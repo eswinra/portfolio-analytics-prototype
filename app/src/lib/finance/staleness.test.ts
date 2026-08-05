@@ -12,9 +12,9 @@ describe('dataState', () => {
   it('missing wins over everything', () => {
     expect(dataState(true, '2026-06-30', '2026-06-30', 'Daily')).toBe('missing');
   });
-  it('daily data is stale beyond 4 calendar days', () => {
-    expect(dataState(false, '2026-06-26', '2026-06-30', 'Daily')).toBe('current');
-    expect(dataState(false, '2026-06-25', '2026-06-30', 'Daily')).toBe('stale');
+  it('daily data: Friday close viewed Monday is current, older is stale', () => {
+    expect(dataState(false, '2026-06-27', '2026-06-30', 'Daily')).toBe('current'); // 3 days
+    expect(dataState(false, '2026-06-26', '2026-06-30', 'Daily')).toBe('stale'); // 4 days
   });
   it('monthly data allows 45 days', () => {
     expect(dataState(false, '2026-05-31', '2026-06-30', 'Monthly')).toBe('current');

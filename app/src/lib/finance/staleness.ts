@@ -4,7 +4,7 @@ export type DataState = 'current' | 'stale' | 'missing';
 
 /** Staleness thresholds in calendar days by declared frequency. */
 export const STALE_DAYS: Record<string, number> = {
-  Daily: 4, // covers weekends + one business day of lag
+  Daily: 3, // Friday close viewed Monday (3 days) is current; anything older is stale
   Monthly: 45,
   Quarterly: 135,
   Annual: 450,

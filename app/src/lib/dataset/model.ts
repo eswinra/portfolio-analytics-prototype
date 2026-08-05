@@ -228,7 +228,10 @@ export function buildDataset(records: ContractRecord[], sourceType: string): Dat
     const prev = present[present.length - 2];
     const lastPoint = points[points.length - 1];
     const missingAtEnd = lastPoint !== undefined && lastPoint.close === null;
-    const state = dataState(missingAtEnd, last?.date ?? asOf, lastMarketDate, 'Daily');
+    // Stale wins over missing-at-end: a series whose newest value is beyond the daily
+    // freshness threshold is stale; a fresh series lacking only the latest point is missing.
+    const ageState = dataState(false, last?.date ?? asOf, lastMarketDate, 'Daily');
+    const state: DataState = ageState === 'stale' ? 'stale' : missingAtEnd ? 'missing' : 'current';
     return {
       proxyId,
       category: proxyCategory.get(proxyId) ?? '',

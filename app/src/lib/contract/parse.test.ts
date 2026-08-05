@@ -46,8 +46,8 @@ describe('valid fixture', () => {
     const ds = buildDataset(res.records, 'workbook');
     const oil = ds.proxyStrip.find((p) => p.proxyId === 'DEMO-OIL');
     const usd = ds.proxyStrip.find((p) => p.proxyId === 'DEMO-USD');
-    expect(oil?.state).toBe('missing');
-    expect(usd?.state).toBe('missing'); // trailing nulls ⇒ flagged at strip level
+    expect(oil?.state).toBe('missing'); // fresh series, latest point absent
+    expect(usd?.state).toBe('stale'); // newest value 4 calendar days old
     const eq = ds.proxyStrip.find((p) => p.proxyId === 'DEMO-EQ-GLOBAL');
     expect(eq?.state).toBe('current');
     expect(eq?.lastReturn).not.toBeNull();

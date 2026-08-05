@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-04 — Stage 6: PA-team product review
+
+- Full presentation audit of the production build under a simulated Pages subpath
+  (`docs/product-review.md`): two-minute read, classification legibility, reconciliation
+  tie-out, import rejection E2E, ACFR filter ARIA state, mobile layout — results and evidence
+  recorded.
+- Fixed M1 (medium): the stale-demo proxy rendered as missing — daily staleness threshold
+  corrected to 3 calendar days and strip logic gives stale precedence over missing-at-end;
+  the three data states now render distinctly (✓/△/✕). Tests updated; pipeline re-run green.
+- Accepted-with-mitigation findings L1–L3 and residuals R1–R2 documented.
+- Added `docs/demo-script.md` (timed 5–7 minute walkthrough with Q&A anchors); no separate demo
+  route added (smallest-prototype principle).
+
 ## 2026-08-04 — Stage 5: Dashboard build
 
 - Built the static web prototype in `app/` (Vite + React 18 + TypeScript strict): Overview,
