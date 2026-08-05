@@ -1,4 +1,30 @@
-# Workbook QA Evidence — Stage 3 build
+# Workbook QA Evidence
+
+## Stage 4 — independent audit (2026-08-04)
+
+Auditor pass separate from the build QA: reads only the workbook file, recomputes the entire
+calculation chain from the Inputs sheets with independent code, and audits structure and the
+export table (`tools/`-independent script; findings below).
+
+**Recomputation:** all 12 monthly TF returns, benchmark returns with effective-dated policy
+weights, QTD/FYTD chain-links, all six category contributions, residual, and all allocation
+weights/targets tie to Excel's cached values within 1e-9. Contribution residual 0.052% ≤ 10 bp
+tolerance. Transfers net to zero every month. No error values on any sheet; no hardcoded
+constants inside calculation areas; formula patterns consistent down every 12-row grid column.
+
+**Findings and dispositions:**
+
+| # | Finding | Severity | Disposition |
+|---|---|---|---|
+| A1 | `public_reference` rows with `$K`/`$B` units carried `scale="1"` | Warning (metadata) | **Fixed** — generator now maps unit→scale (`$K`→`k`, `$mm`→`mm`, `$B`→`bn`); workbook rebuilt, re-QA'd |
+| A2 | openpyxl reports 0 data validations on Crosswalk/QA_Checklist | Warning (tooling) | **Not a defect** — Excel stores cross-sheet list validations in the x14 extension block (verified present with correct ranges/sources in raw sheet XML); openpyxl cannot read that block. Same storage form as the starter workbook. |
+| A3 | Flat CSV interface had no in-band schema version | Improvement | **Fixed** — `schema_version` column (29th) added to `Export_Contract` and the contract |
+
+Post-fix re-run: build → Excel QA (all values OK, 10/2/0 checks) → audit (0 critical,
+0 warning apart from A2's documented tooling limitation). Reference workbook hash re-verified
+unchanged (`120d466f…c793d32`).
+
+## Stage 3 build QA
 
 Build: `tools/build_workbook.py` (deterministic, seed 20260630).
 QA: `tools/qa_excel.py` — opens the workbook in desktop Excel via COM, forces

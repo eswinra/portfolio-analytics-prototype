@@ -1,0 +1,86 @@
+# Data Contract — Workbook ↔ Web Prototype Interface
+
+Schema version: **1.0.0** (semver; `schema_version` column on every record). The web prototype
+consumes only this contract — never workbook presentation cells. Canonical valid instance:
+`data/sample/demofund_export_v1.csv` (338 records).
+
+## Shape
+
+One flat CSV/table; one record per row; 29 columns exactly (order not significant, names are);
+UTF-8; ISO-8601 dates (civil dates, no time zone component — market closes are US business
+days, monthly records use month-end dates).
+
+## Record types
+
+| record_type | Grain | Value semantics |
+|---|---|---|
+| `monthly_return` | entity × category(+TOTAL) × month | decimal monthly net return |
+| `monthly_benchmark_return` | entity × category(+TOTAL) × month | decimal benchmark return |
+| `period_return` | entity × TOTAL × {1M, QTD, FYTD} × {net_return, bench_return, hurdle_return} | decimal period return |
+| `allocation` | entity × category × {emv, weight_actual, weight_target, over_under_pct} at as-of | $mm or decimal weight |
+| `contribution_qtd` | entity × category (+ arith total, chain-linked, residual) | decimal contribution |
+| `market_close` | proxy × business day | synthetic price level |
+| `public_reference` | cited public value | as cited (unit varies) |
+| `check_result` | control id | status string PASS/WARN/FAIL |
+
+Aggregate note: `period_return`(1M) intentionally equals `monthly_return`(TOTAL, final month) —
+aggregates are a *view* for tiles; series records feed charts. They differ by `metric_id` and
+`record_type`, so they are not duplicates under the key below, and the app must never sum
+across record types.
+
+## Identity and duplicate detection
+
+Natural key: `(record_type, entity_id, metric_id, category_id, as_of_date, period_start,
+period_end)`. Imports containing two rows with the same natural key are rejected (see
+`docs/import-validation-rules.md`). `record_id` must also be unique per file.
+
+## Required vs optional fields
+
+Required on every record: `record_id`, `record_type`, `entity_id`, `metric_id`, `value` *or*
+`quality_status=missing`, `unit`, `currency`, `scale`, `as_of_date`, `classification`,
+`source_type`, `source_name`, `provider`, `retrieved_date`, `quality_status`, `schema_version`.
+Conditionally required: `category_id` (all except `public_reference`); `period_start/end/type`
+(all return/contribution records); `book_of_record`, `return_method`, `gross_net` (return
+records); `benchmark_id` (benchmark records); `page_table` (`public_reference` records).
+Optional: `valuation_status` (defaults `final`), `method_id`, `note`.
+
+## Safe null behavior
+
+An empty `value` is legal **only** when `quality_status = missing`; the app renders an explicit
+missing state and excludes the record from every calculation. Any other empty required field
+rejects the file. Nulls are never coerced to 0. A `stale` state is *derived* by the consumer
+(record age vs `frequency` — thresholds in `docs/data-dictionary.md`), not asserted in data.
+
+## Period compatibility
+
+- Returns combine only by chain-linking within one (`entity_id`, `category_id`, `metric_id`)
+  series of contiguous equal `period_type` records; gaps break the chain and the affected
+  aggregate reports missing.
+- Portfolio vs benchmark comparisons require identical `period_start`, `period_end`, and
+  `period_type`.
+- Records with different `as_of_date` never aggregate; the UI shows per-dataset as-of.
+
+## Versioning and rejection
+
+- Major version mismatch (e.g., `2.x` file into a `1.x` app) → reject whole file.
+- Minor/patch above the app's known version → accept known columns, warn.
+- Unknown `record_type` / `classification` / `period_type` token → reject file (closed enums).
+- Import is all-or-nothing: any rejection leaves prior app state untouched and produces a
+  row-level error report.
+
+## Enums
+
+- `classification`: `reported_public` | `synthetic` | `proxy_estimate` | `calculated`
+  (data-state overlays `stale`/`missing` are carried in `quality_status` or derived).
+- `quality_status`: `ok` | `missing` | (reserved: `estimated`, `exception:<reason>`).
+- `period_type`: `D` | `M` | `Q` | `FY` | `1M` | `QTD` | `FYTD` | `1Y` | `ITD`.
+- `book_of_record`: `IBOR` | `ABOR` | `n/a`. `return_method`: `TWR` | `MWR` | `n/a`.
+  `gross_net`: `gross` | `net` | `n/a`. `source_type`: `workbook` | `public_report` |
+  `synthetic_generator` | `user_import`.
+
+## Fixtures
+
+`data/sample/demofund_export_v1.csv` — deterministic, wholly synthetic (entity `DEMOFUND`),
+regenerated only via `tools/build_workbook.py` → `tools/qa_excel.py` → `tools/make_fixtures.py`.
+`data/sample/invalid/*.csv` — eight malformed variants, one named defect each, used as
+validator test vectors.

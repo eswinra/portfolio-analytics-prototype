@@ -1047,7 +1047,7 @@ hdr = ["record_id", "record_type", "entity_id", "metric_id", "category_id", "val
        "currency", "scale", "as_of_date", "period_start", "period_end", "period_type",
        "frequency", "classification", "source_type", "source_name", "page_table", "provider",
        "retrieved_date", "book_of_record", "return_method", "gross_net", "valuation_status",
-       "benchmark_id", "method_id", "quality_status", "note"]
+       "benchmark_id", "method_id", "quality_status", "note", "schema_version"]
 EXPORT_HEADER_ROWS = 6  # title rows + header row (rows 1..6 in col A used before data)
 style_hdr(ws, 6, hdr)
 r = 7
@@ -1057,10 +1057,11 @@ def ex_row(record_type, metric_id, category_id, value, unit, asof, ps, pe, pt, f
            value_is_formula=False, fmt=PCT2):
     global r
     rid = f"REC-{r-6:04d}"
+    scale = {"$mm": "mm", "$K": "k", "$B": "bn"}.get(unit, "1")
     vals = [rid, record_type, "DEMOFUND", metric_id, category_id, value, unit, "USD",
-            "1" if unit != "$mm" else "mm", asof, ps, pe, pt, freq, classification,
+            scale, asof, ps, pe, pt, freq, classification,
             source_type, source_name, page_table, provider, dt.date(2026, 8, 4),
-            book, rm, gn, vs, bench, method, qs, note]
+            book, rm, gn, vs, bench, method, qs, note, "1.0.0"]
     for j, v in enumerate(vals):
         fnt = F_LINK if (j == 5 and value_is_formula) else (F_FORMULA if value_is_formula else F_INPUT)
         fmt_j = None
@@ -1174,7 +1175,7 @@ wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "EXPORT_EXPECTED", attr_text=str(N_RECORDS)))
 ws.freeze_panes = "A7"
 col_widths(ws, [10, 20, 11, 22, 16, 12, 6, 6, 5, 11, 11, 11, 7, 9, 15, 12, 18, 28, 20, 11,
-                8, 8, 7, 9, 10, 22, 9, 26])
+                8, 8, 7, 9, 10, 22, 9, 26, 9])
 
 wb.save(OUT)
 print(f"saved {OUT}")
