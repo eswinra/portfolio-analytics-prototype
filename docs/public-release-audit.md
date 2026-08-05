@@ -92,9 +92,10 @@ This also proves the bundled fixture path (`data/sample/…?raw`) resolves from 
 
 ## Manual-review warnings (decisions for the owner, not blockers)
 
-1. **No LICENSE file.** A public repo without a license is "all rights reserved."
-   Recommendation: add MIT for the code before or immediately after publication (I can add it
-   on approval).
+1. **No LICENSE file.** ~~Recommendation: add MIT.~~ **Resolved by owner decision
+   (2026-08-04): no license for the prototype/showcase phase** — the repository stays
+   "all rights reserved," which is acceptable for a demonstration to the Portfolio Analytics
+   teams. Revisit only if external reuse is ever intended.
 2. **Process-meta files would be public**: `CLAUDE.md`, `PROMPTS.md`, `PROJECT_BRIEF.md`,
    `.claude/settings.json` document how the prototype was built (no secrets, verified).
    Default recommendation: keep them — they honestly document methodology and guardrails; say
