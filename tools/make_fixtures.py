@@ -98,11 +98,15 @@ d[3][i_val] = ""
 d[3][i_qs] = "ok"
 write(os.path.join(INV, "blank_value_flagged_ok.csv"), hdr, d)
 
-# 7. incoherent period (start after end)
+# 7. incoherent period (start after end) — mutate a period_return row
 d = clone()
+mutated = False
 for r in d:
-    if r[0] == "REC-0289":  # a period_return row
+    if r[1] == "period_return" and r[i_ps] and r[i_pe] and r[i_ps] != r[i_pe]:
         r[i_ps], r[i_pe] = r[i_pe], r[i_ps]
+        mutated = True
+        break
+assert mutated, "no period_return row found to mutate"
 write(os.path.join(INV, "period_start_after_end.csv"), hdr, d)
 
 # 8. invalid classification token

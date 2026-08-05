@@ -18,7 +18,7 @@ findings import with visible flags.
 | V06 | Enum columns contain only allowed tokens (`record_type`, `classification`, `period_type`, `quality_status`, `book_of_record`, `return_method`, `gross_net`, `frequency`, `source_type`) | Reject | `invalid/bad_classification.csv` |
 | V07 | Numeric columns parse as finite numbers where `quality_status ≠ missing` | Reject | `invalid/bad_number.csv` |
 | V08 | Empty `value` requires `quality_status = missing`; non-empty value with `missing` → Warn | Reject | `invalid/blank_value_flagged_ok.csv` |
-| V09 | `period_start ≤ period_end`; both present when `period_type` set | Reject | `invalid/period_start_after_end.csv` |
+| V09 | `period_start ≤ period_end` (all records); start and end both present for return/contribution record types — balance, market and check records may carry a descriptive `period_type` without a span | Reject | `invalid/period_start_after_end.csv` |
 | V10 | Percent plausibility: `unit=%` return/contribution values must satisfy \|v\| ≤ 0.60 (60% for a month/quarter is outside demo bounds — catches whole-number-percent files) | Reject | `invalid/whole_number_percent.csv` |
 | V11 | Dates valid ISO-8601; `retrieved_date ≥ as_of_date` for `public_reference` → else Warn | Reject/Warn | — |
 | V12 | Monthly series contiguity per (entity, category, metric): gaps → Warn, affected aggregates render missing | Warn | — |

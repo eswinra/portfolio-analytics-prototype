@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-08-04 — Stage 5: Dashboard build
+
+- Built the static web prototype in `app/` (Vite + React 18 + TypeScript strict): Overview,
+  Contribution, Allocation, Data quality, ACFR workflow, Import, and Limitations views; Zod
+  contract schema + V01–V18 import validator; pure finance modules; two validated charts.
+- 49 unit tests (finance math incl. compounding/averaging counter-example, tolerance edges,
+  staleness thresholds, period alignment; contract parsing against the valid fixture and all 8
+  invalid fixtures plus mutation cases). Format, lint, typecheck, tests and production build all
+  pass; built app verified in a browser under a simulated Pages subpath with zero console errors.
+- Contract correction found by the app's own validator: V09 originally over-enforced period
+  spans and rejected the canonical fixture — scoped to return/contribution record types
+  (docs updated).
+- Data correction found during browser review: `public_reference` rows were attributed to
+  `DEMOFUND`; `entity_id` now names the cited public entity. Workbook, QA and fixtures
+  regenerated (`tools/build_workbook.py` r2).
+- Added `.github/workflows/pages.yml` (minimal-permission Pages deploy; not executed remotely),
+  `README.md`, `docs/architecture.md`.
+
 ## 2026-08-04 — Stage 4: Workbook audit and data contract
 
 - Independent audit of the expanded workbook (fresh recomputation from the file's own inputs):

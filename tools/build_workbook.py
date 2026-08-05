@@ -1054,11 +1054,11 @@ r = 7
 def ex_row(record_type, metric_id, category_id, value, unit, asof, ps, pe, pt, freq,
            classification, source_type, source_name, page_table, provider,
            book="n/a", rm="n/a", gn="n/a", vs="final", bench="", method="", qs="ok", note="",
-           value_is_formula=False, fmt=PCT2):
+           value_is_formula=False, fmt=PCT2, entity="DEMOFUND"):
     global r
     rid = f"REC-{r-6:04d}"
     scale = {"$mm": "mm", "$K": "k", "$B": "bn"}.get(unit, "1")
-    vals = [rid, record_type, "DEMOFUND", metric_id, category_id, value, unit, "USD",
+    vals = [rid, record_type, entity, metric_id, category_id, value, unit, "USD",
             scale, asof, ps, pe, pt, freq, classification,
             source_type, source_name, page_table, provider, dt.date(2026, 8, 4),
             book, rm, gn, vs, bench, method, qs, note, "1.0.0"]
@@ -1155,13 +1155,14 @@ for di, day in enumerate(JUN_DAYS):
                "synthetic proxy series", "synthetic generator", qs=qs,
                note=cat, fmt=PX4)
 
-# public reference records (static)
+# public reference records (static). entity_id names the cited public entity, not DEMOFUND:
+# these are quotations about a real fund and must never be attributed to the synthetic entity.
 for (rid, metric, entity, value, unit, src, prov), _m in zip(PUBLIC_ROWS, range(len(PUBLIC_ROWS))):
     asof, ps, pe, pt, book, rm, gn = pub_meta[rid]
-    ex_row("public_reference", metric, entity, value, unit, asof, ps, pe, pt, "Ad Hoc",
+    ex_row("public_reference", metric, "", value, unit, asof, ps, pe, pt, "Ad Hoc",
            "reported_public", "public_report", src.split(",")[0], src, prov, book=book, rm=rm,
            gn=gn, note=f"quoted from {src}",
-           fmt=PCT2 if unit == "%" else MM0)
+           fmt=PCT2 if unit == "%" else MM0, entity=entity)
 
 # check result records (formula links to status)
 for k, (cid_, desc, _rf, _sf, _exp, _note) in enumerate(checks):

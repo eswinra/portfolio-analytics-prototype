@@ -7,7 +7,7 @@ One row per column of the export/import table. "Req" = required (C = conditional
 |---|---|---|---|
 | `record_id` | string | ✔ | Unique per file, `REC-nnnn` in fixtures. Opaque identifier only. |
 | `record_type` | enum | ✔ | `monthly_return`, `monthly_benchmark_return`, `period_return`, `allocation`, `contribution_qtd`, `market_close`, `public_reference`, `check_result` |
-| `entity_id` | string | ✔ | Synthetic entity id. Fixtures use `DEMOFUND` only. Never a real fund identifier. |
+| `entity_id` | string | ✔ | Synthetic entity id (`DEMOFUND` in fixtures) for all record types **except** `public_reference`, where it names the cited public entity (e.g. "LACERA Pension Plan") so quotations are never attributed to the synthetic fund. |
 | `metric_id` | string | ✔ | e.g. `net_return_m`, `bench_return_m`, `net_return`, `bench_return`, `hurdle_return`, `emv`, `weight_actual`, `weight_target`, `over_under_pct`, `contribution`, `contribution_arith_total`, `return_chain_linked`, `residual`, `close`, check ids `CHK-nn`, or the quoted public metric name |
 | `category_id` | string | C | `GROWTH`, `CREDIT`, `RAIH`, `RRM`, `OVERLAY`, `OTHER`, `TOTAL`; proxy ids (`DEMO-*`) for `market_close` |
 | `value` | number \| status string \| empty | ✔* | Decimal fraction for % units (0.0417 = 4.17%); level for `px`; $ amount at `scale`; status text for `check_result`. Empty only with `quality_status=missing`. |
