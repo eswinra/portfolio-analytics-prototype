@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-04 — Stage 7: Public-release audit
+
+- `docs/public-release-audit.md`: PASS with 3 manual-review warnings (license choice,
+  process-meta files, owner/visibility confirmation). Evidence: 78-file tracked inventory with
+  `git ls-files`/`git check-ignore`; zero office/PDF files tracked; zero secrets in files and
+  full history; zero network calls in the app; minimal-permission workflow; clean-clone
+  `npm ci` → 49/49 tests → lint → build all green; no source maps.
+- No remote created, nothing pushed; publication commands proposed only, pending explicit
+  approval (Prompt 8A/8B).
+
 ## 2026-08-04 — Stage 6: PA-team product review
 
 - Full presentation audit of the production build under a simulated Pages subpath
