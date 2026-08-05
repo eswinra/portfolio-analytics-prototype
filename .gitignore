@@ -1,0 +1,53 @@
+# Local setup notes
+/README_SETUP.md
+/.local-reference-sha256.txt
+
+# Sensitive and local configuration
+.env
+.env.*
+secrets/
+config/credentials.json
+.claude/settings.local.json
+
+# Original local reference material
+/reference/*
+!/reference/.gitkeep
+!/reference/README.md
+
+# Defense in depth: do not commit office/PDF source files by default
+*.pdf
+*.xlsx
+*.xls
+*.xlsm
+
+# Explicitly allow synthetic sample workbooks if approved later
+!/data/sample/**/*.xlsx
+!/public/sample-data/**/*.xlsx
+
+# Local/private data and generated artifacts
+/data/raw/
+/data/private/
+/outputs/
+/exports/
+/tmp/
+
+# Node and web tooling
+node_modules/
+dist/
+.vite/
+coverage/
+playwright-report/
+test-results/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
