@@ -1,8 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
-    "defaultMode": "plan",
-    "disableBypassPermissionsMode": "disable",
+    "defaultMode": "bypassPermissions",
     "deny": [
       "Read(/.env)",
       "Read(/.env.*)",
@@ -10,11 +9,21 @@
       "Read(/config/credentials.json)",
       "Edit(/reference/**)",
       "Bash(git push *--force*)",
-      "PowerShell(git push *--force*)"
+      "Bash(git push -f*)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "PowerShell(git push *--force*)",
+      "PowerShell(git push -f*)",
+      "PowerShell(git push * -f)",
+      "PowerShell(git push * -f *)"
     ],
     "ask": [
+      "Bash(git push)",
       "Bash(git push *)",
+      "PowerShell(git push)",
       "PowerShell(git push *)",
+      "Bash(git remote add *)",
+      "PowerShell(git remote add *)",
       "Bash(gh *)",
       "PowerShell(gh *)",
       "Bash(npm publish *)",

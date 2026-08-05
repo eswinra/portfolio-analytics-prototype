@@ -2,20 +2,20 @@
 
 Use these prompts in order, one at a time, in the same project task unless a prompt says to start fresh. Review each result before continuing. Do not paste the entire file at once.
 
-Never use Bypass permissions in this project. The mode named beside each prompt is part of the workflow.
+This workspace runs with **Bypass permissions** by default. That is safe here because `.claude/settings.json` enforces hard guardrails in every mode, including Bypass: edits to `reference/` and force pushes are denied outright, and any `git push`, `gh` command, `git remote add`, or `npm publish` always stops for your explicit approval. Stage discipline (what each prompt may and may not do) is enforced by the prompt text itself and by `CLAUDE.md`. The mode note beside each prompt is advisory.
 
 ---
 
 ## Prompt 1 - Independent discovery
 
-**Mode: Plan. No project writes.**
+**Mode: Bypass is fine — the prompt itself forbids project writes. Switch to Plan if you want a hard read-only guarantee for this stage.**
 
 ```text
 You are at the root of this project.
 
 Read CLAUDE.md and PROJECT_BRIEF.md first. Confirm the active stage is Discovery. Inspect the complete local reference set under reference/, including every sheet and meaningful structure in the starter workbook and the relevant pages, tables, definitions, dates, and limitations in all four public PDF reports.
 
-Treat reference/ as read-only. Stay in Plan mode. Do not create or modify any project file, install packages, scaffold an application, or build a workbook. Return the discovery in chat only.
+Treat reference/ as read-only. This stage is strictly read-only. Do not create or modify any project file, install packages, scaffold an application, or build a workbook. Return the discovery in chat only.
 
 I want your independent judgment. Do not merely convert possible dashboard features into a generic UI. Work backward from the Portfolio Analytics team's decisions, the evidence in the sources, and what can and cannot be supported by public or synthetic data.
 
@@ -42,7 +42,7 @@ Review Claude's answer before continuing. The point of this first prompt is to s
 
 ## Prompt 2 - Pressure-test and document the approved direction
 
-**Mode: Manual. Documentation writes only.**
+**Mode: Bypass. Documentation writes only — the prompt enforces that boundary.**
 
 ```text
 The discovery direction is ready for a skeptical review. Switch the active stage to Discovery documentation. You may create or edit Markdown documentation only. Do not create application code, install dependencies, or create/modify any workbook.
@@ -86,7 +86,7 @@ End with a concise Excel-stage acceptance checklist. Stop before creating the ex
 
 ## Prompt 3 - Expand the Excel workbook first
 
-**Mode: Manual or Edit automatically, after you approve Prompt 2.**
+**Mode: Bypass, after you approve Prompt 2.**
 
 ```text
 The active stage is Excel bridge. Implement the approved Excel-first expansion.
@@ -151,7 +151,7 @@ Do not create web application code in this stage.
 
 ## Prompt 4 - Audit the workbook and lock the web data contract
 
-**Mode: Manual or Edit automatically.**
+**Mode: Bypass.**
 
 ```text
 The active stage is Data contract. Independently audit the expanded workbook before using it as the basis for a web application.
@@ -189,7 +189,7 @@ Stop after the corrected workbook, compact QA evidence, and approved data contra
 
 ## Prompt 5 - Build the dashboard from the approved contract
 
-**Mode: Edit automatically, after you approve Prompt 4.**
+**Mode: Bypass, after you approve Prompt 4.**
 
 ```text
 The active stage is Dashboard. Implement the approved product concept and data contract as the smallest maintainable, polished public prototype.
@@ -231,7 +231,7 @@ Do not create a GitHub repository, push, or deploy. Stop with what was built, fi
 
 ## Prompt 6 - PA-team product review and presentation mode
 
-**Mode: Manual or Edit automatically.**
+**Mode: Bypass.**
 
 ```text
 Run the production-like application locally and review it as though you are presenting it to a public-pension Portfolio Analytics team on a conference-room screen.
@@ -258,7 +258,7 @@ Do not push or deploy.
 
 ## Prompt 7 - Public-release audit and GitHub preparation
 
-**Mode: Manual. No remote changes.**
+**Mode: Bypass. No remote changes — push and `gh` are ask-gated, so nothing remote can happen without your approval.**
 
 ```text
 The active stage is Release audit. Prepare the current project for a possible public GitHub repository and GitHub Pages deployment, but do not create a remote, push, publish, or change visibility.
@@ -288,7 +288,7 @@ Do not execute any remote command. Stop for my explicit approval.
 
 ## Prompt 8A - Final publish preview
 
-**Mode: Manual. Still no remote changes.**
+**Mode: Bypass. Still no remote changes.**
 
 Replace the placeholders before pasting.
 
@@ -329,7 +329,7 @@ After deployment, report the commit SHA, repository URL, Pages URL, workflow res
 ### If Claude starts coding during discovery
 
 ```text
-Stop. The active stage is read-only discovery. Return to Plan mode, do not create files, and complete the evidence-based recommendation in chat.
+Stop. The active stage is read-only discovery. Do not create or modify files, and complete the evidence-based recommendation in chat.
 ```
 
 ### If Claude skips the Excel-first sequence
