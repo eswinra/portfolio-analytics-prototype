@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-08-06 — Revision 2: external-review adoption, IPS policy pack, Daily Pulse
+
+- Verified and adopted an external code review (all 8 code-level claims reproduced; see chat
+  analysis): display rounding tie-out, hash-router skip-link bug, positional chart join,
+  entity blending, trusted derived fields, partial totals, V10 over-reach, hard-coded ranges.
+- **IPS policy pack**: both public Investment Policy Statements (restated 2024-06-12) encoded
+  with explicit min/target/max (Pension Cash 0–3% asymmetry), ½-step targets, benchmark
+  formulas + lags, citations, and a source-inconsistency data note (OPEB RAIH sub-class ½-steps
+  sum 15.5% vs category 16.5% — flagged, not silently corrected). New Policy view; Allocation
+  now uses the real Pension bands with distance-to-boundary.
+- **Daily proxy pulse** on Overview: policy-weighted read-through with honest policy-weight
+  coverage (40.5% in the demo — Natural Resources proxy deliberately unpriced), covered-basket
+  return, exceptions queue with staff-analytics framing, and a generated copy-to-clipboard
+  daily brief. Market-pulse CSV template added (`data/sample/market_pulse_template.csv`) for
+  the Bloomberg BDH export workflow, with a prominent internal-use/licensing warning.
+- **Integrity foundation**: V17 now rejects multi-entity files; date-keyed series joins;
+  span-matched excess; derived fields recomputed; partial totals suppressed with an exception;
+  missing-flagged values discarded at parse; V10 scoped to return/contribution records.
+- **Import preflight**: validate-and-summarize before an explicit Apply; downloadable error
+  report; template and invalid-sample downloads.
+- **A11y/UX fixes**: skip link (hash-router safe), route-change scroll/focus reset, expandable
+  monthly data table (fixes the chart's aria promise), mobile allocation cards, scrollable
+  mobile nav, ACFR days-remaining column, contribution rounding-adjustment line with
+  unrounded-values footnote.
+- Tests: 49 → 62 (read-through, asymmetric bands, entity rejection, discard-on-missing,
+  V10 scoping, suppression rules). Full pipeline green.
+
 ## 2026-08-04 — Stage 7: Public-release audit
 
 - `docs/public-release-audit.md`: PASS with 3 manual-review warnings (license choice,

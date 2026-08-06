@@ -47,6 +47,9 @@ const PERIOD_SPAN_REQUIRED = new Set([
   'contribution_qtd',
 ]);
 
+/** Record types subject to the V10 percent-plausibility bound. */
+const PCT_BOUND_TYPES = PERIOD_SPAN_REQUIRED;
+
 function err(
   ruleId: string,
   row: number,
@@ -171,18 +174,20 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
         return;
       }
       value = null;
+    } else if (raw.quality_status === 'missing') {
+      // A missing flag always wins: the value is discarded so it can never render numerically.
+      warnings.push(warn('V08', rowNo, 'value', 'value present but flagged missing — discarded'));
+      value = null;
     } else {
-      if (raw.quality_status === 'missing') {
-        warnings.push(warn('V08', rowNo, 'value', 'value present but flagged missing'));
-      }
       const n = Number(rawValue);
       if (!Number.isFinite(n) && NUMERIC_RECORD_TYPES.has(raw.record_type)) {
         errors.push(err('V07', rowNo, 'value', 'value is not a finite number', rawValue));
         return;
       }
       value = n;
-      // V10 percent plausibility (returns/contributions only; not levels)
-      if (raw.unit === '%' && Math.abs(n) > PCT_BOUND) {
+      // V10 percent plausibility — return/contribution records only. Allocation weights and
+      // other % levels may legitimately exceed the bound (e.g. a 61% Growth weight).
+      if (raw.unit === '%' && PCT_BOUND_TYPES.has(raw.record_type) && Math.abs(n) > PCT_BOUND) {
         errors.push(
           err(
             'V10',
@@ -312,18 +317,30 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
     }
   }
 
-  // V17 unfamiliar entity (public_reference rows cite real entities by design and are exempt)
-  if (fixtureEntityId) {
-    const other = [
-      ...new Set(
-        records.filter((r) => r.record_type !== 'public_reference').map((r) => r.entity_id),
+  // V17 entity discipline (public_reference rows cite real entities by design and are exempt):
+  // a file must describe exactly ONE portfolio entity. Multi-entity files are rejected until a
+  // genuine fund selector exists — silently blending funds is worse than refusing the file.
+  const portfolioEntities = [
+    ...new Set(records.filter((r) => r.record_type !== 'public_reference').map((r) => r.entity_id)),
+  ];
+  if (portfolioEntities.length > 1) {
+    errors.push(
+      err(
+        'V17',
+        0,
+        'entity_id',
+        `file contains ${portfolioEntities.length} portfolio entities (${portfolioEntities.join(', ')}); one entity per file`,
       ),
-    ].filter((e) => e !== fixtureEntityId);
-    for (const e of other) {
-      warnings.push(
-        warn('V17', 0, 'entity_id', `user-supplied entity "${e}": all labels derive from the file`),
-      );
-    }
+    );
+  } else if (fixtureEntityId && portfolioEntities[0] && portfolioEntities[0] !== fixtureEntityId) {
+    warnings.push(
+      warn(
+        'V17',
+        0,
+        'entity_id',
+        `user-supplied entity "${portfolioEntities[0]}": all labels derive from the file`,
+      ),
+    );
   }
 
   if (errors.length > 0) return failed(errors, warnings);

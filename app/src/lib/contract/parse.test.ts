@@ -58,6 +58,52 @@ describe('valid fixture', () => {
     expect(ds.publicReferences).toHaveLength(8);
     for (const p of ds.publicReferences) expect(p.pageTable.length).toBeGreaterThan(0);
   });
+
+  it('joins monthly series by date, not array position', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    expect(ds.joinedMonths).toHaveLength(12);
+    for (const m of ds.joinedMonths) {
+      expect(m.monthEnd).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+    const last = ds.joinedMonths[ds.joinedMonths.length - 1]!;
+    expect(last.portfolioIndex).toBeCloseTo(1.124117, 5);
+    expect(last.benchmarkIndex).toBeCloseTo(1.12573, 5);
+  });
+
+  it('computes the policy-weighted read-through with honest coverage', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    // DEMO-OIL (Natural Resources, 3%) is unpriced by design → excluded, coverage 40.5%
+    expect(ds.readThrough.coverage).toBeCloseTo(0.405, 6);
+    expect(ds.readThrough.unpriced.map((u) => u.classLabel)).toContain('Natural Resources');
+    expect(ds.readThrough.fundLevelImpact).not.toBeNull();
+  });
+
+  it('recomputes over/under from primitives and applies IPS bands', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    const growth = ds.allocation.find((a) => a.categoryId === 'GROWTH')!;
+    expect(growth.overUnderPct).toBeCloseTo(growth.actualWeight! - growth.targetWeight!, 12);
+    expect(growth.bandMin).toBeCloseTo(0.4, 12); // Pension IPS 40–56%
+    expect(growth.bandMax).toBeCloseTo(0.56, 12);
+    expect(growth.rangeStatus).toBe('within');
+    expect(ds.emvIncomplete).toBe(false);
+  });
+
+  it('suppresses totals and flags an exception when a sleeve EMV is missing', () => {
+    const base = load('demofund_export_v1.csv');
+    // blank the GROWTH emv record value and flag it missing
+    const mutated = base.replace(
+      /^(REC-0154,allocation,DEMOFUND,emv,GROWTH,)([^,]+)(,\$mm,USD,mm,[^,]+,,,M,Monthly,calculated,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,IBOR,n\/a,n\/a,final,,,)ok/m,
+      '$1$3missing',
+    );
+    expect(mutated).not.toBe(base);
+    const res2 = parseContractCsv(mutated);
+    expect(res2.ok).toBe(true); // structurally valid; missing is a state, not an error
+    const ds = buildDataset(res2.records, 'user_import');
+    expect(ds.emvIncomplete).toBe(true);
+    expect(ds.totalEmvMm).toBeNull();
+    expect(ds.allocation.every((a) => a.overUnderMm === null)).toBe(true);
+    expect(ds.exceptions.some((e) => e.id === 'EMV-PARTIAL')).toBe(true);
+  });
 });
 
 describe('invalid fixtures are rejected with the right rule', () => {
@@ -119,11 +165,52 @@ describe('invalid fixtures are rejected with the right rule', () => {
     expect(res.errors.map((e) => e.ruleId)).toContain('V14');
   });
 
-  it('unfamiliar entity produces a V17 warning, not a rejection', () => {
+  it('unfamiliar (single) entity produces a V17 warning, not a rejection', () => {
     const base = load('demofund_export_v1.csv');
     const mutated = base.replaceAll('DEMOFUND', 'OTHERFUND');
     const res = parseContractCsv(mutated, 'DEMOFUND');
     expect(res.ok).toBe(true);
     expect(res.warnings.map((w) => w.ruleId)).toContain('V17');
+  });
+
+  it('multi-entity files are rejected outright (V17) — no silent blending', () => {
+    const base = load('demofund_export_v1.csv');
+    // relabel a single portfolio record to a second entity
+    const mutated = base.replace(
+      'REC-0001,monthly_return,DEMOFUND',
+      'REC-0001,monthly_return,SECONDFUND',
+    );
+    expect(mutated).not.toBe(base);
+    const res = parseContractCsv(mutated);
+    expect(res.ok).toBe(false);
+    expect(res.errors.map((e) => e.ruleId)).toContain('V17');
+  });
+
+  it('V10 percent bound does not reject legitimate large allocation weights', () => {
+    const base = load('demofund_export_v1.csv');
+    // push GROWTH weight_actual to 65% — implausible as a return, legal as a weight
+    const mutated = base.replace(
+      /^(REC-0155,allocation,DEMOFUND,weight_actual,GROWTH,)([^,]+)/m,
+      '$10.65',
+    );
+    expect(mutated).not.toBe(base);
+    const res = parseContractCsv(mutated);
+    // weights no longer sum to 1 → V13 fires; V10 must NOT
+    expect(res.errors.map((e) => e.ruleId)).toContain('V13');
+    expect(res.errors.map((e) => e.ruleId)).not.toContain('V10');
+  });
+
+  it('a value present but flagged missing is discarded (warned), never rendered', () => {
+    const base = load('demofund_export_v1.csv');
+    const mutated = base.replace(
+      /^(REC-0187,market_close,DEMOFUND,close,[^,]+,)([^,]+)(,px[^\n]*?),ok,/m,
+      '$1$2$3,missing,',
+    );
+    expect(mutated).not.toBe(base);
+    const res = parseContractCsv(mutated);
+    expect(res.ok).toBe(true);
+    expect(res.warnings.map((w) => w.ruleId)).toContain('V08');
+    const rec = res.records.find((r) => r.record_id === 'REC-0187');
+    expect(rec?.value).toBeNull();
   });
 });

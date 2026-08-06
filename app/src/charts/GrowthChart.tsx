@@ -37,7 +37,7 @@ export function GrowthChart({ data }: { data: GrowthDatum[] }) {
     <figure
       style={{ margin: 0 }}
       role="img"
-      aria-label={`Cumulative growth of one dollar over ${data.length} months. Portfolio ends at ${last?.portfolio?.toFixed(3) ?? 'n/a'}, benchmark at ${last?.benchmark?.toFixed(3) ?? 'n/a'}. A data table follows this chart.`}
+      aria-label={`Cumulative growth of one dollar over ${data.length} months. Portfolio ends at ${last?.portfolio?.toFixed(3) ?? 'n/a'}, benchmark at ${last?.benchmark?.toFixed(3) ?? 'n/a'}. An expandable monthly data table follows this chart.`}
     >
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 8, right: 84, bottom: 4, left: 4 }}>

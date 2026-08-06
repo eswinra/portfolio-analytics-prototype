@@ -25,6 +25,30 @@ src/views + src/charts + src/components   presentation only; no finance math in 
 User imports go through exactly the same parser as the bundled fixture; a rejected file leaves
 state untouched and yields a row-level report.
 
+## Revision 2 additions (post-review, 2026-08-06)
+
+- **IPS policy pack** (`src/fixtures/policyPack.ts`): `reported_public` reference data quoted
+  from both public LACERA Investment Policy Statements (restated June 12, 2024) with explicit
+  **min/target/max** bands (the Pension Cash +2/−1 asymmetry is the reason ± half-widths are
+  banned), dated ½-step transition targets, and benchmark formulas with lag months as structured
+  metadata. Surfaced on the Policy view; Allocation measures the synthetic portfolio against the
+  real Pension bands and shows distance-to-boundary as staff analytics.
+- **Daily proxy pulse**: `src/lib/finance/readThrough.ts` computes the policy-weighted proxy
+  read-through (Σ ½-step weight × proxy daily return) with coverage expressed in policy-weight
+  terms; unpriced classes are excluded and listed, never imputed as zero. Labeled
+  `proxy_estimate`, never portfolio performance. A generated plain-text daily brief
+  (`src/lib/dataset/brief.ts`) supports the EOD email/Teams workflow via copy-to-clipboard.
+- **Integrity hardening**: multi-entity files rejected (V17); monthly chart series joined by
+  month-end date, never array position; period excess computed only on matched spans; derived
+  fields (`over_under_pct`, totals) recomputed from primitives; partial sleeve totals suppressed;
+  missing-flagged values discarded at parse; V10 scoped to return/contribution records; a
+  derived exceptions queue (checks + market states + range breaches + span mismatches).
+- **Preflight import**: files are validated and summarized (rows scanned, entity, errors,
+  warnings, downloadable error report) and applied only on explicit confirmation.
+- **A11y/UX**: skip link focuses main directly (hash-router safe); scroll/focus reset on route
+  change; expandable monthly data table under the growth chart; mobile card layout for the
+  allocation table; scrollable single-row mobile nav; confidentiality warning on Import.
+
 ## Notable decisions
 
 - **Relative base + hash routing** (revision of the discovery-stage `basename` idea): `base: './'`

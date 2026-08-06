@@ -1,4 +1,5 @@
-import { HashRouter, NavLink, Route, Routes } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { HashRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { AcfrView } from './views/AcfrView';
@@ -8,14 +9,40 @@ import { DataQualityView } from './views/DataQualityView';
 import { ImportView } from './views/ImportView';
 import { LimitationsView } from './views/LimitationsView';
 import { OverviewView } from './views/OverviewView';
+import { PolicyView } from './views/PolicyView';
+
+/** On every route change: reset scroll and move focus to the main region (screen-reader and
+ *  keyboard users land on the new content, not under the sticky nav). */
+function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> }) {
+  const { pathname } = useLocation();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    window.scrollTo(0, 0);
+    mainRef.current?.focus({ preventScroll: true });
+  }, [pathname, mainRef]);
+  return null;
+}
 
 function Shell() {
   const { dataset, source } = useDataset();
+  const mainRef = useRef<HTMLElement>(null);
+
+  // The skip link must not touch the URL hash (HashRouter owns it) — focus directly.
+  function skipToMain(e: React.MouseEvent) {
+    e.preventDefault();
+    mainRef.current?.focus();
+  }
+
   return (
     <>
-      <a href="#main" className="skip-link">
+      <a href="#main" className="skip-link" onClick={skipToMain}>
         Skip to content
       </a>
+      <RouteFocusReset mainRef={mainRef} />
       <div className="disclaimer-band" role="note">
         <strong>Prototype.</strong> Synthetic and cited public data only — not an official LACERA
         system, performance report, or statement of endorsement.
@@ -25,7 +52,7 @@ function Shell() {
         <h1>Fund Pulse (synthetic demo)</h1>
         <div className="asof">
           Entity <strong>{dataset.meta.entityId}</strong> · as of{' '}
-          <strong>{dataset.meta.asOf}</strong>
+          <strong>{dataset.meta.asOf || 'n/a'}</strong>
           <br />
           {source === 'fixture' ? 'bundled synthetic fixture' : 'user-imported dataset'} · schema{' '}
           {dataset.meta.schemaVersion}
@@ -37,16 +64,18 @@ function Shell() {
         </NavLink>
         <NavLink to="/contribution">Contribution</NavLink>
         <NavLink to="/allocation">Allocation</NavLink>
+        <NavLink to="/policy">Policy</NavLink>
         <NavLink to="/data-quality">Data quality</NavLink>
         <NavLink to="/acfr">ACFR workflow</NavLink>
         <NavLink to="/import">Import</NavLink>
         <NavLink to="/limitations">Limitations</NavLink>
       </nav>
-      <main id="main">
+      <main id="main" ref={mainRef} tabIndex={-1}>
         <Routes>
           <Route path="/" element={<OverviewView />} />
           <Route path="/contribution" element={<ContributionView />} />
           <Route path="/allocation" element={<AllocationView />} />
+          <Route path="/policy" element={<PolicyView />} />
           <Route path="/data-quality" element={<DataQualityView />} />
           <Route path="/acfr" element={<AcfrView />} />
           <Route path="/import" element={<ImportView />} />
@@ -66,8 +95,10 @@ function Shell() {
       </main>
       <footer>
         Exploratory prototype for discussion with a Portfolio Analytics team. All DEMOFUND values
-        are synthetic; cited public values are labeled and excluded from calculations. Imports are
-        processed locally in your browser and never transmitted.
+        are synthetic; cited public values (IPS tables, report figures) are labeled and excluded
+        from calculations. Imports are processed locally in your browser and never transmitted.
+        Operational estimates are not official performance; the custodian remains the book of
+        record.
       </footer>
     </>
   );

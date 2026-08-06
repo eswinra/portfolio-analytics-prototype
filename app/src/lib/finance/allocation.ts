@@ -1,39 +1,57 @@
-/** Allocation vs effective-dated policy targets. */
+/** Allocation vs effective-dated policy targets with explicit min/max bands. */
 
 export interface AllocationRow {
   categoryId: string;
   emvMm: number | null;
   actualWeight: number | null;
   targetWeight: number | null;
+  /** recomputed upstream as actual − target; never trusted from an import */
   overUnderPct: number | null;
+}
+
+export interface PolicyBandLimits {
+  min: number;
+  max: number;
 }
 
 export interface AllocationStatus extends AllocationRow {
   overUnderMm: number | null;
   rangeStatus: 'within' | 'out' | 'n/a';
+  /** distance to the nearer policy boundary (decimal); negative when outside the band */
+  boundaryDistance: number | null;
+  bandMin: number | null;
+  bandMax: number | null;
 }
 
-/** Demo range half-widths per category (mirrors the workbook Policy_Targets ranges). */
-export const RANGE_HALF_WIDTH: Record<string, number> = {
-  GROWTH: 0.05,
-  CREDIT: 0.03,
-  RAIH: 0.03,
-  RRM: 0.04,
-};
-
+/**
+ * Bands are explicit min/max (IPS bands can be asymmetric — Pension Cash is 1% with +2/−1,
+ * i.e. 0–3%). `totalEmvMm` must be the FULL total: callers pass null when any sleeve is
+ * missing so dollar gaps are suppressed rather than computed from a partial total.
+ */
 export function allocationStatus(
   rows: readonly AllocationRow[],
   totalEmvMm: number | null,
+  limits: Record<string, PolicyBandLimits>,
 ): AllocationStatus[] {
   return rows.map((r) => {
-    const half = RANGE_HALF_WIDTH[r.categoryId];
+    const band = limits[r.categoryId];
     let rangeStatus: AllocationStatus['rangeStatus'] = 'n/a';
-    if (half !== undefined && r.overUnderPct !== null) {
-      rangeStatus = Math.abs(r.overUnderPct) <= half ? 'within' : 'out';
+    let boundaryDistance: number | null = null;
+    if (band && r.actualWeight !== null) {
+      const within = r.actualWeight >= band.min && r.actualWeight <= band.max;
+      rangeStatus = within ? 'within' : 'out';
+      boundaryDistance = Math.min(r.actualWeight - band.min, band.max - r.actualWeight);
     }
     const overUnderMm =
       r.overUnderPct !== null && totalEmvMm !== null ? r.overUnderPct * totalEmvMm : null;
-    return { ...r, overUnderMm, rangeStatus };
+    return {
+      ...r,
+      overUnderMm,
+      rangeStatus,
+      boundaryDistance,
+      bandMin: band ? band.min : null,
+      bandMax: band ? band.max : null,
+    };
   });
 }
 

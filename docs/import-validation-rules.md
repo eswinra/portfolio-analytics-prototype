@@ -17,16 +17,16 @@ findings import with visible flags.
 | V05 | Natural key `(record_type, entity_id, metric_id, category_id, as_of_date, period_start, period_end)` unique | Reject | `invalid/duplicate_records.csv` |
 | V06 | Enum columns contain only allowed tokens (`record_type`, `classification`, `period_type`, `quality_status`, `book_of_record`, `return_method`, `gross_net`, `frequency`, `source_type`) | Reject | `invalid/bad_classification.csv` |
 | V07 | Numeric columns parse as finite numbers where `quality_status ≠ missing` | Reject | `invalid/bad_number.csv` |
-| V08 | Empty `value` requires `quality_status = missing`; non-empty value with `missing` → Warn | Reject | `invalid/blank_value_flagged_ok.csv` |
+| V08 | Empty `value` requires `quality_status = missing`; a non-empty value flagged `missing` is **discarded** (nulled) with a Warn — it can never render numerically | Reject/Warn | `invalid/blank_value_flagged_ok.csv` |
 | V09 | `period_start ≤ period_end` (all records); start and end both present for return/contribution record types — balance, market and check records may carry a descriptive `period_type` without a span | Reject | `invalid/period_start_after_end.csv` |
-| V10 | Percent plausibility: `unit=%` return/contribution values must satisfy \|v\| ≤ 0.60 (60% for a month/quarter is outside demo bounds — catches whole-number-percent files) | Reject | `invalid/whole_number_percent.csv` |
+| V10 | Percent plausibility: `unit=%` values on **return/contribution record types only** must satisfy \|v\| ≤ 0.60 (catches whole-number-percent files; allocation weights and other % levels may legitimately exceed the bound) | Reject | `invalid/whole_number_percent.csv` |
 | V11 | Dates valid ISO-8601; `retrieved_date ≥ as_of_date` for `public_reference` → else Warn | Reject/Warn | — |
 | V12 | Monthly series contiguity per (entity, category, metric): gaps → Warn, affected aggregates render missing | Warn | — |
 | V13 | Weight coherence: `allocation` `weight_actual` values per (entity, as_of) sum to 1 ± 0.0001 | Reject | — |
 | V14 | Contribution coherence: `contribution_qtd` categories + residual reconcile to `return_chain_linked` within the residual record ± 0.0001 | Reject | — |
 | V15 | `reported_public` classification allowed only on `public_reference` records | Reject | — |
 | V16 | Mixed vintages: within one `record_type`+`metric_id` series, `as_of_date` must be single-valued for balance records (`allocation`) | Reject | — |
-| V17 | Unknown `entity_id` (≠ fixture entity) → Warn banner "user-supplied entity; all labels derive from the file" | Warn | — |
+| V17 | Exactly **one** portfolio entity per file (`public_reference` citation rows exempt): multi-entity files are rejected outright — no silent blending; a single unknown entity → Warn banner | Reject/Warn | — |
 | V18 | File size ≤ 5 MB, ≤ 20,000 rows (prototype bounds) | Reject | — |
 
 ## Error-report format

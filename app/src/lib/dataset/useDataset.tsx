@@ -4,16 +4,30 @@ import fixtureCsv from '../../../../data/sample/demofund_export_v1.csv?raw';
 import { parseContractCsv, type ImportError } from '../contract/parse';
 import { buildDataset, type Dataset } from './model';
 
-/** Dataset state: bundled fixture by default; a valid user import replaces it (memory only). */
+/**
+ * Dataset state: bundled fixture by default. Imports go through a PREFLIGHT stage — the file
+ * is validated and summarized, and nothing is applied until the user explicitly confirms.
+ */
 
 export const FIXTURE_ENTITY = 'DEMOFUND';
+
+export interface PreflightResult {
+  fileName: string;
+  rowsScanned: number;
+  entityId: string;
+  errors: ImportError[];
+  warnings: ImportError[];
+  ok: boolean;
+}
 
 interface DatasetState {
   dataset: Dataset;
   source: 'fixture' | 'import';
   importWarnings: ImportError[];
-  lastRejection: ImportError[] | null;
-  importCsvText: (text: string) => { ok: boolean; errors: ImportError[] };
+  preflight: PreflightResult | null;
+  stageCsvText: (text: string, fileName: string) => PreflightResult;
+  applyStaged: () => boolean;
+  discardStaged: () => void;
   resetToFixture: () => void;
 }
 
@@ -35,31 +49,73 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   const [dataset, setDataset] = useState<Dataset>(fixture);
   const [source, setSource] = useState<'fixture' | 'import'>('fixture');
   const [importWarnings, setImportWarnings] = useState<ImportError[]>([]);
-  const [lastRejection, setLastRejection] = useState<ImportError[] | null>(null);
+  const [preflight, setPreflight] = useState<PreflightResult | null>(null);
+  const [stagedText, setStagedText] = useState<string | null>(null);
 
-  const importCsvText = useCallback((text: string) => {
+  const stageCsvText = useCallback((text: string, fileName: string): PreflightResult => {
     const res = parseContractCsv(text, FIXTURE_ENTITY);
-    if (!res.ok) {
-      setLastRejection(res.errors);
-      return { ok: false as const, errors: res.errors };
-    }
+    const rowsScanned = Math.max(text.trim().split('\n').length - 1, 0);
+    const entityId =
+      res.records.find((r) => r.record_type !== 'public_reference')?.entity_id ?? 'unknown';
+    const result: PreflightResult = {
+      fileName,
+      rowsScanned,
+      entityId,
+      errors: res.errors,
+      warnings: res.warnings,
+      ok: res.ok,
+    };
+    setPreflight(result);
+    setStagedText(res.ok ? text : null);
+    return result;
+  }, []);
+
+  const applyStaged = useCallback((): boolean => {
+    if (!stagedText || !preflight?.ok) return false;
+    const res = parseContractCsv(stagedText, FIXTURE_ENTITY);
+    if (!res.ok) return false;
     setDataset(buildDataset(res.records, 'user_import'));
     setSource('import');
     setImportWarnings(res.warnings);
-    setLastRejection(null);
-    return { ok: true as const, errors: [] };
+    setPreflight(null);
+    setStagedText(null);
+    return true;
+  }, [stagedText, preflight]);
+
+  const discardStaged = useCallback(() => {
+    setPreflight(null);
+    setStagedText(null);
   }, []);
 
   const resetToFixture = useCallback(() => {
     setDataset(fixture);
     setSource('fixture');
     setImportWarnings([]);
-    setLastRejection(null);
+    setPreflight(null);
+    setStagedText(null);
   }, [fixture]);
 
   const value = useMemo(
-    () => ({ dataset, source, importWarnings, lastRejection, importCsvText, resetToFixture }),
-    [dataset, source, importWarnings, lastRejection, importCsvText, resetToFixture],
+    () => ({
+      dataset,
+      source,
+      importWarnings,
+      preflight,
+      stageCsvText,
+      applyStaged,
+      discardStaged,
+      resetToFixture,
+    }),
+    [
+      dataset,
+      source,
+      importWarnings,
+      preflight,
+      stageCsvText,
+      applyStaged,
+      discardStaged,
+      resetToFixture,
+    ],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -417,12 +417,70 @@ button.linklike {
   color: var(--ink-muted);
 }
 
+.pulse-hero {
+  border-left: 5px solid var(--accent);
+  margin-bottom: 1rem;
+}
+
+.confidentiality-warning {
+  border-left: 5px solid var(--status-warn-ink);
+  background: var(--status-warn-bg);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+details > summary {
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+main:focus {
+  outline: none;
+}
+
 @media (max-width: 720px) {
   .tile .tile-value {
     font-size: 1.5rem;
   }
   main {
     padding: 0.75rem;
+  }
+  /* nav collapses to a horizontally scrollable single row */
+  .mainnav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mainnav a {
+    white-space: nowrap;
+  }
+  /* wide policy tables become stacked cards */
+  table.cardable thead {
+    position: absolute;
+    left: -9999px;
+  }
+  table.cardable tr {
+    display: block;
+    border: 1px solid var(--panel-edge);
+    border-radius: 6px;
+    margin-bottom: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--panel);
+  }
+  table.cardable td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px dotted var(--rule);
+    text-align: right;
+  }
+  table.cardable td::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    text-align: left;
   }
 }
 

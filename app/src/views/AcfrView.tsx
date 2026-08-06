@@ -14,6 +14,13 @@ const STATUSES: (WorkStatus | 'All')[] = [
   'Blocked',
 ];
 
+/** Days from the viewer's local date to the illustrative due date; '—' once complete. */
+function daysLeft(dueDate: string, status: WorkStatus): string {
+  if (status === 'Complete') return '—';
+  const days = Math.ceil((Date.parse(dueDate) - Date.now()) / 86400000);
+  return days < 0 ? `${-days} overdue` : String(days);
+}
+
 export function AcfrView() {
   const [filter, setFilter] = useState<WorkStatus | 'All'>('All');
 
@@ -92,6 +99,9 @@ export function AcfrView() {
                 <th scope="col">Authoritative source</th>
                 <th scope="col">Tie-out</th>
                 <th scope="col">Due</th>
+                <th scope="col" className="num">
+                  Days left
+                </th>
                 <th scope="col">Status</th>
               </tr>
             </thead>
@@ -107,6 +117,7 @@ export function AcfrView() {
                   <td>{c.source}</td>
                   <td>{c.tieOut}</td>
                   <td>{c.dueDate}</td>
+                  <td className="num">{daysLeft(c.dueDate, c.status)}</td>
                   <td>
                     <Pill tone={statusTone(c.status)}>{c.status}</Pill>
                   </td>
