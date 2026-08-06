@@ -40,8 +40,9 @@ export function OverviewView() {
       <section className="panel pulse-hero" aria-labelledby="pulse-h">
         <h2 id="pulse-h">Daily proxy pulse — staff analytics, synthetic demo</h2>
         <p className="footnote">
-          Policy-weighted read-through of liquid market proxies using the IPS ½-step weights (cited
-          on <Link to="/policy">Policy</Link>). A proxy estimate of the market move's read-through —{' '}
+          Policy-weighted read-through of liquid market proxies using the{' '}
+          {meta.policyEntity === 'OPEB' ? 'OPEB' : 'Pension'} IPS ½-step weights (cited on{' '}
+          <Link to="/policy">Policy</Link>). A proxy estimate of the market move's read-through —{' '}
           <strong>never a portfolio return</strong>. Private-market classes are excluded (benchmarks
           lagged 1–3 months per IPS Table 2). Market data through {marketDate ?? 'n/a'}.
         </p>
@@ -209,7 +210,7 @@ export function OverviewView() {
           <div className="table-scroll">
             <table>
               <caption>
-                DEMOFUND vs synthetic policy benchmark and hurdle, periods ended {meta.asOf}
+                {meta.entityId} vs synthetic policy benchmark and hurdle, periods ended {meta.asOf}
               </caption>
               <thead>
                 <tr>

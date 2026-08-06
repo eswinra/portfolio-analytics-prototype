@@ -313,7 +313,7 @@ export interface ProxyPolicyMapping {
   halfStepWeight: number;
 }
 
-export const PROXY_POLICY_MAP: ProxyPolicyMapping[] = [
+export const PROXY_POLICY_MAP_PENSION: ProxyPolicyMapping[] = [
   {
     proxyId: 'DEMO-EQ-GLOBAL',
     classId: 'GLOBAL_EQ',
@@ -333,6 +333,37 @@ export const PROXY_POLICY_MAP: ProxyPolicyMapping[] = [
     halfStepWeight: 0.03,
   },
 ];
+
+export const PROXY_POLICY_MAP_OPEB: ProxyPolicyMapping[] = [
+  {
+    proxyId: 'DEMO-EQ-GLOBAL',
+    classId: 'GLOBAL_EQ',
+    classLabel: 'Global Equity',
+    halfStepWeight: 0.4,
+  },
+  {
+    proxyId: 'DEMO-BOND-AGG',
+    classId: 'IG_BONDS',
+    classLabel: 'Investment Grade Bonds',
+    halfStepWeight: 0.145,
+  },
+  {
+    proxyId: 'DEMO-OIL',
+    classId: 'NAT_RES',
+    classLabel: 'Natural Resources',
+    halfStepWeight: 0.02,
+  },
+];
+
+export type PolicyEntity = 'PENSION' | 'OPEB';
+
+export function policyFor(entity: PolicyEntity): PolicyPack {
+  return entity === 'OPEB' ? OPEB_POLICY : PENSION_POLICY;
+}
+
+export function proxyMapFor(entity: PolicyEntity): ProxyPolicyMapping[] {
+  return entity === 'OPEB' ? PROXY_POLICY_MAP_OPEB : PROXY_POLICY_MAP_PENSION;
+}
 
 /** Categories the demo maps at category level for range monitoring (Pension pack). */
 export const CATEGORY_TO_POLICY: Record<string, string> = {

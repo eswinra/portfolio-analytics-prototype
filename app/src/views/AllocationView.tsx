@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { catLabel, fmtMm, fmtPct, Panel, Pill, SignedPct, statusTone } from '../components/ui';
-import { PENSION_POLICY } from '../fixtures/policyPack';
+import { policyFor } from '../fixtures/policyPack';
 import { useDataset } from '../lib/dataset/useDataset';
 import { weightsSumOk } from '../lib/finance/allocation';
 
@@ -10,17 +10,18 @@ import { weightsSumOk } from '../lib/finance/allocation';
 export function AllocationView() {
   const { dataset } = useDataset();
   const { allocation, totalEmvMm, emvIncomplete, meta } = dataset;
+  const pack = policyFor(meta.policyEntity);
   const sumOk = weightsSumOk(allocation);
 
   return (
     <>
       <h1>Allocation vs policy</h1>
       <p className="footnote">
-        Synthetic DEMOFUND data as of {meta.asOf}, measured against the range structure of the
-        public Pension IPS ({PENSION_POLICY.version}; <Link to="/policy">full policy tables</Link>).
-        Over/under is recomputed as actual − target; imported derived fields are never trusted.
-        Range status is a factual report — the IPS defines no mechanical trade trigger, so nothing
-        here is a rebalancing instruction.
+        Synthetic {meta.entityId} data as of {meta.asOf}, measured against the range structure of
+        the public {pack.entityLabel} IPS ({pack.version};{' '}
+        <Link to="/policy">full policy tables</Link>). Over/under is recomputed as actual − target;
+        imported derived fields are never trusted. Range status is a factual report — the IPS
+        defines no mechanical trade trigger, so nothing here is a rebalancing instruction.
       </p>
       <Panel
         title={`Actual vs target (total ${emvIncomplete ? 'suppressed — sleeve missing' : `${fmtMm(totalEmvMm)} $mm`}, synthetic)`}
@@ -108,9 +109,9 @@ export function AllocationView() {
         </div>
       </Panel>
       <p className="footnote">
-        Policy source: {PENSION_POLICY.sourceDoc}, {PENSION_POLICY.sourcePages}. Near-boundary
-        distance is staff analytics, not a policy limit. Confirm the governing policy version
-        (long-term vs ½-step) before any compliance statement.
+        Policy source: {pack.sourceDoc}, {pack.sourcePages}. Near-boundary distance is staff
+        analytics, not a policy limit. Confirm the governing policy version (long-term vs ½-step)
+        before any compliance statement.
       </p>
     </>
   );

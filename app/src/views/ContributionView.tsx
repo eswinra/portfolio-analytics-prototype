@@ -30,7 +30,7 @@ export function ContributionView() {
     <>
       <h1>Contribution — quarter to date</h1>
       <p className="footnote">
-        Synthetic DEMOFUND data as of {meta.asOf}. Contribution = beginning-of-month weight ×
+        Synthetic {meta.entityId} data as of {meta.asOf}. Contribution = beginning-of-month weight ×
         monthly return, summed over the quarter. The compounding residual against the chain-linked
         return is disclosed below and tested against a 10 bp tolerance.
       </p>

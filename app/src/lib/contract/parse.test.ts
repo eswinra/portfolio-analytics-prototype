@@ -88,6 +88,27 @@ describe('valid fixture', () => {
     expect(ds.emvIncomplete).toBe(false);
   });
 
+  it('OPEB fixture validates and scopes to the OPEB policy pack', () => {
+    const res2 = parseContractCsv(load('demo_opeb_export_v1.csv'));
+    expect(res2.ok).toBe(true);
+    expect(res2.records).toHaveLength(338);
+    const ds = buildDataset(res2.records, 'workbook', 'OPEB');
+    expect(ds.meta.entityId).toBe('DEMO-OPEB');
+    expect(ds.meta.policyEntity).toBe('OPEB');
+    // OPEB IPS bands: Growth 35–55%, RRM 17–35%
+    const growth = ds.allocation.find((a) => a.categoryId === 'GROWTH')!;
+    expect(growth.bandMin).toBeCloseTo(0.35, 12);
+    expect(growth.bandMax).toBeCloseTo(0.55, 12);
+    // OPEB read-through weights: 40% + 14.5% priced (NR 2% unpriced) → 54.5% coverage
+    expect(ds.readThrough.coverage).toBeCloseTo(0.545, 6);
+    expect(ds.reconciliation?.status).toBe('PASS');
+    // internal consistency: chained monthly TOTAL reproduces exported QTD
+    const qtd = ds.periods.find((p) => p.label.startsWith('Quarter'))!;
+    const total = ds.monthlyPortfolio.get('TOTAL')!;
+    const chained = total.slice(-3).reduce((g, p) => g * (1 + p.value!), 1) - 1;
+    expect(chained).toBeCloseTo(qtd.portfolio!, 9);
+  });
+
   it('suppresses totals and flags an exception when a sleeve EMV is missing', () => {
     const base = load('demofund_export_v1.csv');
     // blank the GROWTH emv record value and flag it missing

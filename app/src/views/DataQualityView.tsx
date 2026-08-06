@@ -107,7 +107,7 @@ export function DataQualityView() {
 
       <Panel
         title="Cited public reference values"
-        note="The only reported_public rows in the dataset. Each is quoted for its exact stated period from a public document; none feeds a DEMOFUND calculation."
+        note="The only reported_public rows in the dataset. Each is quoted for its exact stated period from a public document; none feeds a portfolio calculation."
       >
         <div className="table-scroll">
           <table>

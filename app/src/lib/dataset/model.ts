@@ -1,9 +1,10 @@
 import { CATEGORY_ORDER, type ContractRecord } from '../contract/schema';
 import {
   CATEGORY_TO_POLICY,
-  PENSION_POLICY,
-  PROXY_POLICY_MAP,
+  policyFor,
+  proxyMapFor,
   type PolicyBand,
+  type PolicyEntity,
 } from '../../fixtures/policyPack';
 import {
   allocationStatus,
@@ -87,6 +88,8 @@ export interface DatasetMeta {
   sourceType: string;
   recordCount: number;
   classificationCounts: Record<string, number>;
+  /** which IPS policy pack scopes this dataset's bands and read-through weights */
+  policyEntity: PolicyEntity;
 }
 
 export interface Dataset {
@@ -121,10 +124,10 @@ function num(v: number | string | null): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
-/** Category-level band limits from the Pension IPS policy pack (reported_public). */
-export function pensionCategoryLimits(): Record<string, PolicyBandLimits> {
+/** Category-level band limits from the selected entity's IPS policy pack (reported_public). */
+export function categoryLimits(policyEntity: PolicyEntity): Record<string, PolicyBandLimits> {
   const byId = new Map<string, PolicyBand>(
-    PENSION_POLICY.bands.map((band) => [band.classId, band]),
+    policyFor(policyEntity).bands.map((band) => [band.classId, band]),
   );
   const limits: Record<string, PolicyBandLimits> = {};
   for (const [categoryId, policyId] of Object.entries(CATEGORY_TO_POLICY)) {
@@ -136,7 +139,11 @@ export function pensionCategoryLimits(): Record<string, PolicyBandLimits> {
   return limits;
 }
 
-export function buildDataset(records: ContractRecord[], sourceType: string): Dataset {
+export function buildDataset(
+  records: ContractRecord[],
+  sourceType: string,
+  policyEntity: PolicyEntity = 'PENSION',
+): Dataset {
   // ---- entity scoping: the parser rejects multi-entity files (V17); defensively scope anyway
   const portfolioEntities = [
     ...new Set(records.filter((r) => r.record_type !== 'public_reference').map((r) => r.entity_id)),
@@ -293,7 +300,7 @@ export function buildDataset(records: ContractRecord[], sourceType: string): Dat
         };
       }),
     totalEmvMm,
-    pensionCategoryLimits(),
+    categoryLimits(policyEntity),
   );
 
   // ---- market strip + read-through
@@ -326,7 +333,7 @@ export function buildDataset(records: ContractRecord[], sourceType: string): Dat
     };
   });
   const readThrough = policyReadThrough(
-    PROXY_POLICY_MAP.map((m) => {
+    proxyMapFor(policyEntity).map((m) => {
       const strip = proxyStrip.find((p) => p.proxyId === m.proxyId);
       return {
         proxyId: m.proxyId,
@@ -422,6 +429,7 @@ export function buildDataset(records: ContractRecord[], sourceType: string): Dat
       sourceType,
       recordCount: scoped.length,
       classificationCounts,
+      policyEntity,
     },
     monthlyPortfolio,
     monthlyBenchmark,

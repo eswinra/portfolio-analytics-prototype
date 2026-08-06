@@ -28,7 +28,7 @@ function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> })
 }
 
 function Shell() {
-  const { dataset, source } = useDataset();
+  const { dataset, source, entityTab, setEntityTab } = useDataset();
   const mainRef = useRef<HTMLElement>(null);
 
   // The skip link must not touch the URL hash (HashRouter owns it) — focus directly.
@@ -50,12 +50,31 @@ function Shell() {
       <header className="masthead">
         <span className="kicker">Portfolio Analytics — exploratory prototype</span>
         <h1>Fund Pulse (synthetic demo)</h1>
+        <div className="entity-tabs" role="group" aria-label="Select fund">
+          <button
+            type="button"
+            className={entityTab === 'PENSION' && source === 'fixture' ? 'active' : ''}
+            aria-pressed={entityTab === 'PENSION' && source === 'fixture'}
+            onClick={() => setEntityTab('PENSION')}
+          >
+            Pension fund
+          </button>
+          <button
+            type="button"
+            className={entityTab === 'OPEB' && source === 'fixture' ? 'active' : ''}
+            aria-pressed={entityTab === 'OPEB' && source === 'fixture'}
+            onClick={() => setEntityTab('OPEB')}
+          >
+            OPEB fund
+          </button>
+          {source === 'import' ? <span className="pill warn">imported dataset</span> : null}
+        </div>
         <div className="asof">
           Entity <strong>{dataset.meta.entityId}</strong> · as of{' '}
           <strong>{dataset.meta.asOf || 'n/a'}</strong>
           <br />
-          {source === 'fixture' ? 'bundled synthetic fixture' : 'user-imported dataset'} · schema{' '}
-          {dataset.meta.schemaVersion}
+          {source === 'fixture' ? 'bundled synthetic fixture' : 'user-imported dataset'} ·{' '}
+          {dataset.meta.policyEntity} IPS policy pack · schema {dataset.meta.schemaVersion}
         </div>
       </header>
       <nav className="mainnav" aria-label="Primary">
