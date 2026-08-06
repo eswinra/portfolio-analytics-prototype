@@ -5,12 +5,17 @@ import os
 import pythoncom
 import win32com.client as com
 
+import sys
+
+ENTITY = (sys.argv[sys.argv.index("--entity") + 1] if "--entity" in sys.argv else "PENSION").upper()
+SUFFIX = "" if ENTITY == "PENSION" else "_OPEB"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WB = os.path.join(ROOT, "outputs", "Portfolio_Analytics_Dashboard_Workbook_Prototype.xlsx")
-RENDERS = os.path.join(ROOT, "outputs", "renders")
+WB = os.path.join(ROOT, "outputs", f"Portfolio_Analytics_Dashboard_Workbook_Prototype{SUFFIX}.xlsx")
+RENDERS = os.path.join(ROOT, "outputs", f"renders{SUFFIX.lower()}")
 os.makedirs(RENDERS, exist_ok=True)
-EXPECTED = json.load(open(os.path.join(ROOT, "outputs", "expected_values.json"),
-                          encoding="utf-8"))
+EXPECTED = json.load(
+    open(os.path.join(ROOT, "outputs", f"expected_values{SUFFIX.lower()}.json"), encoding="utf-8")
+)
 
 TOL = 5e-9
 failures = []

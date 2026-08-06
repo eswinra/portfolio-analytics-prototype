@@ -1,4 +1,4 @@
-# Data Dictionary — schema 1.0.0
+# Data Dictionary — schema 1.1.0
 
 One row per column of the export/import table. "Req" = required (C = conditionally, see
 `docs/data-contract.md`).
@@ -6,7 +6,7 @@ One row per column of the export/import table. "Req" = required (C = conditional
 | Column | Type | Req | Definition / allowed values |
 |---|---|---|---|
 | `record_id` | string | ✔ | Unique per file, `REC-nnnn` in fixtures. Opaque identifier only. |
-| `record_type` | enum | ✔ | `monthly_return`, `monthly_benchmark_return`, `period_return`, `allocation`, `contribution_qtd`, `market_close`, `public_reference`, `check_result` |
+| `record_type` | enum | ✔ | `monthly_return`, `monthly_benchmark_return`, `period_return`, `allocation`, `contribution_qtd`, `market_close`, `public_reference`, `check_result`, `policy_target`, `benchmark_definition` (schema 1.1) |
 | `entity_id` | string | ✔ | Synthetic entity id (`DEMOFUND` in fixtures) for all record types **except** `public_reference`, where it names the cited public entity (e.g. "LACERA Pension Plan") so quotations are never attributed to the synthetic fund. |
 | `metric_id` | string | ✔ | e.g. `net_return_m`, `bench_return_m`, `net_return`, `bench_return`, `hurdle_return`, `emv`, `weight_actual`, `weight_target`, `over_under_pct`, `contribution`, `contribution_arith_total`, `return_chain_linked`, `residual`, `close`, check ids `CHK-nn`, or the quoted public metric name |
 | `category_id` | string | C | `GROWTH`, `CREDIT`, `RAIH`, `RRM`, `OVERLAY`, `OTHER`, `TOTAL`; proxy ids (`DEMO-*`) for `market_close` |

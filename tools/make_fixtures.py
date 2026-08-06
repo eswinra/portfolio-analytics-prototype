@@ -12,8 +12,12 @@ import os
 
 import openpyxl
 
+import sys
+
+ENTITY = (sys.argv[sys.argv.index("--entity") + 1] if "--entity" in sys.argv else "PENSION").upper()
+SUFFIX = "" if ENTITY == "PENSION" else "_OPEB"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WB = os.path.join(ROOT, "outputs", "Portfolio_Analytics_Dashboard_Workbook_Prototype.xlsx")
+WB = os.path.join(ROOT, "outputs", f"Portfolio_Analytics_Dashboard_Workbook_Prototype{SUFFIX}.xlsx")
 OUT = os.path.join(ROOT, "data", "sample")
 INV = os.path.join(OUT, "invalid")
 os.makedirs(INV, exist_ok=True)
@@ -40,7 +44,7 @@ for row in ws.iter_rows(min_row=7, max_row=ws.max_row):
     if row[0].value is None:
         continue
     rows.append([fmt(row[j].value) for j in range(NCOL)])
-assert len(rows) == 338, len(rows)
+assert len(rows) == 358, len(rows)  # 338 core records + 20 schema-1.1 policy/benchmark rows
 
 def write(path, header, data):
     with io.open(path, "w", encoding="utf-8", newline="") as f:
@@ -48,9 +52,15 @@ def write(path, header, data):
         w.writerow(header)
         w.writerows(data)
 
-VALID = os.path.join(OUT, "demofund_export_v1.csv")
+VALID = os.path.join(
+    OUT, "demofund_export_v1.csv" if ENTITY == "PENSION" else "demo_opeb_export_v1.csv"
+)
 write(VALID, hdr, rows)
 print(f"wrote {VALID} ({len(rows)} records)")
+
+if ENTITY != "PENSION":
+    # invalid variants and the README derive from the Pension fixture only
+    sys.exit(0)
 
 # --- deliberately malformed variants (each begins from the valid data) -------------
 i_class = hdr.index("classification")
@@ -127,9 +137,14 @@ documents. Schema: 1.0.0 — see `docs/data-contract.md` and `docs/data-dictiona
 `invalid/` contains deliberately malformed variants used to test the import validator
 (`docs/import-validation-rules.md`). Each file name states its defect.
 
-Regenerate: `python tools/build_workbook.py && python tools/qa_excel.py &&
-python tools/make_fixtures.py` (QA step requires desktop Excel; it caches calculated values
-that this exporter reads).
+`demo_opeb_export_v1.csv` is the OPEB-entity equivalent (`DEMO-OPEB`), produced by the same
+generator with `--entity OPEB` from its own Excel workbook. Both fixtures carry 16
+`policy_target` and 4 `benchmark_definition` records (contract schema 1.1) quoting the public
+IPS band structure.
+
+Regenerate (QA steps require desktop Excel):
+`python tools/build_workbook.py && python tools/qa_excel.py && python tools/make_fixtures.py`
+then the same three commands with `--entity OPEB`.
 """
 with io.open(os.path.join(OUT, "README.md"), "w", encoding="utf-8") as f:
     f.write(README)

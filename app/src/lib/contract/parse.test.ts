@@ -20,7 +20,7 @@ describe('valid fixture', () => {
   it('accepts with zero errors', () => {
     expect(res.ok).toBe(true);
     expect(res.errors).toHaveLength(0);
-    expect(res.records).toHaveLength(338);
+    expect(res.records).toHaveLength(358);
   });
 
   it('derives the dataset with values matching the audited workbook', () => {
@@ -85,16 +85,19 @@ describe('valid fixture', () => {
     expect(growth.bandMin).toBeCloseTo(0.4, 12); // Pension IPS 40–56%
     expect(growth.bandMax).toBeCloseTo(0.56, 12);
     expect(growth.rangeStatus).toBe('within');
+    expect(ds.policySource).toBe('dataset'); // schema-1.1 bands travel with the data
     expect(ds.emvIncomplete).toBe(false);
   });
 
   it('OPEB fixture validates and scopes to the OPEB policy pack', () => {
     const res2 = parseContractCsv(load('demo_opeb_export_v1.csv'));
     expect(res2.ok).toBe(true);
-    expect(res2.records).toHaveLength(338);
+    expect(res2.records).toHaveLength(358);
     const ds = buildDataset(res2.records, 'workbook', 'OPEB');
     expect(ds.meta.entityId).toBe('DEMO-OPEB');
     expect(ds.meta.policyEntity).toBe('OPEB');
+    expect(ds.policySource).toBe('dataset');
+    expect(ds.policyRecordCount).toBe(16);
     // OPEB IPS bands: Growth 35–55%, RRM 17–35%
     const growth = ds.allocation.find((a) => a.categoryId === 'GROWTH')!;
     expect(growth.bandMin).toBeCloseTo(0.35, 12);

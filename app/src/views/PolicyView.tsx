@@ -1,36 +1,34 @@
-import { useState } from 'react';
-
 import { ClassBadge, fmtPct, Panel } from '../components/ui';
-import { POLICY_PACKS, type PolicyPack } from '../fixtures/policyPack';
+import { policyFor } from '../fixtures/policyPack';
+import { useDataset } from '../lib/dataset/useDataset';
 
-/** IPS policy reference: explicit min/target/max bands, ½-step targets, benchmarks with lags. */
+/**
+ * IPS policy reference: explicit min/target/max bands, ½-step targets, benchmarks with lags.
+ * The fund shown follows the MAIN masthead Pension/OPEB switch — no separate toggle here.
+ */
 
 export function PolicyView() {
-  const [entity, setEntity] = useState<PolicyPack>(POLICY_PACKS[0]!);
+  const { dataset } = useDataset();
+  const entity = policyFor(dataset.meta.policyEntity);
+  const policyRecordCount = dataset.policyRecordCount;
 
   return (
     <>
-      <h1>IPS policy reference</h1>
+      <h1>IPS policy reference — {entity.entityLabel}</h1>
       <p className="footnote">
         Quoted from the public LACERA Investment Policy Statements (
         <ClassBadge c="reported_public" /> — the only non-synthetic content in this app besides the
         cited values on Data quality). Bands are stored as explicit minimum / target / maximum
-        because the source uses asymmetric ranges — Pension Cash is 1% with +2/−1, i.e. 0–3%.
+        because the source uses asymmetric ranges — Pension Cash is 1% with +2/−1, i.e. 0–3%. Switch
+        funds with the Pension/OPEB tabs in the header.
       </p>
-
-      <div role="group" aria-label="Select fund policy" style={{ marginBottom: '0.75rem' }}>
-        {POLICY_PACKS.map((p) => (
-          <button
-            key={p.entityId}
-            className="linklike"
-            style={{ marginRight: '1rem', fontWeight: entity.entityId === p.entityId ? 700 : 400 }}
-            aria-pressed={entity.entityId === p.entityId}
-            onClick={() => setEntity(p)}
-          >
-            {p.entityLabel}
-          </button>
-        ))}
-      </div>
+      {policyRecordCount > 0 ? (
+        <p className="footnote">
+          The active dataset carries <strong>{policyRecordCount}</strong> category-level{' '}
+          <code>policy_target</code> records (contract schema 1.1) — the allocation bands on this
+          fund's views come from the dataset, cross-checked against the bundled pack below.
+        </p>
+      ) : null}
 
       <Panel
         title={`${entity.entityLabel} — approved asset allocation`}

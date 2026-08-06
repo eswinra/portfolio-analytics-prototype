@@ -173,12 +173,12 @@ for grid_top, cols in ((TF_R0, [2, 3, 4, 5, 6]),):
 
 # ---------------------------------------------------------------- export table audit
 ex = wbv["Export_Contract"]
-hdr = [ex.cell(row=6, column=j + 1).value for j in range(28)]
+hdr = [ex.cell(row=6, column=j + 1).value for j in range(29)]
 recs = []
 for row in ex.iter_rows(min_row=7, max_row=ex.max_row):
     if row[0].value is None:
         continue
-    recs.append({hdr[j]: row[j].value for j in range(28)})
+    recs.append({hdr[j]: row[j].value for j in range(29)})
 notes.append(f"export records read: {len(recs)}")
 ids = [r["record_id"] for r in recs]
 if len(ids) != len(set(ids)):
@@ -201,7 +201,7 @@ for r in recs:
         add("Critical", "Export_Contract", rid, "blank value flagged ok")
     if r["unit"] == "%" and isinstance(r["value"], (int, float)) and abs(r["value"]) > 1:
         add("Warning", "Export_Contract", rid, f"% value {r['value']} looks like whole-number percent")
-    if r["classification"] == "reported_public" and r["record_type"] != "public_reference":
+    if r["classification"] == "reported_public" and r["record_type"] not in ("public_reference", "policy_target", "benchmark_definition"):
         add("Critical", "Export_Contract", rid, "reported_public outside public_reference")
     key = (r["record_type"], r["metric_id"], r["category_id"], str(r["as_of_date"]),
            str(r["period_start"]), str(r["period_end"]))
@@ -220,7 +220,8 @@ for r in recs:
 # expected counts by record type
 exp_counts = {"monthly_return": 84, "monthly_benchmark_return": 60, "period_return": 9,
               "allocation": 24, "contribution_qtd": 9, "market_close": 132,
-              "public_reference": 8, "check_result": 12}
+              "public_reference": 8, "check_result": 12,
+              "policy_target": 16, "benchmark_definition": 4}
 got_counts = Counter(r["record_type"] for r in recs)
 for k, v in exp_counts.items():
     if got_counts.get(k) != v:

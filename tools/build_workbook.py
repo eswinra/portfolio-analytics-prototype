@@ -18,9 +18,14 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
+import sys
+ENTITY = (sys.argv[sys.argv.index("--entity") + 1] if "--entity" in sys.argv else "PENSION").upper()
+assert ENTITY in ("PENSION", "OPEB"), ENTITY
+ENTITY_ID = "DEMOFUND" if ENTITY == "PENSION" else "DEMO-OPEB"
+SUFFIX = "" if ENTITY == "PENSION" else "_OPEB"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "outputs", "Portfolio_Analytics_Dashboard_Workbook_Prototype.xlsx")
-QA_JSON = os.path.join(ROOT, "outputs", "expected_values.json")
+OUT = os.path.join(ROOT, "outputs", f"Portfolio_Analytics_Dashboard_Workbook_Prototype{SUFFIX}.xlsx")
+QA_JSON = os.path.join(ROOT, "outputs", f"expected_values{SUFFIX.lower()}.json")
 
 # ---------------------------------------------------------------- styles
 F_TITLE = Font(bold=True, size=14, color="1F3864")
@@ -53,10 +58,11 @@ MON = "mmm yyyy"
 
 DISCLAIMER = ("PROTOTYPE — SYNTHETIC / PUBLIC DATA ONLY. This workbook is an exploratory "
               "prototype for discussion. It is NOT an official LACERA system, report, or "
-              "statement of performance. All DEMOFUND values are synthetic.")
+              "statement of performance. All " + ENTITY_ID + " values are synthetic.")
 
 # ---------------------------------------------------------------- synthetic data
-rng = random.Random(20260630)
+rng = random.Random(20260630 if ENTITY == "PENSION" else 20260631)
+rng_mkt = random.Random(99260630)  # market context is the SAME for both funds
 AS_OF = dt.date(2026, 6, 30)
 MONTHS = []  # month-end dates Jul 2025 .. Jun 2026
 d = dt.date(2025, 7, 31)
@@ -97,21 +103,51 @@ BENCH_R = {
     for cid in ("GROWTH", "CREDIT", "RAIH", "RRM")
 }
 
-BMV0 = {"GROWTH": 4700.0, "CREDIT": 1400.0, "RAIH": 1500.0, "RRM": 2350.0,
-        "OVERLAY": 40.0, "OTHER": 10.0}
+if ENTITY == "PENSION":
+    BMV0 = {"GROWTH": 4700.0, "CREDIT": 1400.0, "RAIH": 1500.0, "RRM": 2350.0,
+            "OVERLAY": 40.0, "OTHER": 10.0}
+else:
+    BMV0 = {"GROWTH": 450.0, "CREDIT": 160.0, "RAIH": 130.0, "RRM": 253.0,
+            "OVERLAY": 5.0, "OTHER": 2.0}
 # end-of-month internal transfers ($mm, net zero across categories) at quarter ends
 TRANSFERS = {i: {c: 0.0 for c in CAT_IDS} for i in range(12)}
-TRANSFERS[2] = {"GROWTH": -60.0, "CREDIT": 20.0, "RAIH": 15.0, "RRM": 25.0, "OVERLAY": 0.0, "OTHER": 0.0}
-TRANSFERS[5] = {"GROWTH": 40.0, "CREDIT": -25.0, "RAIH": -20.0, "RRM": 5.0, "OVERLAY": 0.0, "OTHER": 0.0}
-TRANSFERS[8] = {"GROWTH": -30.0, "CREDIT": 10.0, "RAIH": 25.0, "RRM": -5.0, "OVERLAY": 0.0, "OTHER": 0.0}
+if ENTITY == "OPEB":
+    pass  # no internal transfers in the OPEB demo
+elif True:
+    TRANSFERS[2] = {"GROWTH": -60.0, "CREDIT": 20.0, "RAIH": 15.0, "RRM": 25.0, "OVERLAY": 0.0, "OTHER": 0.0}
+    TRANSFERS[5] = {"GROWTH": 40.0, "CREDIT": -25.0, "RAIH": -20.0, "RRM": 5.0, "OVERLAY": 0.0, "OTHER": 0.0}
+    TRANSFERS[8] = {"GROWTH": -30.0, "CREDIT": 10.0, "RAIH": 25.0, "RRM": -5.0, "OVERLAY": 0.0, "OTHER": 0.0}
 
 # policy target versions (weights %, four benchmark categories; OVERLAY/OTHER = 0)
-POLICY = [
-    {"effective": dt.date(2025, 7, 1), "GROWTH": 0.47, "CREDIT": 0.14, "RAIH": 0.15, "RRM": 0.24},
-    {"effective": dt.date(2026, 1, 1), "GROWTH": 0.48, "CREDIT": 0.13, "RAIH": 0.15, "RRM": 0.24},
-]
-RANGES = {"GROWTH": 0.05, "CREDIT": 0.03, "RAIH": 0.03, "RRM": 0.04}
-HURDLE_ANNUAL = 0.0675  # synthetic actuarial-style hurdle assumption
+if ENTITY == "PENSION":
+    POLICY = [
+        {"effective": dt.date(2025, 7, 1), "GROWTH": 0.47, "CREDIT": 0.14, "RAIH": 0.15, "RRM": 0.24},
+        {"effective": dt.date(2026, 1, 1), "GROWTH": 0.48, "CREDIT": 0.13, "RAIH": 0.15, "RRM": 0.24},
+    ]
+    RANGES = {"GROWTH": 0.05, "CREDIT": 0.03, "RAIH": 0.03, "RRM": 0.04}
+    HURDLE_ANNUAL = 0.0675  # synthetic actuarial-style hurdle assumption
+    # category-level IPS quotation (invest_policy_stmt.pdf, Table 1 printed p.20)
+    IPS_BANDS = {"GROWTH": (0.40, 0.48, 0.56, 0.505), "CREDIT": (0.09, 0.13, 0.17, 0.12),
+                 "RAIH": (0.11, 0.15, 0.19, 0.16), "RRM": (0.16, 0.24, 0.32, 0.215)}
+    IPS_DOC = ("invest_policy_stmt.pdf", "Table 1-2, printed pp. 20-21")
+    IPS_BENCH = {"GROWTH": (0, "Custom Blend (component lags 0-3 mo)"),
+                 "CREDIT": (1, "70% CS Leveraged Loans / 30% Bloomberg US Corp HY + 100 bps (1-mo lag)"),
+                 "RAIH": (0, "Custom Blend (component lags 0-3 mo)"),
+                 "RRM": (0, "Custom Blend (HF component 1-mo lag)")}
+else:
+    POLICY = [
+        {"effective": dt.date(2025, 7, 1), "GROWTH": 0.45, "CREDIT": 0.16, "RAIH": 0.13, "RRM": 0.26},
+        {"effective": dt.date(2026, 1, 1), "GROWTH": 0.45, "CREDIT": 0.17, "RAIH": 0.165, "RRM": 0.215},
+    ]
+    RANGES = {"GROWTH": 0.10, "CREDIT": 0.05, "RAIH": 0.04, "RRM": 0.09}
+    HURDLE_ANNUAL = 0.06  # synthetic OPEB-style hurdle assumption
+    IPS_BANDS = {"GROWTH": (0.35, 0.45, 0.55, 0.45), "CREDIT": (0.11, 0.16, 0.21, 0.17),
+                 "RAIH": (0.09, 0.13, 0.17, 0.165), "RRM": (0.17, 0.26, 0.35, 0.215)}
+    IPS_DOC = ("IPS-OPEB.pdf", "Table 1-2, printed pp. 21-22")
+    IPS_BENCH = {"GROWTH": (0, "Custom Blend (PE component 3-mo lag)"),
+                 "CREDIT": (1, "70% CS Leveraged Loans / 30% Bloomberg US Corp HY + 100 bps (1-mo lag)"),
+                 "RAIH": (0, "Custom Blend (RE/Infra components 3-mo lag; NR unlagged)"),
+                 "RRM": (0, "Custom Blend")}
 
 # market strip: 6 synthetic proxies x business days of June 2026
 PROXIES = [
@@ -132,7 +168,7 @@ CLOSES = {}
 for pid, _name, _cat, p0 in PROXIES:
     px, series = p0, []
     for _day in JUN_DAYS:
-        px = round(px * (1 + rng.gauss(0.0004, 0.008)), 4)
+        px = round(px * (1 + rng_mkt.gauss(0.0004, 0.008)), 4)
         series.append(px)
     CLOSES[pid] = series
 # deliberate data-quality demos:
@@ -269,7 +305,7 @@ rows = [
                 "future web dashboard prototype. Demonstrates classified inputs, valid return / "
                 "contribution / allocation calculations, data-quality controls, the corrected "
                 "ACFR trackers, and a normalized export contract."),
-    ("Entity", "DEMOFUND — a wholly synthetic demonstration fund. No DEMOFUND value is, or is "
+    ("Entity", ENTITY_ID + " — a wholly synthetic demonstration fund. No " + ENTITY_ID + " value is, or is "
                "derived from, an actual LACERA figure."),
     ("As-of date", "2026-06-30 (named cell AsOfDate on Policy_Targets). Demo fiscal year: "
                    "July 2025 – June 2026."),
@@ -403,7 +439,7 @@ col_widths(ws, [11, 16, 28, 26, 10, 11, 13, 30, 12])
 
 # ================================================================ Inputs_Portfolio
 ws = wb.create_sheet("Inputs_Portfolio")
-sheet_title(ws, "Inputs_Portfolio — synthetic DEMOFUND monthly inputs",
+sheet_title(ws, "Inputs_Portfolio — synthetic " + ENTITY_ID + " monthly inputs",
             "All values synthetic. Returns are monthly net TWR-style category returns. "
             "Transfers are end-of-month internal reallocations (net zero across categories).")
 put(ws, 4, 1, "Initial beginning market values ($mm), 1 Jul 2025", F_H2, border=False)
@@ -461,7 +497,7 @@ put(ws, 4, 2, AS_OF, F_INPUT, fmt=DATE, fill=FILL_INPUT)
 wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "AsOfDate", attr_text="Policy_Targets!$B$4"))
 put(ws, 4, 4, "SchemaVersion", F_H2, border=False)
-put(ws, 4, 5, "1.0.0", F_INPUT, fill=FILL_INPUT)
+put(ws, 4, 5, "1.1.0", F_INPUT, fill=FILL_INPUT)
 wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "SchemaVersion", attr_text="Policy_Targets!$E$4"))
 put(ws, 5, 1, "Hurdle (annual, synthetic assumption)", F_H2, border=False)
@@ -505,7 +541,7 @@ col_widths(ws, [26, 22, 12, 22, 12])
 
 # ================================================================ Calc_Returns
 ws = wb.create_sheet("Calc_Returns")
-sheet_title(ws, "Calc_Returns — DEMOFUND monthly engine (all formulas)",
+sheet_title(ws, "Calc_Returns — " + ENTITY_ID + " monthly engine (all formulas)",
             "BMV evolves from inputs; weights are beginning-of-month; total return is the "
             "weighted sum of category returns, chain-linked through a growth index.")
 NCAT = len(CAT_IDS)
@@ -969,7 +1005,7 @@ col_widths(ws, [20, 60, 26, 11, 10, 10, 15, 18, 18])
 
 # ================================================================ Exec_View
 ws = wb.create_sheet("Exec_View")
-sheet_title(ws, "Executive View — DEMOFUND (synthetic) as of 2026-06-30")
+sheet_title(ws, "Executive View — " + ENTITY_ID + " (synthetic) as of 2026-06-30")
 put(ws, 4, 1, "All portfolio figures on this sheet are SYNTHETIC (classification: synthetic / "
               "calculated). Net-of-fees TWR-style monthly linking. See Calc sheets for lineage.",
     F_WARN, border=False, wrap=True)
@@ -1054,14 +1090,15 @@ r = 7
 def ex_row(record_type, metric_id, category_id, value, unit, asof, ps, pe, pt, freq,
            classification, source_type, source_name, page_table, provider,
            book="n/a", rm="n/a", gn="n/a", vs="final", bench="", method="", qs="ok", note="",
-           value_is_formula=False, fmt=PCT2, entity="DEMOFUND"):
+           value_is_formula=False, fmt=PCT2, entity=None):
     global r
+    entity = ENTITY_ID if entity is None else entity
     rid = f"REC-{r-6:04d}"
     scale = {"$mm": "mm", "$K": "k", "$B": "bn"}.get(unit, "1")
     vals = [rid, record_type, entity, metric_id, category_id, value, unit, "USD",
             scale, asof, ps, pe, pt, freq, classification,
             source_type, source_name, page_table, provider, dt.date(2026, 8, 4),
-            book, rm, gn, vs, bench, method, qs, note, "1.0.0"]
+            book, rm, gn, vs, bench, method, qs, note, "1.1.0"]
     for j, v in enumerate(vals):
         fnt = F_LINK if (j == 5 and value_is_formula) else (F_FORMULA if value_is_formula else F_INPUT)
         fmt_j = None
@@ -1169,6 +1206,18 @@ for k, (cid_, desc, _rf, _sf, _exp, _note) in enumerate(checks):
     ex_row("check_result", cid_, "TOTAL", f"=Checks!D{CHK_R0+k}", "status", AS_OF, None, None, "M",
            "Monthly", "calculated", "workbook", "Checks", desc[:60], "workbook formulas",
            value_is_formula=True, fmt=None)
+
+# schema 1.1: quoted IPS policy structure (category level) travels with the dataset
+for cat, (p_min, p_tgt, p_max, p_hs) in IPS_BANDS.items():
+    for metric, val in (("policy_min", p_min), ("policy_target", p_tgt),
+                        ("policy_max", p_max), ("policy_halfstep", p_hs)):
+        ex_row("policy_target", metric, cat, val, "%", AS_OF, None, None, "", "Ad Hoc",
+               "reported_public", "public_report", IPS_DOC[0], IPS_DOC[1], "LACERA IPS",
+               note="Restated June 12, 2024; half-step effective 2024-07-01")
+for cat, (lag, formula) in IPS_BENCH.items():
+    ex_row("benchmark_definition", "benchmark_lag_months", cat, float(lag), "1", AS_OF, None,
+           None, "", "Ad Hoc", "reported_public", "public_report", IPS_DOC[0], IPS_DOC[1],
+           "LACERA IPS", bench=f"BM-{cat}", note=formula, fmt="0")
 
 EXPORT_LAST = r - 1
 N_RECORDS = EXPORT_LAST - 6

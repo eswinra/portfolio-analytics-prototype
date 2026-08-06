@@ -38,7 +38,12 @@ const NUMERIC_RECORD_TYPES = new Set([
   'contribution_qtd',
   'market_close',
   'public_reference',
+  'policy_target',
+  'benchmark_definition',
 ]);
+
+/** Record types allowed to carry the reported_public classification (quotations). */
+const QUOTE_RECORD_TYPES = new Set(['public_reference', 'policy_target', 'benchmark_definition']);
 
 const PERIOD_SPAN_REQUIRED = new Set([
   'monthly_return',
@@ -220,10 +225,15 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
       warnings.push(warn('V11', rowNo, 'retrieved_date', 'retrieved before as-of date'));
     }
 
-    // V15 reported_public confinement
-    if (raw.classification === 'reported_public' && raw.record_type !== 'public_reference') {
+    // V15 reported_public confinement (quotation record types only)
+    if (raw.classification === 'reported_public' && !QUOTE_RECORD_TYPES.has(raw.record_type)) {
       errors.push(
-        err('V15', rowNo, 'classification', 'reported_public allowed only on public_reference'),
+        err(
+          'V15',
+          rowNo,
+          'classification',
+          'reported_public allowed only on public_reference / policy_target / benchmark_definition',
+        ),
       );
       return;
     }

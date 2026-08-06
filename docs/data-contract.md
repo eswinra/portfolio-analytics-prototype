@@ -1,8 +1,24 @@
 # Data Contract — Workbook ↔ Web Prototype Interface
 
-Schema version: **1.0.0** (semver; `schema_version` column on every record). The web prototype
+Schema version: **1.1.0** (semver; `schema_version` column on every record). The web prototype
 consumes only this contract — never workbook presentation cells. Canonical valid instance:
-`data/sample/demofund_export_v1.csv` (338 records).
+`data/sample/demofund_export_v1.csv` (358 records; OPEB twin `demo_opeb_export_v1.csv`).
+
+## 1.1.0 additions (2026-08-06)
+
+Two record types carry the quoted IPS policy structure with the dataset (both classified
+`reported_public` with page-level citations — V15 allows the quotation types only):
+
+- `policy_target` — grain: entity x policy class x metric, where metric_id is one of
+  `policy_min` / `policy_target` / `policy_max` / `policy_halfstep` (explicit bounds; never
+  reconstruct from a +/- half-width — Pension Cash is 0-3% around a 1% target). No period span;
+  the effective date is stated in `note`.
+- `benchmark_definition` — metric_id `benchmark_lag_months` (numeric), formula text in `note`,
+  `benchmark_id` linking the series records.
+
+The app builds allocation bands from `policy_target` records when present (`policySource:
+"dataset"`), falling back to the app-bundled pack for 1.0.x files. Column set unchanged; 1.0.x
+files remain valid.
 
 ## Shape
 

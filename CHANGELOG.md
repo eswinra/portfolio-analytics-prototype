@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-08-06 — Revision 4: schema 1.1, OPEB workbook, Policy-page switch fix
+
+- **Policy page now follows the main Pension/OPEB masthead switch** (its separate internal
+  toggle removed) — reported by the user.
+- **Contract schema 1.1.0**: `policy_target` (explicit `policy_min/target/max/halfstep` per
+  category) and `benchmark_definition` (numeric lag months + formula) record types, classified
+  `reported_public` with IPS citations (V15 widened to the quotation types). The app builds
+  allocation bands from dataset policy records when present (`policySource: "dataset"`),
+  falling back to the bundled pack for 1.0.x files.
+- **OPEB Excel workbook**: `tools/build_workbook.py --entity OPEB` builds
+  `outputs/..._OPEB.xlsx` with per-entity config (seed 20260631, OPEB IPS bands/targets/6.0%
+  hurdle, no transfers); `qa_excel.py`/`make_fixtures.py` parameterized the same way. The OPEB
+  fixture is now workbook-derived (replacing the engine-only generator, which was removed), and
+  both funds share one market-context series via a dedicated market RNG.
+- Both fixtures regenerated at 358 records from Excel-QA'd workbooks (Pension audited values
+  unchanged: FYTD 12.41%, residual 5.2 bps; OPEB: FYTD 6.34% vs benchmark 8.20%, residual
+  2.5 bps). 63 tests green.
+
 ## 2026-08-06 — Revision 3: dual-fund tabs (Pension / OPEB)
 
 - **Fund tabs** under the Fund Pulse masthead switch the entire dataset and policy scope:

@@ -112,6 +112,10 @@ export interface Dataset {
   exceptions: ExceptionItem[];
   publicReferences: PublicReference[];
   checks: CheckEntry[];
+  /** schema 1.1: number of policy_target records carried by the dataset */
+  policyRecordCount: number;
+  /** where the allocation bands came from: dataset policy records, or the bundled pack */
+  policySource: 'dataset' | 'bundled';
 }
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -275,6 +279,25 @@ export function buildDataset(
     // over_under_pct in the file is deliberately ignored: recomputed below
     byCat.set(r.category_id, e);
   }
+  // schema 1.1: category-level bands carried in the dataset override the bundled pack
+  const policyRecs = scoped.filter((r) => r.record_type === 'policy_target');
+  const datasetLimits: Record<string, PolicyBandLimits> = {};
+  {
+    const mins = new Map<string, number>();
+    const maxs = new Map<string, number>();
+    for (const r of policyRecs) {
+      if (typeof r.value !== 'number') continue;
+      if (r.metric_id === 'policy_min') mins.set(r.category_id, r.value);
+      if (r.metric_id === 'policy_max') maxs.set(r.category_id, r.value);
+    }
+    for (const [cat, min] of mins) {
+      const max = maxs.get(cat);
+      if (max !== undefined && max >= min) datasetLimits[cat] = { min, max };
+    }
+  }
+  const policySource: 'dataset' | 'bundled' =
+    Object.keys(datasetLimits).length > 0 ? 'dataset' : 'bundled';
+
   const emvValues = [...byCat.values()].map((e) => e.emv ?? null);
   const emvIncomplete = byCat.size > 0 && emvValues.some((v) => v === null);
   const totalEmvMm =
@@ -300,7 +323,7 @@ export function buildDataset(
         };
       }),
     totalEmvMm,
-    categoryLimits(policyEntity),
+    policySource === 'dataset' ? datasetLimits : categoryLimits(policyEntity),
   );
 
   // ---- market strip + read-through
@@ -447,5 +470,7 @@ export function buildDataset(
     exceptions,
     publicReferences,
     checks,
+    policyRecordCount: policyRecs.length,
+    policySource,
   };
 }

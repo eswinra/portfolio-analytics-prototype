@@ -13,6 +13,9 @@ export const RECORD_TYPES = [
   'market_close',
   'public_reference',
   'check_result',
+  // schema 1.1: quoted IPS policy structure travels with the dataset
+  'policy_target',
+  'benchmark_definition',
 ] as const;
 
 export const CLASSIFICATIONS = [

@@ -24,7 +24,7 @@ findings import with visible flags.
 | V12 | Monthly series contiguity per (entity, category, metric): gaps → Warn, affected aggregates render missing | Warn | — |
 | V13 | Weight coherence: `allocation` `weight_actual` values per (entity, as_of) sum to 1 ± 0.0001 | Reject | — |
 | V14 | Contribution coherence: `contribution_qtd` categories + residual reconcile to `return_chain_linked` within the residual record ± 0.0001 | Reject | — |
-| V15 | `reported_public` classification allowed only on `public_reference` records | Reject | — |
+| V15 | `reported_public` classification allowed only on quotation record types (`public_reference`, `policy_target`, `benchmark_definition`) | Reject | — |
 | V16 | Mixed vintages: within one `record_type`+`metric_id` series, `as_of_date` must be single-valued for balance records (`allocation`) | Reject | — |
 | V17 | Exactly **one** portfolio entity per file (`public_reference` citation rows exempt): multi-entity files are rejected outright — no silent blending; a single unknown entity → Warn banner | Reject/Warn | — |
 | V18 | File size ≤ 5 MB, ≤ 20,000 rows (prototype bounds) | Reject | — |

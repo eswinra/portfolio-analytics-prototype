@@ -1,5 +1,10 @@
 # Expanded Workbook Specification
 
+Artifacts: `outputs/Portfolio_Analytics_Dashboard_Workbook_Prototype.xlsx` (Pension entity)
+and `..._OPEB.xlsx` (OPEB entity, `--entity OPEB`; same builder, per-entity synthetic config,
+IPS bands and hurdle; both export 358 records at schema 1.1 incl. 16 `policy_target` + 4
+`benchmark_definition` quotation rows). Original single-artifact description follows.
+
 Artifact: `outputs/Portfolio_Analytics_Dashboard_Workbook_Prototype.xlsx` (git-ignored; rebuild
 with `python tools/build_workbook.py`, QA with `python tools/qa_excel.py` — requires Excel +
 pywin32 for the QA step). Original starter workbook untouched: SHA-256
