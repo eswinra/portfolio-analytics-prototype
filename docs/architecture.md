@@ -31,8 +31,10 @@ state untouched and yields a row-level report.
   from both public LACERA Investment Policy Statements (restated June 12, 2024) with explicit
   **min/target/max** bands (the Pension Cash +2/−1 asymmetry is the reason ± half-widths are
   banned), dated ½-step transition targets, and benchmark formulas with lag months as structured
-  metadata. Surfaced on the Policy view; Allocation measures the synthetic portfolio against the
-  real Pension bands and shows distance-to-boundary as staff analytics.
+  metadata. Surfaced as collapsed audit references on the Methodology view (the dedicated Policy
+  page was removed in revision 5.5 — the PA team owns the IPS, so a restatement earned no
+  navigation slot); Allocation measures the synthetic portfolio against the real Pension bands
+  and shows distance-to-boundary as staff analytics.
 - **Daily proxy pulse**: `src/lib/finance/readThrough.ts` computes the policy-weighted proxy
   read-through (Σ ½-step weight × proxy daily return) with coverage expressed in policy-weight
   terms; unpriced classes are excluded and listed, never imputed as zero. Labeled

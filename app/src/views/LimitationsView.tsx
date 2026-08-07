@@ -1,6 +1,9 @@
-import { Panel } from '../components/ui';
+import { ClassBadge, fmtPct, Panel } from '../components/ui';
+import { POLICY_PACKS } from '../fixtures/policyPack';
 
-/** Honest boundary: what this demo is, what a real system would need, what should not be built. */
+/** Honest boundary: what this demo is, what a real system would need, what should not be built.
+ *  Also hosts the quoted IPS reference tables (collapsed) — audit material, not daily content:
+ *  the PA team knows its own policy, so the tables no longer occupy a navigation slot. */
 
 export function LimitationsView() {
   return (
@@ -86,6 +89,70 @@ export function LimitationsView() {
           </li>
         </ul>
       </Panel>
+
+      {POLICY_PACKS.map((entity) => (
+        <details className="panel" key={entity.entityId}>
+          <summary>IPS reference (quoted) — {entity.entityLabel} approved asset allocation</summary>
+          <p className="footnote" style={{ marginTop: '0.6rem' }}>
+            <ClassBadge c="reported_public" /> Quoted from {entity.policyName}, {entity.version} (
+            {entity.sourceDoc}, {entity.sourcePages}). Audit reference only — these bands drive the
+            Allocation view's range checks; the team's authoritative source remains the IPS itself.
+            Bands are explicit min/target/max because the source uses asymmetric ranges (Pension
+            Cash: 1% with +2/−1, i.e. 0–3%).
+          </p>
+          <div className="table-scroll">
+            <table>
+              <caption>
+                Long-term targets with explicit bands, plus ½-step transition targets effective{' '}
+                {entity.halfStepEffective}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Asset class</th>
+                  <th scope="col" className="num">
+                    Min
+                  </th>
+                  <th scope="col" className="num">
+                    Target
+                  </th>
+                  <th scope="col" className="num">
+                    Max
+                  </th>
+                  <th scope="col" className="num">
+                    ½-step
+                  </th>
+                  <th scope="col">Benchmark (Table 2)</th>
+                  <th scope="col" className="num">
+                    Lag
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {entity.bands.map((band) => (
+                  <tr key={band.classId} className={band.parent === undefined ? 'total-row' : ''}>
+                    <td style={band.parent !== undefined ? { paddingLeft: '1.6rem' } : undefined}>
+                      {band.label}
+                    </td>
+                    <td className="num">{fmtPct(band.min, 0)}</td>
+                    <td className="num">{fmtPct(band.target, 0)}</td>
+                    <td className="num">{fmtPct(band.max, 0)}</td>
+                    <td className="num">{fmtPct(band.halfStepTarget, 1)}</td>
+                    <td className="footnote">{band.benchmark}</td>
+                    <td className="num">
+                      {band.benchmarkLagMonths > 0 ? `${band.benchmarkLagMonths} mo` : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ul className="footnote">
+            {entity.notes.map((n, i) => (
+              <li key={i}>{n}</li>
+            ))}
+          </ul>
+        </details>
+      ))}
     </>
   );
 }

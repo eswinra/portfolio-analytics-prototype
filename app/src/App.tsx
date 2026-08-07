@@ -8,7 +8,6 @@ import { ExceptionsView } from './views/ExceptionsView';
 import { ImportView } from './views/ImportView';
 import { LimitationsView } from './views/LimitationsView';
 import { PerformanceView } from './views/PerformanceView';
-import { PolicyView } from './views/PolicyView';
 import { PulseView } from './views/PulseView';
 import { TrendsView } from './views/TrendsView';
 
@@ -79,7 +78,6 @@ function Shell() {
         <NavLink to="/trends">Trends</NavLink>
         <NavLink to="/allocation">Allocation</NavLink>
         <NavLink to="/exceptions">Exceptions</NavLink>
-        <NavLink to="/policy">Policy</NavLink>
         <NavLink to="/acfr">ACFR</NavLink>
         <NavLink to="/import">Import</NavLink>
         <NavLink to="/methodology">Methodology</NavLink>
@@ -91,8 +89,8 @@ function Shell() {
           <Route path="/trends" element={<TrendsView />} />
           <Route path="/allocation" element={<AllocationView />} />
           <Route path="/exceptions" element={<ExceptionsView />} />
-          <Route path="/policy" element={<PolicyView />} />
           <Route path="/acfr" element={<AcfrView />} />
+          <Route path="/policy" element={<Navigate to="/methodology" replace />} />
           <Route path="/import" element={<ImportView />} />
           <Route path="/methodology" element={<LimitationsView />} />
           {/* legacy routes from revisions 1–4 */}

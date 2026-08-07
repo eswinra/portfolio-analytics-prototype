@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-08-06 — Revision 5.5: Policy page removed (owner decision)
+
+- The Policy tab restated IPS tables the PA team already owns, so it no longer occupies a
+  navigation slot. Navigation is eight tabs: Overview | Performance | Trends | Allocation |
+  Exceptions | ACFR | Import | Methodology.
+- The quoted IPS allocation tables (both funds: min/target/max, ½-step, Table-2 benchmarks
+  with lags, interpretation notes) move to **Methodology** as collapsed `reported_public`
+  audit references — the citations survive for auditors and non-PA audiences without daily
+  screen cost. `#/policy` redirects to `#/methodology`; in-app links updated
+  (Allocation footnote, Overview proxy detail).
+- No data, validator, or calculation changes. Tests 72/72, lint clean, production build OK.
+
+## 2026-08-06 — Revision 5.4: import example, glyph fix, shareable Excel dashboard
+
+- `tools/make_import_example.py`: deterministic day-after workbook + ready-to-upload CSV
+  demonstrating the daily append workflow (clears the stale-proxy exception, lifts coverage).
+- Fixed σ rendering as Σ in Trends table headers (`text-transform: uppercase` exemption);
+  clarified Trends captions (per-bar meaning, sparkline range, full-series scale).
+- `tools/make_dashboard_workbook.py`: standalone `Fund_Pulse_Dashboard.xlsx` mirroring the
+  web Overview/Trends story for e-mail sharing, with COM-verified recalc and chart fills.
+
 ## 2026-08-06 — Revision 5.3: Trends (history-in-the-file)
 
 - New **Trends** view: daily policy-weighted read-through trend (per-day bars with per-day

@@ -76,8 +76,8 @@ export function AllocationView() {
       <h1>Allocation vs policy</h1>
       <p className="footnote">
         Synthetic {meta.entityId} data as of {meta.asOf}, measured against the {pack.entityLabel}{' '}
-        IPS bands ({pack.version}; <Link to="/policy">full policy tables</Link>). Range status is a
-        factual report — the IPS defines no mechanical trade trigger.
+        IPS bands ({pack.version}; quoted tables under <Link to="/methodology">Methodology</Link>).
+        Range status is a factual report — the IPS defines no mechanical trade trigger.
         {!sumOk ? ' WARNING: actual weights do not sum to 100% — inspect the imported file.' : ''}
       </p>
 

@@ -158,7 +158,8 @@ export function PulseView() {
             proxy daily return) over covered classes — a <ClassBadge c="proxy_estimate" />, never a
             portfolio return. Covered-basket return (renormalized over covered weight):{' '}
             <SignedPct v={readThrough.coveredBasketReturn} />. Private-market classes are excluded;
-            their benchmarks are lagged 1–3 months per IPS Table 2 (<Link to="/policy">policy</Link>
+            their benchmarks are lagged 1–3 months per IPS Table 2 (
+            <Link to="/methodology">reference</Link>
             ). Operational estimate until reconciled; the custodian remains the official book of
             record.
           </p>
