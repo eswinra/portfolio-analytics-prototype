@@ -15,6 +15,12 @@ import { reconcileContribution, type Reconciliation } from '../finance/contribut
 import { dataState, type DataState } from '../finance/staleness';
 import { growthIndex, periodsComparable, type MonthPoint } from '../finance/returns';
 import { policyReadThrough, type ReadThrough } from '../finance/readThrough';
+import {
+  dailyReadThroughSeries,
+  proxyTrend,
+  type ProxyTrend,
+  type ReadThroughDay,
+} from '../finance/trends';
 
 /** Typed dataset model derived from contract records — the only shape views consume. */
 
@@ -112,6 +118,10 @@ export interface Dataset {
   exceptions: ExceptionItem[];
   publicReferences: PublicReference[];
   checks: CheckEntry[];
+  /** per-proxy trend windows computed from the series inside the dataset */
+  proxyTrends: Map<string, ProxyTrend>;
+  /** daily policy-weighted read-through series (coverage varies by day) */
+  readThroughDays: ReadThroughDay[];
   /** schema 1.1: number of policy_target records carried by the dataset */
   policyRecordCount: number;
   /** where the allocation bands came from: dataset policy records, or the bundled pack */
@@ -355,6 +365,14 @@ export function buildDataset(
       lastDate: last?.date ?? null,
     };
   });
+  const proxyTrends = new Map<string, ProxyTrend>();
+  for (const [proxyId, points] of market) proxyTrends.set(proxyId, proxyTrend(points));
+  const readThroughDays = dailyReadThroughSeries(
+    proxyMapFor(policyEntity).map((m) => ({
+      weight: m.halfStepWeight,
+      points: market.get(m.proxyId) ?? [],
+    })),
+  );
   const readThrough = policyReadThrough(
     proxyMapFor(policyEntity).map((m) => {
       const strip = proxyStrip.find((p) => p.proxyId === m.proxyId);
@@ -483,6 +501,8 @@ export function buildDataset(
     exceptions,
     publicReferences,
     checks,
+    proxyTrends,
+    readThroughDays,
     policyRecordCount: policyRecs.length,
     policySource,
   };

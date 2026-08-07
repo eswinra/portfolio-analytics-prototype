@@ -570,6 +570,12 @@ button.linklike {
   font-size: 0.85rem;
 }
 
+.sparkline {
+  width: 110px;
+  height: 26px;
+  display: block;
+}
+
 .inline-details {
   display: inline;
 }

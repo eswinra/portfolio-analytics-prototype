@@ -10,6 +10,7 @@ import { LimitationsView } from './views/LimitationsView';
 import { PerformanceView } from './views/PerformanceView';
 import { PolicyView } from './views/PolicyView';
 import { PulseView } from './views/PulseView';
+import { TrendsView } from './views/TrendsView';
 
 /** On every route change: reset scroll and move focus to the main region. */
 function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> }) {
@@ -75,6 +76,7 @@ function Shell() {
           Overview
         </NavLink>
         <NavLink to="/performance">Performance</NavLink>
+        <NavLink to="/trends">Trends</NavLink>
         <NavLink to="/allocation">Allocation</NavLink>
         <NavLink to="/exceptions">Exceptions</NavLink>
         <NavLink to="/policy">Policy</NavLink>
@@ -86,6 +88,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<PulseView />} />
           <Route path="/performance" element={<PerformanceView />} />
+          <Route path="/trends" element={<TrendsView />} />
           <Route path="/allocation" element={<AllocationView />} />
           <Route path="/exceptions" element={<ExceptionsView />} />
           <Route path="/policy" element={<PolicyView />} />

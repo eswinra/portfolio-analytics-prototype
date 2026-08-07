@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-06 — Revision 5.3: Trends (history-in-the-file)
+
+- New **Trends** view: daily policy-weighted read-through trend (per-day bars with per-day
+  coverage in the tooltip), per-proxy windows (1d / 5d trading week / MTD from first close of
+  the month / sigma-20 daily volatility) with sparklines, and the fund's latest months plus
+  chain-linked rolling 3-month vs benchmark.
+- Architecture decision made explicit in the UI: the app saves NOTHING between imports — the
+  history lives inside the dataset (the daily workflow appends one day per close, so every
+  imported file deepens every window). All windows use present observations only and render
+  em-dash when history is insufficient; nothing is imputed.
+- New pure module `src/lib/finance/trends.ts` with 8 tests (gap skipping, MTD boundary,
+  volatility window, per-day coverage variation). Tests 64 -> 72.
+
+
 ## 2026-08-06 — Revision 5.2: fund-first Overview with charts; self-explaining pulse
 
 - Overview now leads with the FUND, per owner feedback: KPI tiles (FYTD vs benchmark, FYTD
