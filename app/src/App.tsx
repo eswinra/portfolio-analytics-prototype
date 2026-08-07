@@ -26,32 +26,6 @@ function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> })
   return null;
 }
 
-function MoreMenu() {
-  const ref = useRef<HTMLDetailsElement>(null);
-  const close = () => {
-    if (ref.current) ref.current.open = false;
-  };
-  return (
-    <details className="more-menu" ref={ref}>
-      <summary>More ▾</summary>
-      <div className="more-menu-list" role="list">
-        <NavLink to="/policy" onClick={close}>
-          Policy &amp; benchmarks
-        </NavLink>
-        <NavLink to="/acfr" onClick={close}>
-          ACFR reporting workflow
-        </NavLink>
-        <NavLink to="/import" onClick={close}>
-          Import data
-        </NavLink>
-        <NavLink to="/methodology" onClick={close}>
-          Methodology &amp; disclosures
-        </NavLink>
-      </div>
-    </details>
-  );
-}
-
 function Shell() {
   const { dataset, source, entityTab, setEntityTab } = useDataset();
   const mainRef = useRef<HTMLElement>(null);
@@ -98,12 +72,15 @@ function Shell() {
       </header>
       <nav className="mainnav" aria-label="Primary">
         <NavLink to="/" end>
-          Pulse
+          Overview
         </NavLink>
         <NavLink to="/performance">Performance</NavLink>
         <NavLink to="/allocation">Allocation</NavLink>
         <NavLink to="/exceptions">Exceptions</NavLink>
-        <MoreMenu />
+        <NavLink to="/policy">Policy</NavLink>
+        <NavLink to="/acfr">ACFR</NavLink>
+        <NavLink to="/import">Import</NavLink>
+        <NavLink to="/methodology">Methodology</NavLink>
       </nav>
       <main id="main" ref={mainRef} tabIndex={-1}>
         <Routes>

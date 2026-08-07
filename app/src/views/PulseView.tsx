@@ -30,7 +30,7 @@ export function PulseView() {
 
   return (
     <>
-      <h1 className="visually-hidden">Daily proxy pulse</h1>
+      <h1 className="visually-hidden">Overview — daily proxy pulse</h1>
       <div className="tile-row">
         <div className="tile">
           <div className="tile-label">Covered-proxy impact</div>

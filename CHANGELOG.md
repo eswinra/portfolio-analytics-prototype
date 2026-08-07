@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-06 — Revision 5.1: flat navigation, Overview naming (user preference)
+
+- All eight views back as top-level tabs (Overview | Performance | Allocation | Exceptions |
+  Policy | ACFR | Import | Methodology) — the More dropdown removed at the owner's request;
+  "Pulse" renamed "Overview". Simplified first screen and per-view trimming from revision 5
+  unchanged.
+
+
 ## 2026-08-06 — Revision 5: information-architecture simplification (external UX review adopted)
 
 - **New first screen (Pulse)**: four tiles (covered-proxy impact / policy-weight coverage /
