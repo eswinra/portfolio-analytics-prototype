@@ -386,29 +386,42 @@ export function buildDataset(
     .map((r) => ({ id: r.metric_id, status: String(r.value), note: r.page_table }));
 
   // ---- exceptions requiring review (derived, staff-analytics labeling)
+  // Root-cause merged: a degraded market series and the workbook control that flags it are ONE
+  // issue, not two — "2 issues affecting 2 controls", never four separate warnings.
   const exceptions: ExceptionItem[] = [];
+  const missingProxies = proxyStrip.filter((p) => p.state === 'missing');
+  const staleProxies = proxyStrip.filter((p) => p.state === 'stale');
+  if (missingProxies.length > 0) {
+    exceptions.push({
+      id: 'ISSUE-MISSING',
+      severity: 'warn',
+      description: `${missingProxies.map((p) => p.proxyId).join(', ')} — final close missing (control CHK-06)`,
+      impact: 'Excluded from the daily read-through; coverage reduced.',
+      nextAction: 'Refresh the market export or confirm the source series.',
+    });
+  }
+  if (staleProxies.length > 0) {
+    exceptions.push({
+      id: 'ISSUE-STALE',
+      severity: 'warn',
+      description: `${staleProxies.map((p) => `${p.proxyId} — stale since ${p.lastDate ?? 'n/a'}`).join(', ')} (control CHK-07)`,
+      impact: 'Excluded from the daily read-through; coverage reduced.',
+      nextAction: 'Refresh the market export or confirm the source series.',
+    });
+  }
+  // remaining non-PASS controls not already represented by a merged market issue
+  const MERGED_CONTROLS = new Set([
+    ...(missingProxies.length > 0 ? ['CHK-06'] : []),
+    ...(staleProxies.length > 0 || missingProxies.length > 0 ? ['CHK-07'] : []),
+  ]);
   for (const c of checks) {
-    if (c.status === 'WARN' || c.status === 'FAIL') {
+    if ((c.status === 'WARN' || c.status === 'FAIL') && !MERGED_CONTROLS.has(c.id)) {
       exceptions.push({
         id: c.id,
         severity: c.status === 'FAIL' ? 'fail' : 'warn',
         description: c.note || `Workbook control ${c.id} is ${c.status}`,
         impact: 'Control state travels with the dataset; investigate at the source workbook.',
-        nextAction: 'Review the control on the Data quality view.',
-      });
-    }
-  }
-  for (const p of proxyStrip) {
-    if (p.state !== 'current') {
-      exceptions.push({
-        id: `MKT-${p.proxyId}`,
-        severity: 'warn',
-        description: `${p.proxyId} is ${p.state} (last value ${p.lastDate ?? 'n/a'})`,
-        impact:
-          p.state === 'stale'
-            ? 'Excluded from the daily read-through; coverage reduced.'
-            : 'Latest close absent; excluded from the daily read-through.',
-        nextAction: 'Refresh the market export or confirm the source series.',
+        nextAction: 'Review the control detail on the Exceptions view.',
       });
     }
   }

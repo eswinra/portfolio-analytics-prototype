@@ -9,6 +9,18 @@ export function fmtPct(v: number | null | undefined, dp = 2): string {
   return `${(v * 100).toFixed(dp)}%`;
 }
 
+/**
+ * Small-return formatter: "Flat" under half a bp (kills the −0.00% artifact), whole basis
+ * points below 10 bp, signed percent above. For daily proxy impacts and excess figures.
+ */
+export function fmtSmartReturn(v: number | null | undefined): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return '—';
+  const bp = v * 10000;
+  if (Math.abs(bp) < 0.5) return 'Flat';
+  if (Math.abs(bp) < 25) return `${bp > 0 ? '+' : '−'}${Math.round(Math.abs(bp))} bp`;
+  return `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v * 100).toFixed(2)}%`;
+}
+
 export function fmtMm(v: number | null | undefined): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return '—';
   return v.toLocaleString('en-US', { maximumFractionDigits: 1, minimumFractionDigits: 1 });

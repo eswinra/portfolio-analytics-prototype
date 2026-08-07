@@ -49,18 +49,19 @@ export function ImportView() {
       <h1>Import a dataset</h1>
 
       <div className="panel confidentiality-warning" role="note">
-        <strong>
-          Do not upload confidential or non-public portfolio information to the public prototype.
-        </strong>{' '}
-        Files are parsed entirely in your browser and never transmitted — but this public site is
-        for synthetic and shareable data only. Licensed market data (e.g., Bloomberg exports) is for
-        your internal use: run the app locally or on an internal host for that workflow, and never
-        commit exports to the repository.
+        <strong>Do not upload confidential or non-public portfolio information.</strong> Files never
+        leave your browser, but this public site is for synthetic/shareable data only.{' '}
+        <details className="inline-details">
+          <summary>Licensed-data guidance</summary>
+          Licensed market data (e.g., Bloomberg exports) is for your internal use: run the app
+          locally or on an internal host for that workflow, and never commit exports to the
+          repository.
+        </details>
       </div>
 
       <p className="footnote">
-        Upload a CSV following the documented contract (schema 1.0.0). Import is preflighted: the
-        file is validated and summarized first, and nothing changes until you apply it.
+        Contract CSV (schema 1.x). Preflighted: validated and summarized first — nothing changes
+        until you apply it.
       </p>
 
       <div
@@ -239,8 +240,9 @@ export function ImportView() {
         </ul>
       </Panel>
 
-      <Panel title="What the validator checks">
-        <ul className="footnote">
+      <details className="panel">
+        <summary>What the validator checks (V01–V18)</summary>
+        <ul className="footnote" style={{ marginTop: '0.6rem' }}>
           <li>Schema version, required columns, closed enums (V02, V03, V06)</li>
           <li>Duplicate record ids and duplicate natural keys (V04, V05)</li>
           <li>
@@ -248,10 +250,10 @@ export function ImportView() {
           </li>
           <li>Period coherence; percent plausibility on return/contribution records (V09, V10)</li>
           <li>Allocation weights sum to 100%; contribution reconciles (V13, V14)</li>
-          <li>reported_public confined to cited reference rows (V15)</li>
+          <li>reported_public confined to quotation record types (V15)</li>
           <li>Exactly one portfolio entity per file (V17)</li>
         </ul>
-      </Panel>
+      </details>
     </>
   );
 }

@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-08-06 — Revision 5: information-architecture simplification (external UX review adopted)
+
+- **New first screen (Pulse)**: four tiles (covered-proxy impact / policy-weight coverage /
+  policy status / data issues), today's covered drivers in bp, top needs-review issues, one
+  periodic-context line, copy-brief action; proxy math, market-context table and methodology
+  behind one expander. Mobile Pulse height 5,061px -> 1,631px; header+nav 413px -> 266px
+  (incl. the persistent disclaimer band).
+- **Navigation**: Pulse | Performance | Allocation | Exceptions | More (Policy & benchmarks,
+  ACFR workflow, Import, Methodology & disclosures) with an accessible disclosure menu; legacy
+  routes redirect. Header metadata (schema/fixture/policy pack) moved to Exceptions > Data
+  details.
+- **Performance** merges the period table (hurdle retained WITH its inline definition), growth
+  chart + monthly table, contribution chart (zero-value categories omitted from the chart,
+  retained in the accessible detail), and the 5-line reconciliation with full detail expander.
+- **Allocation** rendered as policy-range bullet rows (min - target - max, actual marker,
+  distance-to-boundary); EMV/dollar over/under behind "Dollar details" (a dollar gap must not
+  read as a trade size); "Non-policy exposures" one-liner for Overlays/Other.
+- **Exceptions**: root-cause merged in the model (a degraded series + its control = ONE issue;
+  "2 issues affecting 2 controls", never four warnings); summary line; passing controls and
+  provenance/citations behind expanders (absorbs the former Data-quality view).
+- **ACFR**: action queue (blocked/review/in-progress, top 5) with Crosswalk/QA subtabs; the
+  full 51-record registers behind "Show the full register" with status filters.
+- **Formatting**: fmtSmartReturn — "Flat" under 0.5 bp (kills the negative-zero artifact), bp
+  under 25 bp, percent above. Covered-basket return demoted to the Pulse expander (kept, per
+  the adopted-with-modification note). Import warning condensed with licensed-data guidance
+  behind an inline expander.
+- Tests 63 -> 64 (exception root-cause merge). Full pipeline green; browser-verified desktop
+  and mobile.
+
+
 ## 2026-08-06 — Revision 4: schema 1.1, OPEB workbook, Policy-page switch fix
 
 - **Policy page now follows the main Pension/OPEB masthead switch** (its separate internal

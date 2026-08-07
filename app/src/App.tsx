@@ -1,18 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { HashRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { AcfrView } from './views/AcfrView';
 import { AllocationView } from './views/AllocationView';
-import { ContributionView } from './views/ContributionView';
-import { DataQualityView } from './views/DataQualityView';
+import { ExceptionsView } from './views/ExceptionsView';
 import { ImportView } from './views/ImportView';
 import { LimitationsView } from './views/LimitationsView';
-import { OverviewView } from './views/OverviewView';
+import { PerformanceView } from './views/PerformanceView';
 import { PolicyView } from './views/PolicyView';
+import { PulseView } from './views/PulseView';
 
-/** On every route change: reset scroll and move focus to the main region (screen-reader and
- *  keyboard users land on the new content, not under the sticky nav). */
+/** On every route change: reset scroll and move focus to the main region. */
 function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> }) {
   const { pathname } = useLocation();
   const first = useRef(true);
@@ -27,11 +26,36 @@ function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> })
   return null;
 }
 
+function MoreMenu() {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const close = () => {
+    if (ref.current) ref.current.open = false;
+  };
+  return (
+    <details className="more-menu" ref={ref}>
+      <summary>More ▾</summary>
+      <div className="more-menu-list" role="list">
+        <NavLink to="/policy" onClick={close}>
+          Policy &amp; benchmarks
+        </NavLink>
+        <NavLink to="/acfr" onClick={close}>
+          ACFR reporting workflow
+        </NavLink>
+        <NavLink to="/import" onClick={close}>
+          Import data
+        </NavLink>
+        <NavLink to="/methodology" onClick={close}>
+          Methodology &amp; disclosures
+        </NavLink>
+      </div>
+    </details>
+  );
+}
+
 function Shell() {
   const { dataset, source, entityTab, setEntityTab } = useDataset();
   const mainRef = useRef<HTMLElement>(null);
 
-  // The skip link must not touch the URL hash (HashRouter owns it) — focus directly.
   function skipToMain(e: React.MouseEvent) {
     e.preventDefault();
     mainRef.current?.focus();
@@ -48,8 +72,7 @@ function Shell() {
         system, performance report, or statement of endorsement.
       </div>
       <header className="masthead">
-        <span className="kicker">Portfolio Analytics — exploratory prototype</span>
-        <h1>Fund Pulse (synthetic demo)</h1>
+        <h1>Fund Pulse</h1>
         <div className="entity-tabs" role="group" aria-label="Select fund">
           <button
             type="button"
@@ -57,7 +80,7 @@ function Shell() {
             aria-pressed={entityTab === 'PENSION' && source === 'fixture'}
             onClick={() => setEntityTab('PENSION')}
           >
-            Pension fund
+            Pension
           </button>
           <button
             type="button"
@@ -65,47 +88,44 @@ function Shell() {
             aria-pressed={entityTab === 'OPEB' && source === 'fixture'}
             onClick={() => setEntityTab('OPEB')}
           >
-            OPEB fund
+            OPEB
           </button>
           {source === 'import' ? <span className="pill warn">imported dataset</span> : null}
         </div>
         <div className="asof">
-          Entity <strong>{dataset.meta.entityId}</strong> · as of{' '}
-          <strong>{dataset.meta.asOf || 'n/a'}</strong>
-          <br />
-          {source === 'fixture' ? 'bundled synthetic fixture' : 'user-imported dataset'} ·{' '}
-          {dataset.meta.policyEntity} IPS policy pack · schema {dataset.meta.schemaVersion}
+          As of <strong>{dataset.meta.asOf || 'n/a'}</strong> · synthetic proxy view
         </div>
       </header>
       <nav className="mainnav" aria-label="Primary">
         <NavLink to="/" end>
-          Overview
+          Pulse
         </NavLink>
-        <NavLink to="/contribution">Contribution</NavLink>
+        <NavLink to="/performance">Performance</NavLink>
         <NavLink to="/allocation">Allocation</NavLink>
-        <NavLink to="/policy">Policy</NavLink>
-        <NavLink to="/data-quality">Data quality</NavLink>
-        <NavLink to="/acfr">ACFR workflow</NavLink>
-        <NavLink to="/import">Import</NavLink>
-        <NavLink to="/limitations">Limitations</NavLink>
+        <NavLink to="/exceptions">Exceptions</NavLink>
+        <MoreMenu />
       </nav>
       <main id="main" ref={mainRef} tabIndex={-1}>
         <Routes>
-          <Route path="/" element={<OverviewView />} />
-          <Route path="/contribution" element={<ContributionView />} />
+          <Route path="/" element={<PulseView />} />
+          <Route path="/performance" element={<PerformanceView />} />
           <Route path="/allocation" element={<AllocationView />} />
+          <Route path="/exceptions" element={<ExceptionsView />} />
           <Route path="/policy" element={<PolicyView />} />
-          <Route path="/data-quality" element={<DataQualityView />} />
           <Route path="/acfr" element={<AcfrView />} />
           <Route path="/import" element={<ImportView />} />
-          <Route path="/limitations" element={<LimitationsView />} />
+          <Route path="/methodology" element={<LimitationsView />} />
+          {/* legacy routes from revisions 1–4 */}
+          <Route path="/contribution" element={<Navigate to="/performance" replace />} />
+          <Route path="/data-quality" element={<Navigate to="/exceptions" replace />} />
+          <Route path="/limitations" element={<Navigate to="/methodology" replace />} />
           <Route
             path="*"
             element={
               <>
                 <h1>Not found</h1>
                 <p>
-                  That view does not exist. <NavLink to="/">Back to the overview.</NavLink>
+                  That view does not exist. <NavLink to="/">Back to the pulse.</NavLink>
                 </p>
               </>
             }
@@ -113,11 +133,10 @@ function Shell() {
         </Routes>
       </main>
       <footer>
-        Exploratory prototype for discussion with a Portfolio Analytics team. All DEMOFUND values
+        Exploratory prototype for discussion with a Portfolio Analytics team. All portfolio values
         are synthetic; cited public values (IPS tables, report figures) are labeled and excluded
-        from calculations. Imports are processed locally in your browser and never transmitted.
-        Operational estimates are not official performance; the custodian remains the book of
-        record.
+        from calculations. Imports stay in your browser. Operational estimates are not official
+        performance; the custodian remains the book of record.
       </footer>
     </>
   );

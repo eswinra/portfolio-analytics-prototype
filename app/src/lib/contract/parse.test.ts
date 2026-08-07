@@ -89,6 +89,14 @@ describe('valid fixture', () => {
     expect(ds.emvIncomplete).toBe(false);
   });
 
+  it('merges degraded market series with their controls into root-cause issues', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    // one missing proxy + one stale proxy + their two WARN controls → exactly 2 issues
+    expect(ds.exceptions).toHaveLength(2);
+    expect(ds.exceptions.map((e) => e.id).sort()).toEqual(['ISSUE-MISSING', 'ISSUE-STALE']);
+    expect(ds.exceptions[0]?.description).toContain('CHK-06');
+  });
+
   it('OPEB fixture validates and scopes to the OPEB policy pack', () => {
     const res2 = parseContractCsv(load('demo_opeb_export_v1.csv'));
     expect(res2.ok).toBe(true);
