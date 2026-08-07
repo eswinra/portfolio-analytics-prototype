@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08-06 — Revision 5.2: fund-first Overview with charts; self-explaining pulse
+
+- Overview now leads with the FUND, per owner feedback: KPI tiles (FYTD vs benchmark, FYTD
+  excess with ahead/trailing context, QTD with excess, policy status) plus two charts — Growth
+  of $1 vs benchmark and a new monthly-returns bar chart (validated polarity palette, single
+  series). Both follow the Pension/OPEB switch.
+- The daily proxy pulse is a compact strip below the charts, and a flat reading now explains
+  itself ("Flat — drivers offset: Global Equity +5 bp, Investment Grade Bonds −5 bp"); non-flat
+  days name the leading driver. Coverage, data issues, copy-brief and the full proxy detail
+  remain one line/click away.
+
+
 ## 2026-08-06 — Revision 5.1: flat navigation, Overview naming (user preference)
 
 - All eight views back as top-level tabs (Overview | Performance | Allocation | Exceptions |

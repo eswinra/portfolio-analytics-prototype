@@ -466,6 +466,19 @@ button.linklike {
   padding-top: 0.7rem;
 }
 
+.pulse-strip {
+  border-left: 5px solid var(--accent);
+}
+
+.pulse-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.6rem;
+  align-items: center;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
 .issue-list {
   list-style: none;
   margin: 0;
