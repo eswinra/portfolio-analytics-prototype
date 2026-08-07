@@ -120,8 +120,8 @@ export function TrendsView() {
             </BarChart>
           </ResponsiveContainer>
           <figcaption className="footnote">
-            Blue = positive, rust = negative day. A proxy estimate of the market read-through —
-            never a portfolio return.
+            Each bar is one trading day's estimated fund-level impact from the covered liquid
+            proxies. Blue = positive, rust = negative. A proxy estimate — never a portfolio return.
           </figcaption>
         </figure>
       </Panel>
@@ -136,7 +136,9 @@ export function TrendsView() {
             <thead>
               <tr>
                 <th scope="col">Proxy</th>
-                <th scope="col">History</th>
+                <th scope="col">
+                  History <span className="footnote">(full series, own scale)</span>
+                </th>
                 <th scope="col" className="num">
                   Obs
                 </th>
@@ -150,7 +152,7 @@ export function TrendsView() {
                   MTD
                 </th>
                 <th scope="col" className="num">
-                  σ20 (daily)
+                  <span style={{ textTransform: 'none' }}>σ</span>20 (daily)
                 </th>
               </tr>
             </thead>
@@ -177,8 +179,8 @@ export function TrendsView() {
       </Panel>
 
       <Panel
-        title="Fund monthly trend"
-        note="From the dataset's monthly series (synthetic). Rolling 3-month figures are chain-linked, never averaged."
+        title="Total fund monthly trend (all categories)"
+        note="Whole-portfolio monthly net returns for the selected fund — Σ(beginning weight × category return) across all six sleeves, never a single section and never averaged. Rolling 3-month figures are chain-linked."
       >
         <div className="table-scroll">
           <table>
