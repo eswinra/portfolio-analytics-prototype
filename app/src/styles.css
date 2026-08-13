@@ -915,3 +915,99 @@ a:hover {
     font-size: 30px;
   }
 }
+
+/* ---- team workflow demo (synthetic contract data) --------------------------------- */
+
+.workflow-banner {
+  background: var(--surface);
+  border-bottom: 1px solid var(--divider);
+}
+
+.workflow-banner-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 9px 28px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted-72);
+}
+
+.workflow-banner-inner strong {
+  color: var(--accent-800);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.workflow-banner-inner nav {
+  margin-left: auto;
+  display: flex;
+  gap: 16px;
+}
+
+.workflow-banner-inner nav a {
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.workflow-banner-inner nav a.active {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.draft-banner {
+  background: var(--accent-100);
+  border-bottom: 1px solid var(--accent-300);
+  color: var(--accent-900);
+  font-size: 12px;
+  padding: 7px 28px;
+  text-align: center;
+}
+
+.dropzone {
+  border: 2px dashed var(--accent-400);
+  background: var(--surface);
+  padding: 28px 22px;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.dropzone.dragging {
+  background: var(--accent-100);
+  border-color: var(--accent-700);
+}
+
+.dropzone p {
+  margin: 0 0 10px;
+}
+
+.error-list {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11.5px;
+  background: var(--neutral-100);
+  border: 1px solid var(--divider);
+  padding: 10px 12px;
+  margin-top: 12px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+details.panel > summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.footnote {
+  font-size: 12px;
+  color: var(--muted-72);
+}
+
+.issue-impact {
+  font-size: 12px;
+  color: var(--muted-72);
+}

@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-08-13 — Revision 8.1: team workflow demo restored (Import, Reconciliation, Exceptions)
+
+Owner-approved restoration of the operating half of the team-tool vision, incorporated into
+the LACERA design without touching the seven-tab presentation nav.
+
+- **Team workflow demo section**: Import, Reconciliation, and Exceptions return as
+  footer-linked views styled on the LACERA system, each carrying a surface-tinted banner
+  ("Team workflow demo — synthetic contract data (schema 1.3, V01–V23)") plus its own
+  sub-nav, keeping the published/synthetic wall explicit. The title band labels these views
+  "Team workflow demo · synthetic DEMOFUND/DEMO-OPEB data".
+- **Import**: the full pipeline proof is back — drag-and-drop with preflight, apply/discard,
+  downloadable error report, the schema-1.3 Data Dictionary rendered from the validator's
+  constants, template downloads, and the first-timer guide. The draft-data banner reappears
+  (workflow section only) when imported rows are review_status=draft.
+- **Reconciliation**: paired sources with computed variance, tolerance-as-data, and the
+  deliberate demo break, restyled in the tag language (breaks render as the navy Blocked
+  tag).
+- **Exceptions triage**: tier + days-open queue, Team Activity provenance panel, passing
+  controls, and the dataset provenance/citations details. Risk & Compliance links to it.
+- **Plumbing**: DatasetProvider remounted beside the published-figures context with an
+  EntitySync bridge, so the header Pension/OPEB toggle drives the synthetic dataset too;
+  ui.tsx regains compatibility helpers (Pill→Tag mapping, fmtPct/fmtMm/fmtSmartReturn,
+  ClassBadge).
+- Verified end-to-end in the browser: preflight → apply → draft banner → restore; entity
+  sync to DEMO-OPEB; 106 tests, lint, typecheck, build clean.
+
 ## 2026-08-13 — Revision 8: LACERA redesign (published FY2025 figures, seven views)
 
 Implemented the owner's design handoff (`design_handoff_lacera_portfolio_analytics/`) —

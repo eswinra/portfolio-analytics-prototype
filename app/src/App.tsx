@@ -2,13 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
 import { boardBrief, publishedFor } from './fixtures/published';
+import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { EntityProvider, useEntity } from './lib/entity';
 import { AcfrView } from './views/AcfrView';
 import { AllocationView } from './views/AllocationView';
+import { ExceptionsView } from './views/ExceptionsView';
 import { FundedView } from './views/FundedView';
 import { HoldingsView } from './views/HoldingsView';
+import { ImportView } from './views/ImportView';
 import { PerformanceView } from './views/PerformanceView';
 import { PulseView } from './views/PulseView';
+import { ReconView } from './views/ReconView';
 import { RiskView } from './views/RiskView';
 
 /** LACERA Portfolio Analytics shell (design handoff): notice bar, wordmark header with the
@@ -24,6 +28,24 @@ const VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/holdings', 'Holdings & Managers', 'Holdings & managers'],
   ['/acfr', 'ACFR Workflow', 'ACFR reporting workflow'],
 ];
+
+/** Team workflow demo — the synthetic contract-data views (footer-linked, outside the
+ *  seven-tab presentation nav; the published/synthetic wall stays explicit). */
+const WORKFLOW_VIEWS: [path: string, label: string, bandTitle: string][] = [
+  ['/import', 'Import', 'Import a dataset'],
+  ['/recon', 'Reconciliation', 'Reconciliation'],
+  ['/exceptions', 'Exceptions', 'Exceptions & data quality'],
+];
+
+/** Keeps the synthetic dataset's fund selection in step with the header entity toggle. */
+function EntitySync() {
+  const { entity } = useEntity();
+  const { setEntityTab } = useDataset();
+  useEffect(() => {
+    setEntityTab(entity);
+  }, [entity, setEntityTab]);
+  return null;
+}
 
 /** On every route change: reset scroll and move focus to the main region. */
 function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> }) {
@@ -43,9 +65,11 @@ function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> })
 function TitleBand() {
   const { pathname } = useLocation();
   const { entity } = useEntity();
+  const { dataset } = useDataset();
   const d = publishedFor(entity);
-  const view = VIEWS.find(([p]) => p === pathname) ?? VIEWS[0]!;
-  const isOverview = view[0] === '/';
+  const workflow = WORKFLOW_VIEWS.find(([p]) => p === pathname);
+  const view = workflow ?? VIEWS.find(([p]) => p === pathname) ?? VIEWS[0]!;
+  const isOverview = !workflow && view[0] === '/';
   const [copied, setCopied] = useState(false);
 
   async function copyBrief() {
@@ -64,7 +88,9 @@ function TitleBand() {
       <div className="band">
         <div className="band-inner">
           <h1>{view[2]}</h1>
-          <span className="entity">{d.label}</span>
+          <span className="entity">
+            {workflow ? `Team workflow demo · synthetic ${dataset.meta.entityId} data` : d.label}
+          </span>
           {isOverview ? (
             <span className="actions">
               <button type="button" className="btn-band" onClick={copyBrief}>
@@ -75,6 +101,34 @@ function TitleBand() {
         </div>
       </div>
       <div className="band-strip" />
+      {workflow ? (
+        <>
+          <div className="workflow-banner" role="note">
+            <div className="workflow-banner-inner">
+              <strong>Team workflow demo</strong>
+              <span>
+                Synthetic contract data (schema 1.3, V01–V23) — not the published FY2025 figures
+                shown on the presentation views. Files never leave your browser.
+              </span>
+              <nav aria-label="Workflow views">
+                {WORKFLOW_VIEWS.map(([path, label]) => (
+                  <NavLink key={path} to={path}>
+                    {label}
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
+          </div>
+          {dataset.draftRecordCount > 0 ? (
+            <div className="draft-banner" role="status">
+              <strong>Draft data:</strong> {dataset.draftRecordCount} record
+              {dataset.draftRecordCount === 1 ? '' : 's'} in the active dataset{' '}
+              {dataset.draftRecordCount === 1 ? 'is' : 'are'} still review_status=draft — figures
+              may change on review.
+            </div>
+          ) : null}
+        </>
+      ) : null}
     </>
   );
 }
@@ -157,14 +211,15 @@ function Shell() {
           <Route path="/risk" element={<RiskView />} />
           <Route path="/holdings" element={<HoldingsView />} />
           <Route path="/acfr" element={<AcfrView />} />
+          {/* team workflow demo — synthetic contract data */}
+          <Route path="/import" element={<ImportView />} />
+          <Route path="/recon" element={<ReconView />} />
+          <Route path="/exceptions" element={<ExceptionsView />} />
           {/* legacy routes from revisions 1–7 */}
           <Route path="/trends" element={<Navigate to="/performance" replace />} />
           <Route path="/contribution" element={<Navigate to="/performance" replace />} />
-          <Route path="/exceptions" element={<Navigate to="/risk" replace />} />
-          <Route path="/data-quality" element={<Navigate to="/risk" replace />} />
-          <Route path="/recon" element={<Navigate to="/risk" replace />} />
+          <Route path="/data-quality" element={<Navigate to="/exceptions" replace />} />
           <Route path="/policy" element={<Navigate to="/allocation" replace />} />
-          <Route path="/import" element={<Navigate to="/" replace />} />
           <Route path="/methodology" element={<Navigate to="/" replace />} />
           <Route path="/limitations" element={<Navigate to="/" replace />} />
           <Route
@@ -192,6 +247,17 @@ function Shell() {
             Statement
           </div>
           <div className="meta">
+            Team workflow demo (synthetic contract data):{' '}
+            {WORKFLOW_VIEWS.map(([path, label], i) => (
+              <span key={path}>
+                {i > 0 ? ' · ' : ''}
+                <NavLink to={path} style={{ color: '#fff' }}>
+                  {label}
+                </NavLink>
+              </span>
+            ))}
+          </div>
+          <div className="meta">
             Exploratory prototype for the Portfolio Analytics team. All figures are quoted from
             published LACERA documents as of the dates shown; this is not an official LACERA system,
             performance report, or statement of endorsement.
@@ -205,9 +271,12 @@ function Shell() {
 export default function App() {
   return (
     <EntityProvider>
-      <HashRouter>
-        <Shell />
-      </HashRouter>
+      <DatasetProvider>
+        <HashRouter>
+          <EntitySync />
+          <Shell />
+        </HashRouter>
+      </DatasetProvider>
     </EntityProvider>
   );
 }
