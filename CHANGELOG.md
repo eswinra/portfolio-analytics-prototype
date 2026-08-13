@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-13 — Revision 7.1: ACFR sections own their items; diagram removed (owner feedback)
+
+- **Tie-out items nested under their sections**: the page-level crosswalk (23 tables and
+  disclosures) now lives inside its section cards — Investment items under INV; Financial,
+  Financial Notes, RSI and SI under FIN; Statistical under STAT. Each card shows
+  "tie-out items X / Y complete" beside its artifact progress; Introduction and Actuarial
+  state that the investment-data crosswalk has no items for them. The separate crosswalk
+  register is gone; the QA checklist (28 controls, cross-section by nature) remains as a
+  collapsed register.
+- **Viewer-role selector fixed**: normal type size instead of inheriting the KPI-tile scale.
+- **Architecture panel removed from Methodology** at the owner's decision — the workflow
+  tree stays an internal working reference; the public page keeps its prose boundaries.
+- Tests 106/106; lint, typecheck, build clean; verified in the browser.
+
 ## 2026-08-13 — Revision 7: full team-tool backlog (contract 1.3 — recon, ACFR board, private markets)
 
 Remainder of the confirmed backlog plus the architecture reference from the internal review.

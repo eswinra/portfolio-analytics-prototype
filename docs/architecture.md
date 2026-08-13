@@ -101,3 +101,12 @@ with tabular numerals for figures.
 - **Architecture diagram**: the PA workflow tree rendered as a native inline SVG
   (`components/ArchitectureDiagram.tsx`) on Methodology — token-aligned with the code,
   LIVE/TARGET chips marking current vs target state; no raster asset, no network request.
+
+## Revision 7.1 (2026-08-13)
+
+- Architecture diagram removed from the public Methodology page at the owner's decision
+  (`ArchitectureDiagram.tsx` deleted); the workflow tree remains an internal working
+  reference outside the repo.
+- ACFR tie-out items (the page-level crosswalk) nested under their section cards
+  (Investment → INV; Financial, Financial Notes, RSI and SI → FIN; Statistical → STAT);
+  the separate crosswalk register removed, QA controls kept as a cross-section register.

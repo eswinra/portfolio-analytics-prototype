@@ -1,23 +1,24 @@
 import { useMemo, useState } from 'react';
 
 import acfrCsv from '../../../data/sample/demo_acfr_status_v1.csv?raw';
-import { Panel, Pill, statusTone } from '../components/ui';
-import { CROSSWALK, QA_CONTROLS, type WorkStatus } from '../fixtures/acfrWorkflow';
+import { Pill, statusTone } from '../components/ui';
+import { CROSSWALK, QA_CONTROLS, type CrosswalkItem } from '../fixtures/acfrWorkflow';
 import { parseContractCsv } from '../lib/contract/parse';
 import type { AcfrStatus } from '../lib/contract/schema';
 import {
   buildAcfrBoard,
   completeRowCsv,
   sectionArtifacts,
+  type AcfrBoard,
   type AcfrSection,
 } from '../lib/dataset/acfr';
 
 /**
  * ACFR: a section-readiness board built from contract records (acfr_section_status +
  * acfr_artifact_link in their own single-entity tracker file). Latest row per section is the
- * state; the full row history is the change log — the file is the record. Role gating here is
- * DEMONSTRATION ONLY: a static public site cannot enforce identity, and says so; the
- * enforceable tracker belongs in an identity-aware internal environment.
+ * state; the full row history is the change log — the file is the record. Every page-level
+ * tie-out item lives under its own section card. Role gating is DEMONSTRATION ONLY: a static
+ * public site cannot enforce identity, and says so.
  */
 
 type ViewerRole = 'analyst' | 'lead' | 'leadership';
@@ -38,29 +39,41 @@ const STATUS_TONE: Record<AcfrStatus, 'good' | 'warn' | 'bad' | 'neutral'> = {
   complete: 'good',
 };
 
-const OLD_STATUSES: (WorkStatus | 'All')[] = [
-  'All',
-  'Not Started',
-  'In Progress',
-  'Ready for Review',
-  'Complete',
-  'Blocked',
-];
+/** Crosswalk source-section labels → board section ids (RSI and SI are part of Financial). */
+const CROSSWALK_SECTION: Record<string, string> = {
+  Investment: 'INV',
+  Financial: 'FIN',
+  'Financial Notes': 'FIN',
+  'Required Supplementary Information': 'FIN',
+  'Supplementary Information': 'FIN',
+  Statistical: 'STAT',
+};
+
+function daysLeft(dueDate: string, refDate: string | null): number | null {
+  if (!refDate) return null;
+  const d = Math.round((Date.parse(dueDate) - Date.parse(refDate)) / 86400000);
+  return Number.isFinite(d) ? d : null;
+}
 
 function SectionCard({
   section,
+  board,
   role,
   onCopyComplete,
   copied,
   artifacts,
+  items,
 }: {
   section: AcfrSection;
+  board: AcfrBoard;
   role: ViewerRole;
   onCopyComplete: (s: AcfrSection) => void;
   copied: boolean;
   artifacts: ReturnType<typeof sectionArtifacts>;
+  items: CrosswalkItem[];
 }) {
   const overdue = section.daysToDue !== null && section.daysToDue < 0;
+  const itemsDone = items.filter((c) => c.status === 'Complete').length;
   return (
     <section className="panel" aria-label={`${section.label} section status`}>
       <div className="bullet-head">
@@ -88,10 +101,72 @@ function SectionCard({
           </>
         ) : null}{' '}
         · artifacts <strong>{section.artifactsIn}</strong> / {section.artifactsExpected} in
+        {items.length > 0 ? (
+          <>
+            {' '}
+            · tie-out items <strong>{itemsDone}</strong> / {items.length} complete
+          </>
+        ) : null}
       </p>
+
+      {items.length > 0 ? (
+        <details>
+          <summary className="footnote">Tie-out items ({items.length})</summary>
+          <div className="table-scroll" style={{ marginTop: '0.5rem' }}>
+            <table>
+              <caption>
+                {section.label}: tables and disclosures mapped to sources and tie-outs (illustrative
+                statuses)
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Table / disclosure</th>
+                  <th scope="col">Due</th>
+                  <th scope="col" className="num">
+                    Days left
+                  </th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((c) => {
+                  const dl = daysLeft(c.dueDate, board.refDate);
+                  return (
+                    <tr key={`${c.acfrPage}-${c.table}`}>
+                      <td>
+                        {c.table}
+                        <div className="footnote">
+                          ACFR p.{c.acfrPage} · {c.fund} · {c.source} → {c.tieOut}
+                        </div>
+                      </td>
+                      <td>{c.dueDate}</td>
+                      <td className="num">
+                        {c.status === 'Complete' || dl === null
+                          ? '—'
+                          : dl < 0
+                            ? `${-dl} overdue`
+                            : dl}
+                      </td>
+                      <td>
+                        <Pill tone={statusTone(c.status)}>{c.status}</Pill>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ) : (
+        <p className="footnote" style={{ margin: '0.2rem 0' }}>
+          No tie-out items tracked here — the investment-data crosswalk covers the Financial,
+          Investments and Statistical sections.
+        </p>
+      )}
+
       <details>
         <summary className="footnote">
-          History ({section.history.length}) &amp; artifacts ({section.artifactsExpected})
+          Status history ({section.history.length}) &amp; artifacts ({section.artifactsExpected})
         </summary>
         <ul className="footnote" style={{ marginTop: '0.4rem' }}>
           {section.history.map((h) => (
@@ -114,6 +189,7 @@ function SectionCard({
           Artifacts are links + metadata only — real files never live on this public site.
         </p>
       </details>
+
       {section.status === 'ready_signoff' ? (
         role === 'leadership' ? (
           <p style={{ marginBottom: 0 }}>
@@ -137,8 +213,6 @@ function SectionCard({
 export function AcfrView() {
   const [role, setRole] = useState<ViewerRole>('analyst');
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
-  const [tab, setTab] = useState<'crosswalk' | 'qa'>('crosswalk');
-  const [filter, setFilter] = useState<WorkStatus | 'All'>('All');
 
   const { board, records } = useMemo(() => {
     const res = parseContractCsv(acfrCsv);
@@ -150,10 +224,22 @@ export function AcfrView() {
     return { board: buildAcfrBoard(res.records), records: res.records };
   }, []);
 
+  const itemsBySection = useMemo(() => {
+    const m = new Map<string, CrosswalkItem[]>();
+    for (const c of CROSSWALK) {
+      const sectionId = CROSSWALK_SECTION[c.section];
+      if (!sectionId) continue;
+      const arr = m.get(sectionId) ?? [];
+      arr.push(c);
+      m.set(sectionId, arr);
+    }
+    for (const arr of m.values()) arr.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+    return m;
+  }, []);
+
   const complete = board.sections.filter((s) => s.status === 'complete').length;
   const signoff = board.sections.filter((s) => s.status === 'ready_signoff').length;
-  const artifactsIn = board.sections.reduce((a, s) => a + s.artifactsIn, 0);
-  const artifactsAll = board.sections.reduce((a, s) => a + s.artifactsExpected, 0);
+  const itemsDone = CROSSWALK.filter((c) => c.status === 'Complete').length;
 
   async function copyComplete(section: AcfrSection) {
     const rowCsv = completeRowCsv(
@@ -171,17 +257,15 @@ export function AcfrView() {
     }
   }
 
-  const items = filter === 'All' ? CROSSWALK : CROSSWALK.filter((c) => c.status === filter);
-  const controls = filter === 'All' ? QA_CONTROLS : QA_CONTROLS.filter((c) => c.status === filter);
-
   return (
     <>
       <h1>ACFR reporting workflow</h1>
       <p className="footnote">
         Section readiness from contract records (<code>{board.entityId}</code> tracker file, through{' '}
         {board.refDate ?? 'n/a'}): the latest status row per section is the state, and the full row
-        history is the change log — the file is the record. Statuses, dates, owners and links are{' '}
-        <strong>illustrative demo values</strong> with synthetic actor labels.
+        history is the change log — the file is the record. Page-level tie-out items sit under their
+        sections. Statuses, dates, owners and links are <strong>illustrative demo values</strong>{' '}
+        with synthetic actor labels.
       </p>
 
       <div className="tile-row">
@@ -198,20 +282,20 @@ export function AcfrView() {
           <div className="tile-sub">awaiting leadership</div>
         </div>
         <div className="tile">
-          <div className="tile-label">Artifacts in</div>
+          <div className="tile-label">Tie-out items complete</div>
           <div className="tile-value">
-            {artifactsIn} / {artifactsAll}
+            {itemsDone} / {CROSSWALK.length}
           </div>
-          <div className="tile-sub">links + metadata, never files</div>
+          <div className="tile-sub">across all sections</div>
         </div>
         <div className="tile">
           <div className="tile-label">Viewer role</div>
-          <div className="tile-value">
+          <div style={{ margin: '0.3rem 0' }}>
             <select
               aria-label="Viewer role (demonstration only)"
               value={role}
               onChange={(e) => setRole(e.target.value as ViewerRole)}
-              style={{ font: 'inherit', padding: '0.15rem 0.3rem' }}
+              style={{ font: 'inherit', fontSize: '0.95rem', padding: '0.25rem 0.4rem' }}
             >
               <option value="analyst">analyst</option>
               <option value="lead">lead</option>
@@ -233,120 +317,44 @@ export function AcfrView() {
         <SectionCard
           key={s.sectionId}
           section={s}
+          board={board}
           role={role}
           onCopyComplete={copyComplete}
           copied={copiedSection === s.sectionId}
           artifacts={sectionArtifacts(records, s.sectionId)}
+          items={itemsBySection.get(s.sectionId) ?? []}
         />
       ))}
 
       <details className="panel">
-        <summary>Illustrative crosswalk &amp; QA registers (app-bundled detail)</summary>
-        <p className="footnote" style={{ marginTop: '0.6rem' }}>
-          The page-level crosswalk (23 items) and QA checklist (28 controls) retained from the
-          earlier revision — statuses illustrative; structure follows the public ACFR 2025 table of
-          contents.
-        </p>
-        <div role="group" aria-label="Register" style={{ marginBottom: '0.75rem' }}>
-          <button
-            className="linklike"
-            style={{ marginRight: '1rem', fontWeight: tab === 'crosswalk' ? 700 : 400 }}
-            aria-pressed={tab === 'crosswalk'}
-            onClick={() => setTab('crosswalk')}
-          >
-            Crosswalk ({CROSSWALK.length})
-          </button>
-          <button
-            className="linklike"
-            style={{ fontWeight: tab === 'qa' ? 700 : 400 }}
-            aria-pressed={tab === 'qa'}
-            onClick={() => setTab('qa')}
-          >
-            QA controls ({QA_CONTROLS.length})
-          </button>
-          <span style={{ marginLeft: '1.2rem' }} className="footnote">
-            filter:{' '}
-            {OLD_STATUSES.map((s) => (
-              <button
-                key={s}
-                className="linklike"
-                style={{ marginRight: '0.7rem', fontWeight: filter === s ? 700 : 400 }}
-                aria-pressed={filter === s}
-                onClick={() => setFilter(s)}
-              >
-                {s}
-              </button>
-            ))}
-          </span>
+        <summary>QA controls register ({QA_CONTROLS.length}) — applies across sections</summary>
+        <div className="table-scroll" style={{ marginTop: '0.6rem' }}>
+          <table>
+            <caption>ACFR investment QA checklist with illustrative statuses</caption>
+            <thead>
+              <tr>
+                <th scope="col">Category</th>
+                <th scope="col">Control</th>
+                <th scope="col">Applies to</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {QA_CONTROLS.map((c) => (
+                <tr key={c.control}>
+                  <td>{c.category}</td>
+                  <td>{c.control}</td>
+                  <td>{c.appliesTo}</td>
+                  <td>{c.severity}</td>
+                  <td>
+                    <Pill tone={statusTone(c.status)}>{c.status}</Pill>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        {tab === 'crosswalk' ? (
-          <Panel title={`Investment data crosswalk (${items.length} shown)`}>
-            <div className="table-scroll">
-              <table>
-                <caption>ACFR table → source → tie-out mapping with illustrative statuses</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">ACFR p.</th>
-                    <th scope="col">Table / disclosure</th>
-                    <th scope="col">Fund</th>
-                    <th scope="col">Authoritative source</th>
-                    <th scope="col">Tie-out</th>
-                    <th scope="col">Due</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((c) => (
-                    <tr key={`${c.acfrPage}-${c.table}`}>
-                      <td className="num">{c.acfrPage}</td>
-                      <td>
-                        {c.table}
-                        <div className="footnote">{c.test}</div>
-                      </td>
-                      <td>{c.fund}</td>
-                      <td>{c.source}</td>
-                      <td>{c.tieOut}</td>
-                      <td>{c.dueDate}</td>
-                      <td>
-                        <Pill tone={statusTone(c.status)}>{c.status}</Pill>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-        ) : (
-          <Panel title={`QA controls (${controls.length} shown)`}>
-            <div className="table-scroll">
-              <table>
-                <caption>ACFR investment QA checklist with illustrative statuses</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Category</th>
-                    <th scope="col">Control</th>
-                    <th scope="col">Applies to</th>
-                    <th scope="col">Severity</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {controls.map((c) => (
-                    <tr key={c.control}>
-                      <td>{c.category}</td>
-                      <td>{c.control}</td>
-                      <td>{c.appliesTo}</td>
-                      <td>{c.severity}</td>
-                      <td>
-                        <Pill tone={statusTone(c.status)}>{c.status}</Pill>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-        )}
       </details>
     </>
   );
