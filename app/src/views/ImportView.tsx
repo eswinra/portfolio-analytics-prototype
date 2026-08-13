@@ -3,6 +3,7 @@ import { useRef, useState, type DragEvent } from 'react';
 import invalidSampleCsv from '../../../data/sample/invalid/bad_schema_version.csv?raw';
 import templateCsv from '../../../data/sample/market_pulse_template.csv?raw';
 import { Panel, Pill } from '../components/ui';
+import { COLUMN_DOCS, DICTIONARY_COLUMNS } from '../lib/contract/dictionary';
 import { useDataset } from '../lib/dataset/useDataset';
 import type { ImportError } from '../lib/contract/parse';
 
@@ -234,16 +235,98 @@ export function ImportView() {
               target="_blank"
               rel="noreferrer"
             >
-              View the full validation rules (V01–V18)
+              View the full validation rules (V01–V21)
             </a>
           </li>
         </ul>
       </Panel>
 
       <details className="panel">
-        <summary>What the validator checks (V01–V18)</summary>
+        <summary>How to fill the template — first-timer guide</summary>
+        <ol style={{ marginTop: '0.6rem' }}>
+          <li>
+            Download the market-pulse template above (or start from yesterday's file — the daily
+            workflow appends one day per close, and history deepens every window).
+          </li>
+          <li>
+            Paste the day's closes into the value column. Returns and weights are{' '}
+            <strong>decimals</strong>: 4.17% is <code>0.0417</code>, never <code>4.17</code>.
+          </li>
+          <li>One fund per file — Pension and OPEB are separate imports.</li>
+          <li>
+            If a value is genuinely unavailable, leave it blank AND set{' '}
+            <code>quality_status=missing</code>; the app shows an honest gap, never a zero.
+          </li>
+          <li>
+            Save as CSV and drop it above. The preflight shows exactly what would change — nothing
+            applies until you confirm.
+          </li>
+        </ol>
+        <p className="footnote">The three Monday-morning mistakes, and what the validator says:</p>
+        <ul className="footnote">
+          <li>
+            <strong>Whole-number percents</strong> (4.17 for 4.17%) → rejected by V10 with the
+            decimal expected. Fix: divide by 100.
+          </li>
+          <li>
+            <strong>Two funds in one file</strong> → rejected by V17. Fix: split into one file per
+            entity.
+          </li>
+          <li>
+            <strong>Blank value without the missing flag</strong> → rejected by V08. Fix: set{' '}
+            <code>quality_status=missing</code> on that row.
+          </li>
+        </ul>
+      </details>
+
+      <details className="panel">
+        <summary>Data dictionary — every column and enum token (schema 1.2)</summary>
+        <p className="footnote" style={{ marginTop: '0.6rem' }}>
+          Rendered directly from the validator's own constants — this table cannot drift from the
+          import rules. Schema 1.0/1.1 files (29 columns, without the last three) remain valid.
+        </p>
+        <div className="table-scroll">
+          <table>
+            <caption>Contract columns in file order</caption>
+            <thead>
+              <tr>
+                <th scope="col">Column</th>
+                <th scope="col">Description</th>
+                <th scope="col">Allowed tokens</th>
+                <th scope="col">Rule</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DICTIONARY_COLUMNS.map((col) => {
+                const d = COLUMN_DOCS[col];
+                return (
+                  <tr key={col}>
+                    <td>
+                      <code>{col}</code>
+                    </td>
+                    <td className="footnote">
+                      {d.desc}
+                      {d.example ? (
+                        <>
+                          {' '}
+                          e.g. <code>{d.example}</code>
+                        </>
+                      ) : null}
+                    </td>
+                    <td className="footnote">{d.enumTokens ? d.enumTokens.join(' · ') : 'free'}</td>
+                    <td className="footnote">{d.rule ?? '—'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details className="panel">
+        <summary>What the validator checks (V01–V21)</summary>
         <ul className="footnote" style={{ marginTop: '0.6rem' }}>
-          <li>Schema version, required columns, closed enums (V02, V03, V06)</li>
+          <li>Schema version, version-gated column sets, closed enums (V02, V03, V06)</li>
           <li>Duplicate record ids and duplicate natural keys (V04, V05)</li>
           <li>
             Numbers parse; blank or missing-flagged values never render numerically (V07, V08)
@@ -252,6 +335,10 @@ export function ImportView() {
           <li>Allocation weights sum to 100%; contribution reconciles (V13, V14)</li>
           <li>reported_public confined to quotation record types (V15)</li>
           <li>Exactly one portfolio entity per file (V17)</li>
+          <li>
+            Provenance (schema 1.2): entered_by on user-import rows; reviewer named on
+            reviewed/published rows; review_status enum (V19, V20, V21)
+          </li>
         </ul>
       </details>
     </>

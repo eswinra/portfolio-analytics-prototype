@@ -28,6 +28,14 @@ findings import with visible flags.
 | V16 | Mixed vintages: within one `record_type`+`metric_id` series, `as_of_date` must be single-valued for balance records (`allocation`) | Reject | — |
 | V17 | Exactly **one** portfolio entity per file (`public_reference` citation rows exempt): multi-entity files are rejected outright — no silent blending; a single unknown entity → Warn banner | Reject/Warn | — |
 | V18 | File size ≤ 5 MB, ≤ 20,000 rows (prototype bounds) | Reject | — |
+| V19 | Schema 1.2 files: `entered_by` non-blank on every `source_type=user_import` row | Reject | — |
+| V20 | `reviewed_by` non-blank whenever `review_status` ∈ {`reviewed`, `published`} | Reject | — |
+| V21 | `review_status` ∈ {`draft`, `reviewed`, `published`, `n/a`} or blank (≡ n/a) | Reject | — |
+
+V02 (amended for 1.2): the header must be exactly the 29 base columns or the 32-column set
+including `entered_by`/`reviewed_by`/`review_status` — a partial provenance header rejects.
+The declared `schema_version` must match the column set on every row (32 cols ⇒ 1.2.x;
+29 cols ⇒ 1.0.x/1.1.x).
 
 ## Error-report format
 

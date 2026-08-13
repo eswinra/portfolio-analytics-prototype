@@ -24,9 +24,9 @@ os.makedirs(INV, exist_ok=True)
 
 wb = openpyxl.load_workbook(WB, data_only=True)
 ws = wb["Export_Contract"]
-NCOL = 29
+NCOL = 32  # schema 1.2: 29 base columns + entered_by / reviewed_by / review_status
 hdr = [ws.cell(row=6, column=j + 1).value for j in range(NCOL)]
-assert hdr[0] == "record_id" and hdr[-1] == "schema_version", hdr
+assert hdr[0] == "record_id" and hdr[-1] == "review_status", hdr
 
 def fmt(v):
     if v is None:
@@ -124,7 +124,35 @@ d = clone()
 d[0][i_class] = "official_performance"
 write(os.path.join(INV, "bad_classification.csv"), hdr, d)
 
-print("wrote 8 invalid fixtures under", INV)
+# --- schema 1.2 provenance variants ------------------------------------------------
+i_src = hdr.index("source_type")
+i_entered = hdr.index("entered_by")
+i_reviewed = hdr.index("reviewed_by")
+i_rstatus = hdr.index("review_status")
+
+# 9. user_import row without entered_by (V19)
+d = clone()
+d[0][i_src] = "user_import"
+d[0][i_entered] = ""
+write(os.path.join(INV, "user_import_no_entered_by.csv"), hdr, d)
+
+# 10. published row without a reviewer (V20)
+d = clone()
+d[0][i_reviewed] = ""
+assert d[0][i_rstatus] == "published"
+write(os.path.join(INV, "published_no_reviewer.csv"), hdr, d)
+
+# 11. invalid review_status token (V21)
+d = clone()
+d[0][i_rstatus] = "approved"
+write(os.path.join(INV, "bad_review_status.csv"), hdr, d)
+
+# 12. partial provenance header — reviewed_by column dropped (V02)
+h12 = [h for h in hdr if h != "reviewed_by"]
+d = [[c for j, c in enumerate(r) if j != i_reviewed] for r in rows]
+write(os.path.join(INV, "partial_provenance_columns.csv"), h12, d)
+
+print("wrote 12 invalid fixtures under", INV)
 
 README = """# Sample data (synthetic)
 
@@ -132,7 +160,9 @@ README = """# Sample data (synthetic)
 `DEMOFUND` produced by the analyst workbook (`tools/build_workbook.py`, deterministic seed
 20260630; exported by `tools/make_fixtures.py`). It contains **no actual portfolio data**;
 the only `reported_public` rows are individually cited quotations from public LACERA
-documents. Schema: 1.0.0 — see `docs/data-contract.md` and `docs/data-dictionary.md`.
+documents. Schema: 1.2.0 (29 base columns + `entered_by`/`reviewed_by`/`review_status`
+provenance; actor labels are synthetic — `PA-ANALYST-1`, `PA-LEAD-1` — never real names).
+See `docs/data-contract.md` and `docs/data-dictionary.md`.
 
 `invalid/` contains deliberately malformed variants used to test the import validator
 (`docs/import-validation-rules.md`). Each file name states its defect.

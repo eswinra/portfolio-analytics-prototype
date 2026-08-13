@@ -42,6 +42,15 @@ Daily → 1 business day; Monthly → 45 calendar days; Quarterly → 135 days; 
 badges; `calculated` displays the weakest origin among its inputs (lineage via `method_id` +
 `source_name`).
 
+## Provenance columns (schema 1.2)
+
+`entered_by` — who keyed the row (initials or role label; synthetic labels like
+`PA-ANALYST-1` in public fixtures). Required on `user_import` rows (V19).
+`reviewed_by` — reviewer; required when `review_status` is `reviewed`/`published` (V20).
+`review_status` — `draft` · `reviewed` · `published` · `n/a` (blank ≡ n/a; V21). Draft rows
+raise the app's draft banner. The in-app Data Dictionary panel (Import page) renders these
+definitions from the validator's own constants and cannot drift from this document's intent.
+
 ## Category display names
 
 `GROWTH` Growth · `CREDIT` Credit · `RAIH` Real Assets & Inflation Hedges · `RRM` Risk

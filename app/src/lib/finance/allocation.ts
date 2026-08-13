@@ -19,9 +19,15 @@ export interface AllocationStatus extends AllocationRow {
   rangeStatus: 'within' | 'out' | 'n/a';
   /** distance to the nearer policy boundary (decimal); negative when outside the band */
   boundaryDistance: number | null;
+  /** within the band but within NEAR_BOUND_THRESHOLD of a boundary — early warning, not a breach */
+  nearBound: boolean;
   bandMin: number | null;
   bandMax: number | null;
 }
+
+/** Early-warning distance: 1.0 pp inside a policy bound. Constant until thresholds are
+ *  data-driven (tolerance_definition, planned with the Reconciliation work). */
+export const NEAR_BOUND_THRESHOLD = 0.01;
 
 /**
  * Bands are explicit min/max (IPS bands can be asymmetric — Pension Cash is 1% with +2/−1,
@@ -49,6 +55,10 @@ export function allocationStatus(
       overUnderMm,
       rangeStatus,
       boundaryDistance,
+      nearBound:
+        rangeStatus === 'within' &&
+        boundaryDistance !== null &&
+        boundaryDistance <= NEAR_BOUND_THRESHOLD,
       bandMin: band ? band.min : null,
       bandMax: band ? band.max : null,
     };

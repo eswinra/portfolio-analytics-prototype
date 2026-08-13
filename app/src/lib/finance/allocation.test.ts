@@ -113,6 +113,43 @@ describe('allocationStatus with explicit min/max bands', () => {
     expect(breach.boundaryDistance).toBeCloseTo(0.17 - 0.19, 10); // negative outside
   });
 
+  it('flags near-bound sleeves within 1.0 pp of a boundary — never breaches', () => {
+    const near = allocationStatus(
+      [
+        {
+          categoryId: 'GROWTH',
+          emvMm: 1,
+          actualWeight: 0.405, // 0.5 pp above the 40% min
+          targetWeight: 0.48,
+          overUnderPct: -0.075,
+        },
+      ],
+      100,
+      LIMITS,
+    )[0]!;
+    expect(near.rangeStatus).toBe('within');
+    expect(near.nearBound).toBe(true);
+
+    const comfortable = allocationStatus(rows, 100, LIMITS);
+    expect(comfortable.find((r) => r.categoryId === 'GROWTH')?.nearBound).toBe(false);
+
+    const breach = allocationStatus(
+      [
+        {
+          categoryId: 'GROWTH',
+          emvMm: 1,
+          actualWeight: 0.39,
+          targetWeight: 0.48,
+          overUnderPct: -0.09,
+        },
+      ],
+      100,
+      LIMITS,
+    )[0]!;
+    expect(breach.rangeStatus).toBe('out');
+    expect(breach.nearBound).toBe(false); // out-of-range is a breach, not a warning
+  });
+
   it('computes over/under dollars from the full total only', () => {
     const s = allocationStatus(rows, 10000, LIMITS);
     expect(s.find((r) => r.categoryId === 'GROWTH')?.overUnderMm).toBeCloseTo(186, 6);

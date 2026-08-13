@@ -45,6 +45,14 @@ function Shell() {
         <strong>Prototype.</strong> Synthetic and cited public data only — not an official LACERA
         system, performance report, or statement of endorsement.
       </div>
+      {dataset.draftRecordCount > 0 ? (
+        <div className="disclaimer-band draft-band" role="status">
+          <strong>Draft data.</strong> {dataset.draftRecordCount} record
+          {dataset.draftRecordCount === 1 ? '' : 's'} in this dataset{' '}
+          {dataset.draftRecordCount === 1 ? 'is' : 'are'} still <code>review_status=draft</code> —
+          figures may change on review.
+        </div>
+      ) : null}
       <header className="masthead">
         <h1>Fund Pulse</h1>
         <div className="entity-tabs" role="group" aria-label="Select fund">

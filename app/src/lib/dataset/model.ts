@@ -79,12 +79,25 @@ export interface JoinedMonth {
   benchmarkIndex: number | null;
 }
 
+export type ExceptionTier = 'blocking' | 'warning' | 'informational';
+
 export interface ExceptionItem {
   id: string;
   severity: 'warn' | 'fail';
+  /** triage tier: blocking (wrong/suppressed figures) > warning (degraded) > informational */
+  tier: ExceptionTier;
+  /** days open, computed from dates inside the file; null when no date anchors the issue */
+  ageDays: number | null;
   description: string;
   impact: string;
   nextAction: string;
+}
+
+export interface TeamActivityEntry {
+  actor: string;
+  enteredRows: number;
+  reviewedRows: number;
+  latestAsOf: string;
 }
 
 export interface DatasetMeta {
@@ -126,6 +139,10 @@ export interface Dataset {
   policyRecordCount: number;
   /** where the allocation bands came from: dataset policy records, or the bundled pack */
   policySource: 'dataset' | 'bundled';
+  /** schema 1.2: rows still review_status=draft (drives the shell banner) */
+  draftRecordCount: number;
+  /** schema 1.2: per-actor entry/review row counts — the file is the audit log */
+  teamActivity: TeamActivityEntry[];
 }
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -406,6 +423,18 @@ export function buildDataset(
   // ---- exceptions requiring review (derived, staff-analytics labeling)
   // Root-cause merged: a degraded market series and the workbook control that flags it are ONE
   // issue, not two — "2 issues affecting 2 controls", never four separate warnings.
+  // Tiers: blocking (a displayed figure is wrong or suppressed) > warning (degraded input) >
+  // informational (nothing wrong, but the team should know). Age is computed from dates inside
+  // the file only — no clock state survives an import.
+  const refDate = marketDate && marketDate > asOf ? marketDate : asOf;
+  const dayDiff = (from: string | null): number | null => {
+    if (!from || !refDate) return null;
+    const d = Math.round((Date.parse(refDate) - Date.parse(from)) / 86400000);
+    return Number.isFinite(d) && d >= 0 ? d : null;
+  };
+  const oldestDate = (dates: (string | null)[]): string | null =>
+    dates.filter((d): d is string => d !== null).sort()[0] ?? null;
+
   const exceptions: ExceptionItem[] = [];
   const missingProxies = proxyStrip.filter((p) => p.state === 'missing');
   const staleProxies = proxyStrip.filter((p) => p.state === 'stale');
@@ -413,6 +442,8 @@ export function buildDataset(
     exceptions.push({
       id: 'ISSUE-MISSING',
       severity: 'warn',
+      tier: 'warning',
+      ageDays: dayDiff(oldestDate(missingProxies.map((p) => p.lastDate))),
       description: `${missingProxies.map((p) => p.proxyId).join(', ')} — final close missing (control CHK-06)`,
       impact: 'Excluded from the daily read-through; coverage reduced.',
       nextAction: 'Refresh the market export or confirm the source series.',
@@ -422,6 +453,8 @@ export function buildDataset(
     exceptions.push({
       id: 'ISSUE-STALE',
       severity: 'warn',
+      tier: 'warning',
+      ageDays: dayDiff(oldestDate(staleProxies.map((p) => p.lastDate))),
       description: `${staleProxies.map((p) => `${p.proxyId} — stale since ${p.lastDate ?? 'n/a'}`).join(', ')} (control CHK-07)`,
       impact: 'Excluded from the daily read-through; coverage reduced.',
       nextAction: 'Refresh the market export or confirm the source series.',
@@ -437,6 +470,8 @@ export function buildDataset(
       exceptions.push({
         id: c.id,
         severity: c.status === 'FAIL' ? 'fail' : 'warn',
+        tier: c.status === 'FAIL' ? 'blocking' : 'warning',
+        ageDays: null,
         description: c.note || `Workbook control ${c.id} is ${c.status}`,
         impact: 'Control state travels with the dataset; investigate at the source workbook.',
         nextAction: 'Review the control detail on the Exceptions view.',
@@ -448,6 +483,8 @@ export function buildDataset(
       exceptions.push({
         id: `ALLOC-${a.categoryId}`,
         severity: 'fail',
+        tier: 'blocking',
+        ageDays: null,
         description: `${a.categoryId} actual weight is outside the IPS policy range`,
         impact: 'Factual report of an out-of-range position; not a trade instruction.',
         nextAction: 'Escalate per rebalancing procedures (IPS §F).',
@@ -459,6 +496,8 @@ export function buildDataset(
       exceptions.push({
         id: `SPAN-${p.label}`,
         severity: 'fail',
+        tier: 'blocking',
+        ageDays: null,
         description: `Benchmark period span does not match the portfolio span for ${p.label}`,
         impact: 'Excess return suppressed for this period.',
         nextAction: 'Correct the period records in the source file.',
@@ -469,11 +508,54 @@ export function buildDataset(
     exceptions.push({
       id: 'EMV-PARTIAL',
       severity: 'fail',
+      tier: 'blocking',
+      ageDays: null,
       description: 'One or more sleeve market values are missing',
       impact: 'Total EMV and dollar policy gaps are suppressed (no partial totals).',
       nextAction: 'Supply the missing allocation records.',
     });
   }
+
+  // ---- schema 1.2 provenance: draft census + per-actor activity (the file is the audit log)
+  const draftRecordCount = scoped.filter((r) => r.review_status === 'draft').length;
+  if (draftRecordCount > 0) {
+    exceptions.push({
+      id: 'DRAFT-RECORDS',
+      severity: 'warn',
+      tier: 'informational',
+      ageDays: null,
+      description: `${draftRecordCount} record${draftRecordCount === 1 ? '' : 's'} still review_status=draft`,
+      impact: 'Figures derived from draft rows may change on review.',
+      nextAction: 'Have a reviewer mark the rows reviewed/published in the source file.',
+    });
+  }
+  const activity = new Map<string, TeamActivityEntry>();
+  const touch = (actor: string, kind: 'entered' | 'reviewed', date: string) => {
+    if (!actor.trim()) return;
+    const e = activity.get(actor) ?? {
+      actor,
+      enteredRows: 0,
+      reviewedRows: 0,
+      latestAsOf: date,
+    };
+    if (kind === 'entered') e.enteredRows += 1;
+    else e.reviewedRows += 1;
+    if (date > e.latestAsOf) e.latestAsOf = date;
+    activity.set(actor, e);
+  };
+  for (const r of scoped) {
+    touch(r.entered_by, 'entered', r.as_of_date);
+    touch(r.reviewed_by, 'reviewed', r.as_of_date);
+  }
+  const teamActivity = [...activity.values()].sort((a, b) => a.actor.localeCompare(b.actor));
+
+  const TIER_ORDER: Record<ExceptionTier, number> = { blocking: 0, warning: 1, informational: 2 };
+  exceptions.sort(
+    (a, b) =>
+      TIER_ORDER[a.tier] - TIER_ORDER[b.tier] ||
+      (b.ageDays ?? -1) - (a.ageDays ?? -1) ||
+      a.id.localeCompare(b.id),
+  );
 
   return {
     meta: {
@@ -505,5 +587,7 @@ export function buildDataset(
     readThroughDays,
     policyRecordCount: policyRecs.length,
     policySource,
+    draftRecordCount,
+    teamActivity,
   };
 }

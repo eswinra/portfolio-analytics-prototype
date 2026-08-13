@@ -57,6 +57,12 @@ for n, (proxy, move) in enumerate(MOVES.items(), start=1):
     row[i["value"]] = format(round(last_close[proxy] * (1 + move), 4), ".10g")
     row[i["quality_status"]] = "ok"
     row[i["retrieved_date"]] = "2026-08-07"
+    # schema 1.2 provenance: the day's paste is a user-import entry, not yet reviewed —
+    # importing therefore demos V19 (entered_by) plus the draft banner and review workflow
+    row[i["source_type"]] = "user_import"
+    row[i["entered_by"]] = "PA-ANALYST-2"
+    row[i["reviewed_by"]] = ""
+    row[i["review_status"]] = "draft"
     new_rows.append(row)
 
 # the daily workflow re-runs the checks: with a complete fresh day, CHK-06/07 pass
@@ -109,9 +115,11 @@ steps = [
      "daily_import_example.csv, which is exactly that export.  5) In the app: Import → drop the "
      "CSV → review the preflight (364 rows, 0 errors) → Apply."),
     ("What to look for after Apply", "Overview: 'Today's proxy pulse — market data through "
-     "2026-07-01', read-through led by Global Equity, coverage 43.5%, no data issues. "
-     "Exceptions: 0 issues, 12 controls passed. The fund KPIs and charts are unchanged (same "
-     "monthly history)."),
+     "2026-07-01', read-through led by Global Equity, coverage 43.5%, both market issues "
+     "cleared. A yellow DRAFT DATA banner appears: the six new rows are review_status=draft "
+     "(entered by PA-ANALYST-2, not yet reviewed) — Exceptions shows one informational issue "
+     "and the Team Activity panel now lists both actors. That is the schema-1.2 review "
+     "workflow: a reviewer would set the rows reviewed/published in the source file."),
     ("Real-data caution", "For licensed market data (Bloomberg terminal exports), use this "
      "workflow only on an internal copy of the app and never commit exports to the public "
      "repository. Files are parsed entirely in the browser and never transmitted."),

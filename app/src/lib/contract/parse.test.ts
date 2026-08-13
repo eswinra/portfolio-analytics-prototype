@@ -94,7 +94,18 @@ describe('valid fixture', () => {
     // one missing proxy + one stale proxy + their two WARN controls → exactly 2 issues
     expect(ds.exceptions).toHaveLength(2);
     expect(ds.exceptions.map((e) => e.id).sort()).toEqual(['ISSUE-MISSING', 'ISSUE-STALE']);
-    expect(ds.exceptions[0]?.description).toContain('CHK-06');
+    expect(ds.exceptions.find((e) => e.id === 'ISSUE-MISSING')?.description).toContain('CHK-06');
+  });
+
+  it('tiers and ages exceptions from dates inside the file (oldest first within a tier)', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    for (const e of ds.exceptions) expect(e.tier).toBe('warning');
+    // market data through 2026-06-30: USD last close 06-26 (4 days), OIL last close 06-29 (1)
+    const stale = ds.exceptions.find((e) => e.id === 'ISSUE-STALE')!;
+    const missing = ds.exceptions.find((e) => e.id === 'ISSUE-MISSING')!;
+    expect(stale.ageDays).toBe(4);
+    expect(missing.ageDays).toBe(1);
+    expect(ds.exceptions[0]?.id).toBe('ISSUE-STALE'); // older issue sorts first
   });
 
   it('OPEB fixture validates and scopes to the OPEB policy pack', () => {
@@ -148,6 +159,10 @@ describe('invalid fixtures are rejected with the right rule', () => {
     ['blank_value_flagged_ok.csv', 'V08'],
     ['period_start_after_end.csv', 'V09'],
     ['bad_classification.csv', 'V06'],
+    ['user_import_no_entered_by.csv', 'V19'],
+    ['published_no_reviewer.csv', 'V20'],
+    ['bad_review_status.csv', 'V21'],
+    ['partial_provenance_columns.csv', 'V02'],
   ];
 
   it.each(cases)('%s → %s', (file, rule) => {
@@ -244,5 +259,66 @@ describe('invalid fixtures are rejected with the right rule', () => {
     expect(res.warnings.map((w) => w.ruleId)).toContain('V08');
     const rec = res.records.find((r) => r.record_id === 'REC-0187');
     expect(rec?.value).toBeNull();
+  });
+});
+
+describe('schema 1.2 provenance', () => {
+  const v12 = load('demofund_export_v1.csv');
+
+  /** Strip the three provenance columns and re-declare 1.1 — a faithful legacy file. */
+  function downgradeTo11(csv: string): string {
+    return csv
+      .replace(',entered_by,reviewed_by,review_status', '')
+      .replaceAll(',PA-ANALYST-1,PA-LEAD-1,published', '')
+      .replaceAll(',1.2.0', ',1.1.0');
+  }
+
+  it('fixture actors surface as team activity; nothing is draft', () => {
+    const res = parseContractCsv(v12);
+    expect(res.ok).toBe(true);
+    const ds = buildDataset(res.records, 'workbook');
+    expect(ds.draftRecordCount).toBe(0);
+    expect(ds.teamActivity.map((t) => t.actor)).toEqual(['PA-ANALYST-1', 'PA-LEAD-1']);
+    expect(ds.teamActivity[0]?.enteredRows).toBe(358);
+    expect(ds.teamActivity[1]?.reviewedRows).toBe(358);
+  });
+
+  it('29-column 1.1 files stay valid; provenance normalizes to empty', () => {
+    const legacy = downgradeTo11(v12);
+    const res = parseContractCsv(legacy);
+    expect(res.ok).toBe(true);
+    expect(res.records).toHaveLength(358);
+    expect(res.records[0]?.entered_by).toBe('');
+    expect(res.records[0]?.review_status).toBe('');
+    const ds = buildDataset(res.records, 'workbook');
+    expect(ds.teamActivity).toHaveLength(0);
+    expect(ds.draftRecordCount).toBe(0);
+  });
+
+  it('32 columns declaring schema 1.1 is rejected (V02 version/column mismatch)', () => {
+    const mismatched = v12.replaceAll(',1.2.0,', ',1.1.0,');
+    expect(mismatched).not.toBe(v12);
+    const res = parseContractCsv(mismatched);
+    expect(res.ok).toBe(false);
+    expect(res.errors.map((e) => e.ruleId)).toContain('V02');
+  });
+
+  it('29 columns declaring schema 1.2 is rejected (V02 version/column mismatch)', () => {
+    const mismatched = downgradeTo11(v12).replaceAll(',1.1.0', ',1.2.0');
+    const res = parseContractCsv(mismatched);
+    expect(res.ok).toBe(false);
+    expect(res.errors.map((e) => e.ruleId)).toContain('V02');
+  });
+
+  it('draft rows are counted and raise an informational exception (banner + queue)', () => {
+    // draft with no reviewer is legal (V20 binds reviewed/published only)
+    const drafted = v12.replaceAll(',PA-ANALYST-1,PA-LEAD-1,published', ',PA-ANALYST-1,,draft');
+    const res = parseContractCsv(drafted);
+    expect(res.ok).toBe(true);
+    const ds = buildDataset(res.records, 'user_import');
+    expect(ds.draftRecordCount).toBe(358);
+    const info = ds.exceptions.find((e) => e.id === 'DRAFT-RECORDS')!;
+    expect(info.tier).toBe('informational');
+    expect(ds.exceptions[ds.exceptions.length - 1]?.id).toBe('DRAFT-RECORDS'); // sorts last
   });
 });

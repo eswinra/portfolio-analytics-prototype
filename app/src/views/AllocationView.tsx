@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { catLabel, fmtMm, fmtPct, Panel, Pill, statusTone } from '../components/ui';
+import { catLabel, fmtMm, fmtPct, Panel, Pill } from '../components/ui';
 import { policyFor } from '../fixtures/policyPack';
 import { useDataset } from '../lib/dataset/useDataset';
 import { weightsSumOk, type AllocationStatus } from '../lib/finance/allocation';
@@ -45,9 +45,13 @@ function BulletRow({ a }: { a: AllocationStatus }) {
         <span className="bullet-max">{fmtPct(a.bandMax, 0)}</span>
       </div>
       <div className="bullet-caption">
-        <Pill tone={statusTone(a.rangeStatus)}>
-          {a.rangeStatus === 'within' ? 'Within range' : 'Out of range'}
-        </Pill>{' '}
+        {a.rangeStatus === 'out' ? (
+          <Pill tone="bad">Out of range</Pill>
+        ) : a.nearBound ? (
+          <Pill tone="warn">Near bound</Pill>
+        ) : (
+          <Pill tone="good">Within range</Pill>
+        )}{' '}
         {a.boundaryDistance !== null ? (
           <span className="footnote">
             {(Math.abs(a.boundaryDistance) * 100).toFixed(2)} pp{' '}
@@ -87,7 +91,8 @@ export function AllocationView() {
         ))}
         <p className="panel-note">
           Non-policy exposures (Overlays &amp; Hedges, Other Asset): {fmtPct(nonPolicyWeight)} — 0%
-          policy weight, not range-monitored.
+          policy weight, not range-monitored. “Near bound” = within 1.0 pp of a policy boundary — an
+          early warning, not a breach.
         </p>
       </Panel>
 

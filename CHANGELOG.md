@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-08-13 — Revision 6: team-tool foundation (schema 1.2 provenance, dictionary, triage)
+
+First tranche of the internally-reviewed team-tool backlog (three items confirmed by the
+owner; requirements produced by an internal domain review and verified against the code).
+
+- **Schema 1.2 — provenance in the contract**: `entered_by`, `reviewed_by`, `review_status`
+  append after `schema_version`; column sets are version-gated so 1.0/1.1 files stay valid
+  (all three columns or none — partial headers reject). New rules **V19** (entered_by on
+  user-import rows), **V20** (reviewer named on reviewed/published rows), **V21**
+  (review_status enum). Any draft row raises a yellow **Draft data** banner and an
+  informational exception. New **Team Activity** panel on Exceptions derives per-actor
+  entry/review counts from the rows — the file is the audit log; the app stores nothing.
+  Both workbooks, fixtures (still 358 records each), and the import example regenerated at
+  1.2.0 with synthetic actor labels (`PA-ANALYST-1`, `PA-LEAD-1`); the import example's new
+  day is entered by `PA-ANALYST-2` as `draft`, so the demo import now shows the full review
+  workflow. Four new invalid samples (V19/V20/V21/partial header). Excel QA: all PASS.
+- **In-app Data Dictionary + onboarding (Import)**: every column and enum token rendered
+  from the validator's own constants — a typed map makes an undocumented column a compile
+  error, and a test pins token lists to the schema. "How to fill the template" first-timer
+  guide covers the three Monday-morning failures (whole-number percents/V10, two entities/
+  V17, blank-without-missing/V08) with fixes.
+- **Exceptions triage**: every issue now carries a **tier** (blocking / warning /
+  informational) and **days open** computed from dates inside the file; the queue sorts by
+  tier then age (the 4-day stale series now outranks the 1-day missing close).
+- **Allocation near-bound rider**: sleeves within 1.0 pp of a policy bound show an amber
+  "Near bound" state (early warning, never a breach); the Overview policy tile surfaces
+  the count. Threshold is a documented constant until tolerance-as-data arrives with the
+  Reconciliation work.
+- Tests 72 → 86; typecheck, lint, production build clean; draft-banner path verified
+  end-to-end in the browser (preflight → apply → banner → restore).
+
 ## 2026-08-06 — Revision 5.5: Policy page removed (owner decision)
 
 - The Policy tab restated IPS tables the PA team already owns, so it no longer occupies a

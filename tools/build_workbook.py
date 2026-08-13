@@ -497,7 +497,7 @@ put(ws, 4, 2, AS_OF, F_INPUT, fmt=DATE, fill=FILL_INPUT)
 wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "AsOfDate", attr_text="Policy_Targets!$B$4"))
 put(ws, 4, 4, "SchemaVersion", F_H2, border=False)
-put(ws, 4, 5, "1.1.0", F_INPUT, fill=FILL_INPUT)
+put(ws, 4, 5, "1.2.0", F_INPUT, fill=FILL_INPUT)
 wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "SchemaVersion", attr_text="Policy_Targets!$E$4"))
 put(ws, 5, 1, "Hurdle (annual, synthetic assumption)", F_H2, border=False)
@@ -1075,7 +1075,7 @@ col_widths(ws, [34, 24, 26, 22, 20, 12, 12, 12])
 
 # ================================================================ Export_Contract
 ws = wb.create_sheet("Export_Contract")
-sheet_title(ws, "Export_Contract — normalized interface for the web prototype (schema 1.0.0)",
+sheet_title(ws, "Export_Contract — normalized interface for the web prototype (schema 1.2.0)",
             "One record per row. Derived values are formula-linked to their calculation cells; "
             "input values are static. This sheet, exported as CSV, is the only interface the web "
             "prototype consumes.")
@@ -1083,7 +1083,9 @@ hdr = ["record_id", "record_type", "entity_id", "metric_id", "category_id", "val
        "currency", "scale", "as_of_date", "period_start", "period_end", "period_type",
        "frequency", "classification", "source_type", "source_name", "page_table", "provider",
        "retrieved_date", "book_of_record", "return_method", "gross_net", "valuation_status",
-       "benchmark_id", "method_id", "quality_status", "note", "schema_version"]
+       "benchmark_id", "method_id", "quality_status", "note", "schema_version",
+       # schema 1.2 provenance — synthetic actor labels only, never real names
+       "entered_by", "reviewed_by", "review_status"]
 EXPORT_HEADER_ROWS = 6  # title rows + header row (rows 1..6 in col A used before data)
 style_hdr(ws, 6, hdr)
 r = 7
@@ -1098,7 +1100,8 @@ def ex_row(record_type, metric_id, category_id, value, unit, asof, ps, pe, pt, f
     vals = [rid, record_type, entity, metric_id, category_id, value, unit, "USD",
             scale, asof, ps, pe, pt, freq, classification,
             source_type, source_name, page_table, provider, dt.date(2026, 8, 4),
-            book, rm, gn, vs, bench, method, qs, note, "1.1.0"]
+            book, rm, gn, vs, bench, method, qs, note, "1.2.0",
+            "PA-ANALYST-1", "PA-LEAD-1", "published"]
     for j, v in enumerate(vals):
         fnt = F_LINK if (j == 5 and value_is_formula) else (F_FORMULA if value_is_formula else F_INPUT)
         fmt_j = None
@@ -1225,7 +1228,7 @@ wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "EXPORT_EXPECTED", attr_text=str(N_RECORDS)))
 ws.freeze_panes = "A7"
 col_widths(ws, [10, 20, 11, 22, 16, 12, 6, 6, 5, 11, 11, 11, 7, 9, 15, 12, 18, 28, 20, 11,
-                8, 8, 7, 9, 10, 22, 9, 26, 9])
+                8, 8, 7, 9, 10, 22, 9, 26, 9, 14, 12, 12])
 
 wb.save(OUT)
 print(f"saved {OUT}")

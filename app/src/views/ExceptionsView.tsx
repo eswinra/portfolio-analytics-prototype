@@ -19,11 +19,15 @@ const CHECK_DESCRIPTIONS: Record<string, string> = {
   'CHK-12': 'Export record count matches expected',
 };
 
+const TIER_TONE = { blocking: 'bad', warning: 'warn', informational: 'neutral' } as const;
+
 export function ExceptionsView() {
   const { dataset, source, importWarnings } = useDataset();
-  const { exceptions, checks, meta, publicReferences } = dataset;
+  const { exceptions, checks, meta, publicReferences, teamActivity } = dataset;
 
-  const failures = exceptions.filter((e) => e.severity === 'fail').length;
+  const blocking = exceptions.filter((e) => e.tier === 'blocking').length;
+  const warning = exceptions.filter((e) => e.tier === 'warning').length;
+  const info = exceptions.filter((e) => e.tier === 'informational').length;
   const passing = checks.filter((c) => c.status === 'PASS');
   const pack = policyFor(meta.policyEntity);
 
@@ -31,9 +35,8 @@ export function ExceptionsView() {
     <>
       <h1>Exceptions &amp; data quality</h1>
       <p className="footnote">
-        {failures} failure{failures === 1 ? '' : 's'} · {exceptions.length - failures} issue
-        {exceptions.length - failures === 1 ? '' : 's'} need review · {passing.length} controls
-        passed. Staff analytics: factual states, never instructions.
+        {blocking} blocking · {warning} warning · {info} informational · {passing.length} controls
+        passed. Sorted by tier, then days open. Staff analytics: factual states, never instructions.
       </p>
 
       {exceptions.length === 0 ? (
@@ -44,10 +47,16 @@ export function ExceptionsView() {
         <Panel title={`Open issues (${exceptions.length})`}>
           <div className="table-scroll">
             <table>
-              <caption>Root-cause merged: a degraded series and its control are one issue</caption>
+              <caption>
+                Root-cause merged: a degraded series and its control are one issue. Age is computed
+                from dates inside the file — no clock survives an import.
+              </caption>
               <thead>
                 <tr>
-                  <th scope="col">Severity</th>
+                  <th scope="col">Tier</th>
+                  <th scope="col" className="num">
+                    Age
+                  </th>
                   <th scope="col">Issue</th>
                   <th scope="col">Impact</th>
                   <th scope="col">Next action</th>
@@ -57,7 +66,10 @@ export function ExceptionsView() {
                 {exceptions.map((e) => (
                   <tr key={e.id}>
                     <td>
-                      <Pill tone={e.severity === 'fail' ? 'bad' : 'warn'}>{e.severity}</Pill>
+                      <Pill tone={TIER_TONE[e.tier]}>{e.tier}</Pill>
+                    </td>
+                    <td className="num">
+                      {e.ageDays === null ? '—' : `${e.ageDays} day${e.ageDays === 1 ? '' : 's'}`}
                     </td>
                     <td>{e.description}</td>
                     <td className="footnote">{e.impact}</td>
@@ -69,6 +81,46 @@ export function ExceptionsView() {
           </div>
         </Panel>
       )}
+
+      {teamActivity.length > 0 ? (
+        <details className="panel">
+          <summary>Team activity — who entered and reviewed this dataset</summary>
+          <p className="footnote" style={{ marginTop: '0.6rem' }}>
+            Derived entirely from the dataset's provenance columns (schema 1.2) — the file is the
+            audit log; the app stores nothing. Bundled fixtures carry synthetic actor labels, never
+            real names.
+          </p>
+          <div className="table-scroll">
+            <table>
+              <caption>Per-actor row counts and latest as-of date</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Actor</th>
+                  <th scope="col" className="num">
+                    Rows entered
+                  </th>
+                  <th scope="col" className="num">
+                    Rows reviewed
+                  </th>
+                  <th scope="col">Latest as-of</th>
+                </tr>
+              </thead>
+              <tbody>
+                {teamActivity.map((t) => (
+                  <tr key={t.actor}>
+                    <td>
+                      <code>{t.actor}</code>
+                    </td>
+                    <td className="num">{t.enteredRows}</td>
+                    <td className="num">{t.reviewedRows}</td>
+                    <td>{t.latestAsOf}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ) : null}
 
       <details className="panel">
         <summary>Show {passing.length} passing controls</summary>

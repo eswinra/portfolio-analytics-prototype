@@ -4,7 +4,9 @@
 `DEMOFUND` produced by the analyst workbook (`tools/build_workbook.py`, deterministic seed
 20260630; exported by `tools/make_fixtures.py`). It contains **no actual portfolio data**;
 the only `reported_public` rows are individually cited quotations from public LACERA
-documents. Schema: 1.0.0 — see `docs/data-contract.md` and `docs/data-dictionary.md`.
+documents. Schema: 1.2.0 (29 base columns + `entered_by`/`reviewed_by`/`review_status`
+provenance; actor labels are synthetic — `PA-ANALYST-1`, `PA-LEAD-1` — never real names).
+See `docs/data-contract.md` and `docs/data-dictionary.md`.
 
 `invalid/` contains deliberately malformed variants used to test the import validator
 (`docs/import-validation-rules.md`). Each file name states its defect.

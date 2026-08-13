@@ -1,8 +1,30 @@
 # Data Contract — Workbook ↔ Web Prototype Interface
 
-Schema version: **1.1.0** (semver; `schema_version` column on every record). The web prototype
+Schema version: **1.2.0** (semver; `schema_version` column on every record). The web prototype
 consumes only this contract — never workbook presentation cells. Canonical valid instance:
 `data/sample/demofund_export_v1.csv` (358 records; OPEB twin `demo_opeb_export_v1.csv`).
+
+## 1.2.0 additions (2026-08-06) — provenance
+
+Three columns append after `schema_version` (the 29-column prefix of 1.0/1.1 files is
+untouched):
+
+- `entered_by` — who keyed the row (initials or role label). **Public fixtures carry
+  synthetic actor labels only** (`PA-ANALYST-1`); real initials belong in the team's own
+  local imports, which never leave the browser.
+- `reviewed_by` — who reviewed the row; required once `review_status` is `reviewed` or
+  `published` (V20).
+- `review_status` — enum `draft` / `reviewed` / `published` / `n/a` (blank ≡ n/a, V21). Any
+  `draft` row raises a visible banner in the app and an informational exception.
+
+**Version gating (V02, amended):** a file's column set must be exactly the 29 base columns
+*or* the 32-column set — all three provenance columns or none. 32 columns require every row
+to declare `schema_version` 1.2.x; 29 columns require 1.0.x/1.1.x. Mismatches reject.
+`entered_by` is required on `source_type=user_import` rows in 1.2 files (V19).
+
+**The audit log is the file:** there is no separate log store. Rows carry who/when; the app
+derives its Team Activity panel and draft census purely from the records, consistent with
+the history-in-the-file architecture.
 
 ## 1.1.0 additions (2026-08-06)
 

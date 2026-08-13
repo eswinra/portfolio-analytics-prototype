@@ -100,6 +100,17 @@ code {
   color: #f0d48a;
 }
 
+/* schema 1.2: visible whenever any row is still review_status=draft */
+.draft-band {
+  background: var(--status-warn-bg);
+  color: var(--status-warn-ink);
+}
+
+.draft-band strong,
+.draft-band code {
+  color: inherit;
+}
+
 .masthead {
   padding: 1.1rem 1.25rem 0.9rem;
   border-bottom: 3px double var(--rule);

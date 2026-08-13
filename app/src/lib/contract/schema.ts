@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Data contract schema 1.0.0 — mirrors docs/data-contract.md. */
+/** Data contract schema 1.2.0 — mirrors docs/data-contract.md. */
 
 export const SCHEMA_MAJOR = 1;
 
@@ -37,6 +37,8 @@ export const SOURCE_TYPES = [
   'synthetic_generator',
   'user_import',
 ] as const;
+/** schema 1.2: review workflow states ('' in a file is read as n/a) */
+export const REVIEW_STATUSES = ['draft', 'reviewed', 'published', 'n/a'] as const;
 
 export const REQUIRED_COLUMNS = [
   'record_id',
@@ -69,6 +71,10 @@ export const REQUIRED_COLUMNS = [
   'note',
   'schema_version',
 ] as const;
+
+/** schema 1.2 provenance columns — a file carries all three or none (V02). */
+export const PROVENANCE_COLUMNS = ['entered_by', 'reviewed_by', 'review_status'] as const;
+export const COLUMNS_V12 = [...REQUIRED_COLUMNS, ...PROVENANCE_COLUMNS] as const;
 
 const isoDate = z
   .string()
@@ -107,13 +113,25 @@ export const rawRecordSchema = z.object({
   quality_status: z.enum(QUALITY_STATUSES),
   note: z.string(),
   schema_version: z.string().regex(/^\d+\.\d+\.\d+$/, 'expected semver'),
+  // schema 1.2 provenance — absent in 1.0/1.1 files (header-gated in the parser, V02)
+  entered_by: z.string().optional(),
+  reviewed_by: z.string().optional(),
+  review_status: z.union([z.enum(REVIEW_STATUSES), z.literal('')]).optional(),
 });
 
 export type RawRecord = z.infer<typeof rawRecordSchema>;
+export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
 
-/** Parsed record: value resolved to number | status string | null(missing). */
-export interface ContractRecord extends Omit<RawRecord, 'value'> {
+/** Parsed record: value resolved to number | status string | null(missing); provenance
+ *  normalized to '' for pre-1.2 files so views never branch on undefined. */
+export interface ContractRecord extends Omit<
+  RawRecord,
+  'value' | 'entered_by' | 'reviewed_by' | 'review_status'
+> {
   value: number | string | null;
+  entered_by: string;
+  reviewed_by: string;
+  review_status: ReviewStatus | '';
 }
 
 export type RecordType = (typeof RECORD_TYPES)[number];

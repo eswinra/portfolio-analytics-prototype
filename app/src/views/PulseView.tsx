@@ -18,6 +18,7 @@ export function PulseView() {
   const [copied, setCopied] = useState(false);
 
   const breaches = allocation.filter((a) => a.rangeStatus === 'out').length;
+  const nearBound = allocation.filter((a) => a.nearBound).length;
   const fytd = periods.find((p) => p.label.startsWith('Fiscal'));
   const qtd = periods.find((p) => p.label.startsWith('Quarter'));
 
@@ -84,16 +85,19 @@ export function PulseView() {
         <div className="tile">
           <div className="tile-label">Policy status</div>
           <div className="tile-value">
-            {breaches === 0 ? (
-              <Pill tone="good">0 breaches</Pill>
-            ) : (
+            {breaches > 0 ? (
               <Pill tone="bad">
                 {breaches} breach{breaches === 1 ? '' : 'es'}
               </Pill>
+            ) : nearBound > 0 ? (
+              <Pill tone="warn">{nearBound} near bound</Pill>
+            ) : (
+              <Pill tone="good">0 breaches</Pill>
             )}
           </div>
           <div className="tile-sub">
-            vs IPS ranges · <Link to="/allocation">allocation</Link>
+            vs IPS ranges{nearBound > 0 && breaches > 0 ? ` · ${nearBound} near bound` : ''} ·{' '}
+            <Link to="/allocation">allocation</Link>
           </div>
         </div>
       </div>

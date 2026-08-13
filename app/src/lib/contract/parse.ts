@@ -1,14 +1,16 @@
 import Papa from 'papaparse';
 
 import {
+  COLUMNS_V12,
   type ContractRecord,
+  PROVENANCE_COLUMNS,
   type RawRecord,
   rawRecordSchema,
   REQUIRED_COLUMNS,
   SCHEMA_MAJOR,
 } from './schema';
 
-/** Import validator — implements docs/import-validation-rules.md (V01–V18). */
+/** Import validator — implements docs/import-validation-rules.md (V01–V21). */
 
 export interface ImportError {
   ruleId: string;
@@ -93,12 +95,22 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
   if (rows.length === 0) return failed([err('V01', 0, '-', 'file has no data rows')]);
   if (rows.length > MAX_ROWS) return failed([err('V18', 0, '-', 'file exceeds 20,000 rows')]);
 
-  // V02 columns
+  // V02 columns — version-gated sets: the 29 base columns (schema 1.0/1.1) or the 32-column
+  // set including provenance (schema 1.2). A partial provenance header is a rejection: three
+  // columns or none, never a guess.
   const cols = parsed.meta.fields ?? [];
-  const missingCols = REQUIRED_COLUMNS.filter((c) => !cols.includes(c));
+  const provPresent = PROVENANCE_COLUMNS.filter((c) => cols.includes(c));
+  const isV12File = provPresent.length === PROVENANCE_COLUMNS.length;
+  if (provPresent.length > 0 && !isV12File) {
+    for (const c of PROVENANCE_COLUMNS)
+      if (!cols.includes(c))
+        errors.push(err('V02', 0, c, `partial schema-1.2 provenance column set: ${c} missing`));
+  }
+  const expectedCols = isV12File ? COLUMNS_V12 : REQUIRED_COLUMNS;
+  const missingCols = expectedCols.filter((c) => !cols.includes(c));
   for (const c of missingCols) errors.push(err('V02', 0, c, `required column missing: ${c}`));
   for (const c of cols)
-    if (!(REQUIRED_COLUMNS as readonly string[]).includes(c))
+    if (!(COLUMNS_V12 as readonly string[]).includes(c))
       warnings.push(warn('V02', 0, c, `unknown column ignored: ${c}`));
   if (errors.length > 0) return failed(errors, warnings);
 
@@ -112,7 +124,7 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
     if (!res.success) {
       for (const issue of res.error.issues) {
         const col = String(issue.path[0] ?? '-');
-        const ruleId = col === 'schema_version' ? 'V03' : 'V06';
+        const ruleId = col === 'schema_version' ? 'V03' : col === 'review_status' ? 'V21' : 'V06';
         errors.push(err(ruleId, rowNo, col, issue.message, row[col]));
       }
       return;
@@ -130,6 +142,53 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
           `unsupported schema major version (file ${raw.schema_version}, app ${SCHEMA_MAJOR}.x)`,
           raw.schema_version,
         ),
+      );
+      return;
+    }
+
+    // V02 (row half): declared version must match the header's column set
+    const minor = Number(raw.schema_version.split('.')[1] ?? 0);
+    if (isV12File && minor < 2) {
+      errors.push(
+        err(
+          'V02',
+          rowNo,
+          'schema_version',
+          `provenance columns present but row declares ${raw.schema_version}; 1.2 columns require schema_version 1.2+`,
+          raw.schema_version,
+        ),
+      );
+      return;
+    }
+    if (!isV12File && minor >= 2) {
+      errors.push(
+        err(
+          'V02',
+          rowNo,
+          'schema_version',
+          `schema_version ${raw.schema_version} declared but provenance columns are absent`,
+          raw.schema_version,
+        ),
+      );
+      return;
+    }
+
+    // V19 accountability: 1.2 user-import rows must say who entered them
+    if (isV12File && raw.source_type === 'user_import' && !(raw.entered_by ?? '').trim()) {
+      errors.push(
+        err('V19', rowNo, 'entered_by', 'entered_by required on user_import rows (schema 1.2)'),
+      );
+      return;
+    }
+
+    // V20 review integrity: a reviewed/published row must name its reviewer
+    const reviewStatus = raw.review_status ?? '';
+    if (
+      (reviewStatus === 'reviewed' || reviewStatus === 'published') &&
+      !(raw.reviewed_by ?? '').trim()
+    ) {
+      errors.push(
+        err('V20', rowNo, 'reviewed_by', `reviewed_by required when review_status=${reviewStatus}`),
       );
       return;
     }
@@ -238,7 +297,13 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
       return;
     }
 
-    records.push({ ...raw, value });
+    records.push({
+      ...raw,
+      value,
+      entered_by: raw.entered_by ?? '',
+      reviewed_by: raw.reviewed_by ?? '',
+      review_status: raw.review_status ?? '',
+    });
   });
 
   if (errors.length > 0) return failed(errors, warnings);
