@@ -1,5 +1,43 @@
 # Changelog
 
+## 2026-08-13 — Revision 7: full team-tool backlog (contract 1.3 — recon, ACFR board, private markets)
+
+Remainder of the confirmed backlog plus the architecture reference from the internal review.
+
+- **Contract schema 1.3.0** (column set unchanged; 1.0–1.2 files stay valid): `recon_value`
+  source-side pairs (V05 key gains source_name for this type; V23 caps a key at two sources),
+  `tolerance_definition` (tolerance-as-data, ≥ 0), `acfr_section_status` (V22 enum; one row
+  per change — the file is the change log), `acfr_artifact_link` (links + metadata, never
+  files), `pm_commitment`/`pm_capital_account` (primitives only). Fixtures 358 → 376 records
+  each; new tracker fixture `demo_acfr_status_v1.csv` (24 records, entity DEMO-ACFR).
+- **Reconciliation tab** (nav: nine tabs): paired sources with the variance computed on
+  screen, tolerance carried as data, owner/review status/aging per pair; the internal-book
+  side ties exactly to the workbook's own EMV values and one category pair is a deliberate
+  demo break that also lands in Exceptions.
+- **ACFR board rebuilt on contract records**: five-section readiness cards (status, draft
+  version, owner, due-date aging, artifacts in/expected, full history expander), a
+  viewer-role toggle labeled "demonstration only — not access control", and a
+  leadership-gated Complete action that copies a ready-to-append CSV row — the file is the
+  record, so the demo cannot and does not write state. Recommendation stated on the page:
+  the enforceable tracker belongs in the identity-aware internal M365 environment (hybrid).
+  Crosswalk/QA registers demoted to an expander.
+- **Private-markets monitoring** on Performance: commitment / called / unfunded* /
+  distributed / lagged NAV / DPI* / TVPI* per synthetic sleeve (*computed, never imported;
+  zero-called ratios render em-dash, never zero).
+- **Performance period toggles** (1M / QTD / FYTD / ITD): on-screen chain-link
+  reconciliation of the selected window vs the exported figure (0.0 bp TIES on the fixture;
+  ITD = FYTD is stated, not hidden).
+- **Trends risk lenses** (min-20-observation gates, proxy-estimate labeled): max drawdown
+  with peak→trough dates, best/worst day, deviation vs 20-day average, and a date-matched
+  rolling correlation matrix. Daily fund-level risk remains deliberately unbuilt.
+- **Freshness lines** on every data view (newest as-of + entering actor); **enriched daily
+  brief** (policy breaches/near-bound, recon breaks, tiered+aged exceptions, draft count).
+- **Architecture diagram on Methodology**: the workflow tree recreated as a native inline
+  SVG with code-true vocabulary and LIVE/TARGET chips — every consumption-layer tab is
+  live; the AI intake→structure→extract engine and identity-enforced approvals are
+  target-state. Authoring template generator added (`tools/make_authoring_template.py`).
+- Tests 86 → 106; Excel QA all PASS both entities; every new surface browser-verified.
+
 ## 2026-08-13 — Revision 6: team-tool foundation (schema 1.2 provenance, dictionary, triage)
 
 First tranche of the internally-reviewed team-tool backlog (three items confirmed by the

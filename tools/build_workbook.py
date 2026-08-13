@@ -497,7 +497,7 @@ put(ws, 4, 2, AS_OF, F_INPUT, fmt=DATE, fill=FILL_INPUT)
 wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "AsOfDate", attr_text="Policy_Targets!$B$4"))
 put(ws, 4, 4, "SchemaVersion", F_H2, border=False)
-put(ws, 4, 5, "1.2.0", F_INPUT, fill=FILL_INPUT)
+put(ws, 4, 5, "1.3.0", F_INPUT, fill=FILL_INPUT)
 wb.defined_names.add(__import__("openpyxl").workbook.defined_name.DefinedName(
     "SchemaVersion", attr_text="Policy_Targets!$E$4"))
 put(ws, 5, 1, "Hurdle (annual, synthetic assumption)", F_H2, border=False)
@@ -1075,7 +1075,7 @@ col_widths(ws, [34, 24, 26, 22, 20, 12, 12, 12])
 
 # ================================================================ Export_Contract
 ws = wb.create_sheet("Export_Contract")
-sheet_title(ws, "Export_Contract — normalized interface for the web prototype (schema 1.2.0)",
+sheet_title(ws, "Export_Contract — normalized interface for the web prototype (schema 1.3.0)",
             "One record per row. Derived values are formula-linked to their calculation cells; "
             "input values are static. This sheet, exported as CSV, is the only interface the web "
             "prototype consumes.")
@@ -1100,7 +1100,7 @@ def ex_row(record_type, metric_id, category_id, value, unit, asof, ps, pe, pt, f
     vals = [rid, record_type, entity, metric_id, category_id, value, unit, "USD",
             scale, asof, ps, pe, pt, freq, classification,
             source_type, source_name, page_table, provider, dt.date(2026, 8, 4),
-            book, rm, gn, vs, bench, method, qs, note, "1.2.0",
+            book, rm, gn, vs, bench, method, qs, note, "1.3.0",
             "PA-ANALYST-1", "PA-LEAD-1", "published"]
     for j, v in enumerate(vals):
         fnt = F_LINK if (j == 5 and value_is_formula) else (F_FORMULA if value_is_formula else F_INPUT)
@@ -1221,6 +1221,44 @@ for cat, (lag, formula) in IPS_BENCH.items():
     ex_row("benchmark_definition", "benchmark_lag_months", cat, float(lag), "1", AS_OF, None,
            None, "", "Ad Hoc", "reported_public", "public_report", IPS_DOC[0], IPS_DOC[1],
            "LACERA IPS", bench=f"BM-{cat}", note=formula, fmt="0")
+
+# schema 1.3: reconciliation pairs + tolerance-as-data + private-markets sleeve (synthetic).
+# The internal-book sides tie exactly to the workbook's own EMV values; one category pair is a
+# deliberate demo break (variance beyond tolerance). Variance is never exported — the app
+# computes it (derived-not-imported).
+EMV_TOT_LAST = EXPECTED["emv_total_last"]
+EMV_CREDIT_LAST = EXPECTED["alloc_actual"]["CREDIT"] * EMV_TOT_LAST
+for metric, tol_v, tol_note in (
+        ("nav_total", 0.5, "custodian vs internal book, total fund NAV ($mm absolute)"),
+        ("emv_category", 0.3, "custodian vs internal book, category EMV ($mm absolute)")):
+    ex_row("tolerance_definition", metric, "", tol_v, "$mm", AS_OF, None, None, "", "Ad Hoc",
+           "synthetic", "workbook", "Recon_Policy", "tolerance-as-data", "synthetic generator",
+           note=tol_note, fmt=MM1)
+for metric, cat, side, book, val in (
+        ("nav_total", "TOTAL", "internal_book", "IBOR", round(EMV_TOT_LAST, 4)),
+        ("nav_total", "TOTAL", "custodian_feed", "ABOR", round(EMV_TOT_LAST + 0.21, 4)),
+        ("emv_category", "CREDIT", "internal_book", "IBOR", round(EMV_CREDIT_LAST, 4)),
+        ("emv_category", "CREDIT", "custodian_feed", "ABOR", round(EMV_CREDIT_LAST - 0.65, 4))):
+    ex_row("recon_value", metric, cat, val, "$mm", AS_OF, None, None, "", "Ad Hoc",
+           "synthetic", "workbook", side, "reconciliation input", "synthetic generator",
+           book=book, note="synthetic demo pair; custodian remains the book of record", fmt=MM1)
+
+# synthetic private-markets sleeve: primitives only — unfunded/DPI/TVPI are computed by the app
+PM_SLEEVES = [
+    ("PM-FUND-A", 150.0, 120.0, 95.0, 88.0),   # mature: distributing
+    ("PM-FUND-B", 100.0, 62.5, 18.0, 71.3),    # mid-life
+    ("PM-FUND-C", 75.0, 20.0, 0.0, 21.1),      # young: nothing back yet
+]
+for sleeve, commit, called, dist, nav in PM_SLEEVES:
+    for rtype, metric, val in (("pm_commitment", "commitment_total", commit),
+                               ("pm_commitment", "called_itd", called),
+                               ("pm_capital_account", "distributed_itd", dist)):
+        ex_row(rtype, metric, sleeve, val, "$mm", AS_OF, None, None, "", "Quarterly",
+               "synthetic", "workbook", "PM_Monitoring", "capital account", "synthetic generator",
+               fmt=MM1)
+    ex_row("pm_capital_account", "nav", sleeve, nav, "$mm", AS_OF, None, None, "", "Quarterly",
+           "synthetic", "workbook", "PM_Monitoring", "capital account", "synthetic generator",
+           vs="lagged", note="valuation as of 2026-03-31 (one-quarter lag)", fmt=MM1)
 
 EXPORT_LAST = r - 1
 N_RECORDS = EXPORT_LAST - 6

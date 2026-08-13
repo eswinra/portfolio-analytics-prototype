@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Data contract schema 1.2.0 — mirrors docs/data-contract.md. */
+/** Data contract schema 1.3.0 — mirrors docs/data-contract.md. */
 
 export const SCHEMA_MAJOR = 1;
 
@@ -16,7 +16,24 @@ export const RECORD_TYPES = [
   // schema 1.1: quoted IPS policy structure travels with the dataset
   'policy_target',
   'benchmark_definition',
+  // schema 1.3: reconciliation, ACFR workflow, private-markets monitoring
+  'recon_value',
+  'tolerance_definition',
+  'acfr_section_status',
+  'acfr_artifact_link',
+  'pm_commitment',
+  'pm_capital_account',
 ] as const;
+
+/** schema 1.3: ACFR section workflow states (acfr_section_status value column, V22) */
+export const ACFR_STATUSES = [
+  'not_started',
+  'in_progress',
+  'in_review',
+  'ready_signoff',
+  'complete',
+] as const;
+export type AcfrStatus = (typeof ACFR_STATUSES)[number];
 
 export const CLASSIFICATIONS = [
   'reported_public',

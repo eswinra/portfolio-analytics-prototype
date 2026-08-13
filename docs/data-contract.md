@@ -1,8 +1,33 @@
 # Data Contract — Workbook ↔ Web Prototype Interface
 
-Schema version: **1.2.0** (semver; `schema_version` column on every record). The web prototype
+Schema version: **1.3.0** (semver; `schema_version` column on every record). The web prototype
 consumes only this contract — never workbook presentation cells. Canonical valid instance:
-`data/sample/demofund_export_v1.csv` (358 records; OPEB twin `demo_opeb_export_v1.csv`).
+`data/sample/demofund_export_v1.csv` (376 records; OPEB twin `demo_opeb_export_v1.csv`; ACFR
+tracker `demo_acfr_status_v1.csv`).
+
+## 1.3.0 additions (2026-08-13) — reconciliation, ACFR workflow, private markets
+
+Six record types; the column set is unchanged from 1.2 (minor-version gating unchanged:
+32 columns ⇒ schema_version 1.2+).
+
+- `recon_value` — one row per SOURCE side of a reconciliation pair; the two sides share
+  (entity, metric_id, category_id, as_of) and differ in `source_name` (generic labels:
+  `internal_book`, `custodian_feed`). **The variance is always computed by the app, never
+  imported.** V05's natural key includes `source_name` for this type only; V23 caps a key at
+  two sources.
+- `tolerance_definition` — per-metric absolute threshold as data (`value` ≥ 0, V23):
+  tolerance-as-data, so thresholds are configurable without a settings store.
+- `acfr_section_status` — one row PER STATUS CHANGE of an ACFR section (`category_id` =
+  FIN/INV/ACT/STAT/INTRO; `value` = status token, V22 enum: not_started / in_progress /
+  in_review / ready_signoff / complete; `page_table` = draft version; `period_end` = due
+  date). Latest row per section is the state; the full history is the change log — the file
+  is the record. Lives in its own single-entity tracker file (V17).
+- `acfr_artifact_link` — links + metadata only, never files (`metric_id` = per-artifact slug;
+  `source_name` = title; `value` 1 + ok = received, blank + missing = outstanding;
+  `note` = link, synthetic placeholders in public fixtures).
+- `pm_commitment` / `pm_capital_account` — private-markets primitives per sleeve
+  (commitment_total, called_itd, distributed_itd, nav in $mm). **Unfunded, DPI and TVPI are
+  computed by the app**; NAV rows carry `valuation_status=lagged` and a lag note.
 
 ## 1.2.0 additions (2026-08-06) — provenance
 

@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  bestWorstDay,
   dailyReadThroughSeries,
+  maxDrawdown,
   monthToDateChange,
   observationChange,
   proxyTrend,
+  rollingCorrelation,
   rollingVolatility,
+  smaDeviation,
   type DailyPoint,
 } from './trends';
 
@@ -102,5 +106,61 @@ describe('dailyReadThroughSeries', () => {
     expect(days).toHaveLength(1);
     expect(days[0]!.impact).toBeCloseTo(0.3 * 0.01, 12); // bond excluded, not imputed
     expect(days[0]!.coverage).toBeCloseTo(0.3, 12);
+  });
+});
+
+describe('risk lenses (min-history gated)', () => {
+  const mk = (closes: (number | null)[], startDay = 1): { date: string; close: number | null }[] =>
+    closes.map((c, i) => ({
+      date: `2026-06-${String(startDay + i).padStart(2, '0')}`,
+      close: c,
+    }));
+
+  it('maxDrawdown finds the deepest peak-to-trough and gates on history', () => {
+    const closes = [
+      100, 105, 110, 99, 102, 108, 95, 97, 100, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112,
+      113,
+    ];
+    const dd = maxDrawdown(mk(closes))!;
+    expect(dd.maxDrawdown).toBeCloseTo(95 / 110 - 1, 10);
+    expect(dd.peakDate).toBe('2026-06-03');
+    expect(dd.troughDate).toBe('2026-06-07');
+    expect(maxDrawdown(mk(closes.slice(0, 10)))).toBeNull();
+  });
+
+  it('bestWorstDay picks the extreme single-day returns', () => {
+    const closes = Array.from({ length: 20 }, (_, i) => 100 + i);
+    closes[10] = 95; // big down day then rebound
+    const bw = bestWorstDay(mk(closes))!;
+    expect(bw.worst.date).toBe('2026-06-11');
+    expect(bw.worst.ret).toBeLessThan(0);
+    expect(bw.best.ret).toBeGreaterThan(0);
+    expect(bestWorstDay(mk(closes.slice(0, 5)))).toBeNull();
+  });
+
+  it('smaDeviation compares last close to its 20-observation average', () => {
+    const flat = Array.from({ length: 20 }, () => 100);
+    expect(smaDeviation(mk(flat))).toBeCloseTo(0, 10);
+    const rising = Array.from({ length: 20 }, (_, i) => 100 + i);
+    expect(smaDeviation(mk(rising))!).toBeGreaterThan(0);
+    expect(smaDeviation(mk(flat.slice(0, 10)))).toBeNull();
+  });
+
+  it('rollingCorrelation matches dates, gates on window, and detects sign', () => {
+    const n = 25;
+    const a = Array.from({ length: n }, (_, i) => 100 * (1 + 0.01 * Math.sin(i)));
+    const inverse = a.map((v) => 200 - v);
+    const ra = rollingCorrelation(mk(a), mk(a), 20);
+    expect(ra).toBeCloseTo(1, 6);
+    const rb = rollingCorrelation(mk(a), mk(inverse), 20);
+    expect(rb).toBeLessThan(-0.9);
+    expect(rollingCorrelation(mk(a.slice(0, 10)), mk(a.slice(0, 10)), 20)).toBeNull();
+  });
+
+  it('lenses skip missing closes rather than imputing', () => {
+    const withGap: (number | null)[] = Array.from({ length: 22 }, (_, i) => 100 + i);
+    withGap[5] = null;
+    const dd = maxDrawdown(mk(withGap));
+    expect(dd).not.toBeNull(); // 21 present obs still clear the gate
   });
 });

@@ -75,6 +75,104 @@ export function proxyTrend(points: readonly DailyPoint[]): ProxyTrend {
   };
 }
 
+/** Minimum present observations before a risk lens will display (honest-history gate). */
+export const LENS_MIN_OBS = 20;
+
+export interface DrawdownResult {
+  /** most negative peak-to-trough decline (≤ 0) */
+  maxDrawdown: number;
+  peakDate: string;
+  troughDate: string;
+}
+
+/** Maximum drawdown from a running peak over present closes; null under the history gate. */
+export function maxDrawdown(
+  points: readonly DailyPoint[],
+  minObs = LENS_MIN_OBS,
+): DrawdownResult | null {
+  const s = presentSeries(points);
+  if (s.length < minObs) return null;
+  let peak = s[0]!;
+  let best: DrawdownResult = { maxDrawdown: 0, peakDate: peak.date, troughDate: peak.date };
+  for (const p of s) {
+    if (p.close > peak.close) peak = p;
+    const dd = p.close / peak.close - 1;
+    if (dd < best.maxDrawdown) {
+      best = { maxDrawdown: dd, peakDate: peak.date, troughDate: p.date };
+    }
+  }
+  return best;
+}
+
+export interface DayReturn {
+  date: string;
+  ret: number;
+}
+
+/** Best and worst single-day returns between consecutive present closes. */
+export function bestWorstDay(
+  points: readonly DailyPoint[],
+  minObs = LENS_MIN_OBS,
+): { best: DayReturn; worst: DayReturn } | null {
+  const s = presentSeries(points);
+  if (s.length < minObs) return null;
+  let best: DayReturn | null = null;
+  let worst: DayReturn | null = null;
+  for (let i = 1; i < s.length; i++) {
+    const r = s[i]!.close / s[i - 1]!.close - 1;
+    if (best === null || r > best.ret) best = { date: s[i]!.date, ret: r };
+    if (worst === null || r < worst.ret) worst = { date: s[i]!.date, ret: r };
+  }
+  return best && worst ? { best, worst } : null;
+}
+
+/** Last close vs its `window`-observation simple moving average; null under the gate. */
+export function smaDeviation(points: readonly DailyPoint[], window = LENS_MIN_OBS): number | null {
+  const s = presentSeries(points);
+  if (s.length < window) return null;
+  const tail = s.slice(-window);
+  const sma = tail.reduce((a, p) => a + p.close, 0) / tail.length;
+  return sma > 0 ? s[s.length - 1]!.close / sma - 1 : null;
+}
+
+/**
+ * Pearson correlation of the last `window` DATE-MATCHED daily returns of two series.
+ * Days where either proxy lacks a return are dropped (never imputed); null when fewer
+ * than `window` matched days exist or either series is degenerate.
+ */
+export function rollingCorrelation(
+  a: readonly DailyPoint[],
+  b: readonly DailyPoint[],
+  window = LENS_MIN_OBS,
+): number | null {
+  const dayReturns = (points: readonly DailyPoint[]): Map<string, number> => {
+    const s = presentSeries(points);
+    const m = new Map<string, number>();
+    for (let i = 1; i < s.length; i++) m.set(s[i]!.date, s[i]!.close / s[i - 1]!.close - 1);
+    return m;
+  };
+  const ra = dayReturns(a);
+  const rb = dayReturns(b);
+  const dates = [...ra.keys()].filter((d) => rb.has(d)).sort();
+  if (dates.length < window) return null;
+  const tail = dates.slice(-window);
+  const xs = tail.map((d) => ra.get(d)!);
+  const ys = tail.map((d) => rb.get(d)!);
+  const mean = (v: number[]) => v.reduce((s2, x) => s2 + x, 0) / v.length;
+  const mx = mean(xs);
+  const my = mean(ys);
+  let cov = 0;
+  let vx = 0;
+  let vy = 0;
+  for (let i = 0; i < tail.length; i++) {
+    cov += (xs[i]! - mx) * (ys[i]! - my);
+    vx += (xs[i]! - mx) ** 2;
+    vy += (ys[i]! - my) ** 2;
+  }
+  if (vx === 0 || vy === 0) return null;
+  return cov / Math.sqrt(vx * vy);
+}
+
 export interface ReadThroughDay {
   date: string;
   /** Σ policy weight × proxy daily return, over proxies priced on this and the prior day */

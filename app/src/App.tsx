@@ -9,6 +9,7 @@ import { ImportView } from './views/ImportView';
 import { LimitationsView } from './views/LimitationsView';
 import { PerformanceView } from './views/PerformanceView';
 import { PulseView } from './views/PulseView';
+import { ReconView } from './views/ReconView';
 import { TrendsView } from './views/TrendsView';
 
 /** On every route change: reset scroll and move focus to the main region. */
@@ -85,6 +86,7 @@ function Shell() {
         <NavLink to="/performance">Performance</NavLink>
         <NavLink to="/trends">Trends</NavLink>
         <NavLink to="/allocation">Allocation</NavLink>
+        <NavLink to="/recon">Recon</NavLink>
         <NavLink to="/exceptions">Exceptions</NavLink>
         <NavLink to="/acfr">ACFR</NavLink>
         <NavLink to="/import">Import</NavLink>
@@ -96,6 +98,7 @@ function Shell() {
           <Route path="/performance" element={<PerformanceView />} />
           <Route path="/trends" element={<TrendsView />} />
           <Route path="/allocation" element={<AllocationView />} />
+          <Route path="/recon" element={<ReconView />} />
           <Route path="/exceptions" element={<ExceptionsView />} />
           <Route path="/acfr" element={<AcfrView />} />
           <Route path="/policy" element={<Navigate to="/methodology" replace />} />

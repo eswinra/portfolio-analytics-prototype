@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { FreshnessLine } from '../components/FreshnessLine';
 import { GrowthChart, type GrowthDatum } from '../charts/GrowthChart';
 import { MonthlyReturnsChart } from '../charts/MonthlyReturnsChart';
 import { ClassBadge, fmtPct, fmtSmartReturn, Pill, SignedPct, statusTone } from '../components/ui';
@@ -59,6 +60,7 @@ export function PulseView() {
   return (
     <>
       <h1 className="visually-hidden">Overview</h1>
+      <FreshnessLine />
       <div className="tile-row">
         <div className="tile">
           <div className="tile-label">Fiscal YTD return (net)</div>

@@ -1,11 +1,22 @@
+import { useState } from 'react';
+
 import { GrowthChart, type GrowthDatum } from '../charts/GrowthChart';
 import { ContributionBars } from '../charts/ContributionBars';
-import { catLabel, fmtPct, fmtSmartReturn, Panel, Pill, statusTone } from '../components/ui';
+import { FreshnessLine } from '../components/FreshnessLine';
+import { catLabel, fmtMm, fmtPct, fmtSmartReturn, Panel, Pill, statusTone } from '../components/ui';
 import { useDataset } from '../lib/dataset/useDataset';
-import type { ContributionEntry } from '../lib/dataset/model';
+import type { ContributionEntry, PeriodTriple } from '../lib/dataset/model';
 import type { Reconciliation } from '../lib/finance/contribution';
 
 /** Performance: periods, growth, and contribution with its reconciliation — one page. */
+
+type SpanKey = '1M' | 'QTD' | 'FYTD' | 'ITD';
+const SPAN_LABEL: Record<SpanKey, string> = {
+  '1M': '1 month',
+  QTD: 'Quarter to date',
+  FYTD: 'Fiscal YTD (= 1Y)',
+  ITD: 'Fiscal YTD (= 1Y)', // demo history begins 2025-07-01, so ITD ≡ FYTD
+};
 
 /** Display-only tie-out (see the full-detail expander for the derivation). */
 function roundingAdjustment(
@@ -21,7 +32,8 @@ function roundingAdjustment(
 
 export function PerformanceView() {
   const { dataset } = useDataset();
-  const { periods, contributions, reconciliation, meta } = dataset;
+  const { periods, contributions, reconciliation, meta, pmSleeves } = dataset;
+  const [span, setSpan] = useState<SpanKey>('QTD');
 
   const growth: GrowthDatum[] = dataset.joinedMonths.map((m) => ({
     monthEnd: m.monthEnd,
@@ -31,9 +43,25 @@ export function PerformanceView() {
   const arithDisplayed = contributions.reduce((a, c) => a + Math.round(c.value * 10000) / 10000, 0);
   const nonZero = contributions.filter((c) => c.value !== 0);
 
+  // on-screen span reconciliation: chain the monthly TOTAL series over the selected window and
+  // tie it to the exported period_return figure — the tie-out is visible, not asserted
+  const target: PeriodTriple | undefined = periods.find((p) => p.label === SPAN_LABEL[span]);
+  const spanMonths = target
+    ? dataset.joinedMonths.filter(
+        (m) => m.monthEnd >= target.periodStart && m.monthEnd <= target.periodEnd,
+      )
+    : [];
+  const spanComplete = spanMonths.length > 0 && spanMonths.every((m) => m.portfolioReturn !== null);
+  const chained = spanComplete
+    ? spanMonths.reduce((g, m) => g * (1 + (m.portfolioReturn as number)), 1) - 1
+    : null;
+  const diffBp =
+    chained !== null && target?.portfolio != null ? (chained - target.portfolio) * 10000 : null;
+
   return (
     <>
       <h1>Performance</h1>
+      <FreshnessLine />
       <p className="footnote">
         Synthetic {meta.entityId} data as of {meta.asOf}. Net-of-fees TWR-style monthly linking; no
         annualization below one year. Calculations use unrounded values; displays are rounded.
@@ -85,6 +113,34 @@ export function PerformanceView() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div role="group" aria-label="Reconcile a period" style={{ marginTop: '0.6rem' }}>
+            {(['1M', 'QTD', 'FYTD', 'ITD'] as SpanKey[]).map((k) => (
+              <button
+                key={k}
+                className="linklike"
+                style={{ marginRight: '0.9rem', fontWeight: span === k ? 700 : 400 }}
+                aria-pressed={span === k}
+                onClick={() => setSpan(k)}
+              >
+                {k}
+              </button>
+            ))}
+            <span className="footnote">
+              {chained !== null && target?.portfolio != null && diffBp !== null ? (
+                <>
+                  chain-linked from the monthly series: <strong>{fmtPct(chained)}</strong> ·
+                  exported: {fmtPct(target.portfolio)} · difference{' '}
+                  {Math.abs(diffBp) < 0.05 ? '0.0' : Math.abs(diffBp).toFixed(1)} bp{' '}
+                  <Pill tone={Math.abs(diffBp) <= 1 ? 'good' : 'warn'}>
+                    {Math.abs(diffBp) <= 1 ? 'TIES' : 'CHECK'}
+                  </Pill>
+                  {span === 'ITD' ? ' · ITD = FYTD (demo history begins 2025-07-01)' : ''}
+                </>
+              ) : (
+                'monthly series incomplete for this window — reconciliation suppressed'
+              )}
+            </span>
           </div>
         </Panel>
 
@@ -208,6 +264,74 @@ export function PerformanceView() {
           </details>
         </Panel>
       </div>
+
+      {pmSleeves.length > 0 ? (
+        <Panel
+          title="Private markets — capital account monitoring (synthetic sleeve)"
+          note="Files carry only the primitives; unfunded, DPI and TVPI are computed on screen — never imported. NAV valuations are lagged and say so; a ratio with zero called capital shows an em-dash, never a zero."
+        >
+          <div className="table-scroll">
+            <table>
+              <caption>
+                Commitment, calls, distributions and lagged NAV per sleeve, with computed ratios
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Sleeve</th>
+                  <th scope="col" className="num">
+                    Commitment
+                  </th>
+                  <th scope="col" className="num">
+                    Called
+                  </th>
+                  <th scope="col" className="num">
+                    Unfunded*
+                  </th>
+                  <th scope="col" className="num">
+                    Distributed
+                  </th>
+                  <th scope="col" className="num">
+                    NAV
+                  </th>
+                  <th scope="col" className="num">
+                    DPI*
+                  </th>
+                  <th scope="col" className="num">
+                    TVPI*
+                  </th>
+                  <th scope="col">Valuation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pmSleeves.map((s) => (
+                  <tr key={s.sleeveId}>
+                    <td>
+                      <code>{s.sleeveId}</code>
+                    </td>
+                    <td className="num">{fmtMm(s.commitmentMm)}</td>
+                    <td className="num">{fmtMm(s.calledMm)}</td>
+                    <td className="num">{fmtMm(s.unfundedMm)}</td>
+                    <td className="num">{fmtMm(s.distributedMm)}</td>
+                    <td className="num">{fmtMm(s.navMm)}</td>
+                    <td className="num">{s.dpi === null ? '—' : `${s.dpi.toFixed(2)}x`}</td>
+                    <td className="num">{s.tvpi === null ? '—' : `${s.tvpi.toFixed(2)}x`}</td>
+                    <td>
+                      <Pill tone={s.valuationStatus === 'final' ? 'good' : 'warn'}>
+                        {s.valuationStatus}
+                      </Pill>
+                      <div className="footnote">{s.lagNote}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="panel-note">
+            * computed: unfunded = commitment − called; DPI = distributed ÷ called; TVPI =
+            (distributed + NAV) ÷ called. All figures $mm, synthetic.
+          </p>
+        </Panel>
+      ) : null}
     </>
   );
 }

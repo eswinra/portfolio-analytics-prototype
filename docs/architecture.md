@@ -86,3 +86,18 @@ with tabular numerals for figures.
 - CSV cell values are never re-emitted into downloadable CSV without escaping (no export path in v1).
 - Bounds: 5 MB / 20,000 rows per import.
 - CI workflow uses minimal Pages permissions and no secrets.
+
+## Revision 7 additions (2026-08-13)
+
+- **Contract 1.3**: six record types — `recon_value` + `tolerance_definition` (Reconciliation
+  tab; variance computed, tolerance-as-data; V05 natural key gains source_name for recon rows
+  only; V23), `acfr_section_status` + `acfr_artifact_link` (ACFR board as contract records in
+  a single-entity tracker file; V22), `pm_commitment` + `pm_capital_account` (private-markets
+  primitives; ratios computed in `lib/finance/privateMarkets.ts`).
+- **New surfaces**: Recon tab (`views/ReconView.tsx`), ACFR readiness board with soft
+  demonstration-only roles (`views/AcfrView.tsx` + `lib/dataset/acfr.ts`), private-markets
+  panel on Performance, period-toggle chain-link reconciliation on Performance, risk lenses +
+  rolling correlation on Trends (min-history gated), per-view freshness lines, enriched brief.
+- **Architecture diagram**: the PA workflow tree rendered as a native inline SVG
+  (`components/ArchitectureDiagram.tsx`) on Methodology — token-aligned with the code,
+  LIVE/TARGET chips marking current vs target state; no raster asset, no network request.

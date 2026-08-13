@@ -14,6 +14,8 @@ import {
 import { reconcileContribution, type Reconciliation } from '../finance/contribution';
 import { dataState, type DataState } from '../finance/staleness';
 import { growthIndex, periodsComparable, type MonthPoint } from '../finance/returns';
+import { buildPmSleeves, type PmSleeve } from '../finance/privateMarkets';
+import { buildReconPairs, type ReconPair } from '../finance/recon';
 import { policyReadThrough, type ReadThrough } from '../finance/readThrough';
 import {
   dailyReadThroughSeries,
@@ -143,6 +145,12 @@ export interface Dataset {
   draftRecordCount: number;
   /** schema 1.2: per-actor entry/review row counts — the file is the audit log */
   teamActivity: TeamActivityEntry[];
+  /** schema 1.3: reconciliation pairs (variance computed, tolerance-as-data) */
+  recons: ReconPair[];
+  /** schema 1.3: private-markets sleeves (ratios computed, never imported) */
+  pmSleeves: PmSleeve[];
+  /** newest as_of in the dataset and who entered that row (empty for pre-1.2 files) */
+  freshness: { latestAsOf: string | null; latestActor: string };
 }
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -516,6 +524,35 @@ export function buildDataset(
     });
   }
 
+  // ---- schema 1.3: reconciliation pairs + private markets (derived fields computed here)
+  const recons = buildReconPairs(scoped, refDate || null);
+  const pmSleeves = buildPmSleeves(scoped);
+  for (const pair of recons) {
+    if (pair.status === 'outside') {
+      const [a, b] = pair.sides;
+      exceptions.push({
+        id: `RECON-${pair.metricId}-${pair.categoryId || 'ALL'}`,
+        severity: 'warn',
+        tier: 'warning',
+        ageDays: pair.ageDays,
+        description: `${pair.metricId} ${pair.categoryId}: ${a?.source ?? '?'} vs ${b?.source ?? '?'} differ by ${pair.variance?.toFixed(2)} ${pair.unit} (tolerance ${pair.toleranceAbs?.toFixed(2)})`,
+        impact: 'Reconciliation break; the custodian remains the official book of record.',
+        nextAction: 'Trace the break at the source and re-import the corrected file.',
+      });
+    }
+    if (pair.status === 'incomplete') {
+      exceptions.push({
+        id: `RECON-INCOMPLETE-${pair.metricId}-${pair.categoryId || 'ALL'}`,
+        severity: 'warn',
+        tier: 'informational',
+        ageDays: pair.ageDays,
+        description: `${pair.metricId} ${pair.categoryId}: reconciliation awaiting its counterpart side`,
+        impact: 'Variance cannot be computed from one side.',
+        nextAction: 'Supply the missing recon_value row.',
+      });
+    }
+  }
+
   // ---- schema 1.2 provenance: draft census + per-actor activity (the file is the audit log)
   const draftRecordCount = scoped.filter((r) => r.review_status === 'draft').length;
   if (draftRecordCount > 0) {
@@ -548,6 +585,16 @@ export function buildDataset(
     touch(r.reviewed_by, 'reviewed', r.as_of_date);
   }
   const teamActivity = [...activity.values()].sort((a, b) => a.actor.localeCompare(b.actor));
+
+  // per-view freshness line: the newest row and who entered it (empty for pre-1.2 files)
+  let freshest: ContractRecord | null = null;
+  for (const r of scoped) {
+    if (freshest === null || r.as_of_date > freshest.as_of_date) freshest = r;
+  }
+  const freshness = {
+    latestAsOf: freshest?.as_of_date ?? null,
+    latestActor: freshest?.entered_by ?? '',
+  };
 
   const TIER_ORDER: Record<ExceptionTier, number> = { blocking: 0, warning: 1, informational: 2 };
   exceptions.sort(
@@ -589,5 +636,8 @@ export function buildDataset(
     policySource,
     draftRecordCount,
     teamActivity,
+    recons,
+    pmSleeves,
+    freshness,
   };
 }

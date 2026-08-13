@@ -10,8 +10,16 @@ import {
 } from 'recharts';
 import { Link } from 'react-router-dom';
 
+import { FreshnessLine } from '../components/FreshnessLine';
 import { fmtPct, fmtSmartReturn, Panel } from '../components/ui';
 import { useDataset } from '../lib/dataset/useDataset';
+import {
+  bestWorstDay,
+  LENS_MIN_OBS,
+  maxDrawdown,
+  rollingCorrelation,
+  smaDeviation,
+} from '../lib/finance/trends';
 
 /**
  * Trends: lenses over the history INSIDE the dataset — the file is the record. Every window
@@ -61,9 +69,12 @@ export function TrendsView() {
       ? last3.reduce((g, m) => g * (1 + m.benchmarkReturn!), 1) - 1
       : null;
 
+  const proxyIds = [...market.keys()].sort();
+
   return (
     <>
       <h1>Trends</h1>
+      <FreshnessLine />
       <p className="footnote">
         Every trend below is computed from the history <em>inside</em> the active dataset — the file
         is the record; the app keeps nothing between imports by design. This dataset carries{' '}
@@ -176,6 +187,106 @@ export function TrendsView() {
             </tbody>
           </table>
         </div>
+      </Panel>
+
+      <Panel
+        title="Risk lenses — drawdown, extremes, trend deviation (proxy estimates)"
+        note={`Each lens requires at least ${LENS_MIN_OBS} present observations and computes only from the imported series — market-proxy behavior, never fund-level risk. Daily fund risk is deliberately not built: proxy coverage cannot support it honestly.`}
+      >
+        <div className="table-scroll">
+          <table>
+            <caption>Per-proxy risk lenses over the full imported history</caption>
+            <thead>
+              <tr>
+                <th scope="col">Proxy</th>
+                <th scope="col" className="num">
+                  Max drawdown
+                </th>
+                <th scope="col">Peak → trough</th>
+                <th scope="col" className="num">
+                  Best day
+                </th>
+                <th scope="col" className="num">
+                  Worst day
+                </th>
+                <th scope="col" className="num">
+                  vs 20-day avg
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {proxyIds.map((proxyId) => {
+                const points = market.get(proxyId) ?? [];
+                const dd = maxDrawdown(points);
+                const bw = bestWorstDay(points);
+                const dev = smaDeviation(points);
+                return (
+                  <tr key={proxyId}>
+                    <td>
+                      <code>{proxyId}</code>
+                    </td>
+                    <td className="num">{dd === null ? '—' : fmtPct(dd.maxDrawdown)}</td>
+                    <td className="footnote">
+                      {dd === null ? '—' : `${dd.peakDate} → ${dd.troughDate}`}
+                    </td>
+                    <td className="num">{bw === null ? '—' : fmtSmartReturn(bw.best.ret)}</td>
+                    <td className="num">{bw === null ? '—' : fmtSmartReturn(bw.worst.ret)}</td>
+                    <td className="num">{dev === null ? '—' : fmtSmartReturn(dev)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <details>
+          <summary className="footnote">
+            Rolling {LENS_MIN_OBS}-day correlation between proxies (date-matched returns)
+          </summary>
+          <div className="table-scroll" style={{ marginTop: '0.6rem' }}>
+            <table>
+              <caption>
+                Pearson correlation of the last {LENS_MIN_OBS} matched daily returns; days where
+                either proxy lacks a close are dropped, never imputed
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">·</th>
+                  {proxyIds.map((id) => (
+                    <th key={id} scope="col" className="num">
+                      <code>{id.replace('DEMO-', '')}</code>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {proxyIds.map((rowId) => (
+                  <tr key={rowId}>
+                    <td>
+                      <code>{rowId.replace('DEMO-', '')}</code>
+                    </td>
+                    {proxyIds.map((colId) => {
+                      if (rowId === colId)
+                        return (
+                          <td key={colId} className="num footnote">
+                            1.00
+                          </td>
+                        );
+                      const c = rollingCorrelation(
+                        market.get(rowId) ?? [],
+                        market.get(colId) ?? [],
+                      );
+                      return (
+                        <td key={colId} className="num">
+                          {c === null ? '—' : c.toFixed(2)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
       </Panel>
 
       <Panel

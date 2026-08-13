@@ -1,3 +1,4 @@
+import { ArchitectureDiagram } from '../components/ArchitectureDiagram';
 import { ClassBadge, fmtPct, Panel } from '../components/ui';
 import { POLICY_PACKS } from '../fixtures/policyPack';
 
@@ -47,6 +48,23 @@ export function LimitationsView() {
           </li>
           <li>No predictions, recommendations, or trading affordances.</li>
         </ul>
+      </Panel>
+
+      <Panel title="Architecture — target pipeline, contract-aligned">
+        <ArchitectureDiagram />
+        <p className="panel-note">
+          Target architecture. The public site shows synthetic or cited-public data only; real data
+          stays internal and local.
+        </p>
+        <p className="footnote">
+          <strong>Current vs target:</strong> every consumption-layer tab is live in this prototype
+          (workbook of record, Allocation/Performance, Reconciliation, Exceptions, and the ACFR
+          board), all fed by the one validated CSV contract (schema 1.3, V01–V23). Target-state
+          pieces are the AI intake → structure → extract engine at the top — today the analyst
+          performs those steps with the workbook and templates — and identity-enforced approvals,
+          which belong in the internal M365 environment, not on a static public site. Rendered as a
+          native SVG (no raster, no network request).
+        </p>
       </Panel>
 
       <Panel title="What a future authorized internal version would need">

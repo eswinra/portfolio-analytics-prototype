@@ -113,7 +113,7 @@ steps = [
      "green rows at the bottom).  3) Re-run your checks (CHK-06/07 return to PASS with a "
      "complete, fresh strip).  4) Save Export_Contract as CSV — or use the companion "
      "daily_import_example.csv, which is exactly that export.  5) In the app: Import → drop the "
-     "CSV → review the preflight (364 rows, 0 errors) → Apply."),
+     "CSV → review the preflight (382 rows, 0 errors) → Apply."),
     ("What to look for after Apply", "Overview: 'Today's proxy pulse — market data through "
      "2026-07-01', read-through led by Global Equity, coverage 43.5%, both market issues "
      "cleared. A yellow DRAFT DATA banner appears: the six new rows are review_status=draft "

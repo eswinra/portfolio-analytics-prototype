@@ -31,6 +31,11 @@ findings import with visible flags.
 | V19 | Schema 1.2 files: `entered_by` non-blank on every `source_type=user_import` row | Reject | — |
 | V20 | `reviewed_by` non-blank whenever `review_status` ∈ {`reviewed`, `published`} | Reject | — |
 | V21 | `review_status` ∈ {`draft`, `reviewed`, `published`, `n/a`} or blank (≡ n/a) | Reject | — |
+| V22 | `acfr_section_status` value ∈ {`not_started`, `in_progress`, `in_review`, `ready_signoff`, `complete`} | Reject | — |
+| V23 | Recon integrity: ≤ 2 distinct `source_name`s per recon key; `tolerance_definition` value ≥ 0 | Reject | — |
+
+V05 (amended for 1.3): the natural key gains `source_name` for `record_type=recon_value`
+only — the two sides of a pair share every other key component by design.
 
 V02 (amended for 1.2): the header must be exactly the 29 base columns or the 32-column set
 including `entered_by`/`reviewed_by`/`review_status` — a partial provenance header rejects.

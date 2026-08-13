@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import { FreshnessLine } from '../components/FreshnessLine';
 import { catLabel, fmtMm, fmtPct, Panel, Pill } from '../components/ui';
 import { policyFor } from '../fixtures/policyPack';
 import { useDataset } from '../lib/dataset/useDataset';
@@ -78,6 +79,7 @@ export function AllocationView() {
   return (
     <>
       <h1>Allocation vs policy</h1>
+      <FreshnessLine />
       <p className="footnote">
         Synthetic {meta.entityId} data as of {meta.asOf}, measured against the {pack.entityLabel}{' '}
         IPS bands ({pack.version}; quoted tables under <Link to="/methodology">Methodology</Link>).

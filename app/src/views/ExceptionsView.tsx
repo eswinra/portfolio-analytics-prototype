@@ -1,3 +1,4 @@
+import { FreshnessLine } from '../components/FreshnessLine';
 import { ClassBadge, Panel, Pill, statusTone } from '../components/ui';
 import { policyFor } from '../fixtures/policyPack';
 import { useDataset } from '../lib/dataset/useDataset';
@@ -34,6 +35,7 @@ export function ExceptionsView() {
   return (
     <>
       <h1>Exceptions &amp; data quality</h1>
+      <FreshnessLine />
       <p className="footnote">
         {blocking} blocking · {warning} warning · {info} informational · {passing.length} controls
         passed. Sorted by tier, then days open. Staff analytics: factual states, never instructions.

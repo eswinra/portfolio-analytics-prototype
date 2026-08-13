@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 
 import {
+  ACFR_STATUSES,
   COLUMNS_V12,
   type ContractRecord,
   PROVENANCE_COLUMNS,
@@ -10,7 +11,7 @@ import {
   SCHEMA_MAJOR,
 } from './schema';
 
-/** Import validator — implements docs/import-validation-rules.md (V01–V21). */
+/** Import validator — implements docs/import-validation-rules.md (V01–V23). */
 
 export interface ImportError {
   ruleId: string;
@@ -42,6 +43,12 @@ const NUMERIC_RECORD_TYPES = new Set([
   'public_reference',
   'policy_target',
   'benchmark_definition',
+  // schema 1.3
+  'recon_value',
+  'tolerance_definition',
+  'pm_commitment',
+  'pm_capital_account',
+  'acfr_artifact_link', // 1 = received; blank + missing = outstanding
 ]);
 
 /** Record types allowed to carry the reported_public classification (quotations). */
@@ -200,7 +207,8 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
     }
     seenIds.add(raw.record_id);
 
-    // V05 natural key
+    // V05 natural key — recon_value alone keys on source_name too: the two sides of a
+    // reconciliation pair share every other key component by design (schema 1.3).
     const key = [
       raw.record_type,
       raw.entity_id,
@@ -209,6 +217,7 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
       raw.as_of_date,
       raw.period_start,
       raw.period_end,
+      raw.record_type === 'recon_value' ? raw.source_name : '',
     ].join('|');
     if (seenKeys.has(key)) {
       errors.push(
@@ -230,6 +239,21 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
       value = rawValue;
       if (!['PASS', 'WARN', 'FAIL'].includes(rawValue)) {
         errors.push(err('V06', rowNo, 'value', `check status must be PASS/WARN/FAIL`, rawValue));
+        return;
+      }
+    } else if (raw.record_type === 'acfr_section_status') {
+      // V22: ACFR workflow rows carry a status token, not a number
+      value = rawValue;
+      if (!(ACFR_STATUSES as readonly string[]).includes(rawValue)) {
+        errors.push(
+          err(
+            'V22',
+            rowNo,
+            'value',
+            `ACFR section status must be one of ${ACFR_STATUSES.join('/')}`,
+            rawValue,
+          ),
+        );
         return;
       }
     } else if (rawValue === '') {
@@ -389,6 +413,28 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
           warn('V12', 0, 'period_end', `gap in monthly series ${k} before ${sorted[i]}`),
         );
       }
+    }
+  }
+
+  // V23 reconciliation discipline: a recon key carries at most two sources (a pair, not a
+  // pile), and tolerance definitions must be non-negative numbers.
+  const reconSources = new Map<string, Set<string>>();
+  for (const r of records) {
+    if (r.record_type === 'recon_value') {
+      const k = `${r.entity_id}|${r.metric_id}|${r.category_id}|${r.as_of_date}`;
+      const s = reconSources.get(k) ?? new Set<string>();
+      s.add(r.source_name);
+      reconSources.set(k, s);
+    }
+    if (r.record_type === 'tolerance_definition' && typeof r.value === 'number' && r.value < 0) {
+      errors.push(err('V23', 0, 'value', `tolerance for ${r.metric_id} is negative`));
+    }
+  }
+  for (const [k, s] of reconSources) {
+    if (s.size > 2) {
+      errors.push(
+        err('V23', 0, 'source_name', `recon key ${k} carries ${s.size} sources; a pair is two`),
+      );
     }
   }
 

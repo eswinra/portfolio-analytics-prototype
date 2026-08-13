@@ -20,7 +20,7 @@ describe('valid fixture', () => {
   it('accepts with zero errors', () => {
     expect(res.ok).toBe(true);
     expect(res.errors).toHaveLength(0);
-    expect(res.records).toHaveLength(358);
+    expect(res.records).toHaveLength(376);
   });
 
   it('derives the dataset with values matching the audited workbook', () => {
@@ -91,9 +91,14 @@ describe('valid fixture', () => {
 
   it('merges degraded market series with their controls into root-cause issues', () => {
     const ds = buildDataset(res.records, 'workbook');
-    // one missing proxy + one stale proxy + their two WARN controls → exactly 2 issues
-    expect(ds.exceptions).toHaveLength(2);
-    expect(ds.exceptions.map((e) => e.id).sort()).toEqual(['ISSUE-MISSING', 'ISSUE-STALE']);
+    // one missing proxy + one stale proxy (merged with their controls) + the deliberate
+    // reconciliation demo break → exactly 3 issues
+    expect(ds.exceptions).toHaveLength(3);
+    expect(ds.exceptions.map((e) => e.id).sort()).toEqual([
+      'ISSUE-MISSING',
+      'ISSUE-STALE',
+      'RECON-emv_category-CREDIT',
+    ]);
     expect(ds.exceptions.find((e) => e.id === 'ISSUE-MISSING')?.description).toContain('CHK-06');
   });
 
@@ -111,7 +116,7 @@ describe('valid fixture', () => {
   it('OPEB fixture validates and scopes to the OPEB policy pack', () => {
     const res2 = parseContractCsv(load('demo_opeb_export_v1.csv'));
     expect(res2.ok).toBe(true);
-    expect(res2.records).toHaveLength(358);
+    expect(res2.records).toHaveLength(376);
     const ds = buildDataset(res2.records, 'workbook', 'OPEB');
     expect(ds.meta.entityId).toBe('DEMO-OPEB');
     expect(ds.meta.policyEntity).toBe('OPEB');
@@ -270,7 +275,7 @@ describe('schema 1.2 provenance', () => {
     return csv
       .replace(',entered_by,reviewed_by,review_status', '')
       .replaceAll(',PA-ANALYST-1,PA-LEAD-1,published', '')
-      .replaceAll(',1.2.0', ',1.1.0');
+      .replaceAll(',1.3.0', ',1.1.0');
   }
 
   it('fixture actors surface as team activity; nothing is draft', () => {
@@ -279,15 +284,15 @@ describe('schema 1.2 provenance', () => {
     const ds = buildDataset(res.records, 'workbook');
     expect(ds.draftRecordCount).toBe(0);
     expect(ds.teamActivity.map((t) => t.actor)).toEqual(['PA-ANALYST-1', 'PA-LEAD-1']);
-    expect(ds.teamActivity[0]?.enteredRows).toBe(358);
-    expect(ds.teamActivity[1]?.reviewedRows).toBe(358);
+    expect(ds.teamActivity[0]?.enteredRows).toBe(376);
+    expect(ds.teamActivity[1]?.reviewedRows).toBe(376);
   });
 
   it('29-column 1.1 files stay valid; provenance normalizes to empty', () => {
     const legacy = downgradeTo11(v12);
     const res = parseContractCsv(legacy);
     expect(res.ok).toBe(true);
-    expect(res.records).toHaveLength(358);
+    expect(res.records).toHaveLength(376);
     expect(res.records[0]?.entered_by).toBe('');
     expect(res.records[0]?.review_status).toBe('');
     const ds = buildDataset(res.records, 'workbook');
@@ -296,7 +301,7 @@ describe('schema 1.2 provenance', () => {
   });
 
   it('32 columns declaring schema 1.1 is rejected (V02 version/column mismatch)', () => {
-    const mismatched = v12.replaceAll(',1.2.0,', ',1.1.0,');
+    const mismatched = v12.replaceAll(',1.3.0,', ',1.1.0,');
     expect(mismatched).not.toBe(v12);
     const res = parseContractCsv(mismatched);
     expect(res.ok).toBe(false);
@@ -316,9 +321,89 @@ describe('schema 1.2 provenance', () => {
     const res = parseContractCsv(drafted);
     expect(res.ok).toBe(true);
     const ds = buildDataset(res.records, 'user_import');
-    expect(ds.draftRecordCount).toBe(358);
+    expect(ds.draftRecordCount).toBe(376);
     const info = ds.exceptions.find((e) => e.id === 'DRAFT-RECORDS')!;
     expect(info.tier).toBe('informational');
     expect(ds.exceptions[ds.exceptions.length - 1]?.id).toBe('DRAFT-RECORDS'); // sorts last
+  });
+});
+
+describe('schema 1.3 record types', () => {
+  const v13 = load('demofund_export_v1.csv');
+  const res = parseContractCsv(v13);
+
+  it('reconciliation pairs join with computed variance and one deliberate demo break', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    expect(ds.recons).toHaveLength(2);
+    const brk = ds.recons.find((p) => p.status === 'outside')!;
+    expect(brk.metricId).toBe('emv_category');
+    expect(brk.categoryId).toBe('CREDIT');
+    expect(brk.variance).toBeCloseTo(0.65, 6);
+    expect(brk.toleranceAbs).toBeCloseTo(0.3, 6);
+    const ok = ds.recons.find((p) => p.status === 'within')!;
+    expect(ok.metricId).toBe('nav_total');
+    expect(ok.variance).toBeCloseTo(0.21, 6);
+  });
+
+  it('private-markets ratios are computed from primitives (zero-called sleeve stays null)', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    expect(ds.pmSleeves).toHaveLength(3);
+    const a = ds.pmSleeves.find((s) => s.sleeveId === 'PM-FUND-A')!;
+    expect(a.unfundedMm).toBeCloseTo(30, 6);
+    expect(a.dpi).toBeCloseTo(95 / 120, 6);
+    expect(a.tvpi).toBeCloseTo((95 + 88) / 120, 6);
+    expect(a.valuationStatus).toBe('lagged');
+    const c = ds.pmSleeves.find((s) => s.sleeveId === 'PM-FUND-C')!;
+    expect(c.dpi).toBeCloseTo(0, 6); // called 20, distributed 0 → DPI 0.00x (legal)
+  });
+
+  it('freshness names the newest row and its actor', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    expect(ds.freshness.latestAsOf).toBe('2026-06-30');
+    expect(ds.freshness.latestActor).toBe('PA-ANALYST-1');
+  });
+
+  it('ACFR tracker fixture validates; board derives sections, history, progress, aging', async () => {
+    const acfr = parseContractCsv(load('demo_acfr_status_v1.csv'));
+    expect(acfr.ok).toBe(true);
+    const { buildAcfrBoard } = await import('../dataset/acfr');
+    const board = buildAcfrBoard(acfr.records);
+    expect(board.sections.map((s) => s.sectionId)).toEqual(['INTRO', 'FIN', 'INV', 'ACT', 'STAT']);
+    const intro = board.sections.find((s) => s.sectionId === 'INTRO')!;
+    expect(intro.status).toBe('complete');
+    expect(intro.history).toHaveLength(3); // the change log is the file
+    const stat = board.sections.find((s) => s.sectionId === 'STAT')!;
+    expect(stat.status).toBe('ready_signoff');
+    expect(stat.version).toBe('v3');
+    const inv = board.sections.find((s) => s.sectionId === 'INV')!;
+    expect(inv.artifactsIn).toBe(3);
+    expect(inv.artifactsExpected).toBe(4);
+    expect(inv.daysToDue).toBeGreaterThan(0);
+  });
+
+  it('V22 rejects an invalid ACFR status token', () => {
+    const acfr = load('demo_acfr_status_v1.csv');
+    const mutated = acfr.replace(',section_status,INTRO,complete,', ',section_status,INTRO,done,');
+    expect(mutated).not.toBe(acfr);
+    const r = parseContractCsv(mutated);
+    expect(r.ok).toBe(false);
+    expect(r.errors.map((e) => e.ruleId)).toContain('V22');
+  });
+
+  it('V23 rejects a third source on a recon key', () => {
+    const extra = v13.trim().split('\n');
+    const reconLine = extra.find(
+      (l) => l.includes('recon_value,DEMOFUND,nav_total,TOTAL') && l.includes('internal_book'),
+    )!;
+    extra.push(reconLine.replace('internal_book', 'third_system').replace(/^REC-\d+/, 'REC-9998'));
+    const r = parseContractCsv(extra.join('\n'));
+    expect(r.ok).toBe(false);
+    expect(r.errors.map((e) => e.ruleId)).toContain('V23');
+  });
+
+  it('recon sides do not collide on the V05 natural key (source-keyed)', () => {
+    expect(res.ok).toBe(true); // two sides per key are present and accepted
+    const sides = res.records.filter((r) => r.record_type === 'recon_value');
+    expect(sides).toHaveLength(4);
   });
 });
