@@ -1,16 +1,29 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
-import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
+import { boardBrief, publishedFor } from './fixtures/published';
+import { EntityProvider, useEntity } from './lib/entity';
 import { AcfrView } from './views/AcfrView';
 import { AllocationView } from './views/AllocationView';
-import { ExceptionsView } from './views/ExceptionsView';
-import { ImportView } from './views/ImportView';
-import { LimitationsView } from './views/LimitationsView';
+import { FundedView } from './views/FundedView';
+import { HoldingsView } from './views/HoldingsView';
 import { PerformanceView } from './views/PerformanceView';
 import { PulseView } from './views/PulseView';
-import { ReconView } from './views/ReconView';
-import { TrendsView } from './views/TrendsView';
+import { RiskView } from './views/RiskView';
+
+/** LACERA Portfolio Analytics shell (design handoff): notice bar, wordmark header with the
+ *  entity segmented control, seven-view nav, title band, and mission footer. Published FY2025
+ *  figures only — quoted from the 2025 PAFR/ACFR and the IPS documents. */
+
+const VIEWS: [path: string, label: string, bandTitle: string][] = [
+  ['/', 'Overview', 'Total fund overview'],
+  ['/performance', 'Performance', 'Performance vs policy benchmark'],
+  ['/allocation', 'Allocation', 'Asset allocation vs policy'],
+  ['/funded', 'Funded Status', 'Funded status and membership'],
+  ['/risk', 'Risk & Compliance', 'Risk & compliance'],
+  ['/holdings', 'Holdings & Managers', 'Holdings & managers'],
+  ['/acfr', 'ACFR Workflow', 'ACFR reporting workflow'],
+];
 
 /** On every route change: reset scroll and move focus to the main region. */
 function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> }) {
@@ -27,8 +40,47 @@ function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> })
   return null;
 }
 
+function TitleBand() {
+  const { pathname } = useLocation();
+  const { entity } = useEntity();
+  const d = publishedFor(entity);
+  const view = VIEWS.find(([p]) => p === pathname) ?? VIEWS[0]!;
+  const isOverview = view[0] === '/';
+  const [copied, setCopied] = useState(false);
+
+  async function copyBrief() {
+    try {
+      await navigator.clipboard.writeText(boardBrief(entity));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <>
+      <div className="band-spacer" />
+      <div className="band">
+        <div className="band-inner">
+          <h1>{view[2]}</h1>
+          <span className="entity">{d.label}</span>
+          {isOverview ? (
+            <span className="actions">
+              <button type="button" className="btn-band" onClick={copyBrief}>
+                {copied ? 'Copied ✓' : 'Copy board brief'}
+              </button>
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <div className="band-strip" />
+    </>
+  );
+}
+
 function Shell() {
-  const { dataset, source, entityTab, setEntityTab } = useDataset();
+  const { entity, setEntity } = useEntity();
   const mainRef = useRef<HTMLElement>(null);
 
   function skipToMain(e: React.MouseEvent) {
@@ -42,90 +94,109 @@ function Shell() {
         Skip to content
       </a>
       <RouteFocusReset mainRef={mainRef} />
-      <div className="disclaimer-band" role="note">
-        <strong>Prototype.</strong> Synthetic and cited public data only — not an official LACERA
-        system, performance report, or statement of endorsement.
+
+      <div className="notice-bar" role="note">
+        <span>Prototype — published FY2025 figures (PAFR · ACFR · IPS)</span>
+        <span className="right">Not an official LACERA system or performance report</span>
       </div>
-      {dataset.draftRecordCount > 0 ? (
-        <div className="disclaimer-band draft-band" role="status">
-          <strong>Draft data.</strong> {dataset.draftRecordCount} record
-          {dataset.draftRecordCount === 1 ? '' : 's'} in this dataset{' '}
-          {dataset.draftRecordCount === 1 ? 'is' : 'are'} still <code>review_status=draft</code> —
-          figures may change on review.
-        </div>
-      ) : null}
+
       <header className="masthead">
-        <h1>Fund Pulse</h1>
-        <div className="entity-tabs" role="group" aria-label="Select fund">
-          <button
-            type="button"
-            className={entityTab === 'PENSION' && source === 'fixture' ? 'active' : ''}
-            aria-pressed={entityTab === 'PENSION' && source === 'fixture'}
-            onClick={() => setEntityTab('PENSION')}
-          >
-            Pension
-          </button>
-          <button
-            type="button"
-            className={entityTab === 'OPEB' && source === 'fixture' ? 'active' : ''}
-            aria-pressed={entityTab === 'OPEB' && source === 'fixture'}
-            onClick={() => setEntityTab('OPEB')}
-          >
-            OPEB
-          </button>
-          {source === 'import' ? <span className="pill warn">imported dataset</span> : null}
+        <div className="brand">
+          <div className="wordmark">LACERA</div>
+          <div className="brand-rule" />
+          <div>
+            <div className="brand-app">Portfolio Analytics</div>
+            <div className="brand-sub">
+              Pension and OPEB Trust Funds of the County of Los Angeles
+            </div>
+          </div>
         </div>
-        <div className="asof">
-          As of <strong>{dataset.meta.asOf || 'n/a'}</strong> · synthetic proxy view
+        <div className="masthead-right">
+          <div className="seg" role="group" aria-label="Select fund">
+            <button
+              type="button"
+              className={entity === 'PENSION' ? 'active' : ''}
+              aria-pressed={entity === 'PENSION'}
+              onClick={() => setEntity('PENSION')}
+            >
+              Pension Plan
+            </button>
+            <button
+              type="button"
+              className={entity === 'OPEB' ? 'active' : ''}
+              aria-pressed={entity === 'OPEB'}
+              onClick={() => setEntity('OPEB')}
+            >
+              OPEB Trust
+            </button>
+          </div>
+          <div className="asof">
+            As of <strong>June 30, 2025</strong> · fiscal year end
+          </div>
         </div>
       </header>
-      <nav className="mainnav" aria-label="Primary">
-        <NavLink to="/" end>
-          Overview
-        </NavLink>
-        <NavLink to="/performance">Performance</NavLink>
-        <NavLink to="/trends">Trends</NavLink>
-        <NavLink to="/allocation">Allocation</NavLink>
-        <NavLink to="/recon">Recon</NavLink>
-        <NavLink to="/exceptions">Exceptions</NavLink>
-        <NavLink to="/acfr">ACFR</NavLink>
-        <NavLink to="/import">Import</NavLink>
-        <NavLink to="/methodology">Methodology</NavLink>
+
+      <nav className="mainnav" aria-label="Views">
+        <div className="mainnav-inner">
+          {VIEWS.map(([path, label]) => (
+            <NavLink key={path} to={path} end={path === '/'}>
+              {label}
+            </NavLink>
+          ))}
+        </div>
       </nav>
-      <main id="main" ref={mainRef} tabIndex={-1}>
+
+      <TitleBand />
+
+      <main id="main" ref={mainRef} tabIndex={-1} className="shell-main">
         <Routes>
           <Route path="/" element={<PulseView />} />
           <Route path="/performance" element={<PerformanceView />} />
-          <Route path="/trends" element={<TrendsView />} />
           <Route path="/allocation" element={<AllocationView />} />
-          <Route path="/recon" element={<ReconView />} />
-          <Route path="/exceptions" element={<ExceptionsView />} />
+          <Route path="/funded" element={<FundedView />} />
+          <Route path="/risk" element={<RiskView />} />
+          <Route path="/holdings" element={<HoldingsView />} />
           <Route path="/acfr" element={<AcfrView />} />
-          <Route path="/policy" element={<Navigate to="/methodology" replace />} />
-          <Route path="/import" element={<ImportView />} />
-          <Route path="/methodology" element={<LimitationsView />} />
-          {/* legacy routes from revisions 1–4 */}
+          {/* legacy routes from revisions 1–7 */}
+          <Route path="/trends" element={<Navigate to="/performance" replace />} />
           <Route path="/contribution" element={<Navigate to="/performance" replace />} />
-          <Route path="/data-quality" element={<Navigate to="/exceptions" replace />} />
-          <Route path="/limitations" element={<Navigate to="/methodology" replace />} />
+          <Route path="/exceptions" element={<Navigate to="/risk" replace />} />
+          <Route path="/data-quality" element={<Navigate to="/risk" replace />} />
+          <Route path="/recon" element={<Navigate to="/risk" replace />} />
+          <Route path="/policy" element={<Navigate to="/allocation" replace />} />
+          <Route path="/import" element={<Navigate to="/" replace />} />
+          <Route path="/methodology" element={<Navigate to="/" replace />} />
+          <Route path="/limitations" element={<Navigate to="/" replace />} />
           <Route
             path="*"
             element={
               <>
-                <h1>Not found</h1>
+                <h2>Not found</h2>
                 <p>
-                  That view does not exist. <NavLink to="/">Back to the pulse.</NavLink>
+                  That view does not exist. <NavLink to="/">Back to the overview.</NavLink>
                 </p>
               </>
             }
           />
         </Routes>
       </main>
-      <footer>
-        Exploratory prototype for discussion with a Portfolio Analytics team. All portfolio values
-        are synthetic; cited public values (IPS tables, report figures) are labeled and excluded
-        from calculations. Imports stay in your browser. Operational estimates are not official
-        performance; the custodian remains the book of record.
+
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <div className="mission">
+            We produce, protect, and provide the promised benefits to our members.
+          </div>
+          <div className="meta">
+            Sources: 2025 Popular Annual Financial Report · 2025 Annual Comprehensive Financial
+            Report · Investment Policy Statement (restated June 12, 2024) · OPEB Investment Policy
+            Statement
+          </div>
+          <div className="meta">
+            Exploratory prototype for the Portfolio Analytics team. All figures are quoted from
+            published LACERA documents as of the dates shown; this is not an official LACERA system,
+            performance report, or statement of endorsement.
+          </div>
+        </div>
       </footer>
     </>
   );
@@ -133,10 +204,10 @@ function Shell() {
 
 export default function App() {
   return (
-    <DatasetProvider>
+    <EntityProvider>
       <HashRouter>
         <Shell />
       </HashRouter>
-    </DatasetProvider>
+    </EntityProvider>
   );
 }

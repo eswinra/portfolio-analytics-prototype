@@ -110,3 +110,17 @@ with tabular numerals for figures.
 - ACFR tie-out items (the page-level crosswalk) nested under their section cards
   (Investment → INV; Financial, Financial Notes, RSI and SI → FIN; Statistical → STAT);
   the separate crosswalk register removed, QA controls kept as a cross-section register.
+
+## Revision 8 (2026-08-13) — LACERA redesign
+
+- Adopted the design-handoff redesign (`design_handoff_lacera_portfolio_analytics/`):
+  seven-view IA (Overview, Performance, Allocation, Funded Status, Risk & Compliance,
+  Holdings & Managers, ACFR Workflow) on the LACERA navy ramp with Mulish, quoting
+  published FY2025 figures (2025 PAFR/ACFR, IPS restated June 12, 2024) with per-panel
+  citations (`fixtures/published.ts`, `config.ts` for defaultEntity/nearBoundPp/showSources).
+- Mulish is self-hosted via `@fontsource/mulish` — the built site still makes zero network
+  requests (the design's Google Fonts link was deliberately not used).
+- Synthetic-workflow views (Trends, Exceptions, Recon, Import, Methodology) retired from
+  navigation with legacy-route redirects; the contract engine (`lib/contract`, `lib/dataset`,
+  `lib/finance`), data fixtures, Python generators, and the full test suite remain intact.
+  The ACFR view still builds its board from the contract tracker file.

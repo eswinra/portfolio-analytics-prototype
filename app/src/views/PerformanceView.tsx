@@ -1,93 +1,51 @@
-import { useState } from 'react';
+import { excessTag, money, Panel, SourceLine, Tag } from '../components/ui';
+import { HORIZONS, publishedFor } from '../fixtures/published';
+import { useEntity } from '../lib/entity';
 
-import { GrowthChart, type GrowthDatum } from '../charts/GrowthChart';
-import { ContributionBars } from '../charts/ContributionBars';
-import { FreshnessLine } from '../components/FreshnessLine';
-import { catLabel, fmtMm, fmtPct, fmtSmartReturn, Panel, Pill, statusTone } from '../components/ui';
-import { useDataset } from '../lib/dataset/useDataset';
-import type { ContributionEntry, PeriodTriple } from '../lib/dataset/model';
-import type { Reconciliation } from '../lib/finance/contribution';
-
-/** Performance: periods, growth, and contribution with its reconciliation — one page. */
-
-type SpanKey = '1M' | 'QTD' | 'FYTD' | 'ITD';
-const SPAN_LABEL: Record<SpanKey, string> = {
-  '1M': '1 month',
-  QTD: 'Quarter to date',
-  FYTD: 'Fiscal YTD (= 1Y)',
-  ITD: 'Fiscal YTD (= 1Y)', // demo history begins 2025-07-01, so ITD ≡ FYTD
-};
-
-/** Display-only tie-out (see the full-detail expander for the derivation). */
-function roundingAdjustment(
-  contributions: ContributionEntry[],
-  reconciliation: Reconciliation | null,
-): number | null {
-  if (!reconciliation) return null;
-  const r2 = (v: number) => Math.round(v * 10000) / 10000;
-  const displayedSum =
-    contributions.reduce((a, c) => a + r2(c.value), 0) + r2(reconciliation.residual);
-  return r2(reconciliation.chainLinked) - displayedSum;
-}
+/** Performance — annualized returns vs the policy benchmark, three years of changes in
+ *  fiduciary net position, and cumulative investment income since FY2016. Quoted figures. */
 
 export function PerformanceView() {
-  const { dataset } = useDataset();
-  const { periods, contributions, reconciliation, meta, pmSleeves } = dataset;
-  const [span, setSpan] = useState<SpanKey>('QTD');
+  const { entity } = useEntity();
+  const d = publishedFor(entity);
+  const P = entity === 'PENSION';
 
-  const growth: GrowthDatum[] = dataset.joinedMonths.map((m) => ({
-    monthEnd: m.monthEnd,
-    portfolio: m.portfolioIndex,
-    benchmark: m.benchmarkIndex,
-  }));
-  const arithDisplayed = contributions.reduce((a, c) => a + Math.round(c.value * 10000) / 10000, 0);
-  const nonZero = contributions.filter((c) => c.value !== 0);
+  const rMax = Math.max(...d.ret.f, ...d.ret.b);
 
-  // on-screen span reconciliation: chain the monthly TOTAL series over the selected window and
-  // tie it to the exported period_return figure — the tie-out is visible, not asserted
-  const target: PeriodTriple | undefined = periods.find((p) => p.label === SPAN_LABEL[span]);
-  const spanMonths = target
-    ? dataset.joinedMonths.filter(
-        (m) => m.monthEnd >= target.periodStart && m.monthEnd <= target.periodEnd,
-      )
-    : [];
-  const spanComplete = spanMonths.length > 0 && spanMonths.every((m) => m.portfolioReturn !== null);
-  const chained = spanComplete
-    ? spanMonths.reduce((g, m) => g * (1 + (m.portfolioReturn as number)), 1) - 1
-    : null;
-  const diffBp =
-    chained !== null && target?.portfolio != null ? (chained - target.portfolio) * 10000 : null;
+  // cumulative income area chart — geometry ported from the design source
+  const cMin = Math.min(0, ...d.cum);
+  const cMax = Math.max(...d.cum);
+  const pts = d.cum.map((v, i) => {
+    const x = (i / (d.cum.length - 1)) * 600;
+    const y = 172 - ((v - cMin) / (cMax - cMin)) * 158;
+    return `${x.toFixed(1)} ${y.toFixed(1)}`;
+  });
+  const cumLine = `M ${pts.join(' L ')}`;
+  const cumArea = `${cumLine} L 600 179 L 0 179 Z`;
+  const cRange = cMax - cMin;
+  let cStep = Math.pow(10, Math.floor(Math.log10(cRange)));
+  if (cRange / cStep < 3) cStep = cStep / 2;
+  const cumGrid: { top: number; label: string }[] = [];
+  for (let v = Math.ceil(cMin / cStep) * cStep; v < cMax - cStep * 0.15; v += cStep) {
+    if (v <= cMin) continue;
+    cumGrid.push({ top: 172 - ((v - cMin) / cRange) * 158, label: v.toLocaleString('en-US') });
+  }
 
   return (
     <>
-      <h1>Performance</h1>
-      <FreshnessLine />
-      <p className="footnote">
-        Synthetic {meta.entityId} data as of {meta.asOf}. Net-of-fees TWR-style monthly linking; no
-        annualization below one year. Calculations use unrounded values; displays are rounded.
-      </p>
-
-      <div className="grid cols-2">
-        <Panel
-          title="Periods"
-          note="Hurdle is a synthetic actuarial-style assumption (Pension 6.75% / OPEB 6.0% annual, geometrically scaled) — not the published actuarial rate."
-        >
+      <div className="grid-panels">
+        <Panel kicker="Annualized total returns — net of fees" title="Periods ended June 30, 2025">
           <div className="table-scroll">
-            <table>
-              <caption>
-                {meta.entityId} vs synthetic policy benchmark and hurdle, periods ended {meta.asOf}
-              </caption>
+            <table className="table">
+              <caption>Annualized returns vs policy benchmark</caption>
               <thead>
                 <tr>
                   <th scope="col">Period</th>
                   <th scope="col" className="num">
-                    Portfolio
+                    Fund
                   </th>
                   <th scope="col" className="num">
-                    Benchmark
-                  </th>
-                  <th scope="col" className="num">
-                    Hurdle
+                    Policy benchmark
                   </th>
                   <th scope="col" className="num">
                     Excess
@@ -95,243 +53,236 @@ export function PerformanceView() {
                 </tr>
               </thead>
               <tbody>
-                {periods.map((p) => (
-                  <tr key={p.label}>
-                    <td>
-                      {p.label}
-                      <div className="footnote">
-                        {p.periodStart} → {p.periodEnd}
-                      </div>
-                    </td>
-                    <td className="num">{fmtPct(p.portfolio)}</td>
-                    <td className="num">
-                      {p.spanMismatch ? <Pill tone="bad">span mismatch</Pill> : fmtPct(p.benchmark)}
-                    </td>
-                    <td className="num">{fmtPct(p.hurdle)}</td>
-                    <td className="num">{fmtSmartReturn(p.excess)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div role="group" aria-label="Reconcile a period" style={{ marginTop: '0.6rem' }}>
-            {(['1M', 'QTD', 'FYTD', 'ITD'] as SpanKey[]).map((k) => (
-              <button
-                key={k}
-                className="linklike"
-                style={{ marginRight: '0.9rem', fontWeight: span === k ? 700 : 400 }}
-                aria-pressed={span === k}
-                onClick={() => setSpan(k)}
-              >
-                {k}
-              </button>
-            ))}
-            <span className="footnote">
-              {chained !== null && target?.portfolio != null && diffBp !== null ? (
-                <>
-                  chain-linked from the monthly series: <strong>{fmtPct(chained)}</strong> ·
-                  exported: {fmtPct(target.portfolio)} · difference{' '}
-                  {Math.abs(diffBp) < 0.05 ? '0.0' : Math.abs(diffBp).toFixed(1)} bp{' '}
-                  <Pill tone={Math.abs(diffBp) <= 1 ? 'good' : 'warn'}>
-                    {Math.abs(diffBp) <= 1 ? 'TIES' : 'CHECK'}
-                  </Pill>
-                  {span === 'ITD' ? ' · ITD = FYTD (demo history begins 2025-07-01)' : ''}
-                </>
-              ) : (
-                'monthly series incomplete for this window — reconciliation suppressed'
-              )}
-            </span>
-          </div>
-        </Panel>
-
-        <Panel title="Growth of $1 (demo fiscal year)">
-          <GrowthChart data={growth} />
-          <details>
-            <summary className="footnote">Monthly data table</summary>
-            <div className="table-scroll">
-              <table>
-                <caption>Monthly returns and growth indexes (joined by month-end date)</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Month end</th>
-                    <th scope="col" className="num">
-                      Portfolio
-                    </th>
-                    <th scope="col" className="num">
-                      Benchmark
-                    </th>
-                    <th scope="col" className="num">
-                      Port. index
-                    </th>
-                    <th scope="col" className="num">
-                      Bench. index
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dataset.joinedMonths.map((m) => (
-                    <tr key={m.monthEnd}>
-                      <td>{m.monthEnd}</td>
-                      <td className="num">{fmtPct(m.portfolioReturn)}</td>
-                      <td className="num">{fmtPct(m.benchmarkReturn)}</td>
-                      <td className="num">{m.portfolioIndex?.toFixed(4) ?? '—'}</td>
-                      <td className="num">{m.benchmarkIndex?.toFixed(4) ?? '—'}</td>
+                {HORIZONS.map((h, i) => {
+                  const t = excessTag(d.ret.f[i]!, d.ret.b[i]!);
+                  return (
+                    <tr key={h}>
+                      <td>{h}</td>
+                      <td className="num" style={{ fontWeight: 500 }}>
+                        {d.ret.f[i]!.toFixed(1)}%
+                      </td>
+                      <td className="num">{d.ret.b[i]!.toFixed(1)}%</td>
+                      <td className="num">
+                        <Tag variant={t.variant}>{t.text}</Tag>
+                      </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
-        </Panel>
-      </div>
-
-      <div className="grid cols-2">
-        <Panel
-          title="Contribution — quarter to date"
-          note="Beginning-of-month weight × monthly return, summed over the quarter. Zero-contribution categories are omitted from the chart and listed in the detail below."
-        >
-          <ContributionBars data={nonZero} />
-        </Panel>
-
-        <Panel title="Reconciliation">
-          <div className="table-scroll">
-            <table>
-              <caption>Contribution ties to the chain-linked return (10 bp tolerance)</caption>
-              <tbody>
-                <tr>
-                  <td>Displayed contributions</td>
-                  <td className="num">{fmtPct(arithDisplayed)}</td>
-                </tr>
-                <tr>
-                  <td>Compounding effect</td>
-                  <td className="num">{fmtPct(reconciliation?.residual ?? null)}</td>
-                </tr>
-                <tr>
-                  <td>Rounding adjustment</td>
-                  <td className="num">
-                    {fmtPct(roundingAdjustment(contributions, reconciliation))}
-                  </td>
-                </tr>
-                <tr className="total-row">
-                  <td>Chain-linked QTD return</td>
-                  <td className="num">{fmtPct(reconciliation?.chainLinked ?? null)}</td>
-                </tr>
-                <tr>
-                  <td>Status</td>
-                  <td className="num">
-                    {reconciliation ? (
-                      <Pill tone={statusTone(reconciliation.status)}>{reconciliation.status}</Pill>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <details>
-            <summary className="footnote">Full reconciliation detail (all categories)</summary>
-            <div className="table-scroll">
-              <table>
-                <caption>Per-category QTD contribution, including zero lines</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Category</th>
-                    <th scope="col" className="num">
-                      Contribution
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contributions.map((c) => (
-                    <tr key={c.categoryId}>
-                      <td>{catLabel(c.categoryId)}</td>
-                      <td className="num">{fmtPct(c.value)}</td>
-                    </tr>
-                  ))}
-                  <tr className="total-row">
-                    <td>Arithmetic total (unrounded)</td>
-                    <td className="num">{fmtPct(reconciliation?.arithmeticTotal ?? null)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="panel-note">
-              All categories are included — nothing is excluded by footnote. The compounding effect
-              is the arithmetic-vs-geometric difference, not an error; the rounding adjustment makes
-              the displayed column tie exactly.
-            </p>
-          </details>
-        </Panel>
-      </div>
-
-      {pmSleeves.length > 0 ? (
-        <Panel
-          title="Private markets — capital account monitoring (synthetic sleeve)"
-          note="Files carry only the primitives; unfunded, DPI and TVPI are computed on screen — never imported. NAV valuations are lagged and say so; a ratio with zero called capital shows an em-dash, never a zero."
-        >
-          <div className="table-scroll">
-            <table>
-              <caption>
-                Commitment, calls, distributions and lagged NAV per sleeve, with computed ratios
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Sleeve</th>
-                  <th scope="col" className="num">
-                    Commitment
-                  </th>
-                  <th scope="col" className="num">
-                    Called
-                  </th>
-                  <th scope="col" className="num">
-                    Unfunded*
-                  </th>
-                  <th scope="col" className="num">
-                    Distributed
-                  </th>
-                  <th scope="col" className="num">
-                    NAV
-                  </th>
-                  <th scope="col" className="num">
-                    DPI*
-                  </th>
-                  <th scope="col" className="num">
-                    TVPI*
-                  </th>
-                  <th scope="col">Valuation</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pmSleeves.map((s) => (
-                  <tr key={s.sleeveId}>
-                    <td>
-                      <code>{s.sleeveId}</code>
-                    </td>
-                    <td className="num">{fmtMm(s.commitmentMm)}</td>
-                    <td className="num">{fmtMm(s.calledMm)}</td>
-                    <td className="num">{fmtMm(s.unfundedMm)}</td>
-                    <td className="num">{fmtMm(s.distributedMm)}</td>
-                    <td className="num">{fmtMm(s.navMm)}</td>
-                    <td className="num">{s.dpi === null ? '—' : `${s.dpi.toFixed(2)}x`}</td>
-                    <td className="num">{s.tvpi === null ? '—' : `${s.tvpi.toFixed(2)}x`}</td>
-                    <td>
-                      <Pill tone={s.valuationStatus === 'final' ? 'good' : 'warn'}>
-                        {s.valuationStatus}
-                      </Pill>
-                      <div className="footnote">{s.lagNote}</div>
-                    </td>
-                  </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
           <p className="panel-note">
-            * computed: unfunded = commitment − called; DPI = distributed ÷ called; TVPI =
-            (distributed + NAV) ÷ called. All figures $mm, synthetic.
+            {d.retNote} Returns exceeded the actuarial assumed rate of return at every horizon
+            (PAFR).
           </p>
+          <SourceLine>2025 PAFR, p. {P ? '5 (Pension)' : '7 (OPEB)'}</SourceLine>
         </Panel>
-      ) : null}
+
+        <Panel kicker="Fund vs benchmark by horizon" title="Percent, annualized">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              gap: 22,
+              height: 180,
+              borderBottom: '1px solid var(--divider)',
+              marginTop: 16,
+            }}
+          >
+            {HORIZONS.map((h, i) => (
+              <div
+                key={h}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  gap: 6,
+                  height: '100%',
+                }}
+              >
+                <div className="bar-col" style={{ flex: 'none', width: 26 }}>
+                  <div className="bar-val" style={{ fontSize: 11, color: 'var(--accent-800)' }}>
+                    {d.ret.f[i]!.toFixed(1)}
+                  </div>
+                  <div
+                    style={{
+                      height: `${((d.ret.f[i]! / rMax) * 100).toFixed(1)}%`,
+                      background: 'var(--accent-600)',
+                      border: '1px solid var(--accent-800)',
+                      borderBottom: 'none',
+                    }}
+                  />
+                </div>
+                <div className="bar-col" style={{ flex: 'none', width: 26 }}>
+                  <div className="bar-val" style={{ fontSize: 11, fontWeight: 400 }}>
+                    {d.ret.b[i]!.toFixed(1)}
+                  </div>
+                  <div
+                    style={{
+                      height: `${((d.ret.b[i]! / rMax) * 100).toFixed(1)}%`,
+                      background: 'var(--accent-200)',
+                      border: '1px solid var(--accent-500)',
+                      borderBottom: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 22, marginTop: 6 }}>
+            {HORIZONS.map((h) => (
+              <div
+                key={h}
+                style={{ flex: 1, textAlign: 'center', fontSize: 11, color: 'var(--muted-68)' }}
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+          <div className="chart-legend">
+            <span className="key">
+              <span
+                className="sw"
+                style={{ background: 'var(--accent-600)', border: '1px solid var(--accent-800)' }}
+              />
+              Fund
+            </span>
+            <span className="key">
+              <span
+                className="sw"
+                style={{ background: 'var(--accent-200)', border: '1px solid var(--accent-500)' }}
+              />
+              Policy benchmark
+            </span>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid-panels mt">
+        <Panel
+          kicker="Changes in fiduciary net position"
+          title="Fiscal years ended June 30 · $ millions"
+        >
+          <div className="table-scroll">
+            <table className="table">
+              <caption>Changes in fiduciary net position, three fiscal years</caption>
+              <thead>
+                <tr>
+                  <th scope="col"></th>
+                  <th scope="col" className="num">
+                    FY2025
+                  </th>
+                  <th scope="col" className="num">
+                    FY2024
+                  </th>
+                  <th scope="col" className="num">
+                    FY2023
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.chg.map((r) => (
+                  <tr key={r.label}>
+                    <td style={{ fontWeight: r.bold ? 600 : 400 }}>{r.label}</td>
+                    <td className="num" style={{ fontWeight: r.bold ? 600 : 400 }}>
+                      {money(r.fy2025)}
+                    </td>
+                    <td className="num">{money(r.fy2024)}</td>
+                    <td className="num">{money(r.fy2023)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <SourceLine>2025 PAFR, p. {P ? '4 (Pension)' : '7 (OPEB)'}</SourceLine>
+        </Panel>
+
+        <Panel
+          kicker="Net investment activities"
+          title="Cumulative investment income, FY2016–FY2025"
+          sub={`${d.cumUnit} · 10-year cumulative results`}
+        >
+          <div style={{ position: 'relative', marginTop: 14 }}>
+            <svg
+              viewBox="0 0 600 180"
+              preserveAspectRatio="none"
+              style={{ width: '100%', height: 180, display: 'block' }}
+              role="img"
+              aria-label={`Cumulative investment income rising to ${d.cumEnd} by FY2025`}
+            >
+              <path d={cumArea} fill="var(--accent-200)" />
+              <path
+                d={cumLine}
+                fill="none"
+                stroke="var(--accent-700)"
+                strokeWidth={2}
+                vectorEffect="non-scaling-stroke"
+              />
+              <line
+                x1={0}
+                y1={179}
+                x2={600}
+                y2={179}
+                stroke="var(--divider)"
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+            <div
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 8,
+                fontWeight: 600,
+                fontSize: 22,
+                color: 'var(--accent-800)',
+              }}
+            >
+              {d.cumEnd}
+            </div>
+            {cumGrid.map((g) => (
+              <div key={g.label}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: g.top,
+                    height: 1,
+                    background: 'var(--divider)',
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: 4,
+                    top: g.top - 15,
+                    fontSize: 10,
+                    color: 'var(--muted-65)',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {g.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: 11,
+              color: 'var(--muted-68)',
+              marginTop: 5,
+            }}
+          >
+            <span>FY2016</span>
+            <span>FY2025</span>
+          </div>
+          <p className="panel-note">{d.cumNote}</p>
+        </Panel>
+      </div>
     </>
   );
 }

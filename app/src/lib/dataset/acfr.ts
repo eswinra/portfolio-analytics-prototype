@@ -8,7 +8,7 @@ import type { AcfrStatus, ContractRecord } from '../contract/schema';
  */
 
 export const ACFR_SECTION_LABELS: Record<string, string> = {
-  INTRO: 'Introduction',
+  INTRO: 'Introductory',
   FIN: 'Financial',
   INV: 'Investments',
   ACT: 'Actuarial',

@@ -15,6 +15,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.{ts,json,html}\""
   },
   "dependencies": {
+    "@fontsource/mulish": "^5.3.0",
     "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

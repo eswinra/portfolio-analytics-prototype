@@ -1,25 +1,22 @@
 import { useMemo, useState } from 'react';
 
 import acfrCsv from '../../../data/sample/demo_acfr_status_v1.csv?raw';
-import { Pill, statusTone } from '../components/ui';
-import { CROSSWALK, QA_CONTROLS, type CrosswalkItem } from '../fixtures/acfrWorkflow';
+import { Panel, Tag, type TagVariant } from '../components/ui';
+import {
+  CROSSWALK,
+  QA_CONTROLS,
+  type CrosswalkItem,
+  type WorkStatus,
+} from '../fixtures/acfrWorkflow';
 import { parseContractCsv } from '../lib/contract/parse';
 import type { AcfrStatus } from '../lib/contract/schema';
-import {
-  buildAcfrBoard,
-  completeRowCsv,
-  sectionArtifacts,
-  type AcfrBoard,
-  type AcfrSection,
-} from '../lib/dataset/acfr';
+import { buildAcfrBoard, completeRowCsv, type AcfrSection } from '../lib/dataset/acfr';
 
-/**
- * ACFR: a section-readiness board built from contract records (acfr_section_status +
- * acfr_artifact_link in their own single-entity tracker file). Latest row per section is the
- * state; the full row history is the change log — the file is the record. Every page-level
- * tie-out item lives under its own section card. Role gating is DEMONSTRATION ONLY: a static
- * public site cannot enforce identity, and says so.
- */
+/** ACFR Workflow — section readiness board rebuilt on the LACERA design: stat tiles, per-
+ *  section cards with a tie-out progress bar and collapsible item tables, and the QA register.
+ *  Data stays on the established rails: section state from the contract tracker file
+ *  (acfr_section_status records — the file is the record), tie-out items from the app-bundled
+ *  crosswalk. Role gating is DEMONSTRATION ONLY — a static site cannot enforce identity. */
 
 type ViewerRole = 'analyst' | 'lead' | 'leadership';
 
@@ -31,15 +28,15 @@ const STATUS_LABEL: Record<AcfrStatus, string> = {
   complete: 'Complete',
 };
 
-const STATUS_TONE: Record<AcfrStatus, 'good' | 'warn' | 'bad' | 'neutral'> = {
-  not_started: 'neutral',
-  in_progress: 'warn',
-  in_review: 'warn',
-  ready_signoff: 'warn',
-  complete: 'good',
-};
+/** Design tag mapping: Complete = accent tint; Not started = neutral; Blocked = navy fill;
+ *  everything in-flight = outline. Handles both board tokens and crosswalk WorkStatus. */
+function statusVariant(s: string): TagVariant {
+  if (s === 'Complete' || s === 'complete') return 'accent';
+  if (s === 'Not Started' || s === 'Not started' || s === 'not_started') return 'neutral';
+  if (s === 'Blocked') return 'blocked';
+  return 'outline';
+}
 
-/** Crosswalk source-section labels → board section ids (RSI and SI are part of Financial). */
 const CROSSWALK_SECTION: Record<string, string> = {
   Introductory: 'INTRO',
   Investment: 'INV',
@@ -51,166 +48,119 @@ const CROSSWALK_SECTION: Record<string, string> = {
   Statistical: 'STAT',
 };
 
-function daysLeft(dueDate: string, refDate: string | null): number | null {
-  if (!refDate) return null;
-  const d = Math.round((Date.parse(dueDate) - Date.parse(refDate)) / 86400000);
-  return Number.isFinite(d) ? d : null;
-}
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function SectionCard({
   section,
-  board,
-  role,
-  onCopyComplete,
-  copied,
-  artifacts,
   items,
+  refDate,
+  role,
+  copied,
+  onCopyComplete,
 }: {
   section: AcfrSection;
-  board: AcfrBoard;
-  role: ViewerRole;
-  onCopyComplete: (s: AcfrSection) => void;
-  copied: boolean;
-  artifacts: ReturnType<typeof sectionArtifacts>;
   items: CrosswalkItem[];
+  refDate: string | null;
+  role: ViewerRole;
+  copied: boolean;
+  onCopyComplete: (s: AcfrSection) => void;
 }) {
-  const overdue = section.daysToDue !== null && section.daysToDue < 0;
-  const itemsDone = items.filter((c) => c.status === 'Complete').length;
+  const dLeft = (due: string): number | null =>
+    refDate ? Math.round((Date.parse(due) - Date.parse(refDate)) / 86400000) : null;
+  const done = items.filter((c) => c.status === 'Complete').length;
+  const statusTxt = `${STATUS_LABEL[section.status]}${section.version ? ` ${section.version}` : ''}`;
+
   return (
-    <section className="panel" aria-label={`${section.label} section status`}>
-      <div className="bullet-head">
-        <strong>
-          {section.label} <span className="footnote">({section.sectionId})</span>
-        </strong>
-        <Pill tone={STATUS_TONE[section.status]}>
-          {STATUS_LABEL[section.status]}
-          {section.version ? ` ${section.version}` : ''}
-        </Pill>
+    <Panel className="acfr-card">
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+        <h2 style={{ margin: 0 }}>{section.label}</h2>
+        <span style={{ fontSize: 11.5, letterSpacing: '0.1em', color: 'var(--muted-65)' }}>
+          {section.sectionId}
+        </span>
+        <span style={{ marginLeft: 'auto' }}>
+          <Tag variant={statusVariant(section.status)}>{statusTxt}</Tag>
+        </span>
       </div>
-      <p className="footnote" style={{ margin: '0.35rem 0' }}>
-        Owner <code>{section.owner || '—'}</code> · updated {section.lastUpdated || '—'} · due{' '}
-        {section.dueDate ?? '—'}
-        {section.daysToDue !== null ? (
-          <>
-            {' '}
-            (
-            {overdue ? (
-              <strong>{-section.daysToDue} days overdue</strong>
-            ) : (
-              `${section.daysToDue} days left`
-            )}
-            )
-          </>
-        ) : null}{' '}
-        · artifacts <strong>{section.artifactsIn}</strong> / {section.artifactsExpected} in
-        {items.length > 0 ? (
-          <>
-            {' '}
-            · tie-out items <strong>{itemsDone}</strong> / {items.length} complete
-          </>
-        ) : null}
-      </p>
-
-      {items.length > 0 ? (
-        <details>
-          <summary>
-            <strong>Tie-out items ({items.length})</strong>{' '}
-            <span className="footnote">— {itemsDone} complete · click to expand</span>
-          </summary>
-          <div className="table-scroll" style={{ marginTop: '0.5rem' }}>
-            <table>
-              <caption>
-                {section.label}: tables and disclosures mapped to sources and tie-outs (illustrative
-                statuses)
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Table / disclosure</th>
-                  <th scope="col">Due</th>
-                  <th scope="col" className="num">
-                    Days left
-                  </th>
-                  <th scope="col">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((c) => {
-                  const dl = daysLeft(c.dueDate, board.refDate);
-                  return (
-                    <tr key={`${c.acfrPage}-${c.table}`}>
-                      <td>
-                        {c.table}
-                        <div className="footnote">
-                          ACFR p.{c.acfrPage} · {c.fund} · {c.source} → {c.tieOut}
-                        </div>
-                      </td>
-                      <td>{c.dueDate}</td>
-                      <td className="num">
-                        {c.status === 'Complete' || dl === null
-                          ? '—'
-                          : dl < 0
-                            ? `${-dl} overdue`
-                            : dl}
-                      </td>
-                      <td>
-                        <Pill tone={statusTone(c.status)}>{c.status}</Pill>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </details>
-      ) : (
-        <p className="footnote" style={{ margin: '0.2rem 0' }}>
-          No tie-out items tracked for this section.
-        </p>
-      )}
-
+      <div className="acfr-meta">
+        Owner <strong>{section.owner || '—'}</strong> · updated {section.lastUpdated || '—'} · due{' '}
+        {section.dueDate ?? '—'} ({section.dueDate ? dLeft(section.dueDate) : '—'} days left) ·
+        artifacts{' '}
+        <strong>
+          {section.artifactsIn} / {section.artifactsExpected}
+        </strong>{' '}
+        in · tie-out items{' '}
+        <strong>
+          {done} / {items.length}
+        </strong>{' '}
+        complete
+      </div>
+      <div className="acfr-progress">
+        <div
+          style={{ width: items.length ? `${((done / items.length) * 100).toFixed(0)}%` : '0%' }}
+        />
+      </div>
       <details>
-        <summary className="footnote">
-          Status history ({section.history.length}) &amp; artifacts ({section.artifactsExpected})
+        <summary>
+          Tie-out items ({items.length}) <span className="hint">— click to expand</span>
         </summary>
-        <ul className="footnote" style={{ marginTop: '0.4rem' }}>
-          {section.history.map((h) => (
-            <li key={`${h.date}-${h.status}`}>
-              {h.date}: {STATUS_LABEL[h.status]}
-              {h.version ? ` (${h.version})` : ''} — <code>{h.actor}</code>
-            </li>
-          ))}
-        </ul>
-        <ul className="footnote">
-          {artifacts.map((a) => (
-            <li key={a.title}>
-              {a.received ? '✓' : '○'} {a.title}
-              {a.version ? ` (${a.version})` : ''}
-              {a.received ? '' : ' — outstanding'}
-            </li>
-          ))}
-        </ul>
-        <p className="footnote">
-          Artifacts are links + metadata only — real files never live on this public site.
-        </p>
+        <div className="table-scroll" style={{ marginTop: 10 }}>
+          <table className="table">
+            <caption>{section.label} tie-out items</caption>
+            <thead>
+              <tr>
+                <th scope="col">Table / disclosure</th>
+                <th scope="col" className="num">
+                  Due
+                </th>
+                <th scope="col" className="num">
+                  Days left
+                </th>
+                <th scope="col" className="num">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((c) => (
+                <tr key={`${c.acfrPage}-${c.table}`}>
+                  <td>
+                    {c.table}
+                    <div style={{ fontSize: 11.5, color: 'var(--muted-65)' }}>
+                      ACFR p. {c.acfrPage} · {c.fund}
+                    </div>
+                  </td>
+                  <td className="num" style={{ whiteSpace: 'nowrap' }}>
+                    {c.dueDate}
+                  </td>
+                  <td className="num">
+                    {c.status === 'Complete' ? '—' : (dLeft(c.dueDate) ?? '—')}
+                  </td>
+                  <td className="num">
+                    <Tag variant={statusVariant(c.status)}>{c.status}</Tag>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </details>
-
       {section.status === 'ready_signoff' ? (
-        role === 'leadership' ? (
-          <p style={{ marginBottom: 0 }}>
-            <button className="linklike" onClick={() => onCopyComplete(section)}>
+        <div style={{ marginTop: 14 }}>
+          {role === 'leadership' ? (
+            <button type="button" className="btn-primary" onClick={() => onCopyComplete(section)}>
               {copied
-                ? 'Row copied ✓ — append to the tracker CSV and re-import'
+                ? 'Row copied ✓ — append to the tracker and re-import'
                 : 'Mark complete (copies a CSV row)'}
             </button>
-          </p>
-        ) : (
-          <p className="footnote" style={{ marginBottom: 0 }}>
-            Ready for sign-off — switch the viewer role to <em>leadership</em> to see the
-            demonstration Complete action.
-          </p>
-        )
+          ) : (
+            <span style={{ fontSize: 12.5, color: 'var(--muted-72)' }}>
+              Ready for sign-off — switch the viewer role to <strong>leadership</strong> to see the
+              demonstration Complete action.
+            </span>
+          )}
+        </div>
       ) : null}
-    </section>
+    </Panel>
   );
 }
 
@@ -218,14 +168,14 @@ export function AcfrView() {
   const [role, setRole] = useState<ViewerRole>('analyst');
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
-  const { board, records } = useMemo(() => {
+  const board = useMemo(() => {
     const res = parseContractCsv(acfrCsv);
     if (!res.ok) {
       throw new Error(
         `Bundled ACFR tracker failed its own contract: ${res.errors[0]?.ruleId} ${res.errors[0]?.message}`,
       );
     }
-    return { board: buildAcfrBoard(res.records), records: res.records };
+    return buildAcfrBoard(res.records);
   }, []);
 
   const itemsBySection = useMemo(() => {
@@ -241,9 +191,22 @@ export function AcfrView() {
     return m;
   }, []);
 
+  const allItems: CrosswalkItem[] = [...itemsBySection.values()].flat();
+  const tiesDone = allItems.filter((c) => c.status === 'Complete').length;
   const complete = board.sections.filter((s) => s.status === 'complete').length;
   const signoff = board.sections.filter((s) => s.status === 'ready_signoff').length;
-  const itemsDone = CROSSWALK.filter((c) => c.status === 'Complete').length;
+
+  let nextDue: string | null = null;
+  for (const c of allItems) {
+    if (c.status !== 'Complete' && (!nextDue || c.dueDate < nextDue)) nextDue = c.dueDate;
+  }
+  const nextDueLabel = nextDue
+    ? `${MONTHS[+nextDue.slice(5, 7) - 1]} ${+nextDue.slice(8, 10)}, ${nextDue.slice(0, 4)}`
+    : '—';
+  const nextDueSub =
+    nextDue && board.refDate
+      ? `${Math.round((Date.parse(nextDue) - Date.parse(board.refDate)) / 86400000)} days out · earliest open tie-out item`
+      : '';
 
   async function copyComplete(section: AcfrSection) {
     const rowCsv = completeRowCsv(
@@ -255,7 +218,7 @@ export function AcfrView() {
     try {
       await navigator.clipboard.writeText(rowCsv);
       setCopiedSection(section.sectionId);
-      setTimeout(() => setCopiedSection(null), 4000);
+      setTimeout(() => setCopiedSection(null), 3200);
     } catch {
       setCopiedSection(null);
     }
@@ -263,96 +226,98 @@ export function AcfrView() {
 
   return (
     <>
-      <h1>ACFR reporting workflow</h1>
-      <p className="footnote">
-        Section readiness from contract records (<code>{board.entityId}</code> tracker file, through{' '}
-        {board.refDate ?? 'n/a'}): the latest status row per section is the state, and the full row
-        history is the change log — the file is the record. Page-level tie-out items sit under their
-        sections. Statuses, dates, owners and links are <strong>illustrative demo values</strong>{' '}
-        with synthetic actor labels.
-      </p>
+      <div className="muted-note" style={{ margin: '-6px 0 18px', maxWidth: 960, fontSize: 13 }}>
+        Section readiness for the ACFR production cycle, through {board.refDate ?? 'n/a'}: the
+        latest status row per section is the state, and the full row history is the change log — the
+        file is the record. Statuses, dates, owners and links are{' '}
+        <strong>illustrative demo values</strong> with synthetic actor labels; the tie-out structure
+        follows the published ACFR table of contents.
+      </div>
 
-      <div className="tile-row">
-        <div className="tile">
-          <div className="tile-label">Sections complete</div>
-          <div className="tile-value">
+      <div className="grid-kpi">
+        <Panel tight kicker="Sections complete">
+          <div className="stat-value">
             {complete} / {board.sections.length}
           </div>
-          <div className="tile-sub">of the five ACFR sections</div>
-        </div>
-        <div className="tile">
-          <div className="tile-label">Ready for sign-off</div>
-          <div className="tile-value">{signoff}</div>
-          <div className="tile-sub">awaiting leadership</div>
-        </div>
-        <div className="tile">
-          <div className="tile-label">Tie-out items complete</div>
-          <div className="tile-value">
-            {itemsDone} / {CROSSWALK.length}
+          <div className="stat-sub">of the five ACFR sections</div>
+        </Panel>
+        <Panel tight kicker="Ready for sign-off">
+          <div className="stat-value">{signoff}</div>
+          <div className="stat-sub">awaiting leadership</div>
+        </Panel>
+        <Panel tight kicker="Tie-out items complete">
+          <div className="stat-value">
+            {tiesDone} / {allItems.length}
           </div>
-          <div className="tile-sub">across all sections</div>
-        </div>
-        <div className="tile">
-          <div className="tile-label">Viewer role</div>
-          <div style={{ margin: '0.3rem 0' }}>
-            <select
-              aria-label="Viewer role (demonstration only)"
-              value={role}
-              onChange={(e) => setRole(e.target.value as ViewerRole)}
-              style={{ font: 'inherit', fontSize: '0.95rem', padding: '0.25rem 0.4rem' }}
-            >
-              <option value="analyst">analyst</option>
-              <option value="lead">lead</option>
-              <option value="leadership">leadership</option>
-            </select>
-          </div>
-          <div className="tile-sub">demonstration only — not access control</div>
+          <div className="stat-sub">across all sections</div>
+        </Panel>
+        <Panel tight kicker="Next tie-out due">
+          <div className="stat-value smaller">{nextDueLabel}</div>
+          <div className="stat-sub">{nextDueSub}</div>
+        </Panel>
+      </div>
+
+      <div className="role-row">
+        <label>
+          Viewer role
+          <select
+            className="input"
+            style={{ width: 'auto', minWidth: 130 }}
+            value={role}
+            onChange={(e) => setRole(e.target.value as ViewerRole)}
+          >
+            <option value="analyst">analyst</option>
+            <option value="lead">lead</option>
+            <option value="leadership">leadership</option>
+          </select>
+        </label>
+        <div className="note">
+          Demonstration only — not access control. A static prototype cannot securely enforce roles:
+          only leadership completes a section; the enforceable, identity-aware tracker belongs in
+          the internal environment.
         </div>
       </div>
 
-      <p className="footnote">
-        A static public site cannot securely enforce roles: this toggle demonstrates the intended
-        workflow (only leadership completes a section). The enforceable, identity-aware tracker
-        belongs in the internal M365 environment; this board demonstrates the concept against the
-        same one-contract data model.
-      </p>
-
       {board.sections.map((s) => (
-        <SectionCard
-          key={s.sectionId}
-          section={s}
-          board={board}
-          role={role}
-          onCopyComplete={copyComplete}
-          copied={copiedSection === s.sectionId}
-          artifacts={sectionArtifacts(records, s.sectionId)}
-          items={itemsBySection.get(s.sectionId) ?? []}
-        />
+        <div className="mt" key={s.sectionId} style={{ marginTop: 20 }}>
+          <SectionCard
+            section={s}
+            items={itemsBySection.get(s.sectionId) ?? []}
+            refDate={board.refDate}
+            role={role}
+            copied={copiedSection === s.sectionId}
+            onCopyComplete={copyComplete}
+          />
+        </div>
       ))}
 
-      <details className="panel">
-        <summary>QA controls register ({QA_CONTROLS.length}) — applies across sections</summary>
-        <div className="table-scroll" style={{ marginTop: '0.6rem' }}>
-          <table>
-            <caption>ACFR investment QA checklist with illustrative statuses</caption>
+      <details className="panel" style={{ marginTop: 20, padding: '18px 22px' }}>
+        <summary style={{ cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
+          QA controls register ({QA_CONTROLS.length}) — applies across sections
+        </summary>
+        <div className="table-scroll" style={{ marginTop: 12 }}>
+          <table className="table">
+            <caption>QA controls register</caption>
             <thead>
               <tr>
                 <th scope="col">Category</th>
                 <th scope="col">Control</th>
                 <th scope="col">Applies to</th>
                 <th scope="col">Severity</th>
-                <th scope="col">Status</th>
+                <th scope="col" className="num">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
-              {QA_CONTROLS.map((c) => (
-                <tr key={c.control}>
-                  <td>{c.category}</td>
-                  <td>{c.control}</td>
-                  <td>{c.appliesTo}</td>
-                  <td>{c.severity}</td>
-                  <td>
-                    <Pill tone={statusTone(c.status)}>{c.status}</Pill>
+              {QA_CONTROLS.map((q) => (
+                <tr key={q.control}>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: 12.5 }}>{q.category}</td>
+                  <td>{q.control}</td>
+                  <td style={{ fontSize: 12, color: 'var(--muted-72)' }}>{q.appliesTo}</td>
+                  <td>{q.severity}</td>
+                  <td className="num">
+                    <Tag variant={statusVariant(q.status satisfies WorkStatus)}>{q.status}</Tag>
                   </td>
                 </tr>
               ))}
@@ -360,6 +325,10 @@ export function AcfrView() {
           </table>
         </div>
       </details>
+      <div className="source-line" style={{ marginTop: 12 }}>
+        Tie-out structure per the 2025 ACFR table of contents; statuses, owners and dates are
+        illustrative demonstration values.
+      </div>
     </>
   );
 }

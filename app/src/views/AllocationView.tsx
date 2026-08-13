@@ -1,154 +1,238 @@
-import { Link } from 'react-router-dom';
+import { Panel, SourceLine, Tag, type TagVariant } from '../components/ui';
+import { CONFIG } from '../config';
+import { publishedFor, type Major } from '../fixtures/published';
+import { useEntity } from '../lib/entity';
 
-import { FreshnessLine } from '../components/FreshnessLine';
-import { catLabel, fmtMm, fmtPct, Panel, Pill } from '../components/ui';
-import { policyFor } from '../fixtures/policyPack';
-import { useDataset } from '../lib/dataset/useDataset';
-import { weightsSumOk, type AllocationStatus } from '../lib/finance/allocation';
+/** Allocation — full-width policy-range bullets (band = IPS range, solid tick = long-term
+ *  target, dashed tick = ½-step, diamond = published actual) plus IPS Tables 1 and 2. */
 
-/**
- * Allocation as policy-range bullets: min ── target ── max with the actual marker and
- * distance-to-boundary. Dollar figures live behind an expander so an over/under amount is
- * never mistaken for a recommended trade size.
- */
+interface BulletGeom {
+  name: string;
+  detail: string;
+  bandLeft: string;
+  bandW: string;
+  tLeft: string;
+  hLeft: string;
+  aLeft: string;
+  hasActual: boolean;
+  actualLbl: string;
+  minL: string;
+  maxL: string;
+  status: string;
+  variant: TagVariant;
+  dist: string;
+}
 
-function BulletRow({ a }: { a: AllocationStatus }) {
-  if (a.bandMin === null || a.bandMax === null || a.actualWeight === null) return null;
-  // scale positions across the band with 20% padding either side
-  const pad = (a.bandMax - a.bandMin) * 0.2;
-  const lo = a.bandMin - pad;
-  const hi = a.bandMax + pad;
-  const pos = (v: number) => `${Math.min(Math.max(((v - lo) / (hi - lo)) * 100, 0), 100)}%`;
-  const nearUpper =
-    a.boundaryDistance !== null && a.bandMax - a.actualWeight <= a.actualWeight - a.bandMin;
-  return (
-    <div className="bullet-row">
-      <div className="bullet-head">
-        <strong>{catLabel(a.categoryId)}</strong>
-        <span className="num">
-          actual {fmtPct(a.actualWeight)} · target{' '}
-          {a.targetWeight === null ? '—' : fmtPct(a.targetWeight, 1)}
-        </span>
-      </div>
-      <div className="bullet-track" aria-hidden="true">
-        <div
-          className="bullet-band"
-          style={{ left: pos(a.bandMin), width: `calc(${pos(a.bandMax)} - ${pos(a.bandMin)})` }}
-        />
-        {a.targetWeight !== null ? (
-          <div className="bullet-target" style={{ left: pos(a.targetWeight) }} />
-        ) : null}
-        <div
-          className={`bullet-actual ${a.rangeStatus === 'out' ? 'out' : ''}`}
-          style={{ left: pos(a.actualWeight) }}
-        />
-        <span className="bullet-min">{fmtPct(a.bandMin, 0)}</span>
-        <span className="bullet-max">{fmtPct(a.bandMax, 0)}</span>
-      </div>
-      <div className="bullet-caption">
-        {a.rangeStatus === 'out' ? (
-          <Pill tone="bad">Out of range</Pill>
-        ) : a.nearBound ? (
-          <Pill tone="warn">Near bound</Pill>
-        ) : (
-          <Pill tone="good">Within range</Pill>
-        )}{' '}
-        {a.boundaryDistance !== null ? (
-          <span className="footnote">
-            {(Math.abs(a.boundaryDistance) * 100).toFixed(2)} pp{' '}
-            {a.boundaryDistance < 0
-              ? 'outside the band'
-              : `to ${nearUpper ? 'upper' : 'lower'} boundary`}
-          </span>
-        ) : null}
-      </div>
-    </div>
-  );
+function bulletGeom([name, t, r, half, act]: Major, nearBoundPp: number): BulletGeom {
+  const lo = t - r;
+  const hi = t + r;
+  const pad = (hi - lo) * 0.2;
+  const lo2 = lo - pad;
+  const hi2 = hi + pad;
+  const pc = (v: number) => `${(((v - lo2) / (hi2 - lo2)) * 100).toFixed(2)}%`;
+  const hasActual = act !== null;
+  let status = 'Targets shown';
+  let variant: TagVariant = 'neutral';
+  let dist = 'actual mix not reproduced — see PAFR p. 7';
+  if (hasActual) {
+    const dLo = act - lo;
+    const dHi = hi - act;
+    const dm = Math.min(dLo, dHi);
+    const side = dHi <= dLo ? 'upper' : 'lower';
+    if (dm < 0) {
+      status = 'Out of range';
+      variant = 'outline';
+      dist = `${Math.abs(dm).toFixed(1)} pp outside the band`;
+    } else if (dm <= nearBoundPp) {
+      status = 'Near bound';
+      variant = 'outline';
+      dist = `${dm.toFixed(1)} pp to ${side} boundary`;
+    } else {
+      status = 'Within range';
+      variant = 'accent';
+      dist = `${dm.toFixed(1)} pp to ${side} boundary`;
+    }
+  }
+  return {
+    name,
+    detail: hasActual
+      ? `actual ${act.toFixed(1)}% · target ${t.toFixed(1)}% · ½-step ${half}%`
+      : `target ${t.toFixed(1)}% · ½-step ${half}%`,
+    bandLeft: pc(lo),
+    bandW: `${(((hi - lo) / (hi2 - lo2)) * 100).toFixed(2)}%`,
+    tLeft: pc(t),
+    hLeft: pc(half),
+    aLeft: hasActual ? pc(act) : '0%',
+    hasActual,
+    actualLbl: hasActual ? `${act.toFixed(1)}%` : '',
+    minL: `${lo}%`,
+    maxL: `${hi}%`,
+    status,
+    variant,
+    dist,
+  };
 }
 
 export function AllocationView() {
-  const { dataset } = useDataset();
-  const { allocation, totalEmvMm, emvIncomplete, meta } = dataset;
-  const pack = policyFor(meta.policyEntity);
-  const sumOk = weightsSumOk(allocation);
-
-  const policyRows = allocation.filter((a) => a.bandMin !== null && a.bandMax !== null);
-  const nonPolicy = allocation.filter((a) => a.bandMin === null || a.bandMax === null);
-  const nonPolicyWeight = nonPolicy.reduce((s, a) => s + (a.actualWeight ?? 0), 0);
+  const { entity } = useEntity();
+  const d = publishedFor(entity);
+  const P = entity === 'PENSION';
+  const bullets = d.majors.map((m) => bulletGeom(m, CONFIG.nearBoundPp));
 
   return (
     <>
-      <h1>Allocation vs policy</h1>
-      <FreshnessLine />
-      <p className="footnote">
-        Synthetic {meta.entityId} data as of {meta.asOf}, measured against the {pack.entityLabel}{' '}
-        IPS bands ({pack.version}; quoted tables under <Link to="/methodology">Methodology</Link>).
-        Range status is a factual report — the IPS defines no mechanical trade trigger.
-        {!sumOk ? ' WARNING: actual weights do not sum to 100% — inspect the imported file.' : ''}
-      </p>
-
-      <Panel title="Policy ranges">
-        {policyRows.map((a) => (
-          <BulletRow key={a.categoryId} a={a} />
-        ))}
-        <p className="panel-note">
-          Non-policy exposures (Overlays &amp; Hedges, Other Asset): {fmtPct(nonPolicyWeight)} — 0%
-          policy weight, not range-monitored. “Near bound” = within 1.0 pp of a policy boundary — an
-          early warning, not a breach.
-        </p>
+      <Panel
+        kicker="Strategic asset allocation — functional categories"
+        title={`Policy target and range${P ? ' vs actual mix' : 's — OPEB Master Trust'}`}
+        sub="Band = IPS range · solid tick = long-term target · dashed tick = ½-step target (7/1/2024) · each track is scaled around its own band"
+      >
+        <div>
+          {bullets.map((b) => (
+            <div className="bullet-row" key={b.name}>
+              <div className="bullet-head">
+                <div className="name">{b.name}</div>
+                <div className="detail">{b.detail}</div>
+              </div>
+              <div className="bullet-track">
+                <div className="rail" />
+                <div className="band-range" style={{ left: b.bandLeft, width: b.bandW }} />
+                <div className="tick-target" style={{ left: b.tLeft }} />
+                <div className="tick-half" style={{ left: b.hLeft }} />
+                {b.hasActual ? (
+                  <>
+                    <div className="diamond" style={{ left: b.aLeft }} />
+                    <span className="actual-lbl" style={{ left: b.aLeft }}>
+                      {b.actualLbl}
+                    </span>
+                  </>
+                ) : null}
+                <span className="min-lbl">{b.minL}</span>
+                <span className="max-lbl">{b.maxL}</span>
+              </div>
+              <div className="bullet-status">
+                <Tag variant={b.variant}>{b.status}</Tag>
+                <span className="dist">{b.dist}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="chart-legend" style={{ marginTop: 14 }}>
+          <span className="key">
+            <span
+              className="sw"
+              style={{
+                width: 14,
+                background: 'var(--accent-600)',
+                border: '1px solid var(--accent-800)',
+              }}
+            />
+            IPS range
+          </span>
+          <span className="key">
+            <span
+              className="sw"
+              style={{
+                width: 14,
+                height: 12,
+                background: 'var(--accent-600)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span style={{ width: 2, height: 12, background: '#fff', display: 'inline-block' }} />
+            </span>
+            Long-term target
+          </span>
+          <span className="key">
+            <span
+              className="sw"
+              style={{
+                width: 14,
+                height: 12,
+                background: 'var(--accent-600)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span style={{ width: 0, height: 12, borderLeft: '2px dashed var(--accent-200)' }} />
+            </span>
+            ½-step target
+          </span>
+          {P ? (
+            <span className="key">
+              <span
+                className="sw"
+                style={{
+                  width: 9,
+                  height: 9,
+                  background: 'var(--accent-200)',
+                  border: '1px solid var(--accent-900)',
+                  transform: 'rotate(45deg)',
+                }}
+              />
+              Actual (6/30/2025)
+            </span>
+          ) : null}
+        </div>
+        <p className="panel-note">{d.allocViewNote}</p>
+        <SourceLine>IPS Table 1, restated June 12, 2024 · actual mix per 2025 PAFR</SourceLine>
       </Panel>
 
-      <details className="panel">
-        <summary>Dollar details — EMV and over/under amounts</summary>
-        <p className="footnote" style={{ marginTop: '0.6rem' }}>
-          {emvIncomplete
-            ? 'A sleeve market value is missing: the total and dollar gaps are suppressed rather than computed from a partial sum.'
-            : `Total ${fmtMm(totalEmvMm)} $mm (synthetic). Dollar over/under is descriptive staff analytics, not a recommended trade amount.`}
-        </p>
+      <Panel
+        className="mt"
+        kicker="Approved asset allocation and benchmarks"
+        title={`IPS Tables 1 and 2 — ${d.label}`}
+      >
         <div className="table-scroll">
-          <table className="cardable">
-            <caption>EMV and dollar over/under per category</caption>
+          <table className="table">
+            <caption>IPS Tables 1 and 2: targets, ranges, ½-step targets, benchmarks</caption>
             <thead>
               <tr>
-                <th scope="col">Category</th>
+                <th scope="col">Asset class</th>
                 <th scope="col" className="num">
-                  EMV ($mm)
+                  Target %
                 </th>
                 <th scope="col" className="num">
-                  Over/under
+                  Range ±
                 </th>
                 <th scope="col" className="num">
-                  Over/under ($mm)
+                  ½-step target
                 </th>
+                <th scope="col">Benchmark</th>
               </tr>
             </thead>
             <tbody>
-              {allocation.map((a) => (
-                <tr key={a.categoryId}>
-                  <td data-label="Category">{catLabel(a.categoryId)}</td>
-                  <td className="num" data-label="EMV ($mm)">
-                    {fmtMm(a.emvMm)}
+              {d.pol.map(([name, t, r, half, bench, level]) => (
+                <tr
+                  key={name}
+                  style={{ background: level === 2 ? 'var(--accent-200)' : 'transparent' }}
+                >
+                  <td
+                    style={{
+                      fontWeight: level === 1 ? 400 : 600,
+                      paddingLeft: level === 1 ? 26 : undefined,
+                    }}
+                  >
+                    {name}
                   </td>
-                  <td className="num" data-label="Over/under">
-                    {a.overUnderPct === null ? '—' : fmtPct(a.overUnderPct)}
+                  <td className="num" style={{ fontWeight: level === 1 ? 400 : 600 }}>
+                    {t}
                   </td>
-                  <td className="num" data-label="Over/under ($mm)">
-                    {a.overUnderMm === null ? '—' : fmtMm(a.overUnderMm)}
-                  </td>
+                  <td className="num">{r}</td>
+                  <td className="num">{half}</td>
+                  <td style={{ fontSize: 12, color: 'var(--muted-86)' }}>{bench}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </details>
-
-      <p className="footnote">
-        Policy source: {pack.sourceDoc}, {pack.sourcePages}
-        {dataset.policySource === 'dataset'
-          ? ' — bands read from the dataset’s policy_target records (schema 1.1).'
-          : ' — bundled policy pack.'}{' '}
-        Confirm the governing policy version (long-term vs ½-step) before any compliance statement.
-      </p>
+        <p className="panel-note">
+          Private-market benchmarks are lagged one to three months per IPS Table 2. Confirm the
+          governing policy version (long-term vs ½-step) before any compliance statement.
+        </p>
+      </Panel>
     </>
   );
 }

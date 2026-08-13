@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-08-13 — Revision 8: LACERA redesign (published FY2025 figures, seven views)
+
+Implemented the owner's design handoff (`design_handoff_lacera_portfolio_analytics/`) —
+a LACERA-branded presentation layer quoting only published documents.
+
+- **New chrome**: notice bar, LACERA wordmark header with a Pension Plan / OPEB Trust
+  segmented control, seven-tab nav with 3px accent underline, accent-800 title band with
+  "Copy board brief" on Overview, accent-200 strip, and the mission footer. Single navy
+  ramp on white, square-cornered 1px-bordered panels, Mulish throughout — self-hosted via
+  @fontsource so the built site still makes zero network requests.
+- **Seven views**: Overview (KPIs, FY2016–25 growth bars, allocation strip, returns table,
+  FY2025 flows), Performance (returns + grouped bars, three-year changes table, cumulative
+  investment income SVG), Allocation (full-width policy bullets with ½-step ticks and
+  published-actual diamonds + complete IPS Tables 1–2), Funded Status (funded-ratio bars,
+  membership / OPEB enrollment + prefunding story), Risk & Compliance (range-compliance
+  table, excess-by-horizon cards, governance notes), Holdings & Managers (largest equity/
+  fixed income holdings, management fees), and the ACFR Workflow board restyled on the new
+  system while keeping its contract-record plumbing (tracker file + crosswalk).
+- **Every displayed figure is a reported_public quotation** from the 2025 PAFR, 2025 ACFR,
+  or the IPS documents, with per-panel source citations (config-gated). The OPEB actual mix
+  is deliberately not reproduced (published only as a chart) and the views say so.
+- **Retired from navigation** (legacy routes redirect): Trends, Exceptions, Recon, Import,
+  Methodology — the synthetic daily-workflow story steps back behind the presentation
+  layer. The contract engine, validators, fixtures, generators, and all 106 tests remain
+  intact and green.
+- Bundle: Recharts dropped from the build; Mulish woff2 subsets bundled locally.
+
 ## 2026-08-13 — Revision 7.1: ACFR sections own their items; diagram removed (owner feedback)
 
 - **Tie-out items nested under their sections**: the page-level crosswalk (23 tables and
