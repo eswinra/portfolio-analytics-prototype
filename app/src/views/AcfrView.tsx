@@ -110,8 +110,11 @@ function SectionCard({
       </p>
 
       {items.length > 0 ? (
-        <details>
-          <summary className="footnote">Tie-out items ({items.length})</summary>
+        <details open>
+          <summary>
+            <strong>Tie-out items ({items.length})</strong>{' '}
+            <span className="footnote">— {itemsDone} complete · click to collapse</span>
+          </summary>
           <div className="table-scroll" style={{ marginTop: '0.5rem' }}>
             <table>
               <caption>
