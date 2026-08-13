@@ -41,11 +41,13 @@ const STATUS_TONE: Record<AcfrStatus, 'good' | 'warn' | 'bad' | 'neutral'> = {
 
 /** Crosswalk source-section labels → board section ids (RSI and SI are part of Financial). */
 const CROSSWALK_SECTION: Record<string, string> = {
+  Introductory: 'INTRO',
   Investment: 'INV',
   Financial: 'FIN',
   'Financial Notes': 'FIN',
   'Required Supplementary Information': 'FIN',
   'Supplementary Information': 'FIN',
+  Actuarial: 'ACT',
   Statistical: 'STAT',
 };
 
@@ -162,8 +164,7 @@ function SectionCard({
         </details>
       ) : (
         <p className="footnote" style={{ margin: '0.2rem 0' }}>
-          No tie-out items tracked here — the investment-data crosswalk covers the Financial,
-          Investments and Statistical sections.
+          No tie-out items tracked for this section.
         </p>
       )}
 
