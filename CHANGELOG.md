@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-13 — Revision 9.1: post-audit follow-ups
+
+- Import confidentiality copy hardened per the second external audit: browser-local
+  processing is now stated as a privacy property, not an authorization or security
+  control — confidential or non-public data belongs only in an approved private
+  environment.
+- Sanitized replacement handoff written to `outputs/handoff-2026-08-13-rev9.md`
+  (ignored; pinned to commit 3d4bc9a, source-precedence ordered). The four historical
+  prompt files were marked “SUPERSEDED — HISTORICAL REFERENCE — DO NOT EXECUTE”
+  outside the repository; verified none of them ever entered the repo or its history.
+
 ## 2026-08-13 — Revision 9: trust & controls (external-audit tranche)
 
 Owner-approved response to the external audit (11 findings independently verified): one

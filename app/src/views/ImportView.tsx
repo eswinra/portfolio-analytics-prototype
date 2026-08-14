@@ -54,8 +54,10 @@ export function ImportView() {
       <Panel kicker="Confidentiality" title="Do not upload confidential or non-public data">
         <p className="footnote" style={{ margin: 0 }}>
           Files never leave your browser, but this public site is for synthetic/shareable data only.
-          Licensed market data (e.g., Bloomberg exports) is for internal use: run the app locally or
-          on an internal host for that workflow, and never commit exports to the repository.
+          Browser-local processing is a privacy property, not an authorization or security control —
+          confidential or non-public data belongs only in an approved private environment. Licensed
+          market data (e.g., Bloomberg exports) is for internal use: run the app locally or on an
+          internal host for that workflow, and never commit exports to the repository.
         </p>
       </Panel>
 
