@@ -1011,3 +1011,34 @@ details.panel > summary {
   font-size: 12px;
   color: var(--muted-72);
 }
+
+/* ---- mode switch (Dashboard | Workstation) ---------------------------------------- */
+
+.mode-switch {
+  margin-left: auto;
+  display: flex;
+  align-self: center;
+  border: 1px solid var(--divider);
+}
+
+.mode-switch a {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--neutral-700);
+  text-decoration: none;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.mode-switch a + a {
+  border-left: 1px solid var(--divider);
+}
+
+.mode-switch a.mode-active {
+  background: var(--accent-700);
+  color: #fff;
+  font-weight: 700;
+}

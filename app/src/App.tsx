@@ -19,23 +19,29 @@ import { RiskView } from './views/RiskView';
  *  entity segmented control, seven-view nav, title band, and mission footer. Published FY2025
  *  figures only — quoted from the 2025 PAFR/ACFR and the IPS documents. */
 
-const VIEWS: [path: string, label: string, bandTitle: string][] = [
+/** Dashboard mode — the published-figures presentation layer (2025 PAFR/ACFR, IPS). */
+const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/', 'Overview', 'Total fund overview'],
   ['/performance', 'Performance', 'Performance vs policy benchmark'],
   ['/allocation', 'Allocation', 'Asset allocation vs policy'],
   ['/funded', 'Funded Status', 'Funded status and membership'],
   ['/risk', 'Risk & Compliance', 'Risk & compliance'],
   ['/holdings', 'Holdings & Managers', 'Holdings & managers'],
+];
+
+/** Workstation mode — where the work is populated: the synthetic contract-data pipeline
+ *  (Data/Import, Reconciliation, Exceptions) and the ACFR production tracker. In the internal
+ *  version the dashboard consumes what the workstation publishes; on this public prototype the
+ *  dashboard quotes published documents while the workstation demonstrates the pipeline. */
+const WORKSTATION_VIEWS: [path: string, label: string, bandTitle: string][] = [
+  ['/import', 'Data', 'Import a dataset'],
+  ['/recon', 'Reconciliation', 'Reconciliation'],
+  ['/exceptions', 'Exceptions', 'Exceptions & data quality'],
   ['/acfr', 'ACFR Workflow', 'ACFR reporting workflow'],
 ];
 
-/** Team workflow demo — the synthetic contract-data views (footer-linked, outside the
- *  seven-tab presentation nav; the published/synthetic wall stays explicit). */
-const WORKFLOW_VIEWS: [path: string, label: string, bandTitle: string][] = [
-  ['/import', 'Import', 'Import a dataset'],
-  ['/recon', 'Reconciliation', 'Reconciliation'],
-  ['/exceptions', 'Exceptions', 'Exceptions & data quality'],
-];
+const isWorkstationPath = (pathname: string): boolean =>
+  WORKSTATION_VIEWS.some(([p]) => p === pathname);
 
 /** Keeps the synthetic dataset's fund selection in step with the header entity toggle. */
 function EntitySync() {
@@ -67,9 +73,10 @@ function TitleBand() {
   const { entity } = useEntity();
   const { dataset } = useDataset();
   const d = publishedFor(entity);
-  const workflow = WORKFLOW_VIEWS.find(([p]) => p === pathname);
-  const view = workflow ?? VIEWS.find(([p]) => p === pathname) ?? VIEWS[0]!;
-  const isOverview = !workflow && view[0] === '/';
+  const workstation = WORKSTATION_VIEWS.find(([p]) => p === pathname);
+  const view = workstation ?? DASHBOARD_VIEWS.find(([p]) => p === pathname) ?? DASHBOARD_VIEWS[0]!;
+  const isOverview = !workstation && view[0] === '/';
+  const isAcfr = pathname === '/acfr';
   const [copied, setCopied] = useState(false);
 
   async function copyBrief() {
@@ -89,7 +96,11 @@ function TitleBand() {
         <div className="band-inner">
           <h1>{view[2]}</h1>
           <span className="entity">
-            {workflow ? `Team workflow demo · synthetic ${dataset.meta.entityId} data` : d.label}
+            {workstation
+              ? isAcfr
+                ? 'Workstation · ACFR tracker — illustrative demo values'
+                : `Workstation · synthetic ${dataset.meta.entityId} data`
+              : d.label}
           </span>
           {isOverview ? (
             <span className="actions">
@@ -101,22 +112,17 @@ function TitleBand() {
         </div>
       </div>
       <div className="band-strip" />
-      {workflow ? (
+      {workstation ? (
         <>
           <div className="workflow-banner" role="note">
             <div className="workflow-banner-inner">
-              <strong>Team workflow demo</strong>
+              <strong>Workstation</strong>
               <span>
-                Synthetic contract data (schema 1.3, V01–V23) — not the published FY2025 figures
-                shown on the presentation views. Files never leave your browser.
+                Where the work is populated — synthetic contract data (schema 1.3, V01–V23), not the
+                published FY2025 figures on the Dashboard. In the internal version the dashboard
+                consumes what the workstation publishes; here the pipeline is demonstrated. Files
+                never leave your browser.
               </span>
-              <nav aria-label="Workflow views">
-                {WORKFLOW_VIEWS.map(([path, label]) => (
-                  <NavLink key={path} to={path}>
-                    {label}
-                  </NavLink>
-                ))}
-              </nav>
             </div>
           </div>
           {dataset.draftRecordCount > 0 ? (
@@ -135,6 +141,9 @@ function TitleBand() {
 
 function Shell() {
   const { entity, setEntity } = useEntity();
+  const { pathname } = useLocation();
+  const workstation = isWorkstationPath(pathname);
+  const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
   const mainRef = useRef<HTMLElement>(null);
 
   function skipToMain(e: React.MouseEvent) {
@@ -192,11 +201,19 @@ function Shell() {
 
       <nav className="mainnav" aria-label="Views">
         <div className="mainnav-inner">
-          {VIEWS.map(([path, label]) => (
+          {modeViews.map(([path, label]) => (
             <NavLink key={path} to={path} end={path === '/'}>
               {label}
             </NavLink>
           ))}
+          <div className="mode-switch" role="group" aria-label="Mode">
+            <NavLink to="/" end className={!workstation ? 'mode-active' : ''}>
+              Dashboard
+            </NavLink>
+            <NavLink to="/import" className={workstation ? 'mode-active' : ''}>
+              Workstation
+            </NavLink>
+          </div>
         </div>
       </nav>
 
@@ -247,15 +264,18 @@ function Shell() {
             Statement
           </div>
           <div className="meta">
-            Team workflow demo (synthetic contract data):{' '}
-            {WORKFLOW_VIEWS.map(([path, label], i) => (
+            Workstation (synthetic contract data):{' '}
+            {WORKSTATION_VIEWS.map(([path, label], i) => (
               <span key={path}>
                 {i > 0 ? ' · ' : ''}
                 <NavLink to={path} style={{ color: '#fff' }}>
                   {label}
                 </NavLink>
               </span>
-            ))}
+            ))}{' '}
+            — in the internal version the dashboard consumes what the workstation publishes; here
+            the dashboard quotes published documents while the workstation demonstrates the
+            pipeline.
           </div>
           <div className="meta">
             Exploratory prototype for the Portfolio Analytics team. All figures are quoted from

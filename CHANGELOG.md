@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-13 — Revision 8.2: Dashboard | Workstation split (owner-directed)
+
+The app now has two first-class modes, matching the workflow architecture: a place where
+the work is populated and a presentation layer that (in the internal version) feeds from it.
+
+- **Mode switch** in the nav bar (Dashboard | Workstation), all URLs stable.
+- **Dashboard** (6 tabs): Overview, Performance, Allocation, Funded Status, Risk &
+  Compliance, Holdings & Managers — the published-FY2025-figures presentation.
+- **Workstation** (4 tabs): Data (import pipeline), Reconciliation, Exceptions, and ACFR
+  Workflow — moved out of the presentation nav, where it belonged: it is a production
+  tracker, not presentation content. Workstation pages keep the synthetic-data banner, now
+  stating the feed relationship: in the internal version the dashboard consumes what the
+  workstation publishes; here the dashboard quotes published documents while the
+  workstation demonstrates the pipeline.
+- Footer restates the same relationship with the four workstation links.
+- Verified in the browser across every mode transition; 106 tests, pipeline clean.
+
 ## 2026-08-13 — Revision 8.1: team workflow demo restored (Import, Reconciliation, Exceptions)
 
 Owner-approved restoration of the operating half of the team-tool vision, incorporated into
