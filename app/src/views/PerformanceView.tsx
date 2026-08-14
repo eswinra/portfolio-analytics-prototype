@@ -12,12 +12,14 @@ export function PerformanceView() {
 
   const rMax = Math.max(...d.ret.f, ...d.ret.b);
 
-  // cumulative income area chart — geometry ported from the design source
+  // cumulative income area chart — geometry ported from the design source, with the vertical
+  // span compressed (158 → 128) so the series peak clears the end-value callout at top right
+  const PLOT_SPAN = 128;
   const cMin = Math.min(0, ...d.cum);
   const cMax = Math.max(...d.cum);
   const pts = d.cum.map((v, i) => {
     const x = (i / (d.cum.length - 1)) * 600;
-    const y = 172 - ((v - cMin) / (cMax - cMin)) * 158;
+    const y = 172 - ((v - cMin) / (cMax - cMin)) * PLOT_SPAN;
     return `${x.toFixed(1)} ${y.toFixed(1)}`;
   });
   const cumLine = `M ${pts.join(' L ')}`;
@@ -28,7 +30,10 @@ export function PerformanceView() {
   const cumGrid: { top: number; label: string }[] = [];
   for (let v = Math.ceil(cMin / cStep) * cStep; v < cMax - cStep * 0.15; v += cStep) {
     if (v <= cMin) continue;
-    cumGrid.push({ top: 172 - ((v - cMin) / cRange) * 158, label: v.toLocaleString('en-US') });
+    cumGrid.push({
+      top: 172 - ((v - cMin) / cRange) * PLOT_SPAN,
+      label: v.toLocaleString('en-US'),
+    });
   }
 
   return (
