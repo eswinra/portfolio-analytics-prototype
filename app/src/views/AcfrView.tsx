@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import acfrCsv from '../../../data/sample/demo_acfr_status_v1.csv?raw';
-import { Panel, Tag, type TagVariant } from '../components/ui';
+import { Panel, SourceLine, Tag, type TagVariant } from '../components/ui';
 import {
   CROSSWALK,
   QA_CONTROLS,
@@ -10,7 +10,12 @@ import {
 } from '../fixtures/acfrWorkflow';
 import { parseContractCsv } from '../lib/contract/parse';
 import type { AcfrStatus } from '../lib/contract/schema';
-import { buildAcfrBoard, completeRowCsv, type AcfrSection } from '../lib/dataset/acfr';
+import {
+  buildAcfrBoard,
+  completeRowCsv,
+  sectionEligibility,
+  type AcfrSection,
+} from '../lib/dataset/acfr';
 
 /** ACFR Workflow — section readiness board rebuilt on the LACERA design: stat tiles, per-
  *  section cards with a tie-out progress bar and collapsible item tables, and the QA register.
@@ -63,12 +68,22 @@ function SectionCard({
   refDate: string | null;
   role: ViewerRole;
   copied: boolean;
-  onCopyComplete: (s: AcfrSection) => void;
+  onCopyComplete: (s: AcfrSection, reviewer: string) => void;
 }) {
   const dLeft = (due: string): number | null =>
     refDate ? Math.round((Date.parse(due) - Date.parse(refDate)) / 86400000) : null;
   const done = items.filter((c) => c.status === 'Complete').length;
+  const blocked = items.filter((c) => c.status === 'Blocked').length;
   const statusTxt = `${STATUS_LABEL[section.status]}${section.version ? ` ${section.version}` : ''}`;
+  const [reviewer, setReviewer] = useState('');
+  const eligibility = sectionEligibility(section, {
+    itemsTotal: items.length,
+    itemsComplete: done,
+    itemsBlocked: blocked,
+    artifactsIn: section.artifactsIn,
+    artifactsExpected: section.artifactsExpected,
+    reviewerOk: reviewer.trim() !== '' && reviewer.trim() !== section.owner,
+  });
 
   return (
     <Panel className="acfr-card">
@@ -77,10 +92,20 @@ function SectionCard({
         <span style={{ fontSize: 11.5, letterSpacing: '0.1em', color: 'var(--muted-65)' }}>
           {section.sectionId}
         </span>
-        <span style={{ marginLeft: 'auto' }}>
+        <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 8 }}>
+          {eligibility.statusAheadOfControls ? (
+            <Tag variant="blocked">status ahead of controls</Tag>
+          ) : null}
           <Tag variant={statusVariant(section.status)}>{statusTxt}</Tag>
         </span>
       </div>
+      {eligibility.statusAheadOfControls ? (
+        <p className="footnote" style={{ margin: '6px 0 0' }}>
+          Status inconsistency: recorded as {STATUS_LABEL[section.status]}, but {done} of{' '}
+          {items.length} tie-outs are complete. The tracker's claim outruns its controls — resolve
+          before relying on this status.
+        </p>
+      ) : null}
       <div className="acfr-meta">
         Owner <strong>{section.owner || '—'}</strong> · updated {section.lastUpdated || '—'} · due{' '}
         {section.dueDate ?? '—'} ({section.dueDate ? dLeft(section.dueDate) : '—'} days left) ·
@@ -147,15 +172,47 @@ function SectionCard({
       {section.status === 'ready_signoff' ? (
         <div style={{ marginTop: 14 }}>
           {role === 'leadership' ? (
-            <button type="button" className="btn-primary" onClick={() => onCopyComplete(section)}>
-              {copied
-                ? 'Row copied ✓ — append to the tracker and re-import'
-                : 'Mark complete (copies a CSV row)'}
-            </button>
+            <div>
+              {!eligibility.eligible ? (
+                <p className="footnote" style={{ margin: '0 0 6px' }}>
+                  <strong>Completion unavailable</strong> — {eligibility.reasons.length} requirement
+                  {eligibility.reasons.length === 1 ? '' : 's'} open:{' '}
+                  {eligibility.reasons.join(' · ')}. A section can be marked complete only when
+                  every requirement clears.
+                </p>
+              ) : null}
+              <span
+                style={{ display: 'inline-flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}
+              >
+                <label
+                  style={{ fontSize: 12.5, display: 'inline-flex', gap: 6, alignItems: 'center' }}
+                >
+                  Reviewer
+                  <input
+                    className="input"
+                    style={{ width: 140 }}
+                    value={reviewer}
+                    placeholder="initials ≠ owner"
+                    onChange={(e) => setReviewer(e.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={!eligibility.eligible}
+                  onClick={() => onCopyComplete(section, reviewer.trim())}
+                >
+                  {copied
+                    ? 'Row copied ✓ — append to the tracker and re-import'
+                    : 'Mark complete (copies a CSV row)'}
+                </button>
+              </span>
+            </div>
           ) : (
             <span style={{ fontSize: 12.5, color: 'var(--muted-72)' }}>
               Ready for sign-off — switch the viewer role to <strong>leadership</strong> to see the
-              demonstration Complete action.
+              demonstration Complete action (gated by tie-outs, artifacts, blockers, and an
+              independent reviewer).
             </span>
           )}
         </div>
@@ -208,11 +265,12 @@ export function AcfrView() {
       ? `${Math.round((Date.parse(nextDue) - Date.parse(board.refDate)) / 86400000)} days out · earliest open tie-out item`
       : '';
 
-  async function copyComplete(section: AcfrSection) {
+  async function copyComplete(section: AcfrSection, reviewer: string) {
     const rowCsv = completeRowCsv(
       board,
       section,
       'PA-LEAD-1',
+      reviewer,
       `ACF-${9000 + Math.floor(Math.random() * 999)}`,
     );
     try {
@@ -325,9 +383,11 @@ export function AcfrView() {
           </table>
         </div>
       </details>
-      <div className="source-line" style={{ marginTop: 12 }}>
-        Tie-out structure per the 2025 ACFR table of contents; statuses, owners and dates are
-        illustrative demonstration values.
+      <div style={{ marginTop: 12 }}>
+        <SourceLine sources={['ACFR_TOC']} />
+        <p className="footnote">
+          Statuses, owners and dates are illustrative demonstration values.
+        </p>
       </div>
     </>
   );

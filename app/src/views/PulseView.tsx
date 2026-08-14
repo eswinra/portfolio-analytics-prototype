@@ -49,7 +49,7 @@ export function PulseView() {
             ))}
           </div>
           <p className="panel-note">{d.growthNote}</p>
-          <SourceLine>2025 PAFR, pp. 4–7</SourceLine>
+          <SourceLine sources={['PAFR_GROWTH']} />
         </Panel>
 
         <Panel kicker={d.allocKicker} title="Asset allocation">
@@ -74,12 +74,15 @@ export function PulseView() {
             ))}
           </div>
           <p className="panel-note">{d.allocFoot}</p>
-          <SourceLine>2025 PAFR p. {P ? 5 : 7} · IPS Table 1 (restated June 12, 2024)</SourceLine>
+          <SourceLine sources={P ? ['PAFR_PENSION', 'IPS_T1'] : ['PAFR_OPEB', 'IPS_T1']} />
         </Panel>
       </div>
 
       <div className="grid-panels mt">
-        <Panel kicker="Annualized total returns — net of fees" title="Fund vs policy benchmark">
+        <Panel
+          kicker="Time-weighted returns (TWR) — net of investment-management fees"
+          title="Fund vs policy benchmark"
+        >
           <div className="table-scroll">
             <table className="table">
               <caption>Fund vs policy benchmark by horizon</caption>
@@ -116,7 +119,15 @@ export function PulseView() {
               </tbody>
             </table>
           </div>
-          <p className="panel-note">{d.retNote}</p>
+          <p className="panel-note">
+            {d.retNote} Excess = fund − benchmark (calculated from quoted figures).
+          </p>
+          <p className="footnote">
+            Time-weighted returns (TWR), net of investment-management fees, annualized for periods
+            over one year, as published. The ACFR separately reports money-weighted returns (MWR);
+            the two are not comparable. Private-market benchmarks are lagged 1–3 months (IPS Table
+            2).
+          </p>
         </Panel>
 
         <Panel

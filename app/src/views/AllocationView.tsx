@@ -177,7 +177,7 @@ export function AllocationView() {
           ) : null}
         </div>
         <p className="panel-note">{d.allocViewNote}</p>
-        <SourceLine>IPS Table 1, restated June 12, 2024 · actual mix per 2025 PAFR</SourceLine>
+        <SourceLine sources={P ? ['IPS_T1', 'PAFR_PENSION'] : ['IPS_T1', 'PAFR_OPEB']} />
       </Panel>
 
       <Panel

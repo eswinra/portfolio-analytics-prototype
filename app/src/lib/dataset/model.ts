@@ -36,6 +36,10 @@ export interface PeriodTriple {
   excess: number | null;
   /** true when the benchmark span did not match the portfolio span (excess suppressed) */
   spanMismatch: boolean;
+  /** true when return_method / gross_net differ between the legs — comparison fails closed */
+  methodMismatch: boolean;
+  /** the fields that differed, for the blocking exception */
+  methodDiffs: string[];
 }
 
 export interface ContributionEntry {
@@ -151,6 +155,9 @@ export interface Dataset {
   pmSleeves: PmSleeve[];
   /** newest as_of in the dataset and who entered that row (empty for pre-1.2 files) */
   freshness: { latestAsOf: string | null; latestActor: string };
+  /** demonstrated publication gate: blocking exceptions + out-of-tolerance recon breaks */
+  publishEligible: boolean;
+  publishBlockers: string[];
 }
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -245,12 +252,20 @@ export function buildDataset(
     value: number | null;
     ps: string;
     pe: string;
+    rm: string;
+    gn: string;
   }
   const legs = new Map<string, Map<string, PeriodLeg>>(); // period_type -> metric -> leg
   for (const r of scoped) {
     if (r.record_type !== 'period_return') continue;
     const byMetric = legs.get(r.period_type) ?? new Map<string, PeriodLeg>();
-    byMetric.set(r.metric_id, { value: num(r.value), ps: r.period_start, pe: r.period_end });
+    byMetric.set(r.metric_id, {
+      value: num(r.value),
+      ps: r.period_start,
+      pe: r.period_end,
+      rm: r.return_method,
+      gn: r.gross_net,
+    });
     legs.set(r.period_type, byMetric);
   }
   const periods: PeriodTriple[] = ['1M', 'QTD', 'FYTD']
@@ -267,8 +282,22 @@ export function buildDataset(
           { period_start: port.ps, period_end: port.pe, period_type: t },
           { period_start: bench.ps, period_end: bench.pe, period_type: t },
         );
+      // fail closed on methodology: a comparison is only valid when both legs state the SAME
+      // return method and fee basis — blank/n-a vs TWR is a mismatch, not a pass
+      const methodDiffs: string[] = [];
+      if (port !== undefined && bench !== undefined) {
+        if (port.rm !== bench.rm)
+          methodDiffs.push(
+            `return_method (${port.rm || 'unspecified'} vs ${bench.rm || 'unspecified'})`,
+          );
+        if (port.gn !== bench.gn)
+          methodDiffs.push(
+            `gross_net (${port.gn || 'unspecified'} vs ${bench.gn || 'unspecified'})`,
+          );
+      }
+      const methodMismatch = methodDiffs.length > 0;
       const portV = port?.value ?? null;
-      const benchV = spanMismatch ? null : (bench?.value ?? null);
+      const benchV = spanMismatch || methodMismatch ? null : (bench?.value ?? null);
       return {
         label: PERIOD_LABELS[t] ?? t,
         periodStart: port?.ps ?? bench?.ps ?? '',
@@ -278,6 +307,8 @@ export function buildDataset(
         hurdle: hurdle?.value ?? null,
         excess: portV !== null && benchV !== null ? portV - benchV : null,
         spanMismatch,
+        methodMismatch,
+        methodDiffs,
       };
     });
 
@@ -446,27 +477,64 @@ export function buildDataset(
   const exceptions: ExceptionItem[] = [];
   const missingProxies = proxyStrip.filter((p) => p.state === 'missing');
   const staleProxies = proxyStrip.filter((p) => p.state === 'stale');
+  // impact honesty (audit finding 5): only proxies in the policy map move the modeled
+  // read-through — context-only series must never claim a coverage reduction
+  const mappedWeights = new Map(
+    proxyMapFor(policyEntity).map((m) => [m.proxyId, m.halfStepWeight]),
+  );
+  const degradedImpact = (affected: ProxyStrip[]): { impact: string; contributing: boolean } => {
+    const contributing = affected.filter((p) => mappedWeights.has(p.proxyId));
+    if (contributing.length === 0) {
+      return {
+        contributing: false,
+        impact:
+          'Context series only: no policy weight, so the modeled read-through is unchanged (0.0 pp). Shown for market-context freshness.',
+      };
+    }
+    const lost = contributing.reduce((s, p) => s + (mappedWeights.get(p.proxyId) ?? 0), 0);
+    const after = readThrough.coverage;
+    const before = after + lost;
+    return {
+      contributing: true,
+      impact: `Excluded from the read-through: coverage falls from ${(before * 100).toFixed(1)}% to ${(after * 100).toFixed(1)}% of policy weight (−${(lost * 100).toFixed(1)} pp).`,
+    };
+  };
   if (missingProxies.length > 0) {
+    const { impact, contributing } = degradedImpact(missingProxies);
     exceptions.push({
       id: 'ISSUE-MISSING',
       severity: 'warn',
-      tier: 'warning',
+      tier: contributing ? 'warning' : 'informational',
       ageDays: dayDiff(oldestDate(missingProxies.map((p) => p.lastDate))),
-      description: `${missingProxies.map((p) => p.proxyId).join(', ')} — final close missing (control CHK-06)`,
-      impact: 'Excluded from the daily read-through; coverage reduced.',
+      description: `${missingProxies.map((p) => `${p.proxyId}${mappedWeights.has(p.proxyId) ? '' : ' (context)'}`).join(', ')} — final close missing (control CHK-06)`,
+      impact,
       nextAction: 'Refresh the market export or confirm the source series.',
     });
   }
   if (staleProxies.length > 0) {
+    const { impact, contributing } = degradedImpact(staleProxies);
     exceptions.push({
       id: 'ISSUE-STALE',
       severity: 'warn',
-      tier: 'warning',
+      tier: contributing ? 'warning' : 'informational',
       ageDays: dayDiff(oldestDate(staleProxies.map((p) => p.lastDate))),
-      description: `${staleProxies.map((p) => `${p.proxyId} — stale since ${p.lastDate ?? 'n/a'}`).join(', ')} (control CHK-07)`,
-      impact: 'Excluded from the daily read-through; coverage reduced.',
+      description: `${staleProxies.map((p) => `${p.proxyId}${mappedWeights.has(p.proxyId) ? '' : ' (context)'} — stale since ${p.lastDate ?? 'n/a'}`).join(', ')} (control CHK-07)`,
+      impact,
       nextAction: 'Refresh the market export or confirm the source series.',
     });
+  }
+  for (const p of periods) {
+    if (p.methodMismatch) {
+      exceptions.push({
+        id: `METHOD-${p.label}`,
+        severity: 'fail',
+        tier: 'blocking',
+        ageDays: null,
+        description: `Methodology mismatch for ${p.label}: ${p.methodDiffs.join('; ')} — comparison fails closed`,
+        impact: 'Excess return suppressed: the legs do not state the same method and fee basis.',
+        nextAction: 'Correct return_method / gross_net on the period records so both legs match.',
+      });
+    }
   }
   // remaining non-PASS controls not already represented by a merged market issue
   const MERGED_CONTROLS = new Set([
@@ -604,6 +672,20 @@ export function buildDataset(
       a.id.localeCompare(b.id),
   );
 
+  // demonstrated publication gate: what the internal pipeline would enforce before a run
+  // could feed a dashboard — blocking issues and reconciliation breaks make a dataset
+  // ineligible to publish
+  const publishBlockers = [
+    ...exceptions.filter((e) => e.tier === 'blocking').map((e) => e.description),
+    ...recons
+      .filter((p) => p.status === 'outside')
+      .map(
+        (p) =>
+          `Reconciliation break: ${p.metricId} ${p.categoryId} variance ${p.variance?.toFixed(2)} ${p.unit} exceeds tolerance ${p.toleranceAbs?.toFixed(2)}`,
+      ),
+  ];
+  const publishEligible = publishBlockers.length === 0;
+
   return {
     meta: {
       entityId,
@@ -639,5 +721,7 @@ export function buildDataset(
     recons,
     pmSleeves,
     freshness,
+    publishEligible,
+    publishBlockers,
   };
 }

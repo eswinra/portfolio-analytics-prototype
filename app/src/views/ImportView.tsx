@@ -4,6 +4,7 @@ import invalidSampleCsv from '../../../data/sample/invalid/bad_schema_version.cs
 import templateCsv from '../../../data/sample/market_pulse_template.csv?raw';
 import { Panel, Pill } from '../components/ui';
 import { COLUMN_DOCS, DICTIONARY_COLUMNS } from '../lib/contract/dictionary';
+import { ENTITY_REGISTRY, WORKSPACE_ENTITY } from '../fixtures/entityRegistry';
 import { useDataset } from '../lib/dataset/useDataset';
 import type { ImportError } from '../lib/contract/parse';
 
@@ -21,8 +22,9 @@ function downloadText(name: string, text: string) {
 }
 
 export function ImportView() {
-  const { stageCsvText, applyStaged, discardStaged, resetToFixture, source, preflight } =
+  const { stageCsvText, applyStaged, discardStaged, resetToFixture, source, preflight, entityTab } =
     useDataset();
+  const workspace = ENTITY_REGISTRY[WORKSPACE_ENTITY[entityTab]]!;
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [applied, setApplied] = useState(false);
@@ -63,6 +65,11 @@ export function ImportView() {
         title="Drop a file to preflight it"
         sub="Validated and summarized first — nothing changes until you apply it."
       >
+        <p className="footnote" style={{ margin: '0 0 10px' }}>
+          Active workspace: <strong>{workspace.entityId}</strong> — {workspace.fundLabel}. A staged
+          file must name this entity; a file describing any other entity is rejected before staging
+          (E-ENTITY). Switch workspaces with the Pension Plan / OPEB Trust toggle above.
+        </p>
         <div
           className={`dropzone${dragging ? ' dragging' : ''}`}
           onDragOver={(e) => {

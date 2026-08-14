@@ -1,5 +1,56 @@
 # Changelog
 
+## 2026-08-13 — Revision 9: trust & controls (external-audit tranche)
+
+Owner-approved response to the external audit (11 findings independently verified): one
+coherent tranche hardening controls, methodology honesty, delivery safety, and mobile/a11y.
+No visual redesign.
+
+- **Entity registry hard gate**: `app/src/fixtures/entityRegistry.ts` maps entity → legal
+  fund → policy pack; staging AND apply both run `checkEntityMatch`. A cross-fund file is
+  rejected before staging with `E-ENTITY` naming both funds and stating that nothing was
+  applied (`E-UNREGISTERED` / `E-TRACKER` for unknown and tracker entities). Switching
+  workspace tabs discards any staged preflight; the Import panel now names the active
+  workspace. Policy identity is never inferred from entity-name text (`inferPolicyEntity`
+  removed).
+- **ACFR completion eligibility**: `sectionEligibility` computes open requirements
+  (tie-outs, artifacts, Blocked items, independent reviewer, ready-for-sign-off status).
+  Leadership sees “Completion unavailable — N requirement(s) open” with a visibly disabled
+  action; a section whose recorded status outruns its controls carries a
+  “status ahead of controls” tag (the INTRO fixture demonstrates detection); completion
+  rows write `reviewed_by`.
+- **Methodology fail-closed**: fund-vs-benchmark legs compare `return_method` and
+  `gross_net`; a mismatch suppresses the comparison and raises a blocking `METHOD-*`
+  exception instead of computing a number.
+- **Proxy impact honesty**: context-only series report a modeled impact of 0.0 pp and are
+  labeled “(context)”; mapped proxies quantify the coverage loss in percentage points.
+- **Publication gate (demonstrated)**: `publishEligible`/`publishBlockers` derive from
+  blocking-tier exceptions plus out-of-tolerance reconciliations; the workstation title
+  band shows ELIGIBLE / INELIGIBLE with the blocking conditions listed.
+- **Source registry and date separation**: typed `SOURCES` registry (ACFR page-anchored
+  URLs; deliberately no fabricated PAFR/IPS links) rendered by `SourceLine`; `DateLine`
+  separates report date, actuarial valuation date, data-through, and retrieval; TWR
+  net-of-fees kickers with the MWR non-comparability and benchmark-lag footnotes; UAAL
+  shown in $B alongside thousands; derived tables labeled “calculated from quoted
+  figures”.
+- **Honest renames**: Risk & Compliance → Policy Monitoring; Holdings & Managers →
+  Holdings & Fees; the OPEB funded view is titled “Benefits & prefunding”.
+- **Mobile and a11y**: zero page-level horizontal overflow at 320/360/375 across all ten
+  routes (charts compress via `--chart-gap` and shrinkable bars; role-row note and grid
+  minmax fixes); tables card at ≤640px with data-labels and Status/Tier first; header
+  contrast raised; route changes move focus to the view title; scrollable table regions
+  are labeled; disabled primary buttons are visibly disabled.
+- **Delivery safety**: dev-server `fs.allow` narrowed to the app plus `data/sample`
+  (references are never servable); the Pages workflow now gates deploy on lint, format
+  check, the test suite, and `npm audit --omit=dev --audit-level=high` before build.
+  Repo-settings recommendation (owner action): require reviewers on the `github-pages`
+  environment.
+- **Verification**: 124 vitest tests (entity gate, ACFR eligibility truth table, method
+  fail-closed, publication gate, jsdom component tests for the two gates); new Playwright
+  smoke suite — 45 checks across desktop and 320/360/375 — covering per-route overflow,
+  axe on Overview and Import, and the three demonstrated controls; screenshot evidence in
+  `outputs/` (ignored).
+
 ## 2026-08-13 — Revision 8.2: Dashboard | Workstation split (owner-directed)
 
 The app now has two first-class modes, matching the workflow architecture: a place where

@@ -104,13 +104,52 @@ describe('valid fixture', () => {
 
   it('tiers and ages exceptions from dates inside the file (oldest first within a tier)', () => {
     const ds = buildDataset(res.records, 'workbook');
-    for (const e of ds.exceptions) expect(e.tier).toBe('warning');
     // market data through 2026-06-30: USD last close 06-26 (4 days), OIL last close 06-29 (1)
     const stale = ds.exceptions.find((e) => e.id === 'ISSUE-STALE')!;
     const missing = ds.exceptions.find((e) => e.id === 'ISSUE-MISSING')!;
     expect(stale.ageDays).toBe(4);
     expect(missing.ageDays).toBe(1);
-    expect(ds.exceptions[0]?.id).toBe('ISSUE-STALE'); // older issue sorts first
+    // DEMO-USD is context-only: informational, and its impact states 0.0 pp — never
+    // "coverage reduced" (audit finding 5)
+    expect(stale.tier).toBe('informational');
+    expect(stale.impact).toContain('0.0 pp');
+    expect(stale.impact).toContain('Context series only');
+    expect(stale.description).toContain('(context)');
+    // DEMO-OIL carries 3% policy weight: warning with the real before/after coverage
+    expect(missing.tier).toBe('warning');
+    expect(missing.impact).toContain('43.5%');
+    expect(missing.impact).toContain('40.5%');
+    expect(missing.impact).toContain('−3.0 pp');
+    expect(ds.exceptions[0]?.id).toBe('ISSUE-MISSING'); // warnings sort before informational
+  });
+
+  it('method mismatches fail closed: excess suppressed plus a blocking exception', () => {
+    const base = load('demofund_export_v1.csv');
+    // flip the FYTD benchmark leg to MWR — the comparison must refuse to compute
+    const lines = base.split('\n');
+    const idx = lines.findIndex(
+      (l) => l.includes(',period_return,DEMOFUND,bench_return,TOTAL,') && l.includes(',FYTD,'),
+    );
+    expect(idx).toBeGreaterThan(0);
+    lines[idx] = lines[idx]!.replace(',TWR,', ',MWR,');
+    const mutated = lines.join('\n');
+    expect(mutated).not.toBe(base);
+    const r = parseContractCsv(mutated);
+    expect(r.ok).toBe(true); // structurally valid — the guard is a comparison rule
+    const ds = buildDataset(r.records, 'user_import');
+    const fytd = ds.periods.find((per) => per.label.includes('Fiscal'))!;
+    expect(fytd.methodMismatch).toBe(true);
+    expect(fytd.benchmark).toBeNull();
+    expect(fytd.excess).toBeNull();
+    const exc = ds.exceptions.find((e) => e.id.startsWith('METHOD-'))!;
+    expect(exc.tier).toBe('blocking');
+    expect(exc.description).toContain('return_method');
+  });
+
+  it('publication gate: the deliberate recon break makes the dataset ineligible', () => {
+    const ds = buildDataset(res.records, 'workbook');
+    expect(ds.publishEligible).toBe(false);
+    expect(ds.publishBlockers.some((b) => b.includes('emv_category'))).toBe(true);
   });
 
   it('OPEB fixture validates and scopes to the OPEB policy pack', () => {

@@ -18,12 +18,15 @@ export default defineConfig({
   },
   server: {
     fs: {
-      // allow importing the canonical fixture from ../data/sample via ?raw
-      allow: ['..'],
+      // Serve ONLY the app itself and the canonical fixtures. Never the repo root:
+      // reference/ and outputs/ must stay unreachable even if the dev server is
+      // shared or tunneled (audit finding 9).
+      strict: true,
+      allow: ['.', '../data/sample'],
     },
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
   },
 });

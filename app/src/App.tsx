@@ -25,8 +25,8 @@ const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/performance', 'Performance', 'Performance vs policy benchmark'],
   ['/allocation', 'Allocation', 'Asset allocation vs policy'],
   ['/funded', 'Funded Status', 'Funded status and membership'],
-  ['/risk', 'Risk & Compliance', 'Risk & compliance'],
-  ['/holdings', 'Holdings & Managers', 'Holdings & managers'],
+  ['/risk', 'Policy Monitoring', 'Policy monitoring'],
+  ['/holdings', 'Holdings & Fees', 'Holdings & fees'],
 ];
 
 /** Workstation mode — where the work is populated: the synthetic contract-data pipeline
@@ -63,7 +63,10 @@ function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> })
       return;
     }
     window.scrollTo(0, 0);
-    mainRef.current?.focus({ preventScroll: true });
+    // announce the new view: focus its title band heading, falling back to main
+    const title = document.getElementById('view-title');
+    if (title) title.focus({ preventScroll: true });
+    else mainRef.current?.focus({ preventScroll: true });
   }, [pathname, mainRef]);
   return null;
 }
@@ -77,6 +80,7 @@ function TitleBand() {
   const view = workstation ?? DASHBOARD_VIEWS.find(([p]) => p === pathname) ?? DASHBOARD_VIEWS[0]!;
   const isOverview = !workstation && view[0] === '/';
   const isAcfr = pathname === '/acfr';
+  const bandTitle = pathname === '/funded' && entity === 'OPEB' ? 'Benefits & prefunding' : view[2];
   const [copied, setCopied] = useState(false);
 
   async function copyBrief() {
@@ -94,7 +98,9 @@ function TitleBand() {
       <div className="band-spacer" />
       <div className="band">
         <div className="band-inner">
-          <h1>{view[2]}</h1>
+          <h1 id="view-title" tabIndex={-1}>
+            {bandTitle}
+          </h1>
           <span className="entity">
             {workstation
               ? isAcfr
@@ -125,6 +131,26 @@ function TitleBand() {
               </span>
             </div>
           </div>
+          {!isAcfr ? (
+            <div
+              className={`publish-banner ${dataset.publishEligible ? 'ok' : 'blocked'}`}
+              role="status"
+            >
+              {dataset.publishEligible ? (
+                <>
+                  <strong>Publication gate (demonstrated):</strong> ELIGIBLE — no blocking
+                  conditions in the active dataset.
+                </>
+              ) : (
+                <>
+                  <strong>Publication gate (demonstrated):</strong> INELIGIBLE —{' '}
+                  {dataset.publishBlockers.length} blocking condition
+                  {dataset.publishBlockers.length === 1 ? '' : 's'}:{' '}
+                  {dataset.publishBlockers.join(' · ')}
+                </>
+              )}
+            </div>
+          ) : null}
           {dataset.draftRecordCount > 0 ? (
             <div className="draft-banner" role="status">
               <strong>Draft data:</strong> {dataset.draftRecordCount} record
@@ -141,6 +167,7 @@ function TitleBand() {
 
 function Shell() {
   const { entity, setEntity } = useEntity();
+  const { dataset } = useDataset();
   const { pathname } = useLocation();
   const workstation = isWorkstationPath(pathname);
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
@@ -194,7 +221,16 @@ function Shell() {
             </button>
           </div>
           <div className="asof">
-            As of <strong>June 30, 2025</strong> · fiscal year end
+            {workstation ? (
+              <>
+                Data through <strong>{dataset.freshness.latestAsOf ?? 'n/a'}</strong> · synthetic
+                workstation dataset
+              </>
+            ) : (
+              <>
+                As of <strong>June 30, 2025</strong> · fiscal year end
+              </>
+            )}
           </div>
         </div>
       </header>

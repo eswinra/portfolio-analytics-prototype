@@ -52,8 +52,13 @@ export function RiskView() {
           kicker={`Policy range compliance — ${compSummary}`}
           title="Actual mix vs IPS ranges, June 30, 2025"
         >
-          <div className="table-scroll">
-            <table className="table">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Policy range compliance"
+            tabIndex={0}
+          >
+            <table className="table cardable">
               <caption>Actual weights against IPS policy ranges</caption>
               <thead>
                 <tr>
@@ -78,14 +83,20 @@ export function RiskView() {
               <tbody>
                 {compRows.map((c) => (
                   <tr key={c.cat}>
-                    <td>{c.cat}</td>
-                    <td className="num" style={{ fontWeight: 500 }}>
+                    <td data-label="Category">{c.cat}</td>
+                    <td className="num" data-label="Actual" style={{ fontWeight: 500 }}>
                       {c.act}
                     </td>
-                    <td className="num">{c.t}</td>
-                    <td className="num">{c.band}</td>
-                    <td className="num">{c.dist}</td>
-                    <td className="num">
+                    <td className="num" data-label="Target">
+                      {c.t}
+                    </td>
+                    <td className="num" data-label="IPS range">
+                      {c.band}
+                    </td>
+                    <td className="num" data-label="To nearer bound">
+                      {c.dist}
+                    </td>
+                    <td className="num" data-label="Status">
                       <Tag variant={c.variant}>{c.tag}</Tag>
                     </td>
                   </tr>
@@ -137,7 +148,9 @@ export function RiskView() {
               );
             })}
           </div>
-          <p className="panel-note">{d.trackNote}</p>
+          <p className="panel-note">
+            {d.trackNote} Excess figures are calculated from quoted TWR results.
+          </p>
         </Panel>
 
         <Panel kicker="Reading this data" title="Governance and provenance notes">

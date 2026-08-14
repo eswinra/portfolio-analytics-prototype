@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { CONFIG } from '../config';
+import { SOURCES, type SourceId, type SourceRecord } from '../fixtures/sources';
 import { CATEGORY_LABELS } from '../lib/contract/schema';
 
 /** Shared presentational pieces for the LACERA design system (design handoff):
@@ -24,10 +25,33 @@ export function Kicker({ children }: { children: ReactNode }) {
   return <div className="kicker">{children}</div>;
 }
 
-/** Per-panel source citation, gated by CONFIG.showSources. */
-export function SourceLine({ children }: { children: ReactNode }) {
+/** Per-panel source citation from the source registry, gated by CONFIG.showSources.
+ *  Registry entries with a stable public URL render as links; the rest render as
+ *  document + page text (no fabricated links). */
+export function SourceLine({ sources, children }: { sources?: SourceId[]; children?: ReactNode }) {
   if (!CONFIG.showSources) return null;
-  return <div className="source-line">Source: {children}</div>;
+  return (
+    <div className="source-line">
+      Source:{' '}
+      {sources
+        ? sources.map((id, i) => {
+            const s: SourceRecord = SOURCES[id];
+            return (
+              <span key={id}>
+                {i > 0 ? ' · ' : ''}
+                {s.url ? (
+                  <a href={s.url} target="_blank" rel="noreferrer">
+                    {s.label}
+                  </a>
+                ) : (
+                  <span title={`${s.doc} — ${s.pageTable} (as of ${s.asOf})`}>{s.label}</span>
+                )}
+              </span>
+            );
+          })
+        : children}
+    </div>
+  );
 }
 
 export function Panel({

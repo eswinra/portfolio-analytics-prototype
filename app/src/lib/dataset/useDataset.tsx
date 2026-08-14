@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 import opebCsv from '../../../../data/sample/demo_opeb_export_v1.csv?raw';
 import pensionCsv from '../../../../data/sample/demofund_export_v1.csv?raw';
+import { checkEntityMatch, ENTITY_REGISTRY } from '../../fixtures/entityRegistry';
 import type { PolicyEntity } from '../../fixtures/policyPack';
 import { parseContractCsv, type ImportError } from '../contract/parse';
 import { buildDataset, type Dataset } from './model';
@@ -49,9 +50,15 @@ function loadFixture(csv: string, policyEntity: PolicyEntity): Dataset {
   return buildDataset(res.records, 'workbook', policyEntity);
 }
 
-/** Infer which IPS pack scopes an imported entity (OPEB-named entities get the OPEB pack). */
-function inferPolicyEntity(entityId: string): PolicyEntity {
-  return /opeb/i.test(entityId) ? 'OPEB' : 'PENSION';
+/** Blocking import error from the entity registry gate (E-ENTITY / E-UNREGISTERED / E-TRACKER). */
+function entityGateError(message: string): ImportError {
+  return {
+    ruleId: message.slice(0, message.indexOf(' ')),
+    severity: 'reject',
+    row: 0,
+    column: 'entity_id',
+    message,
+  };
 }
 
 export function DatasetProvider({ children }: { children: ReactNode }) {
@@ -72,42 +79,61 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   const source: 'fixture' | 'import' = imported ? 'import' : 'fixture';
 
   const setEntityTab = useCallback((e: PolicyEntity) => {
-    // switching tabs always returns to that tab's bundled fixture
+    // switching tabs always returns to that tab's bundled fixture — and clears any staged
+    // preflight, so a file gated against one workspace can never apply into another
     setImported(null);
     setImportWarnings([]);
+    setPreflight(null);
+    setStagedText(null);
     setEntityTabState(e);
   }, []);
 
-  const stageCsvText = useCallback((text: string, fileName: string): PreflightResult => {
-    const res = parseContractCsv(text, FIXTURE_ENTITY);
-    const rowsScanned = Math.max(text.trim().split('\n').length - 1, 0);
-    const entityId =
-      res.records.find((r) => r.record_type !== 'public_reference')?.entity_id ?? 'unknown';
-    const result: PreflightResult = {
-      fileName,
-      rowsScanned,
-      entityId,
-      errors: res.errors,
-      warnings: res.warnings,
-      ok: res.ok,
-    };
-    setPreflight(result);
-    setStagedText(res.ok ? text : null);
-    return result;
-  }, []);
+  const stageCsvText = useCallback(
+    (text: string, fileName: string): PreflightResult => {
+      const res = parseContractCsv(text);
+      const rowsScanned = Math.max(text.trim().split('\n').length - 1, 0);
+      const entityId =
+        res.records.find((r) => r.record_type !== 'public_reference')?.entity_id ?? 'unknown';
+      // entity registry gate: a file/workspace mismatch is a HARD block, never a warning
+      let errors = res.errors;
+      let ok = res.ok;
+      if (res.ok) {
+        const match = checkEntityMatch(entityId, entityTab);
+        if (!match.ok && match.error) {
+          errors = [entityGateError(match.error)];
+          ok = false;
+        }
+      }
+      const result: PreflightResult = {
+        fileName,
+        rowsScanned,
+        entityId,
+        errors,
+        warnings: res.warnings,
+        ok,
+      };
+      setPreflight(result);
+      setStagedText(ok ? text : null);
+      return result;
+    },
+    [entityTab],
+  );
 
   const applyStaged = useCallback((): boolean => {
     if (!stagedText || !preflight?.ok) return false;
-    const res = parseContractCsv(stagedText, FIXTURE_ENTITY);
+    const res = parseContractCsv(stagedText);
     if (!res.ok) return false;
     const entityId =
       res.records.find((r) => r.record_type !== 'public_reference')?.entity_id ?? 'unknown';
-    setImported(buildDataset(res.records, 'user_import', inferPolicyEntity(entityId)));
+    const match = checkEntityMatch(entityId, entityTab);
+    if (!match.ok) return false; // defense in depth: the gate also ran at staging
+    const policyEntity = ENTITY_REGISTRY[entityId]?.policyEntity ?? entityTab;
+    setImported(buildDataset(res.records, 'user_import', policyEntity));
     setImportWarnings(res.warnings);
     setPreflight(null);
     setStagedText(null);
     return true;
-  }, [stagedText, preflight]);
+  }, [stagedText, preflight, entityTab]);
 
   const discardStaged = useCallback(() => {
     setPreflight(null);

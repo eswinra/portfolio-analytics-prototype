@@ -1,3 +1,4 @@
+import { DateLine } from '../components/DateLine';
 import { excessTag, money, Panel, SourceLine, Tag } from '../components/ui';
 import { HORIZONS, publishedFor } from '../fixtures/published';
 import { useEntity } from '../lib/entity';
@@ -38,8 +39,12 @@ export function PerformanceView() {
 
   return (
     <>
+      <DateLine report="June 30, 2025 (fiscal year end)" retrieved="the 2025 PAFR and 2025 ACFR" />
       <div className="grid-panels">
-        <Panel kicker="Annualized total returns — net of fees" title="Periods ended June 30, 2025">
+        <Panel
+          kicker="Time-weighted returns (TWR) — net of investment-management fees"
+          title="Periods ended June 30, 2025"
+        >
           <div className="table-scroll">
             <table className="table">
               <caption>Annualized returns vs policy benchmark</caption>
@@ -80,7 +85,13 @@ export function PerformanceView() {
             {d.retNote} Returns exceeded the actuarial assumed rate of return at every horizon
             (PAFR).
           </p>
-          <SourceLine>2025 PAFR, p. {P ? '5 (Pension)' : '7 (OPEB)'}</SourceLine>
+          <p className="footnote">
+            Time-weighted returns (TWR), net of investment-management fees, annualized for periods
+            over one year, as published. The ACFR separately reports money-weighted returns (MWR);
+            the two are not comparable. Private-market benchmarks are lagged 1–3 months (IPS Table
+            2).
+          </p>
+          <SourceLine sources={P ? ['PAFR_PENSION'] : ['PAFR_OPEB']} />
         </Panel>
 
         <Panel kicker="Fund vs benchmark by horizon" title="Percent, annualized">
@@ -88,7 +99,7 @@ export function PerformanceView() {
             style={{
               display: 'flex',
               alignItems: 'flex-end',
-              gap: 22,
+              gap: 'var(--chart-gap, 22px)',
               height: 180,
               borderBottom: '1px solid var(--divider)',
               marginTop: 16,
@@ -106,8 +117,11 @@ export function PerformanceView() {
                   height: '100%',
                 }}
               >
-                <div className="bar-col" style={{ flex: 'none', width: 26 }}>
-                  <div className="bar-val" style={{ fontSize: 11, color: 'var(--accent-800)' }}>
+                <div
+                  className="bar-col"
+                  style={{ flex: 'none', width: 'min(26px, calc(50% - 3px))' }}
+                >
+                  <div className="bar-val" style={{ color: 'var(--accent-800)' }}>
                     {d.ret.f[i]!.toFixed(1)}
                   </div>
                   <div
@@ -119,8 +133,11 @@ export function PerformanceView() {
                     }}
                   />
                 </div>
-                <div className="bar-col" style={{ flex: 'none', width: 26 }}>
-                  <div className="bar-val" style={{ fontSize: 11, fontWeight: 400 }}>
+                <div
+                  className="bar-col"
+                  style={{ flex: 'none', width: 'min(26px, calc(50% - 3px))' }}
+                >
+                  <div className="bar-val" style={{ fontWeight: 400 }}>
                     {d.ret.b[i]!.toFixed(1)}
                   </div>
                   <div
@@ -135,7 +152,7 @@ export function PerformanceView() {
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 22, marginTop: 6 }}>
+          <div style={{ display: 'flex', gap: 'var(--chart-gap, 22px)', marginTop: 6 }}>
             {HORIZONS.map((h) => (
               <div
                 key={h}
@@ -174,7 +191,9 @@ export function PerformanceView() {
               <caption>Changes in fiduciary net position, three fiscal years</caption>
               <thead>
                 <tr>
-                  <th scope="col"></th>
+                  <th scope="col">
+                    <span className="visually-hidden">Line item</span>
+                  </th>
                   <th scope="col" className="num">
                     FY2025
                   </th>
@@ -200,7 +219,7 @@ export function PerformanceView() {
               </tbody>
             </table>
           </div>
-          <SourceLine>2025 PAFR, p. {P ? '4 (Pension)' : '7 (OPEB)'}</SourceLine>
+          <SourceLine sources={['PAFR_CHANGES']} />
         </Panel>
 
         <Panel

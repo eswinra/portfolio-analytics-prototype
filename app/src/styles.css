@@ -37,6 +37,7 @@
   --muted-65: rgb(31 42 55 / 65%);
   --muted-68: rgb(31 42 55 / 68%);
   --muted-72: rgb(31 42 55 / 72%);
+  --muted-78: rgb(31 42 55 / 78%);
   --muted-84: rgb(31 42 55 / 84%);
   --muted-86: rgb(31 42 55 / 86%);
 }
@@ -395,13 +396,13 @@ a:hover {
 
 .grid-kpi {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
   gap: 22px;
 }
 
 .grid-panels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: 22px;
 }
 
@@ -423,7 +424,7 @@ a:hover {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
-  color: var(--muted-62);
+  color: var(--muted-78);
   padding: 7px;
   border-bottom: 1px solid var(--divider);
 }
@@ -518,6 +519,14 @@ a:hover {
   background: var(--accent-600);
 }
 
+.btn-primary[disabled],
+.btn-primary[disabled]:hover {
+  background: var(--neutral-300);
+  border-color: var(--neutral-400);
+  color: var(--neutral-800);
+  cursor: not-allowed;
+}
+
 .linklike {
   background: none;
   border: none;
@@ -545,6 +554,7 @@ a:hover {
   flex-direction: column;
   justify-content: flex-end;
   height: 100%;
+  min-width: 0;
 }
 
 .bar-col .bar-val {
@@ -883,7 +893,7 @@ a:hover {
   font-size: 12px;
   color: var(--muted-72);
   flex: 1;
-  min-width: 300px;
+  min-width: min(300px, 100%);
 }
 
 /* ---- misc -------------------------------------------------------------------- */
@@ -1041,4 +1051,91 @@ details.panel > summary {
   background: var(--accent-700);
   color: #fff;
   font-weight: 700;
+}
+
+/* ---- trust & controls tranche ------------------------------------------------------ */
+
+.publish-banner {
+  font-size: 12px;
+  padding: 7px 28px;
+  text-align: center;
+}
+
+.publish-banner.ok {
+  background: var(--accent-100);
+  color: var(--accent-900);
+  border-bottom: 1px solid var(--accent-300);
+}
+
+.publish-banner.blocked {
+  background: var(--accent-900);
+  color: #fff;
+}
+
+.date-line {
+  margin: 0 0 14px;
+}
+
+.band h1:focus-visible {
+  outline-color: var(--accent-300);
+}
+
+/* decision tables become status-first cards on small screens */
+@media (max-width: 640px) {
+  .table.cardable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .table.cardable tr {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--divider);
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+
+  .table.cardable td {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: none;
+    padding: 3px 0;
+    text-align: right;
+  }
+
+  .table.cardable td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-78);
+    text-align: left;
+    flex: none;
+  }
+
+  .table.cardable td[data-label='Status'],
+  .table.cardable td[data-label='Tier'] {
+    order: -1;
+  }
+}
+
+/* Compact charts on the narrowest phones (320-400px): tighter gaps and smaller value
+   labels so fixed-label bar charts fit without page-level horizontal overflow. */
+@media (max-width: 400px) {
+  :root {
+    --chart-gap: 10px;
+  }
+
+  .bar-chart {
+    gap: 3px;
+  }
+
+  .bar-col .bar-val {
+    font-size: 8.5px;
+  }
 }

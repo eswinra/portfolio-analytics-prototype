@@ -127,12 +127,53 @@ export function sectionArtifacts(
     .sort((a, b) => a.title.localeCompare(b.title));
 }
 
+export interface SectionControls {
+  itemsTotal: number;
+  itemsComplete: number;
+  itemsBlocked: number;
+  artifactsIn: number;
+  artifactsExpected: number;
+  /** independent reviewer named and distinct from the section owner */
+  reviewerOk: boolean;
+}
+
+export interface SectionEligibility {
+  eligible: boolean;
+  reasons: string[];
+  /** the tracker's claimed status outruns its own controls (e.g. complete at 2/5 tie-outs) */
+  statusAheadOfControls: boolean;
+}
+
+/** Completion eligibility derived from the section's own controls (audit finding 2):
+ *  a section can be marked complete only when every requirement clears. */
+export function sectionEligibility(
+  section: Pick<AcfrSection, 'status'>,
+  c: SectionControls,
+): SectionEligibility {
+  const reasons: string[] = [];
+  const itemsOpen = c.itemsTotal - c.itemsComplete;
+  if (itemsOpen > 0)
+    reasons.push(`${itemsOpen} tie-out item${itemsOpen === 1 ? '' : 's'} not complete`);
+  const artOut = c.artifactsExpected - c.artifactsIn;
+  if (artOut > 0) reasons.push(`${artOut} artifact${artOut === 1 ? '' : 's'} outstanding`);
+  if (c.itemsBlocked > 0)
+    reasons.push(`${c.itemsBlocked} item${c.itemsBlocked === 1 ? '' : 's'} Blocked`);
+  if (!c.reviewerOk) reasons.push('independent reviewer sign-off missing');
+  if (section.status !== 'ready_signoff') reasons.push('section is not Ready for sign-off');
+  return {
+    eligible: reasons.length === 0,
+    reasons,
+    statusAheadOfControls: section.status === 'complete' && c.itemsComplete < c.itemsTotal,
+  };
+}
+
 /** Ready-to-append CSV row marking a section complete — the demo "action": the file is the
  *  record, so completing a section means appending a status row and re-importing. */
 export function completeRowCsv(
   board: AcfrBoard,
   section: AcfrSection,
   actor: string,
+  reviewer: string,
   nextRecordId: string,
 ): string {
   const today = board.refDate ?? section.lastUpdated;
@@ -167,7 +208,7 @@ export function completeRowCsv(
     'marked complete via dashboard demo action',
     '1.3.0',
     actor,
-    actor,
+    reviewer,
     'published',
   ].join(',');
 }

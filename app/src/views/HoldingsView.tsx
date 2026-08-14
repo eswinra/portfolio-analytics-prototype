@@ -50,9 +50,10 @@ export function HoldingsView() {
             <p className="panel-note">
               The ten largest positions total $5.5 billion — about 6.4% of the $86.2 billion fund.
               Reflects the global equity exposure of assets held in custody; a complete list of
-              holdings is available on request from LACERA.
+              holdings is available on request from LACERA. The total and share are calculated from
+              the quoted holdings and net position.
             </p>
-            <SourceLine>2025 ACFR, p. 114</SourceLine>
+            <SourceLine sources={['ACFR_EQ']} />
           </Panel>
         ) : (
           <Panel kicker="Largest equity holdings — OPEB Master Trust" title="June 30, 2025">
@@ -100,7 +101,7 @@ export function HoldingsView() {
           <p className="panel-note">
             Top five of the ten published. Reflects fixed income exposure of assets held in custody.
           </p>
-          <SourceLine>2025 ACFR, p. 115</SourceLine>
+          <SourceLine sources={['ACFR_FI']} />
         </Panel>
       </div>
 
@@ -147,13 +148,13 @@ export function HoldingsView() {
           </table>
         </div>
         <div style={{ fontSize: 12.5, marginTop: 12, fontWeight: 600, color: 'var(--accent-800)' }}>
-          {d.feeNote}
+          {d.feeNote} Calculated from quoted figures — not an official expense ratio.
         </div>
         <p className="panel-note" style={{ marginTop: 8 }}>
           Differences from expenses reported in the Statement of Changes in Fiduciary Net Position
           are due to incentive fees, carry allocations, and operating expenses.
         </p>
-        <SourceLine>2025 ACFR, p. 116</SourceLine>
+        <SourceLine sources={['ACFR_FEES']} />
       </Panel>
     </>
   );

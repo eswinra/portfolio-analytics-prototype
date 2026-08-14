@@ -124,3 +124,27 @@ with tabular numerals for figures.
   navigation with legacy-route redirects; the contract engine (`lib/contract`, `lib/dataset`,
   `lib/finance`), data fixtures, Python generators, and the full test suite remain intact.
   The ACFR view still builds its board from the contract tracker file.
+
+## Revision 9 (2026-08-13) — trust & controls
+
+Context: revisions 8.1/8.2 restored the synthetic workflow surfaces as a footer-linked demo
+and then split the shell into Dashboard (published figures) and Workstation (synthetic
+contract pipeline) modes. Revision 9 hardens that architecture per an external audit:
+
+- **Entity registry** (`app/src/fixtures/entityRegistry.ts`): the only mapping from an
+  entity id to its legal fund and policy pack. `checkEntityMatch` gates both staging and
+  apply; policy identity is never inferred from entity-name text. Tracker entities are
+  registered but not importable into a fund workspace.
+- **Computed gates, not copy**: ACFR section completion (`lib/dataset/acfr.ts`
+  `sectionEligibility`), methodology fail-closed benchmark comparison and the demonstrated
+  publication gate (`lib/dataset/model.ts` `publishEligible`/`publishBlockers`) are all
+  derived from the loaded dataset, so imported files exercise the same controls as fixtures.
+- **Source registry** (`app/src/fixtures/sources.ts`): typed citation records rendered by
+  `SourceLine`; entries carry a URL only when a stable public one exists.
+- **Verification layers**: vitest unit + jsdom component tests (`src/**/*.test.ts(x)`), and
+  a Playwright smoke suite (`app/e2e/`, `playwright.config.ts`) run against the production
+  build at desktop and 320/360/375 widths — per-route overflow probe, axe checks, and the
+  three demonstrated controls. CI (pages.yml) gates deploy on lint, format, tests, and a
+  production-dependency audit; Playwright runs locally by design (no browsers in CI).
+- Dev-server `fs.allow` is narrowed to the app and `data/sample`, keeping `reference/`
+  outside every served root.

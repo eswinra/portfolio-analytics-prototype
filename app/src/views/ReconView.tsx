@@ -50,8 +50,13 @@ export function ReconView() {
           title={`Paired checks (${recons.length}) — ${breaks === 0 ? 'all within tolerance' : `${breaks} outside tolerance`}`}
           note="Sides are synthetic demo inputs; the internal-book side ties to the workbook's own EMV values, and one category pair is a deliberate demonstration break. Tolerances are absolute $mm thresholds defined in the data."
         >
-          <div className="table-scroll">
-            <table className="table">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Reconciliation pairs"
+            tabIndex={0}
+          >
+            <table className="table cardable">
               <caption>
                 Sorted breaks-first. Age is days from the pair's as-of to the dataset reference
                 date, computed from dates inside the file.
@@ -84,33 +89,35 @@ export function ReconView() {
                   const [a, b] = p.sides;
                   return (
                     <tr key={`${p.metricId}|${p.categoryId}|${p.asOf}`}>
-                      <td>
+                      <td data-label="Metric">
                         <code>{p.metricId}</code>
                         <div className="footnote">{p.asOf}</div>
                       </td>
-                      <td>{p.categoryId || '—'}</td>
-                      <td className="num">
+                      <td data-label="Category">{p.categoryId || '—'}</td>
+                      <td className="num" data-label="Side A">
                         {a ? fmtMm(a.value) : '—'}
                         <div className="footnote">{a?.source ?? ''}</div>
                       </td>
-                      <td className="num">
+                      <td className="num" data-label="Side B">
                         {b ? fmtMm(b.value) : '—'}
                         <div className="footnote">{b?.source ?? 'missing side'}</div>
                       </td>
-                      <td className="num">
+                      <td className="num" data-label="Variance">
                         {p.variance === null ? '—' : `${p.variance.toFixed(2)} ${p.unit}`}
                       </td>
-                      <td className="num">
+                      <td className="num" data-label="Tolerance">
                         {p.toleranceAbs === null ? '—' : `${p.toleranceAbs.toFixed(2)} ${p.unit}`}
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <Tag variant={STATUS_VARIANT[p.status]}>{STATUS_LABEL[p.status]}</Tag>
                       </td>
-                      <td>
+                      <td data-label="Owner">
                         <code>{a?.enteredBy || '—'}</code>
                         <div className="footnote">{a?.reviewStatus ?? ''}</div>
                       </td>
-                      <td className="num">{p.ageDays === null ? '—' : `${p.ageDays} d`}</td>
+                      <td className="num" data-label="Age">
+                        {p.ageDays === null ? '—' : `${p.ageDays} d`}
+                      </td>
                     </tr>
                   );
                 })}

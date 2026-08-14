@@ -54,8 +54,8 @@ export function ExceptionsView() {
           kicker="Triage queue — sorted by tier, then age"
           title={`Open issues (${exceptions.length})`}
         >
-          <div className="table-scroll">
-            <table className="table">
+          <div className="table-scroll" role="region" aria-label="Open issues" tabIndex={0}>
+            <table className="table cardable">
               <caption>
                 Root-cause merged: a degraded series and its control are one issue. Age is computed
                 from dates inside the file — no clock survives an import.
@@ -64,7 +64,7 @@ export function ExceptionsView() {
                 <tr>
                   <th scope="col">Tier</th>
                   <th scope="col" className="num">
-                    Age
+                    Age (at data date)
                   </th>
                   <th scope="col">Issue</th>
                   <th scope="col">Impact</th>
@@ -74,15 +74,19 @@ export function ExceptionsView() {
               <tbody>
                 {exceptions.map((e) => (
                   <tr key={e.id}>
-                    <td>
+                    <td data-label="Tier">
                       <Tag variant={TIER_VARIANT[e.tier] ?? 'neutral'}>{e.tier}</Tag>
                     </td>
-                    <td className="num">
+                    <td className="num" data-label="Age">
                       {e.ageDays === null ? '—' : `${e.ageDays} day${e.ageDays === 1 ? '' : 's'}`}
                     </td>
-                    <td>{e.description}</td>
-                    <td className="issue-impact">{e.impact}</td>
-                    <td className="issue-impact">{e.nextAction}</td>
+                    <td data-label="Issue">{e.description}</td>
+                    <td className="issue-impact" data-label="Impact">
+                      {e.impact}
+                    </td>
+                    <td className="issue-impact" data-label="Next action">
+                      {e.nextAction}
+                    </td>
                   </tr>
                 ))}
               </tbody>
