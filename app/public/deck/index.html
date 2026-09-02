@@ -4,250 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>body{margin:0}[hidden]{display:none!important}</style>
-<title>CIO Monthly Interactive</title>
+<title>CIO Monthly Decision Deck</title>
 <style>
   :root {
-    --ground: #E4E8EE;
-    --ground-ink: #3B4251;
-    --chrome: #FFFFFF;
-    --chrome-ink: #1E2430;
-    --chrome-muted: #66707F;
-    --chrome-line: #CFD5DE;
-    --accent: #0070C0;
-    /* LACERA report palette (house style, measured from the public CIO report) */
-    --navy: #10223C;
-    --foot: #232323;
-    --blue: #0070C0;
-    --cyan: #49C0DF;
-    --gray: #8C8C8C;
-    --ink: #404040;
-    --cat: #595959;
-    --muted: #7A8089;
-    --line: #E1E5EB;
-    --tint: #EEF4FA;
-    --paper: #FFFFFF;
-    --a1: #10223C;
-    --a2: #0B5394;
-    --a3: #0070C0;
-    --a4: #49C0DF;
+    --ground: #E4E8EE; --ground-ink: #3B4251; --chrome: #FFFFFF; --chrome-ink: #1E2430; --chrome-muted: #66707F; --chrome-line: #CFD5DE; --accent: #0070C0;
+    /* LACERA report palette (house style) */
+    --navy: #10223C; --foot: #232323; --blue: #0070C0; --cyan: #49C0DF; --gray: #8C8C8C; --ink: #404040; --cat: #595959; --muted: #7A8089;
+    --line: #E1E5EB; --tint: #EEF4FA; --paper: #FFFFFF; --warm: #B85C38; --a1: #10223C; --a2: #0B5394; --a3: #0070C0; --a4: #49C0DF;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ground: #0E131B;
-      --ground-ink: #C5CBD6;
-      --chrome: #171D28;
-      --chrome-ink: #E6EAF0;
-      --chrome-muted: #8E97A7;
-      --chrome-line: #2A3240;
-      --accent: #49C0DF;
-    }
+    :root:not([data-theme="light"]) { --ground: #0E131B; --ground-ink: #C5CBD6; --chrome: #171D28; --chrome-ink: #E6EAF0; --chrome-muted: #8E97A7; --chrome-line: #2A3240; --accent: #49C0DF; }
   }
-  :root[data-theme="dark"] {
-    --ground: #0E131B;
-    --ground-ink: #C5CBD6;
-    --chrome: #171D28;
-    --chrome-ink: #E6EAF0;
-    --chrome-muted: #8E97A7;
-    --chrome-line: #2A3240;
-    --accent: #49C0DF;
-  }
+  :root[data-theme="dark"] { --ground: #0E131B; --ground-ink: #C5CBD6; --chrome: #171D28; --chrome-ink: #E6EAF0; --chrome-muted: #8E97A7; --chrome-line: #2A3240; --accent: #49C0DF; }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: var(--ground);
-    color: var(--ground-ink);
-    font-family: Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif;
-    overflow: hidden;
-  }
+  body { margin: 0; background: var(--ground); color: var(--ground-ink); font-family: Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif; overflow: hidden; }
   .app { height: 100vh; display: flex; flex-direction: column; }
 
-  /* ---------- deck chrome (outside the slide) ---------- */
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 8px 16px; font-size: 12px; color: var(--chrome-muted);
-    background: var(--chrome); border-bottom: 1px solid var(--chrome-line);
-  }
-  .topbar b { color: var(--chrome-ink); font-weight: 700; }
-  .topbar .tag {
-    display: inline-block; padding: 2px 8px; border-radius: 3px; margin-right: 8px;
-    background: var(--accent); color: #fff; font-weight: 700; letter-spacing: .06em; font-size: 10.5px;
-  }
+  /* ---------- deck chrome ---------- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 7px 16px; font-size: 12px; color: var(--chrome-muted); background: var(--chrome); border-bottom: 1px solid var(--chrome-line); }
+  .topbar b { color: var(--chrome-ink); }
+  .topbar .tag { display: inline-block; padding: 2px 8px; border-radius: 3px; margin-right: 8px; background: var(--accent); color: #fff; font-weight: 700; letter-spacing: .06em; font-size: 10.5px; }
+  .entity { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--chrome-ink); }
+  .entity .seg { border-color: var(--chrome-line); }
+  .entity .seg-btn { background: var(--chrome); color: var(--chrome-muted); border-right-color: var(--chrome-line); }
+  .entity .seg-btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
   .viewport { flex: 1; position: relative; min-height: 0; }
-  .stage {
-    position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px;
-    transform: translate(-50%, -50%) scale(1); transform-origin: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,.28); background: var(--paper); overflow: hidden;
-  }
-  .bar {
-    display: flex; align-items: center; gap: 14px; padding: 8px 16px;
-    background: var(--chrome); border-top: 1px solid var(--chrome-line);
-    font-size: 12.5px; color: var(--chrome-muted);
-  }
-  .bar button {
-    font: inherit; font-weight: 700; color: var(--chrome-ink); background: transparent;
-    border: 1px solid var(--chrome-line); border-radius: 4px; padding: 5px 11px; cursor: pointer;
-  }
+  .stage { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; transform: translate(-50%, -50%) scale(1); transform-origin: center; box-shadow: 0 10px 40px rgba(0,0,0,.28); background: var(--paper); overflow: hidden; }
+  .bar { display: flex; align-items: center; gap: 14px; padding: 8px 16px; background: var(--chrome); border-top: 1px solid var(--chrome-line); font-size: 12.5px; color: var(--chrome-muted); }
+  .bar button { font: inherit; font-weight: 700; color: var(--chrome-ink); background: transparent; border: 1px solid var(--chrome-line); border-radius: 4px; padding: 5px 11px; cursor: pointer; }
   .bar button:hover { border-color: var(--accent); color: var(--accent); }
-  .bar button:focus-visible, .seg button:focus-visible, .pill:focus-visible, .seg-btn:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 2px;
-  }
+  .bar button:focus-visible, .seg-btn:focus-visible, .pill:focus-visible, .tile[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .bar button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
   .bar .counter { font-variant-numeric: tabular-nums; color: var(--chrome-ink); font-weight: 700; min-width: 48px; text-align: center; }
   .bar .spacer { flex: 1; }
-  .bar kbd {
-    font-family: inherit; font-size: 11px; border: 1px solid var(--chrome-line); border-radius: 3px;
-    padding: 1px 5px; margin: 0 1px; color: var(--chrome-ink);
-  }
+  .bar kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--chrome-line); border-radius: 3px; padding: 1px 5px; margin: 0 1px; color: var(--chrome-ink); }
   .progress { height: 3px; background: var(--chrome-line); }
   .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .4s ease; }
-  .notes {
-    max-height: 200px; overflow: auto; padding: 12px 20px; font-size: 13px; line-height: 1.5;
-    background: var(--chrome); color: var(--chrome-ink); border-top: 1px solid var(--chrome-line);
-  }
+  .notes { max-height: 200px; overflow: auto; padding: 12px 20px; font-size: 13px; line-height: 1.5; background: var(--chrome); color: var(--chrome-ink); border-top: 1px solid var(--chrome-line); }
   .notes h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--chrome-muted); }
   .notes p { margin: 0 0 6px; max-width: 110ch; }
   .notes code { font-family: Consolas, "Courier New", monospace; font-size: 12px; background: var(--ground); padding: 1px 5px; border-radius: 3px; }
 
-  /* ---------- slides ---------- */
-  .slide {
-    position: absolute; inset: 0; background: var(--paper); color: var(--ink);
-    opacity: 0; visibility: hidden; transform: translateX(56px);
-    transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1), visibility 0s linear .45s;
-  }
+  /* ---------- story chrome: acts strip, help, presenter view, reveals ---------- */
+  .acts { display: flex; gap: 6px; padding: 6px 16px 0; background: var(--chrome); }
+  .act { flex: 1; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--chrome-muted); background: transparent; border: 0; border-top: 3px solid var(--chrome-line); padding: 5px 0 6px; cursor: pointer; text-align: left; transition: color .2s, border-color .2s, opacity .2s; }
+  .act:hover { color: var(--chrome-ink); }
+  .act.done { border-top-color: var(--accent); opacity: .55; }
+  .act.now { border-top-color: var(--accent); color: var(--chrome-ink); opacity: 1; }
+  .act small { display: block; font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 11px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .help { position: absolute; inset: 0; z-index: 30; background: rgba(16,34,60,.93); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .help .box { width: 600px; padding: 28px 32px; }
+  .help h3 { margin: 0 0 14px; font-size: 20px; }
+  .help table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  .help td { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.15); }
+  .help td:first-child { width: 150px; white-space: nowrap; }
+  .help kbd { font-family: inherit; border: 1px solid rgba(255,255,255,.5); border-radius: 3px; padding: 1px 7px; margin-right: 4px; }
+  .help p { font-size: 12.5px; color: rgba(255,255,255,.75); margin: 14px 0 0; }
+  .rev { opacity: 0; transform: translateY(10px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
+  .rev.on { opacity: 1; transform: none; }
+  .tile.qhl { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+  .formula .detail { display: none; }
+  .formula.open .detail { display: block; }
+  .formula .more { font: inherit; font-size: 12px; font-weight: 700; color: var(--blue); background: none; border: 0; padding: 6px 0 0; cursor: pointer; }
+  body.presenter .app { display: none; }
+  .pv { min-height: 100vh; background: var(--ground); color: var(--ground-ink); padding: 24px 32px; display: grid; grid-template-columns: 1fr 300px; gap: 28px; font-size: 15px; line-height: 1.5; }
+  .pv .cur h2 { margin: 0 0 6px; font-size: 26px; color: var(--chrome-ink); }
+  .pv .cur .f { font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 16px; }
+  .pv .notesbox { background: var(--chrome); border: 1px solid var(--chrome-line); padding: 16px 20px; }
+  .pv .notesbox h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--chrome-muted); }
+  .pv .notesbox p { margin: 0 0 8px; }
+  .pv .side { display: flex; flex-direction: column; gap: 14px; }
+  .pv .timer { font-size: 40px; font-weight: 700; color: var(--chrome-ink); font-variant-numeric: tabular-nums; }
+  .pv .nxt { background: var(--chrome); border: 1px solid var(--chrome-line); padding: 12px 16px; font-size: 13px; color: var(--chrome-muted); }
+  .pv .nxt b { display: block; font-size: 15px; color: var(--chrome-ink); }
+  .pv button { font: inherit; font-weight: 700; color: var(--chrome-ink); background: var(--chrome); border: 1px solid var(--chrome-line); border-radius: 4px; padding: 10px 14px; cursor: pointer; }
+  .pv .warn { font-size: 12.5px; color: var(--warm); line-height: 1.4; }
+
+  /* ---------- slide frame ---------- */
+  .slide { position: absolute; inset: 0; background: var(--paper); color: var(--ink); opacity: 0; visibility: hidden; transform: translateX(56px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1), visibility 0s linear .45s; }
   .slide.back { transform: translateX(-56px); }
   .slide.active { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-
-  .hd {
-    position: absolute; left: 0; top: 0; right: 0; height: 106px;
-    background: var(--navy); color: #fff; padding: 20px 40px 0; display: flex; justify-content: space-between; gap: 24px;
-  }
-  .hd h2 { margin: 0; font-size: 33px; line-height: 1.1; font-weight: 700; letter-spacing: -.005em; text-wrap: balance; }
-  .hd .finding { margin: 8px 0 0; font-size: 17.5px; font-weight: 700; line-height: 1.25; color: #fff; max-width: 1000px; }
-  .hd .asof {
-    flex: none; align-self: flex-start; margin-top: 4px; text-align: right; font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.82);
-  }
+  .hd { position: absolute; left: 0; top: 0; right: 0; height: 106px; background: var(--navy); color: #fff; padding: 20px 40px 0; display: flex; justify-content: space-between; gap: 24px; }
+  .hd h2 { margin: 0; font-size: 29px; line-height: 1.1; font-weight: 700; letter-spacing: -.005em; white-space: nowrap; }
+  .hd .finding { margin: 8px 0 0; font-size: 15.5px; font-weight: 700; line-height: 1.25; color: #fff; max-width: 1000px; }
+  .hd .asof { flex: none; align-self: flex-start; margin-top: 4px; text-align: right; font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.82); }
   .hd .asof b { display: block; color: #fff; font-size: 13px; }
   .slide.active .hd h2, .slide.active .hd .finding { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
   .slide.active .hd .finding { animation-delay: .12s; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-
   .bd { position: absolute; left: 0; right: 0; top: 106px; bottom: 36px; padding: 14px 40px 0; }
-  .ft {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: var(--foot); color: #fff;
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; font-size: 10.5px; letter-spacing: .08em;
-  }
+  .ft { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: var(--foot); color: #fff; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; font-size: 10.5px; letter-spacing: .08em; }
   .ft .org { text-align: center; font-weight: 700; }
   .ft .samp { color: #C9CDD3; }
   .ft .pg { text-align: right; font-variant-numeric: tabular-nums; color: #C9CDD3; }
-
   .nb { position: absolute; left: 40px; right: 40px; bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; }
-  .note { font-weight: 700; color: var(--cat); font-size: 14px; line-height: 1.3; max-width: 780px; }
-  .note em { font-style: normal; color: var(--blue); }
+  .note { font-weight: 700; color: var(--cat); font-size: 13.5px; line-height: 1.3; max-width: 800px; }
   .src { font-size: 10.5px; line-height: 1.35; color: var(--ink); text-align: right; max-width: 380px; }
   .src .cls { display: inline-block; margin-top: 2px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 3px; font-family: Consolas, "Courier New", monospace; font-size: 10px; color: var(--cat); }
+  .ent-chip { display: inline-block; padding: 2px 8px; border-radius: 3px; background: rgba(255,255,255,.14); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .04em; margin-top: 6px; }
 
-  /* controls inside a slide */
+  /* controls */
   .ctl { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 36px; }
   .ctl .lab { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-right: 6px; }
   .pills { display: flex; gap: 4px; align-items: center; }
-  .pill {
-    font: inherit; font-size: 12.5px; font-weight: 700; color: var(--cat); background: var(--paper);
-    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; transition: background .2s, color .2s, border-color .2s;
-  }
+  .pill { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--cat); background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
   .pill:hover { border-color: var(--blue); color: var(--blue); }
   .pill[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
-  .seg-btn {
-    font: inherit; font-size: 12px; font-weight: 700; color: var(--cat); background: var(--paper); border: 0; padding: 5px 11px; cursor: pointer;
-    border-right: 1px solid var(--line); transition: background .2s, color .2s;
-  }
+  .seg-btn { font: inherit; font-size: 12px; font-weight: 700; color: var(--cat); background: var(--paper); border: 0; padding: 5px 11px; cursor: pointer; border-right: 1px solid var(--line); transition: background .2s, color .2s; }
   .seg-btn:last-child { border-right: 0; }
   .seg-btn[aria-pressed="true"] { background: var(--navy); color: #fff; }
   .right { display: flex; gap: 10px; align-items: center; }
-
   .chart-wrap { position: relative; }
   .chart-wrap[data-view="table"] .chartv { visibility: hidden; }
   .chart-wrap[data-view="table"] .tablev { display: block; }
   .tablev { display: none; position: absolute; inset: 0; overflow: auto; background: var(--paper); }
+  /* explicit color: tables do not inherit it when a host renders the file in quirks mode */
+  table.dt, table.ops-t, .stats table, .formula, .det table { color: var(--ink); }
   table.dt { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
   table.dt th, table.dt td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
   table.dt th { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 700; background: var(--tint); position: sticky; top: 0; }
   table.dt th:first-child, table.dt td:first-child { text-align: left; }
   table.dt tr.trg td { font-weight: 700; color: var(--cat); background: var(--tint); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; }
   table.dt td.neg { color: #8A2F2F; }
-
-  .tip {
-    position: absolute; z-index: 20; pointer-events: none; opacity: 0; transition: opacity .15s;
-    background: var(--navy); color: #fff; padding: 9px 12px; border-radius: 4px; font-size: 12px; line-height: 1.4;
-    box-shadow: 0 6px 20px rgba(0,0,0,.25); max-width: 300px;
-  }
+  table.dt td.wrap { white-space: normal; text-align: left; }
+  .tip { position: absolute; z-index: 20; pointer-events: none; opacity: 0; transition: opacity .15s; background: var(--navy); color: #fff; padding: 9px 12px; border-radius: 4px; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 20px rgba(0,0,0,.25); max-width: 320px; }
   .tip.on { opacity: 1; }
   .tip b { display: block; font-size: 12.5px; margin-bottom: 4px; }
   .tip table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
   .tip td { padding: 1px 6px 1px 0; }
   .tip td:last-child { text-align: right; padding-right: 0; }
   .tip .dim { color: rgba(255,255,255,.7); }
+  .leg { display: flex; gap: 22px; font-size: 12.5px; font-weight: 700; color: var(--cat); align-items: center; }
+  .leg span { display: inline-flex; align-items: center; gap: 7px; transition: opacity .3s; }
+  .leg span.off { opacity: .25; }
+  .leg .k { width: 14px; height: 10px; border-radius: 2px; }
+  .leg .kt { width: 16px; height: 0; border-top: 2px solid var(--ink); }
+  .sw { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+  .pos-c { color: var(--blue); } .neg-c { color: var(--warm); }
 
-  /* ---------- slide 0: cover ---------- */
-  .cover { background: var(--navy); color: #fff; }
-  .cover .inner { position: absolute; left: 88px; right: 88px; top: 92px; bottom: 60px; }
-  .cover .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--cyan); font-weight: 700; }
-  .cover h1 { margin: 18px 0 0; font-size: 58px; line-height: 1.02; font-weight: 700; letter-spacing: -.01em; max-width: 900px; text-wrap: balance; }
-  .cover .rule { height: 3px; width: 0; background: var(--cyan); margin: 26px 0 22px; }
-  .cover .sub { font-size: 19px; line-height: 1.4; max-width: 820px; color: rgba(255,255,255,.88); }
-  .cover .sub b { color: #fff; }
-  .cover .try { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 44px; }
-  .cover .try div { border-top: 1px solid rgba(255,255,255,.22); padding-top: 12px; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.85); }
-  .cover .try b { display: block; color: #fff; font-size: 14px; margin-bottom: 3px; }
-  .cover .try kbd { font-family: inherit; font-size: 11.5px; border: 1px solid rgba(255,255,255,.4); border-radius: 3px; padding: 0 5px; color: #fff; }
-  .cover .foot { position: absolute; left: 0; right: 0; bottom: 0; font-size: 12px; color: rgba(255,255,255,.62); line-height: 1.5; display: flex; justify-content: space-between; }
-  .cover .r { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
-  .cover.armed .r { opacity: 1; transform: none; }
-  .cover.armed .rule { width: 120px; transition: width .7s cubic-bezier(.2,.7,.2,1) .35s; }
+  /* ---------- slide 1: executive read ---------- */
+  .exec { display: grid; grid-template-columns: 560px 1fr; gap: 32px; height: 500px; margin-top: 4px; }
+  .heads { display: flex; flex-direction: column; gap: 14px; }
+  .head { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; opacity: 0; transform: translateY(8px); transition: opacity .5s ease var(--d, 0s), transform .5s cubic-bezier(.2,.7,.2,1) var(--d, 0s); }
+  .slide.armed .head.on { opacity: 1; transform: none; }
+  .head i { display: block; width: 14px; height: 14px; margin-top: 4px; background: var(--blue); }
+  .head i.q { background: var(--navy); }
+  .head p { margin: 0; font-size: 15px; line-height: 1.42; color: var(--ink); }
+  .head p b { color: var(--navy); }
+  .head p small { display: block; font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .04em; margin-top: 3px; }
+  .tiles6 { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 12px; }
+  .tile { border: 1px solid var(--line); padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: border-color .2s; position: relative; }
+  .tile:hover { border-color: var(--blue); }
+  .tile .l { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+  .tile .v { font-size: 30px; font-weight: 700; color: var(--navy); line-height: 1.1; margin-top: 3px; }
+  .tile .d { font-size: 12.5px; color: var(--cat); margin-top: 4px; font-weight: 700; }
+  .tile .d b { font-weight: 700; }
+  .tile .go { position: absolute; right: 12px; top: 10px; font-size: 10.5px; color: var(--muted); font-weight: 700; }
 
-  /* ---------- slide 1: market performance ---------- */
-  .mkt { position: relative; height: 462px; margin-top: 8px; }
-  .mrow { position: absolute; left: 0; right: 0; height: 24px; transition: top .55s cubic-bezier(.2,.7,.2,1), height .55s; }
-  .mrow .mname { position: absolute; left: 0; top: 0; width: 240px; height: 100%; display: flex; align-items: center; font-size: 12.5px; font-weight: 700; color: var(--cat); white-space: nowrap; }
-  .mrow .mname small { font-weight: 400; color: var(--muted); margin-left: 6px; font-size: 11px; }
-  .mbar {
-    position: absolute; top: 50%; height: 14px; margin-top: -7px; background: var(--blue);
-    transform: scaleX(0); transform-origin: left center;
-    transition: transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), left .55s cubic-bezier(.2,.7,.2,1), width .55s cubic-bezier(.2,.7,.2,1), top .55s;
-  }
-  .mbar.neg { transform-origin: right center; }
-  .mbar.pos { border-radius: 0 4px 4px 0; }
-  .mbar.neg { border-radius: 4px 0 0 4px; }
-  .mval {
-    position: absolute; top: 50%; transform: translateY(-50%); font-size: 12.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums;
-    opacity: 0; transition: opacity .4s ease calc(var(--d, 0s) + .45s), left .55s cubic-bezier(.2,.7,.2,1);
-  }
-  .mval.neg { transform: translate(-100%, -50%); }
-  .slide.armed .mbar { transform: scaleX(1); }
-  .slide.armed .mval { opacity: 1; }
-  .ghead { position: absolute; left: 0; right: 0; height: 24px; display: flex; align-items: flex-end; padding-bottom: 3px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--line); transition: top .55s cubic-bezier(.2,.7,.2,1), opacity .3s; }
-  .ghead.off { opacity: 0; }
-  .zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--gray); transition: left .55s cubic-bezier(.2,.7,.2,1); }
-  .mrow .hit { position: absolute; left: 240px; right: 0; top: 0; bottom: 0; cursor: default; }
-  .mrow:hover .mbar { filter: brightness(.88); }
-
-  /* ---------- slide 2: fund summary ---------- */
+  /* ---------- fund at a glance ---------- */
   .sum { display: grid; grid-template-columns: 300px 1fr; gap: 28px; height: 470px; margin-top: 6px; }
-  .tiles { display: grid; grid-template-rows: repeat(4, 1fr); gap: 12px; }
-  .tile { border: 1px solid var(--line); border-left: 4px solid var(--blue); padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; }
-  .tile .l { font-size: 11.5px; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
-  .tile .v { font-size: 34px; font-weight: 700; color: var(--navy); line-height: 1.1; margin-top: 2px; }
-  .tile .s { font-size: 11px; color: var(--cat); margin-top: 3px; }
+  .tiles4 { display: grid; grid-template-rows: repeat(4, 1fr); gap: 12px; }
+  .tiles4 .tile { border-left: 4px solid var(--blue); cursor: default; }
+  .tiles4 .tile .v { font-size: 32px; }
+  .tiles4 .tile .s { font-size: 11px; color: var(--cat); margin-top: 3px; }
   .alloc h3, .det h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .stack { position: relative; display: flex; height: 48px; gap: 2px; }
   .stack.thin { height: 16px; margin-top: 6px; }
-  .seg-a {
-    position: relative; height: 100%; display: flex; align-items: center; justify-content: center; overflow: visible;
-    font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; transform: scaleX(0); transform-origin: left center;
-    transition: transform .8s cubic-bezier(.2,.7,.2,1) var(--d, 0s), filter .2s, outline-color .2s; outline: 2px solid transparent; outline-offset: 2px;
-  }
+  .seg-a { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; transform: scaleX(0); transform-origin: left center; transition: transform .8s cubic-bezier(.2,.7,.2,1) var(--d, 0s), filter .2s, outline-color .2s; outline: 2px solid transparent; outline-offset: 2px; }
   .seg-a span { white-space: nowrap; pointer-events: none; }
   .seg-a.dark-text { color: var(--navy); }
   .seg-a.sel { outline-color: var(--navy); }
@@ -258,13 +185,12 @@
   .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; font-size: 12px; color: var(--cat); font-weight: 700; }
   .legend button { font: inherit; color: inherit; background: none; border: 0; padding: 2px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
   .legend button:hover { color: var(--blue); }
-  .sw { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
   .det { margin-top: 18px; border: 1px solid var(--line); background: var(--tint); padding: 14px 18px; min-height: 196px; }
   .det .name { font-size: 20px; font-weight: 700; color: var(--navy); }
   .det .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
   .det .kv { font-size: 12px; color: var(--cat); }
   .det .kv b { display: block; font-size: 22px; color: var(--ink); font-weight: 700; }
-  .meter { height: 8px; background: #D4DEE9; border-radius: 4px; position: relative; margin-top: 8px; overflow: visible; }
+  .meter { height: 8px; background: #D4DEE9; border-radius: 4px; position: relative; margin-top: 8px; }
   .meter > i { position: absolute; left: 0; top: 0; height: 100%; background: var(--blue); border-radius: 4px; transition: width .6s cubic-bezier(.2,.7,.2,1); }
   .meter > s { position: absolute; top: -4px; width: 2px; height: 16px; background: var(--ink); transition: left .6s; }
   .det table { border-collapse: collapse; margin-top: 12px; font-size: 12.5px; font-variant-numeric: tabular-nums; width: 100%; }
@@ -272,75 +198,15 @@
   .det th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .det td:first-child, .det th:first-child { text-align: left; }
   .det td.neg { color: #8A2F2F; }
-  .fade { animation: fadein .35s ease both; }
-  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
-  /* ---------- slide 3: fund vs benchmark ---------- */
-  .plot { position: relative; height: 372px; margin-top: 12px; }
-  .base { position: absolute; left: 0; right: 0; height: 1px; background: var(--gray); transition: bottom .6s cubic-bezier(.2,.7,.2,1); }
-  .grp { position: absolute; top: 0; bottom: 0; }
-  .grp .cat-l { position: absolute; left: 0; right: 0; bottom: -28px; text-align: center; font-size: 13px; font-weight: 700; color: var(--cat); }
-  .col { position: absolute; width: 24px; transition: height .6s cubic-bezier(.2,.7,.2,1), bottom .6s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), opacity .3s; transform: scaleY(0); transform-origin: bottom; }
-  .col.pos { border-radius: 4px 4px 0 0; }
-  .col.neg { border-radius: 0 0 4px 4px; transform-origin: top; }
-  .col.fund { background: var(--blue); }
-  .col.bm { background: var(--gray); }
-  .slide.armed .col.fund { transform: scaleY(1); }
-  .slide.armed .col.bm.on { transform: scaleY(1); }
-  .vl { position: absolute; width: 56px; font-size: 12px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; transition: bottom .6s cubic-bezier(.2,.7,.2,1), opacity .35s ease calc(var(--d, 0s) + .4s); opacity: 0; }
-  .vl.fund { text-align: right; }
-  .vl.bm { text-align: left; color: var(--cat); font-weight: 400; }
-  .slide.armed .vl.fund { opacity: 1; }
-  .slide.armed .vl.bm.on { opacity: 1; }
-  .tick { position: absolute; left: 14px; right: 14px; height: 0; border-top: 2px solid var(--ink); opacity: 0; transform: scaleX(0); transition: opacity .3s, transform .5s cubic-bezier(.2,.7,.2,1), bottom .6s; }
-  .tick.on { opacity: 1; transform: scaleX(1); }
-  .tick .tl { position: absolute; right: 0; top: -16px; white-space: nowrap; font-size: 11px; color: var(--ink); font-weight: 700; }
-  .grp .hit { position: absolute; inset: 0; }
-  .grp:hover .col { filter: brightness(.88); }
-  .leg { display: flex; gap: 22px; font-size: 12.5px; font-weight: 700; color: var(--cat); align-items: center; }
-  .leg span { display: inline-flex; align-items: center; gap: 7px; transition: opacity .3s; }
-  .leg span.off { opacity: .25; }
-  .leg .k { width: 14px; height: 10px; border-radius: 2px; }
-  .leg .kt { width: 16px; height: 0; border-top: 2px solid var(--ink); }
-  .callout {
-    position: absolute; right: 0; top: 0; width: 300px; background: var(--tint); border-left: 4px solid var(--blue); padding: 12px 14px; font-size: 13px; line-height: 1.4; color: var(--ink);
-    opacity: 0; transform: translateY(8px); transition: opacity .4s, transform .4s;
-  }
-  .callout.on { opacity: 1; transform: none; }
-  .callout b { color: var(--navy); }
-  .buildhint { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
-
-  /* ---------- slide 4: histogram ---------- */
-  .hist-wrap { display: grid; grid-template-columns: 1fr 250px; gap: 32px; margin-top: 10px; height: 440px; }
-  .hist { position: relative; height: 380px; margin-top: 30px; }
-  .hbin { position: absolute; bottom: 0; top: 0; }
-  .hcol { position: absolute; left: 6px; right: 6px; bottom: 0; background: var(--blue); border-radius: 4px 4px 0 0; transform: scaleY(0); transform-origin: bottom; transition: height .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), background .3s; }
-  .hcol.latest { background: var(--cyan); }
-  .slide.armed .hcol { transform: scaleY(1); }
-  .hv { position: absolute; left: 0; right: 0; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; transition: bottom .7s cubic-bezier(.2,.7,.2,1), opacity .3s ease calc(var(--d, 0s) + .45s); opacity: 0; }
-  .slide.armed .hv { opacity: 1; }
-  .hl { position: absolute; left: 0; right: 0; bottom: -26px; text-align: center; font-size: 11px; font-weight: 700; color: var(--cat); white-space: nowrap; }
-  .hbase { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--gray); }
-  .hbin .hit { position: absolute; inset: 0; }
-  .hbin:hover .hcol { filter: brightness(.88); }
-  .latest-tag { position: absolute; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; transition: bottom .7s cubic-bezier(.2,.7,.2,1); text-align: center; }
-  .latest-tag i { display: block; width: 1px; height: 16px; background: var(--ink); margin: 3px auto 0; }
-  .stats { border: 1px solid var(--line); padding: 14px 16px; margin-top: 30px; align-self: start; }
-  .stats h3 { margin: 0 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  .stats .sub { font-size: 11.5px; color: var(--cat); margin-bottom: 10px; }
-  .stats table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-  .stats td { padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--cat); }
-  .stats td:last-child { text-align: right; font-weight: 700; color: var(--ink); font-size: 15px; }
-  .stats tr:last-child td { border-bottom: 0; }
-
-  /* ---------- slide 5: geography ---------- */
+  /* ---------- geographic exposure ---------- */
   .geo { display: grid; grid-template-columns: 330px 1fr; gap: 36px; margin-top: 10px; height: 440px; }
   .geo h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .split { display: flex; height: 40px; gap: 2px; }
   .split div { height: 100%; display: flex; align-items: center; padding: 0 10px; color: #fff; font-weight: 700; font-size: 14px; transform: scaleX(0); transform-origin: left; transition: transform .8s cubic-bezier(.2,.7,.2,1) var(--d, 0s); white-space: nowrap; overflow: hidden; }
   .slide.armed .split div { transform: scaleX(1); }
   .split .dm { background: var(--blue); }
-  .split .em { background: var(--cyan); color: var(--navy); justify-content: flex-end; }
+  .split .em { background: var(--cyan); }
   .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
   .chip { border: 1px solid var(--line); padding: 10px 12px; }
   .chip.wide { grid-column: 1 / -1; border-left: 4px solid var(--navy); }
@@ -351,16 +217,168 @@
   .grow.dim { opacity: .22; }
   .grow .gn { position: absolute; left: 0; top: 0; width: 150px; height: 100%; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--cat); }
   .grow .gb { position: absolute; left: 160px; top: 50%; height: 16px; margin-top: -8px; border-radius: 0 4px 4px 0; transform: scaleX(0); transform-origin: left; transition: transform .8s cubic-bezier(.2,.7,.2,1) var(--d, 0s); }
-  .grow .gb.dm { background: var(--blue); }
-  .grow .gb.em { background: var(--cyan); }
+  .grow .gb.dm { background: var(--blue); } .grow .gb.em { background: var(--cyan); }
   .slide.armed .grow .gb { transform: scaleX(1); }
   .grow .gv { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .35s ease calc(var(--d, 0s) + .5s); }
   .slide.armed .grow .gv { opacity: 1; }
   .grow .hit { position: absolute; left: 150px; right: 0; top: 0; bottom: 0; }
   .grow:hover .gb { filter: brightness(.88); }
 
+  /* ---------- slide: scorecard ---------- */
+  .plot { position: relative; height: 372px; margin-top: 12px; }
+  .base { position: absolute; left: 0; right: 0; height: 1px; background: var(--gray); transition: bottom .6s cubic-bezier(.2,.7,.2,1); }
+  .grp { position: absolute; top: 0; bottom: 0; }
+  .grp .cat-l { position: absolute; left: 0; right: 0; bottom: -28px; text-align: center; font-size: 13px; font-weight: 700; color: var(--cat); }
+  .col { position: absolute; width: 24px; transition: height .6s cubic-bezier(.2,.7,.2,1), bottom .6s cubic-bezier(.2,.7,.2,1), left .5s, transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), opacity .3s, background .3s; transform: scaleY(0); transform-origin: bottom; }
+  .col.pos { border-radius: 4px 4px 0 0; }
+  .col.neg { border-radius: 0 0 4px 4px; transform-origin: top; }
+  .col.fund { background: var(--blue); }
+  .col.bm { background: var(--gray); }
+  .col.warm { background: var(--warm); }
+  .slide.armed .col.fund { transform: scaleY(1); }
+  .slide.armed .col.bm.on { transform: scaleY(1); }
+  .vl { position: absolute; width: 56px; font-size: 12px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; transition: bottom .6s cubic-bezier(.2,.7,.2,1), left .5s, opacity .35s ease calc(var(--d, 0s) + .4s); opacity: 0; }
+  .vl.fund { text-align: right; }
+  .vl.bm { text-align: left; color: var(--cat); font-weight: 400; }
+  .vl.center { text-align: center; }
+  .slide.armed .vl.fund { opacity: 1; }
+  .slide.armed .vl.bm.on { opacity: 1; }
+  .tick { position: absolute; left: 14px; right: 14px; height: 0; border-top: 2px solid var(--ink); opacity: 0; transform: scaleX(0); transition: opacity .3s, transform .5s cubic-bezier(.2,.7,.2,1), bottom .6s; }
+  .tick.on { opacity: 1; transform: scaleX(1); }
+  .tick .tl { position: absolute; right: 0; top: -16px; white-space: nowrap; font-size: 11px; color: var(--ink); font-weight: 700; }
+  .grp .hit { position: absolute; inset: 0; }
+  .grp:hover .col { filter: brightness(.88); }
+  .callout { position: absolute; right: 0; top: 0; width: 300px; background: var(--tint); border-left: 4px solid var(--blue); padding: 12px 14px; font-size: 13px; line-height: 1.4; color: var(--ink); opacity: 0; transform: translateY(8px); transition: opacity .4s, transform .4s; }
+  .callout.on { opacity: 1; transform: none; }
+  .callout b { color: var(--navy); }
+  .buildhint { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
+
+  /* ---------- slide 3: waterfall ---------- */
+  .wf-wrap { display: grid; grid-template-columns: 1fr 300px; gap: 28px; margin-top: 8px; height: 440px; }
+  .wf { position: relative; height: 380px; margin-top: 16px; }
+  .wcol { position: absolute; width: 60px; margin-left: -30px; transition: height .6s cubic-bezier(.2,.7,.2,1), bottom .6s cubic-bezier(.2,.7,.2,1), background .3s, transform .6s cubic-bezier(.2,.7,.2,1) var(--d, 0s); transform: scaleY(0); }
+  .wcol.up { transform-origin: bottom; border-radius: 4px 4px 0 0; }
+  .wcol.down { transform-origin: top; border-radius: 0 0 4px 4px; }
+  .wcol.total.up { border-radius: 4px 4px 0 0; } .wcol.total.down { border-radius: 0 0 4px 4px; }
+  .slide.armed .wcol { transform: scaleY(1); }
+  .wlab { position: absolute; width: 90px; margin-left: -45px; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; transition: bottom .6s cubic-bezier(.2,.7,.2,1), opacity .35s ease calc(var(--d, 0s) + .4s); opacity: 0; }
+  .slide.armed .wlab { opacity: 1; }
+  .wcat { position: absolute; width: 120px; margin-left: -60px; bottom: -34px; text-align: center; font-size: 11.5px; font-weight: 700; color: var(--cat); line-height: 1.2; }
+  .wconn { position: absolute; height: 1px; background: var(--gray); transition: bottom .6s cubic-bezier(.2,.7,.2,1), opacity .3s; opacity: .8; }
+  .wbase { position: absolute; left: 0; right: 0; height: 1px; background: var(--ink); transition: bottom .6s cubic-bezier(.2,.7,.2,1); }
+  .wf .hit { position: absolute; width: 100px; margin-left: -50px; top: 0; bottom: 0; }
+  .formula { border: 1px solid var(--line); background: var(--tint); padding: 14px 16px; font-size: 12.5px; line-height: 1.45; color: var(--ink); margin-top: 16px; }
+  .formula h3 { margin: 0 0 6px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .formula .big { font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1.1; margin: 4px 0 2px; }
+  .formula .row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px solid #D4DEE9; font-variant-numeric: tabular-nums; }
+  .formula .row:last-of-type { border-bottom: 0; }
+  .formula .row b { font-weight: 700; }
+  .formula .cav { font-size: 11px; color: var(--cat); margin-top: 8px; line-height: 1.4; }
+
+  /* ---------- slide 4: allocation & flows ---------- */
+  .alloc2 { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; margin-top: 6px; height: 330px; }
+  .alloc2 h3 { margin: 0 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .alloc2 .sub { font-size: 11.5px; color: var(--cat); margin-bottom: 8px; }
+  .hbars { position: relative; height: 250px; }
+  .hrow { position: absolute; left: 0; right: 0; height: 44px; }
+  .hrow .hn { position: absolute; left: 0; top: 0; width: 170px; height: 100%; display: flex; flex-direction: column; justify-content: center; font-size: 12.5px; font-weight: 700; color: var(--cat); line-height: 1.15; }
+  .hrow .hn small { font-weight: 400; color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .hb { position: absolute; top: 50%; height: 16px; margin-top: -8px; background: var(--blue); transform: scaleX(0); transform-origin: left; transition: transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), left .6s, width .6s, background .3s; }
+  .hb.pos { border-radius: 0 4px 4px 0; } .hb.neg { border-radius: 4px 0 0 4px; transform-origin: right; background: var(--warm); }
+  .hb.net { background: var(--navy); } .hb.zero { background: var(--gray); }
+  .slide.armed .hb { transform: scaleX(1); }
+  .hv { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .35s ease calc(var(--d, 0s) + .45s), left .6s; white-space: nowrap; }
+  .hv.neg { transform: translate(-100%, -50%); }
+  .slide.armed .hv { opacity: 1; }
+  .hzero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--gray); }
+  .hrow .hit { position: absolute; left: 170px; right: 0; top: 0; bottom: 0; }
+  .hrow:hover .hb { filter: brightness(.88); }
+  .ovl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+  .ovl .tile { cursor: default; padding: 10px 14px; }
+  .ovl .tile .v { font-size: 24px; }
+
+  /* ---------- slide 5: histogram ---------- */
+  .hist-wrap { display: grid; grid-template-columns: 1fr 270px; gap: 32px; margin-top: 10px; height: 440px; }
+  .hist { position: relative; height: 380px; margin-top: 30px; }
+  .hbin { position: absolute; bottom: 0; top: 0; }
+  .hcol { position: absolute; left: 6px; right: 6px; bottom: 0; background: var(--blue); border-radius: 4px 4px 0 0; transform: scaleY(0); transform-origin: bottom; transition: height .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), background .3s; }
+  .hcol.latest { background: var(--cyan); }
+  .slide.armed .hcol { transform: scaleY(1); }
+  .hvv { position: absolute; left: 0; right: 0; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; transition: bottom .7s cubic-bezier(.2,.7,.2,1), opacity .3s ease calc(var(--d, 0s) + .45s); opacity: 0; }
+  .slide.armed .hvv { opacity: 1; }
+  .hl { position: absolute; left: 0; right: 0; bottom: -26px; text-align: center; font-size: 11px; font-weight: 700; color: var(--cat); white-space: nowrap; }
+  .hbase { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--gray); }
+  .hbin .hit { position: absolute; inset: 0; }
+  .hbin:hover .hcol { filter: brightness(.88); }
+  .latest-tag { position: absolute; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; transition: bottom .7s cubic-bezier(.2,.7,.2,1), left .7s; text-align: center; }
+  .latest-tag i { display: block; width: 1px; height: 16px; background: var(--ink); margin: 3px auto 0; }
+  .stats { border: 1px solid var(--line); padding: 14px 16px; margin-top: 30px; align-self: start; }
+  .stats h3 { margin: 0 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .stats .sub { font-size: 11.5px; color: var(--cat); margin-bottom: 8px; }
+  .stats table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  .stats td { padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--cat); }
+  .stats td:last-child { text-align: right; font-weight: 700; color: var(--ink); font-size: 14px; }
+  .stats tr.sec td { border-bottom: 0; padding-top: 10px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .stats tr:last-child td { border-bottom: 0; }
+
+  /* ---------- slide 6: market ---------- */
+  .mkt { position: relative; height: 380px; margin-top: 6px; }
+  .mrow { position: absolute; left: 0; right: 0; height: 24px; transition: top .55s cubic-bezier(.2,.7,.2,1), height .55s; }
+  .mrow .mname { position: absolute; left: 0; top: 0; width: 240px; height: 100%; display: flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--cat); white-space: nowrap; }
+  .mbar { position: absolute; top: 50%; height: 13px; margin-top: -6.5px; background: var(--blue); transform: scaleX(0); transform-origin: left center; transition: transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), left .55s cubic-bezier(.2,.7,.2,1), width .55s cubic-bezier(.2,.7,.2,1), top .55s; }
+  .mbar.neg { transform-origin: right center; border-radius: 4px 0 0 4px; } .mbar.pos { border-radius: 0 4px 4px 0; }
+  .mval { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .4s ease calc(var(--d, 0s) + .45s), left .55s cubic-bezier(.2,.7,.2,1); }
+  .mval.neg { transform: translate(-100%, -50%); }
+  .slide.armed .mbar { transform: scaleX(1); } .slide.armed .mval { opacity: 1; }
+  .ghead { position: absolute; left: 0; right: 0; height: 24px; display: flex; align-items: flex-end; padding-bottom: 3px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--line); transition: top .55s cubic-bezier(.2,.7,.2,1), opacity .3s; }
+  .ghead.off { opacity: 0; }
+  .zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--gray); transition: left .55s cubic-bezier(.2,.7,.2,1); }
+  .mrow .hit { position: absolute; left: 240px; right: 0; top: 0; bottom: 0; }
+  .mrow:hover .mbar { filter: brightness(.88); }
+  .macro { display: flex; gap: 10px; margin-top: 10px; }
+  .mchip { flex: 1; border: 1px solid var(--line); padding: 8px 12px; font-size: 11.5px; color: var(--cat); line-height: 1.3; }
+  .mchip b { display: block; font-size: 16px; color: var(--navy); font-weight: 700; margin-bottom: 1px; }
+  .mchip small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 2px; }
+
+  /* ---------- slide 7: operations ---------- */
+  .ops { margin-top: 6px; }
+  table.ops-t { border-collapse: collapse; width: 100%; font-size: 12px; }
+  table.ops-t th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 5px 10px; border-bottom: 2px solid var(--line); }
+  table.ops-t td { padding: 4.5px 10px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.3; }
+  table.ops-t tr { opacity: 0; transform: translateY(6px); transition: opacity .4s ease var(--d, 0s), transform .4s ease var(--d, 0s); }
+  .slide.armed table.ops-t tr { opacity: 1; transform: none; }
+  table.ops-t tr.hid { display: none; }
+  .st { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; letter-spacing: .03em; white-space: nowrap; }
+  .st.prog { background: var(--tint); color: var(--navy); border: 1px solid #C9D8EA; }
+  .st.dev { background: #F3F4F6; color: var(--cat); border: 1px solid var(--line); }
+  .st.info { background: #FFF7EE; color: #7A4A2A; border: 1px solid #EBD6C2; }
+  .st.quiet { background: #F3F4F6; color: var(--cat); border: 1px solid var(--line); }
+
+  .fade { animation: fadein .35s ease both; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; transition-delay: 0s !important; animation-delay: 0s !important; }
+  }
+
+  /* ---------- print: one slide per landscape page, every build shown complete ---------- */
+  @media print {
+    @page { size: 13.333in 7.5in; margin: 0; }
+    html, body { height: auto; overflow: visible; background: #fff; }
+    .app { height: auto; display: block; }
+    .topbar, .bar, .progress, .notes, .tip, .acts, .help { display: none !important; }
+    .rev, .head { opacity: 1 !important; transform: none !important; }
+    .formula .detail { display: block !important; }
+    table.ops-t tr.hid { display: table-row !important; }
+    .viewport { position: static; }
+    .stage { position: static; transform: none !important; width: 1280px; height: auto; box-shadow: none; overflow: visible; }
+    .slide { position: relative; opacity: 1 !important; visibility: visible !important; transform: none !important; width: 1280px; height: 720px; page-break-after: always; break-after: page; overflow: hidden; }
+    .slide .hd h2, .slide .hd .finding { animation: none !important; }
+    .mbar, .col, .wcol, .hb, .hcol, .head, .seg-a, .gb, .split div { transform: none !important; opacity: 1 !important; }
+    .mval, .vl, .wlab, .hv, .hvv, .gv, .tick, .callout, table.ops-t tr { opacity: 1 !important; transform: none !important; }
+    .leg span.off { opacity: 1; }
+    .chart-wrap[data-view="table"] .chartv { visibility: visible; }
+    .chart-wrap[data-view="table"] .tablev { display: none; }
   }
 </style>
 </head>
@@ -369,44 +387,241 @@
 
 <div class="app">
   <div class="topbar">
-    <div><span class="tag">PROTOTYPE SAMPLE</span><b>Interactive slide deck</b> — public figures reproduced from the LACERA CIO Monthly Report presented July 8, 2026. Not an official LACERA publication.</div>
-    <div>Exploratory demo of animated, interactive slides · no live data · nothing leaves the browser</div>
+    <div><span class="tag">PROTOTYPE SAMPLE</span><b>CIO Monthly — decision deck</b> · public figures from the report presented July 8, 2026 · not an official LACERA publication</div>
+    <div class="entity">Entity
+      <div class="seg" id="entity-seg">
+        <button class="seg-btn" data-v="pension" aria-pressed="true">Pension Fund</button>
+        <button class="seg-btn" data-v="opeb" aria-pressed="false">OPEB Master Trust</button>
+      </div>
+      <span style="font-weight:400;color:var(--chrome-muted)">(<kbd style="font-family:inherit;border:1px solid var(--chrome-line);border-radius:3px;padding:0 4px;font-size:11px">E</kbd> toggles)</span>
+    </div>
   </div>
 
+  <div class="acts" id="acts"></div>
   <div class="viewport">
+    <div class="help" id="help" hidden>
+      <div class="box">
+        <h3>Presenting this deck</h3>
+        <table>
+          <tr><td><kbd>→</kbd><kbd>←</kbd></td><td>Next / previous step. Builds reveal one idea at a time; the finding line is the takeaway.</td></tr>
+          <tr><td><kbd>E</kbd></td><td>Switch every slide between the Pension Fund and the OPEB Master Trust</td></tr>
+          <tr><td><kbd>T</kbd></td><td>Show the table behind the current chart (and back)</td></tr>
+          <tr><td><kbd>N</kbd></td><td>Speaker notes drawer: source page, classification, caveats</td></tr>
+          <tr><td><kbd>P</kbd></td><td>Presenter view in a second window: notes, timer, next slide, remote control</td></tr>
+          <tr><td><kbd>F</kbd></td><td>Full screen</td></tr>
+          <tr><td><kbd>Home</kbd><kbd>End</kbd></td><td>First / last slide · <kbd>?</kbd> this help · swipe on touch screens</td></tr>
+        </table>
+        <p>Story arc: Where we stand → Why → Positioning → Context → Attention. Click an act in the strip above to jump. Hover any bar for the figures behind it.</p>
+      </div>
+    </div>
     <div class="stage" id="stage">
 
-      <!-- 0 · cover -->
-      <section class="slide cover" data-title="Cover">
-        <div class="inner">
-          <div class="eyebrow r">Interactive prototype · built from a public report</div>
-          <h1 class="r" style="transition-delay:.08s">Chief Investment Officer Monthly Report</h1>
-          <div class="rule"></div>
-          <div class="sub r" style="transition-delay:.3s">
-            <b>Five exhibits from the July 2026 report, rebuilt as animated, interactive slides.</b>
-            The same figures, the same LACERA template language — plus period switching, click-to-drill-down, morphing charts, build steps, and a table view behind every chart.
-          </div>
-          <div class="try">
-            <div class="r" style="transition-delay:.55s"><b>Navigate</b><kbd>→</kbd> <kbd>←</kbd> advance slides and in-slide builds. <kbd>Home</kbd> / <kbd>End</kbd> jump.</div>
-            <div class="r" style="transition-delay:.65s"><b>Hover</b>Any bar or column shows the figures behind it, with all trailing periods.</div>
-            <div class="r" style="transition-delay:.75s"><b>Switch</b>Chart ↔ Table on every exhibit; Pension ↔ OPEB; period and composite selectors.</div>
-            <div class="r" style="transition-delay:.85s"><b>Notes</b><kbd>N</kbd> opens speaker notes: source page, data classification, caveats.</div>
-          </div>
-          <div class="foot r" style="transition-delay:1s">
-            <div>Data as of May 31, 2026 (Total Fund, OPEB) and June 30, 2026 (markets) · net of fees · USD<br>Source: LACERA CIO Monthly Report, Board of Investments meeting, July 8, 2026 (public)</div>
-            <div style="text-align:right">Press <kbd style="border:1px solid rgba(255,255,255,.4);border-radius:3px;padding:0 5px;font-family:inherit">→</kbd> to begin</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 1 · global market performance -->
-      <section class="slide" data-title="Global Market Performance">
+      <!-- 1 · executive read -->
+      <section class="slide" data-title="Executive read" data-id="exec" data-frags="3">
         <div class="hd">
           <div>
-            <h2>Global Market Performance</h2>
+            <h2 id="s1-title">Chief Investment Officer Monthly Report — Executive read</h2>
+            <p class="finding" id="s1-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>Board of Investments, July 8, 2026<span class="ent-chip" id="s1-ent"></span></div>
+        </div>
+        <div class="bd">
+          <div class="exec">
+            <div class="heads" id="heads"></div>
+            <div class="tiles6" id="tiles6"></div>
+          </div>
+          <div class="nb">
+            <div class="note"><span class="buildhint" id="exec-hint"></span> Four questions, one at a time; the highlighted tiles belong to the question on screen. Click a tile to jump to its slide.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 8–9, 13–14, 18. Differences (pts) and sums are calculated from reported figures.<br><span class="cls">reported_public · calculated</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">1</span></div>
+      </section>
+
+      <!-- 2 · fund at a glance -->
+      <section class="slide" data-title="Fund at a glance" data-id="summary">
+        <div class="hd">
+          <div>
+            <h2 id="sum-title">Total Fund — Performance Summary</h2>
+            <p class="finding" id="sum-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>Market values in $ millions<span class="ent-chip"></span></div>
+        </div>
+        <div class="bd">
+          <div class="sum">
+            <div class="tiles4" id="sum-tiles"></div>
+            <div>
+              <div class="alloc">
+                <h3>Asset allocation by functional category — actual (top) vs. 2024 SAA target (thin bar)</h3>
+                <div class="stack" id="stack-actual"></div>
+                <div class="stack thin" id="stack-target"></div>
+                <div class="stack-lab"><span>0%</span><span>Actual: click a segment · Target: policy weights from the report</span><span>100%</span></div>
+                <div class="legend" id="alloc-legend"></div>
+              </div>
+              <div class="det" id="det"></div>
+            </div>
+          </div>
+          <div class="nb">
+            <div class="note" id="sum-note"></div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 8–9 (Pension) and pp. 13–14 (OPEB). Differences vs. target and vs. benchmark are calculated from the reported figures.<br><span class="cls">reported_public · calculated</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">2</span></div>
+      </section>
+
+      <!-- 3 · scorecard -->
+      <section class="slide" data-title="Performance vs. policy" data-frags="3" data-id="perf">
+        <div class="hd">
+          <div>
+            <h2 id="perf-title">Performance vs. policy benchmark and actuarial hurdle</h2>
+            <p class="finding" id="perf-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>≥ 3 Y annualized<span class="ent-chip" id="s2-ent"></span></div>
+        </div>
+        <div class="bd">
+          <div class="ctl">
+            <div class="pills" id="perf-comps"><span class="lab">Composite</span></div>
+            <div class="right">
+              <div class="seg" id="perf-mode">
+                <button class="seg-btn" data-v="levels" aria-pressed="true">Returns</button>
+                <button class="seg-btn" data-v="excess" aria-pressed="false">Excess vs. benchmark</button>
+              </div>
+              <div class="leg" id="perf-leg">
+                <span id="leg-f"><i class="k" style="background:var(--blue)"></i><span id="leg-f-t">Net return</span></span>
+                <span class="off" id="leg-bm"><i class="k" style="background:var(--gray)"></i>Policy benchmark</span>
+                <span class="off" id="leg-h"><i class="kt"></i>Actuarial hurdle</span>
+                <span id="leg-w" style="display:none"><i class="k" style="background:var(--warm)"></i>Behind benchmark</span>
+              </div>
+              <div class="seg" data-toggle-view="perf">
+                <button class="seg-btn" data-v="chart" aria-pressed="true">Chart</button>
+                <button class="seg-btn" data-v="table" aria-pressed="false">Table</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrap" id="perf-wrap" data-view="chart">
+            <div class="chartv">
+              <div class="plot" id="plot"></div>
+              <div class="callout" id="perf-callout"></div>
+            </div>
+            <div class="tablev" id="perf-table"></div>
+          </div>
+          <div class="nb">
+            <div class="note" id="perf-note"><span class="buildhint" id="buildhint"></span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 9 (Pension) and p. 14 (OPEB). Excess = net return − policy benchmark, calculated in percentage points.<br><span class="cls">reported_public · calculated</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">3</span></div>
+      </section>
+
+      <!-- 4 · attribution -->
+      <section class="slide" data-title="Where the gap came from" data-id="wf">
+        <div class="hd">
+          <div>
+            <h2>Where the benchmark gap came from</h2>
+            <p class="finding" id="wf-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>Weights at May 31<span class="ent-chip" id="s3-ent"></span></div>
+        </div>
+        <div class="bd">
+          <div class="ctl">
+            <div class="pills" id="wf-periods"><span class="lab">Period</span></div>
+            <div class="right">
+              <div class="leg"><span><i class="k" style="background:var(--blue)"></i>Adds to excess</span><span><i class="k" style="background:var(--warm)"></i>Subtracts</span><span><i class="k" style="background:var(--gray)"></i>Residual</span><span><i class="k" style="background:var(--navy)"></i>Reported total</span></div>
+              <div class="seg" data-toggle-view="wf">
+                <button class="seg-btn" data-v="chart" aria-pressed="true">Chart</button>
+                <button class="seg-btn" data-v="table" aria-pressed="false">Table</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrap" id="wf-wrap" data-view="chart">
+            <div class="chartv">
+              <div class="wf-wrap">
+                <div class="wf" id="wf"></div>
+                <div class="formula" id="wf-formula"></div>
+              </div>
+            </div>
+            <div class="tablev" id="wf-table"></div>
+          </div>
+          <div class="nb">
+            <div class="note">Indicative only: each composite's excess return × its May 31 weight. Beginning-of-period weights are not in the monthly report, so the residual carries allocation effect, weight drift, compounding, overlays and cash.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 9 / p. 14 (returns, benchmarks, weights). Contributions and residual are a proxy estimate, not reported attribution.<br><span class="cls">reported_public · proxy_estimate</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">4</span></div>
+      </section>
+
+      <!-- 5 · allocation & flows -->
+      <section class="slide" data-title="Allocation vs. policy and May flows" data-id="alloc" data-frags="2">
+        <div class="hd">
+          <div>
+            <h2>Allocation vs. policy, May flows, overlay programs</h2>
+            <p class="finding" id="al-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>As of May 31, 2026</b>Market values in $ millions<br>Targets: 2024 SAA<span class="ent-chip" id="s4-ent"></span></div>
+        </div>
+        <div class="bd">
+          <div class="ctl" style="height:30px">
+            <div class="leg"><span><i class="k" style="background:var(--blue)"></i>Over target / inflow</span><span><i class="k" style="background:var(--warm)"></i>Under target / outflow</span><span><i class="k" style="background:var(--navy)"></i>Net</span></div>
+            <div class="seg" data-toggle-view="al">
+              <button class="seg-btn" data-v="chart" aria-pressed="true">Chart</button>
+              <button class="seg-btn" data-v="table" aria-pressed="false">Table</button>
+            </div>
+          </div>
+          <div class="chart-wrap" id="al-wrap" data-view="chart">
+            <div class="chartv">
+              <div class="alloc2">
+                <div><h3>Actual weight minus policy target</h3><div class="sub">Percentage points · each row shows actual vs. target</div><div class="hbars" id="drift"></div></div>
+                <div class="rev" id="al-flows"><h3>May rebalancing activity</h3><div class="sub">$ millions, net flow by functional category</div><div class="hbars" id="flows"></div></div>
+              </div>
+              <div class="ovl rev" id="ovl"></div>
+            </div>
+            <div class="tablev" id="al-table"></div>
+          </div>
+          <div class="nb">
+            <div class="note" id="al-note"><span class="buildhint" id="al-hint"></span> Flows are the report's "rebalancing activity" and can include capital calls, distributions and cash needs — direction vs. target is shown, not judged.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 8–9, 13–14 (weights, targets) and p. 18 (rebalancing, overlay gains). Drift and flow direction are calculated.<br><span class="cls">reported_public · calculated</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">5</span></div>
+      </section>
+
+      <!-- 6 · risk context -->
+      <section class="slide" data-title="Return distribution" data-id="hist" data-frags="1">
+        <div class="hd">
+          <div>
+            <h2>Monthly return distribution, last 120 months</h2>
+            <p class="finding" id="hist-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>June 2016 – May 2026</b>120 months · net of fees<br>Bins in percentage points<span class="ent-chip" id="s5-ent"></span></div>
+        </div>
+        <div class="bd">
+          <div class="ctl" style="height:30px">
+            <div class="leg"><span><i class="k" style="background:var(--blue)"></i>Months in bin</span><span><i class="k" style="background:var(--cyan)"></i>Bin containing May 2026</span></div>
+            <div class="seg" data-toggle-view="hist">
+              <button class="seg-btn" data-v="chart" aria-pressed="true">Chart</button>
+              <button class="seg-btn" data-v="table" aria-pressed="false">Table</button>
+            </div>
+          </div>
+          <div class="chart-wrap" id="hist-wrap" data-view="chart">
+            <div class="chartv"><div class="hist-wrap"><div class="hist" id="hist"></div><div class="stats rev" id="hist-stats"></div></div></div>
+            <div class="tablev" id="hist-table"></div>
+          </div>
+          <div class="nb">
+            <div class="note" id="hist-note"><span class="buildhint" id="hist-hint"></span> Press E to morph between the Pension Fund and the OPEB Master Trust distributions.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 9 and 14. Shares of months and tail counts are calculated from the reported bin counts.<br><span class="cls">reported_public · calculated</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">6</span></div>
+      </section>
+
+      <!-- 7 · market context -->
+      <section class="slide" data-title="Market context" data-id="market" data-frags="1">
+        <div class="hd">
+          <div>
+            <h2>Market context — not fund performance</h2>
             <p class="finding" id="mkt-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of June 30, 2026</b>Index total returns, USD<br>Trailing &lt; 1 Y cumulative · ≥ 3 Y annualized</div>
+          <div class="asof"><b>As of June 30, 2026</b>Index total returns, USD<br>&lt; 1 Y cumulative · ≥ 3 Y annualized</div>
         </div>
         <div class="bd">
           <div class="ctl">
@@ -423,156 +638,40 @@
             </div>
           </div>
           <div class="chart-wrap" id="mkt-wrap" data-view="chart">
-            <div class="chartv"><div class="mkt" id="mkt"></div></div>
+            <div class="chartv">
+              <div class="mkt" id="mkt"></div>
+              <div class="macro rev" id="macro"></div>
+            </div>
             <div class="tablev" id="mkt-table"></div>
           </div>
           <div class="nb">
-            <div class="note" id="mkt-note">Same rows as the report's table; the period buttons and sort re-scale and re-order the bars in place.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 5 (Bloomberg, State Street). ¹NCREIF ODCE (Net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
+            <div class="note"><span class="buildhint" id="mkt-hint"></span> Public index moves are context for the Fund's benchmark-relative results, not a measure of them.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 4–6 (Bloomberg, State Street, St. Louis Fed). ¹NCREIF ODCE (net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">2</span></div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">7</span></div>
       </section>
 
-      <!-- 2 · total fund summary -->
-      <section class="slide" data-title="Total Fund Performance Summary">
+      <!-- 8 · geographic exposure -->
+      <section class="slide" data-title="Geographic exposure" data-id="geo">
         <div class="hd">
           <div>
-            <h2>Total Fund — Performance Summary</h2>
-            <p class="finding">The Fund returned 2.0% net in May 2026 and closed the month at $93.9 billion; click a segment to drill into its returns</p>
+            <h2 id="geo-title">Total Fund — Geographic Exposure by AUM</h2>
+            <p class="finding" id="geo-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>Market values in $ millions</div>
-        </div>
-        <div class="bd">
-          <div class="sum">
-            <div class="tiles">
-              <div class="tile"><div class="l">TOTAL MARKET VALUE</div><div class="v" data-count="93.9" data-fmt="$#B">$0.0B</div><div class="s">Total Fund AUM, Investment Book</div></div>
-              <div class="tile"><div class="l">MONTHLY RETURN (NET)</div><div class="v" data-count="2.0" data-fmt="#%">0.0%</div><div class="s">May 2026 · policy benchmark 2.6%</div></div>
-              <div class="tile"><div class="l">GROWTH OF A DOLLAR</div><div class="v" data-count="1.44" data-fmt="$#.##">$1.00</div><div class="s">Trailing 5 years, net</div></div>
-              <div class="tile"><div class="l">CASH EQUIVALENTS</div><div class="v" data-count="1228" data-fmt="$#,###M">$0M</div><div class="s">In $ millions</div></div>
-            </div>
-            <div>
-              <div class="alloc">
-                <h3>Asset allocation by functional category — actual (top) vs. 2024 SAA target (thin bar)</h3>
-                <div class="stack" id="stack-actual"></div>
-                <div class="stack thin" id="stack-target"></div>
-                <div class="stack-lab"><span>0%</span><span>Actual: click a segment · Target: policy weights from p. 9</span><span>100%</span></div>
-                <div class="legend" id="alloc-legend"></div>
-              </div>
-              <div class="det" id="det"></div>
-            </div>
-          </div>
-          <div class="nb">
-            <div class="note">Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are shown together as the sliver at the right.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 8–9. Differences vs. target and vs. benchmark are calculated from the reported figures.<br><span class="cls">reported_public · calculated</span></div>
-          </div>
-        </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">3</span></div>
-      </section>
-
-      <!-- 3 · fund vs benchmark vs hurdle -->
-      <section class="slide" data-title="Historical Net Performance" data-frags="3">
-        <div class="hd">
-          <div>
-            <h2 id="hist-title">Total Fund — Historical Net Performance</h2>
-            <p class="finding" id="perf-finding">The Fund trailed its policy benchmark over one month to three years, but led over five and ten years</p>
-          </div>
-          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>≥ 3 Y annualized</div>
-        </div>
-        <div class="bd">
-          <div class="ctl">
-            <div class="pills" id="perf-comps"><span class="lab">Composite</span></div>
-            <div class="right">
-              <div class="leg" id="perf-leg">
-                <span><i class="k" style="background:var(--blue)"></i>Net return</span>
-                <span class="off" id="leg-bm"><i class="k" style="background:var(--gray)"></i>Policy benchmark</span>
-                <span class="off" id="leg-h"><i class="kt"></i>Actuarial hurdle</span>
-              </div>
-              <div class="seg" data-toggle-view="perf">
-                <button class="seg-btn" data-v="chart" aria-pressed="true">Chart</button>
-                <button class="seg-btn" data-v="table" aria-pressed="false">Table</button>
-              </div>
-            </div>
-          </div>
-          <div class="chart-wrap" id="perf-wrap" data-view="chart">
-            <div class="chartv">
-              <div class="plot" id="plot"></div>
-              <div class="callout" id="perf-callout"></div>
-            </div>
-            <div class="tablev" id="perf-table"></div>
-          </div>
-          <div class="nb">
-            <div class="note" id="perf-note"><span class="buildhint" id="buildhint">BUILD 1 OF 3 — press → to add the policy benchmark</span></div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 9. Fund minus benchmark differences are calculated (percentage points).<br><span class="cls">reported_public · calculated</span></div>
-          </div>
-        </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">4</span></div>
-      </section>
-
-      <!-- 4 · frequency of returns -->
-      <section class="slide" data-title="Frequency of Monthly Returns">
-        <div class="hd">
-          <div>
-            <h2>Frequency of Monthly Net Returns</h2>
-            <p class="finding" id="hist-finding">61 of the last 120 months returned between 0% and +2%; May 2026's +2.0% sits one bin higher</p>
-          </div>
-          <div class="asof"><b>June 2016 – May 2026</b>120 months · net of fees<br>Bins in percentage points</div>
-        </div>
-        <div class="bd">
-          <div class="ctl">
-            <div class="seg" id="hist-toggle">
-              <button class="seg-btn" data-v="pension" aria-pressed="true">LACERA Pension Fund</button>
-              <button class="seg-btn" data-v="opeb" aria-pressed="false">OPEB Master Trust</button>
-            </div>
-            <div class="right">
-              <div class="leg"><span><i class="k" style="background:var(--blue)"></i>Months in bin</span><span><i class="k" style="background:var(--cyan)"></i>Bin containing the latest month</span></div>
-              <div class="seg" data-toggle-view="hist">
-                <button class="seg-btn" data-v="chart" aria-pressed="true">Chart</button>
-                <button class="seg-btn" data-v="table" aria-pressed="false">Table</button>
-              </div>
-            </div>
-          </div>
-          <div class="chart-wrap" id="hist-wrap" data-view="chart">
-            <div class="chartv">
-              <div class="hist-wrap">
-                <div class="hist" id="hist"></div>
-                <div class="stats" id="hist-stats"></div>
-              </div>
-            </div>
-            <div class="tablev" id="hist-table"></div>
-          </div>
-          <div class="nb">
-            <div class="note" id="hist-note">Switching to the OPEB Master Trust morphs the bars in place — its wider distribution (σ 3.11 vs 1.94) is visible immediately.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 9 and 14. Shares of months are calculated from the reported bin counts.<br><span class="cls">reported_public · calculated</span></div>
-          </div>
-        </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">5</span></div>
-      </section>
-
-      <!-- 5 · geographic exposure -->
-      <section class="slide" data-title="Geographic Exposure">
-        <div class="hd">
-          <div>
-            <h2>Total Fund — Geographic Exposure by AUM</h2>
-            <p class="finding">94% of assets are domiciled in developed markets; the United States alone is 75.3% of the Fund</p>
-          </div>
-          <div class="asof"><b>As of May 31, 2026</b>Ex overlays &amp; hedges<br>By domicile of security / asset</div>
+          <div class="asof"><b>As of May 31, 2026</b>Ex overlays &amp; hedges<br>By domicile of security / asset<span class="ent-chip"></span></div>
         </div>
         <div class="bd">
           <div class="geo">
             <div>
               <h3>Developed vs. emerging &amp; frontier</h3>
-              <div class="split"><div class="dm" style="width:94%">94% developed</div><div class="em" style="width:6%;--d:.5s"></div></div>
-              <div class="stack-lab"><span><i class="sw" style="background:var(--blue);vertical-align:-2px"></i> Developed 94%</span><span><i class="sw" style="background:var(--cyan);vertical-align:-2px"></i> Emerging &amp; frontier 6%</span></div>
-              <div class="chips">
-                <div class="chip wide"><div class="v" data-count="78" data-fmt="#">0</div><div class="l">markets held, by MSCI classification</div></div>
-                <div class="chip"><div class="v" data-count="26" data-fmt="#">0</div><div class="l">developed markets</div></div>
-                <div class="chip"><div class="v" data-count="52" data-fmt="#">0</div><div class="l">emerging &amp; frontier markets</div></div>
-              </div>
+              <div class="split" id="geo-split"></div>
+              <div class="stack-lab" id="geo-split-lab"></div>
+              <div class="chips" id="geo-chips"></div>
             </div>
             <div>
               <div class="ctl" style="height:30px;margin-bottom:6px">
-                <h3 style="margin:0">Top five countries in each group — share of Total Fund AUM</h3>
+                <h3 style="margin:0">Top five countries in each group — share of AUM</h3>
                 <div class="right">
                   <div class="seg" id="geo-filter">
                     <button class="seg-btn" data-v="all" aria-pressed="true">All ten</button>
@@ -592,11 +691,34 @@
             </div>
           </div>
           <div class="nb">
-            <div class="note">One fixed scale for both groups, so the gap between the U.S. and the largest emerging market (China, 1.7%) is drawn to size.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 11 (footnotes 7–8: domicile-based, best available holdings-level transparency, MSCI Market Classification).<br><span class="cls">reported_public</span></div>
+            <div class="note" id="geo-note">One fixed scale for both groups, so the gap between the U.S. and the largest emerging market is drawn to size.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 11 (Pension) and p. 16 (OPEB); footnotes 7–8 / 11–12: domicile-based, best available holdings-level transparency, MSCI Market Classification.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">6</span></div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">8</span></div>
+      </section>
+
+      <!-- 9 · operations -->
+      <section class="slide" data-title="Items for attention" data-id="ops">
+        <div class="hd">
+          <div>
+            <h2>Portfolio, structural and operational items</h2>
+            <p class="finding">Six initiatives in progress, nine positions open, one manager personnel change, one consultant search in quiet period</p>
+          </div>
+          <div class="asof"><b>July 8, 2026 report</b>Status as reported<br>pp. 18–20, 24</div>
+        </div>
+        <div class="bd">
+          <div class="ctl" style="height:30px">
+            <div class="pills" id="ops-filter"><span class="lab">Show</span></div>
+            <div class="leg"><span><i class="st prog" style="padding:1px 6px">In progress</i></span><span><i class="st dev" style="padding:1px 6px">In development</i></span><span><i class="st info" style="padding:1px 6px">For attention</i></span></div>
+          </div>
+          <div class="ops"><table class="ops-t" id="ops-t"></table></div>
+          <div class="nb">
+            <div class="note">Opens on the two items that need a decision or a watch; the other filters list the initiatives and searches as printed, with no target dates given in the report.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 19 (initiatives, personnel), p. 20 (manager updates), p. 24 (quiet period).<br><span class="cls">reported_public</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">9</span></div>
       </section>
 
       <div class="tip" id="tip"></div>
@@ -607,11 +729,15 @@
   <div class="progress"><div id="prog"></div></div>
   <div class="bar">
     <button id="prev" aria-label="Previous">◀</button>
-    <span class="counter" id="counter">1 / 6</span>
+    <span class="counter" id="counter">1 / 8</span>
     <button id="next" aria-label="Next">▶</button>
     <span id="slide-title" style="color:var(--chrome-ink);font-weight:700"></span>
     <span class="spacer"></span>
-    <span><kbd>→</kbd><kbd>←</kbd> navigate · <kbd>N</kbd> notes · <kbd>T</kbd> chart/table</span>
+    <span><kbd>→</kbd><kbd>←</kbd> navigate · <kbd>E</kbd> entity · <kbd>T</kbd> chart/table · <kbd>?</kbd> help</span>
+    <button id="help-btn" aria-label="Keyboard help">?</button>
+    <button id="full-btn">Full screen</button>
+    <button id="pres-btn">Presenter view</button>
+    <button id="print-btn">Print / PDF</button>
     <button id="notes-btn" aria-pressed="false">Speaker notes</button>
   </div>
 </div>
@@ -625,20 +751,52 @@
   const PERIODS = ['1 M', '3 M', 'FYTD', 'YTD', '1 Y', '3 Y', '5 Y', '10 Y'];
   const f1 = v => v == null ? '—' : v.toFixed(1);
   const pct = v => v == null ? '—' : v.toFixed(1) + '%';
-  const sgn = v => (v > 0 ? '+' : '') + v.toFixed(1);
+  const sgn = (v, d) => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d == null ? 1 : d);
+  const money = v => (v < 0 ? '−$' : '$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 1 });
   const ease = t => 1 - Math.pow(1 - t, 3);
 
-  /* ============ DATA (all figures reproduced from the public July 8, 2026 CIO Monthly Report) ============ */
+  /* ============ DATA — reproduced from the public July 8, 2026 CIO Monthly Report ============ */
+  const ENT = {
+    pension: {
+      name: 'LACERA Pension Fund', short: 'Pension Fund', aum: 93.9, mv: 93948, cash: 1228, god: 1.44, pages: 'pp. 8–9',
+      total: { r: [2.0, 2.5, 12.0, 5.8, 15.1, 11.1, 7.6, 9.1], b: [2.6, 4.4, 16.3, 7.1, 18.0, 13.3, 7.5, 8.8], h: [0.6, 1.7, 6.4, 2.9, 7.0, 7.0, 7.0, 7.0] },
+      comps: [
+        { k: 'growth', n: 'Growth', short: 'Growth', mv: 45822, pct: 48.8, tgt: 48.0, flow: 212, r: [2.9, 4.4, 17.6, 8.2, 21.2, 15.3, 10.2, null], b: [3.7, 6.9, 26.9, 11.0, 28.7, 21.0, 11.3, null] },
+        { k: 'credit', n: 'Credit', short: 'Credit', mv: 11760, pct: 12.5, tgt: 13.0, flow: -191, r: [2.4, 2.3, 5.8, 4.6, 13.6, 12.9, 8.1, null], b: [1.4, 1.2, 6.2, 2.0, 8.0, 9.2, 5.0, null] },
+        { k: 'ra', n: 'Real Assets & Inflation Hedges', short: 'Real Assets & IH', mv: 13658, pct: 14.5, tgt: 15.0, flow: -37, r: [-0.1, 0.3, 9.1, 4.6, 10.2, 5.2, 5.6, null], b: [3.9, 7.3, 12.9, 8.5, 14.5, 6.2, 5.7, null] },
+        { k: 'rrm', n: 'Risk Reduction & Mitigation', short: 'Risk Reduction & Mit.', mv: 22158, pct: 23.6, tgt: 24.0, flow: 0, r: [0.7, -0.7, 4.9, 1.4, 6.1, 4.5, 1.3, null], b: [0.4, -0.6, 4.1, 1.0, 5.4, 4.1, 0.9, null] }
+      ],
+      other: { n: 'Overlays & Hedges + Other Asset', mv: 549, pct: 0.6, flow: -4 },
+      netflow: -20,
+      overlays: [{ n: 'Currency hedge', may: 4.2, si: 1546.1 }, { n: 'Cash / rebalance overlay', may: 66.9, si: 810.8 }],
+      hist: { c: [1, 0, 1, 3, 6, 10, 11, 24, 37, 17, 6, 3, 0, 1], mean: 0.75, saa: 0.60, sd: 1.94, min: -6.9, max: 6.6, latest: 2.0, latestBin: 9 },
+      geo: { dm: 94, em: 6, dmN: 26, emN: 52, total: 78, page: 11, top: [['United States', 75.3, 'dm'], ['United Kingdom', 4.1, 'dm'], ['Canada', 2.6, 'dm'], ['Japan', 1.9, 'dm'], ['China', 1.7, 'em'], ['Germany', 1.6, 'dm'], ['Taiwan', 1.1, 'em'], ['South Korea', 1.0, 'em'], ['Brazil', 0.5, 'em'], ['India', 0.4, 'em']] }
+    },
+    opeb: {
+      name: 'OPEB Master Trust', short: 'OPEB Master Trust', aum: 6.3, mv: 6264, cash: 199, god: 1.38, pages: 'pp. 13–14',
+      total: { r: [2.2, 3.2, 14.1, 6.9, 17.1, 13.5, 6.7, 9.4], b: [2.6, 3.4, 14.7, 6.7, 17.6, 13.0, 6.3, 8.5], h: [0.5, 1.0, 5.7, 2.6, 6.2, 6.2, 6.1, 6.0] },
+      comps: [
+        { k: 'growth', n: 'OPEB Growth', short: 'Growth', mv: 2840, pct: 45.3, tgt: 45.0, flow: -95, r: [4.6, 7.0, 25.0, 12.2, 30.7, 22.2, 11.2, null], b: [4.6, 7.2, 25.9, 12.2, 30.4, 22.3, 11.0, null] },
+        { k: 'credit', n: 'OPEB Credit', short: 'Credit', mv: 989, pct: 15.8, tgt: 16.0, flow: 23, r: [0.4, 1.5, 5.7, 1.6, 7.0, 8.1, 4.4, null], b: [1.4, 1.2, 6.2, 2.0, 8.0, 9.3, 4.8, null] },
+        { k: 'ra', n: 'OPEB Real Assets & Inflation Hedges', short: 'Real Assets & IH', mv: 756, pct: 12.1, tgt: 13.0, flow: -37, r: [0.0, 1.5, 10.1, 7.0, 10.0, 8.5, 4.3, null], b: [1.4, 2.4, 11.1, 6.3, 12.7, 5.7, 3.0, null] },
+        { k: 'rrm', n: 'OPEB Risk Reduction & Mitigation', short: 'Risk Reduction & Mit.', mv: 1678, pct: 26.8, tgt: 26.0, flow: 44, r: [0.3, -1.7, 3.4, 0.5, 5.1, 3.1, 0.3, null], b: [0.3, -1.7, 3.2, 0.3, 4.9, 2.9, -0.1, null] }
+      ],
+      other: null,
+      netflow: -65,
+      overlays: null,
+      hist: { c: [3, 2, 2, 5, 9, 8, 6, 18, 31, 14, 10, 4, 3, 5], mean: 0.80, saa: 0.55, sd: 3.11, min: -12.2, max: 8.6, latest: 2.2, latestBin: 9 },
+      geo: { dm: 94, em: 6, dmN: 26, emN: 35, total: 61, page: 16, top: [['United States', 79.8, 'dm'], ['Japan', 2.7, 'dm'], ['Canada', 2.3, 'dm'], ['United Kingdom', 2.0, 'dm'], ['Taiwan', 1.5, 'em'], ['South Korea', 1.3, 'em'], ['China', 1.1, 'em'], ['France', 1.0, 'dm'], ['India', 0.7, 'em'], ['Brazil', 0.2, 'em']] }
+    }
+  };
+  const BINS = ['≤ -6', '-6 to -5', '-5 to -4', '-4 to -3', '-3 to -2', '-2 to -1', '-1 to 0', '0 to 1', '1 to 2', '2 to 3', '3 to 4', '4 to 5', '5 to 6', '≥ 6'];
   const MKT = [
-    { g: 'Reference portfolio', rows: [
-      { n: '60:40 Equity:Bond', i: '60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate', v: [-0.3, 9.1, 15.8, 7.4, 15.8, 13.2, 6.4, 8.3] }] },
+    { g: 'Reference portfolio', rows: [{ n: '60:40 Equity:Bond', i: '60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate', v: [-0.3, 9.1, 15.8, 7.4, 15.8, 13.2, 6.4, 8.3] }] },
     { g: 'Global equity', rows: [
       { n: 'U.S. Large Cap', i: 'S&P 500 Total Return', v: [-1.0, 15.2, 22.3, 10.2, 22.3, 20.6, 13.4, 15.5] },
       { n: 'U.S. Small Cap', i: 'Russell 2000 Total Return', v: [3.7, 21.5, 40.8, 22.6, 40.8, 18.6, 7.0, 11.6] },
       { n: 'Non-U.S. All Cap', i: 'MSCI ACWI ex-U.S. IMI Total Return', v: [-1.0, 13.8, 26.6, 13.1, 26.6, 18.5, 8.4, 9.8] },
       { n: 'Emerging Markets', i: 'MSCI Emerging Markets Total Return', v: [-1.4, 24.1, 43.5, 23.8, 43.5, 23.0, 7.2, 10.1] }] },
-    { g: 'Private equity', rows: [
-      { n: 'Private Equity Buyout', i: 'Thomson Reuters PE Buyout Index', v: [0.1, 20.5, 26.1, 12.3, 26.1, 26.7, 9.1, 14.0] }] },
+    { g: 'Private equity', rows: [{ n: 'Private Equity Buyout', i: 'Thomson Reuters PE Buyout Index', v: [0.1, 20.5, 26.1, 12.3, 26.1, 26.7, 9.1, 14.0] }] },
     { g: 'Fixed income', rows: [
       { n: 'U.S. Corporate High Yield', i: 'Bloomberg U.S. Corporate High Yield Total Return', v: [0.3, 2.5, 5.9, 2.0, 5.9, 8.8, 4.2, 5.8] },
       { n: 'U.S. Long-Term Treasuries', i: 'Bloomberg Long Term U.S. Treasury Total Return', v: [1.0, 0.9, 2.9, 0.4, 2.9, -0.5, -5.6, -1.3] },
@@ -649,38 +807,54 @@
       { n: 'TIPS 0–5 Years', i: 'Bloomberg U.S. Treasury TIPS 0–5 Years Total Return', v: [-0.4, 0.6, 3.6, 1.6, 3.6, 5.1, 3.3, 3.1] },
       { n: 'Real Estate (ODCE, net)¹', i: 'NCREIF Fund Index – ODCE (Net), latest available quarter', v: [0.0, 1.0, 2.3, 1.0, 3.1, -2.8, 2.3, 3.8] }] }
   ];
-  const COMPS = [
-    { k: 'total', n: 'Total Fund', mv: 93948, pct: 100.0, tgt: 100.0, r: [2.0, 2.5, 12.0, 5.8, 15.1, 11.1, 7.6, 9.1], b: [2.6, 4.4, 16.3, 7.1, 18.0, 13.3, 7.5, 8.8], h: [0.6, 1.7, 6.4, 2.9, 7.0, 7.0, 7.0, 7.0] },
-    { k: 'growth', n: 'Growth', mv: 45822, pct: 48.8, tgt: 48.0, c: 'var(--a1)', r: [2.9, 4.4, 17.6, 8.2, 21.2, 15.3, 10.2, null], b: [3.7, 6.9, 26.9, 11.0, 28.7, 21.0, 11.3, null] },
-    { k: 'credit', n: 'Credit', mv: 11760, pct: 12.5, tgt: 13.0, c: 'var(--a2)', r: [2.4, 2.3, 5.8, 4.6, 13.6, 12.9, 8.1, null], b: [1.4, 1.2, 6.2, 2.0, 8.0, 9.2, 5.0, null] },
-    { k: 'ra', n: 'Real Assets & Inflation Hedges', short: 'Real Assets & IH', mv: 13658, pct: 14.5, tgt: 15.0, c: 'var(--a3)', r: [-0.1, 0.3, 9.1, 4.6, 10.2, 5.2, 5.6, null], b: [3.9, 7.3, 12.9, 8.5, 14.5, 6.2, 5.7, null] },
-    { k: 'rrm', n: 'Risk Reduction & Mitigation', short: 'Risk Reduction & Mit.', mv: 22158, pct: 23.6, tgt: 24.0, c: 'var(--a4)', dark: true, r: [0.7, -0.7, 4.9, 1.4, 6.1, 4.5, 1.3, null], b: [0.4, -0.6, 4.1, 1.0, 5.4, 4.1, 0.9, null] },
-    { k: 'other', n: 'Overlays & Hedges + Other Asset', short: 'Overlays + Other', mv: 549, pct: 0.6, tgt: 0, c: 'var(--gray)', r: null, b: null }
+  const MACRO = [
+    { l: 'PCE inflation, May 2026', v: '4.1% y/y', s: 'Highest since April 2023 (p. 4)' },
+    { l: 'Federal funds rate, June meeting', v: '3.50–3.75%', s: 'Fourth consecutive pause in 2026 (p. 4)' },
+    { l: 'U.S. Dollar Index, YTD to 6/30', v: '+2.9%', s: 'EUR −2.8 · JPY −3.6 · GBP −1.6 · CAD −3.3 · MXN +3.0 · CNY +3.0 (p. 6)' },
+    { l: 'Labor force participation', v: '61.8%', s: 'Prior-month data used during the government shutdown (p. 6, fn. 2)' },
+    { l: 'Themes to watch', v: 'Tariffs · AI · rates', s: 'Section 301 tariffs, Strait of Hormuz, earnings concentrated in IT/AI (p. 4)' }
   ];
-  const HIST = {
-    bins: ['≤ -6', '-6 to -5', '-5 to -4', '-4 to -3', '-3 to -2', '-2 to -1', '-1 to 0', '0 to 1', '1 to 2', '2 to 3', '3 to 4', '4 to 5', '5 to 6', '≥ 6'],
-    pension: { n: 'LACERA Pension Fund', c: [1, 0, 1, 3, 6, 10, 11, 24, 37, 17, 6, 3, 0, 1], mean: 0.75, saa: 0.60, sd: 1.94, min: -6.9, max: 6.6, latest: 2.0, latestBin: 9, month: 'May 2026' },
-    opeb: { n: 'OPEB Master Trust', c: [3, 2, 2, 5, 9, 8, 6, 18, 31, 14, 10, 4, 3, 5], mean: 0.80, saa: 0.55, sd: 3.11, min: -12.2, max: 8.6, latest: 2.2, latestBin: 9, month: 'May 2026' }
-  };
-  const GEO = [
-    { n: 'United States', v: 75.3, g: 'dm' }, { n: 'United Kingdom', v: 4.1, g: 'dm' }, { n: 'Canada', v: 2.6, g: 'dm' }, { n: 'Japan', v: 1.9, g: 'dm' }, { n: 'China', v: 1.7, g: 'em' },
-    { n: 'Germany', v: 1.6, g: 'dm' }, { n: 'Taiwan', v: 1.1, g: 'em' }, { n: 'South Korea', v: 1.0, g: 'em' }, { n: 'Brazil', v: 0.5, g: 'em' }, { n: 'India', v: 0.4, g: 'em' }
+  const OPS = [
+    { e: 'Total Fund', item: 'April 2024 approved Strategic Asset Allocation implementation', st: 'prog', p: 19 },
+    { e: 'Total Fund', item: 'Adhering to the BOI-approved 2026 Strategic Framework', st: 'prog', p: 19 },
+    { e: 'Total Fund', item: 'Planning for the Strategic Framework and Initiatives Refresh', st: 'prog', p: 19 },
+    { e: 'Total Fund', item: 'Risk system onboarding', st: 'prog', p: 19 },
+    { e: 'OPEB Master Trust', item: 'April 2024 approved Strategic Asset Allocation implementation', st: 'prog', p: 19 },
+    { e: 'OPEB Master Trust', item: 'Risk system onboarding', st: 'prog', p: 19 },
+    { e: 'Investments Division', item: 'Principal Investment Officer — 1 position', st: 'dev', p: 19 },
+    { e: 'Investments Division', item: 'Finance Analyst III — 4 positions', st: 'dev', p: 19 },
+    { e: 'Investments Division', item: 'Finance Analyst III — 1 position', st: 'prog', p: 19 },
+    { e: 'Investments Division', item: 'Finance Analyst II — 1 position', st: 'prog', p: 19 },
+    { e: 'Investments Division', item: 'Finance Analyst Fellowship — 2 positions', st: 'prog', p: 19 },
+    { e: 'Manager update', item: 'Invesco Real Estate Asia Fund (core private real estate, $111.2 mm): lead PM Ian Schilling retires Q3 2026 after 15 years; successor Phinex Wong, 8 years on the Fund team', st: 'info', p: 20 },
+    { e: 'Consultant search', item: 'Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q2 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)', st: 'quiet', p: 24 }
   ];
+  const STATUS = { prog: ['In progress', 'prog'], dev: ['In development', 'dev'], info: ['For attention', 'info'], quiet: ['Quiet period', 'quiet'] };
   const NOTES = [
-    '<h4>Cover</h4><p>This deck is an exploratory prototype: every figure is copied from the public CIO Monthly Report presented to the Board of Investments on July 8, 2026, and is classified <code>reported_public</code> unless a slide says otherwise. It is not an official LACERA publication and carries no performance assurance.</p><p>What PowerPoint cannot do that this can: bars that re-scale and re-order in place when a period changes, click-to-drill-down on a chart segment, morphing between two datasets, and a table view behind every chart for auditability. Everything runs in the browser; nothing is sent anywhere.</p>',
-    '<h4>Slide 2 · Global Market Performance (report p. 5)</h4><p><b>Source:</b> Bloomberg, State Street via the CIO Monthly Report table "Global Market Performance, As of June 30, 2026". <b>Classification:</b> <code>reported_public</code> for every bar; the one-line finding in the header is <code>calculated</code> (best and worst row for the selected period).</p><p><b>Caveats:</b> periods shorter than one year are cumulative, three years and longer are annualized; FYTD equals 1 Y because the fiscal year ends June 30. NCREIF ODCE (net) is the latest available quarter (footnote 1). Market context only — none of these rows is LACERA performance.</p>',
-    '<h4>Slide 3 · Total Fund Performance Summary (report pp. 8–9)</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8; composite market values, weights, targets and returns from p. 9. <b>Classification:</b> <code>reported_public</code>; the actual-minus-target and fund-minus-benchmark differences are <code>calculated</code> (percentage points, rounded from reported one-decimal figures, so ±0.1 rounding noise is possible).</p><p><b>Caveats:</b> weights use the p. 9 one-decimal values (48.8 / 12.5 / 14.5 / 23.6), not the rounded p. 8 chart labels. Overlays &amp; Hedges and Other Asset are combined into one sliver; Other Asset is an operational holding (footnote 4). Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
-    '<h4>Slide 4 · Historical Net Performance (report p. 9)</h4><p><b>Source:</b> "Total Fund — Historical Net Performance as of May 2026" table. <b>Classification:</b> <code>reported_public</code> for returns, benchmarks and the actuarial hurdle; fund-minus-benchmark in the tooltip is <code>calculated</code>.</p><p><b>Design note:</b> the hurdle is drawn as a tick rather than a third column because it is a threshold, not a portfolio — this keeps the chart at two series (blue fund, gray benchmark) plus a reference mark. The hurdle applies at the Total Fund level only; composites show their own policy benchmarks and have no 10-year figure in the report.</p><p><b>Build steps</b> mimic PowerPoint click animations: 1 fund only → 2 add benchmark → 3 add hurdle → callout.</p>',
-    '<h4>Slide 5 · Frequency of Monthly Net Returns (report pp. 9 and 14)</h4><p><b>Source:</b> "Frequency of Returns" histograms and the monthly-return statistics tables for the Pension Fund (p. 9) and the OPEB Master Trust (p. 14), June 2016 – May 2026, 120 months each. <b>Classification:</b> <code>reported_public</code> for bin counts and statistics; the share of months is <code>calculated</code> (count ÷ 120).</p><p><b>Caveats:</b> bin edges are as printed in the report; the latest month is placed in its bin by value (+2.0% and +2.2% both fall in the 2-to-3 bin). "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labeled in the report.</p>',
-    '<h4>Slide 6 · Geographic Exposure by AUM (report p. 11)</h4><p><b>Source:</b> "Total Fund — Geographic Exposure by AUM as of May 2026". <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries shown are the report\'s top five in each group; the remaining 68 markets are not itemized in the public report.</p>'
+    '<h4>Slide 1 · Executive read</h4><p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
+    '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are combined into one sliver with no policy target. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
+    '<h4>Slide 3 · Performance vs. policy</h4><p><b>Source:</b> p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; excess in pts <code>calculated</code>. "Returns" view builds fund → benchmark → hurdle on click; "Excess vs. benchmark" draws the signed gap directly, which is the decision quantity. Hurdle ticks apply at the total-fund level only. Composites have no 10-year figure in the report. Periods under one year are cumulative, three years and longer annualized; net of fees.</p>',
+    '<h4>Slide 4 · Where the gap came from</h4><p><b>Classification:</b> <code>proxy_estimate</code>. Contribution = (composite return − its policy benchmark) × May 31 weight. This is not the report\'s attribution and not a Brinson decomposition: beginning-of-period weights, the allocation effect, overlays, cash and compounding are all folded into the residual, which is shown as its own bar so the reader can see how much the proxy explains. Use it to decide where to look, not to quantify manager value-add. For the Pension Fund the 1 M shortfall traces mainly to Real Assets &amp; Inflation Hedges; FYTD and 1 Y trace mainly to Growth.</p>',
+    '<h4>Slide 5 · Allocation and flows</h4><p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); May rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
+    '<h4>Slide 6 · Return distribution</h4><p><b>Source:</b> pp. 9 and 14. <b>Classification:</b> <code>reported_public</code> counts and statistics; shares, tail counts and the latest month\'s bin percentile <code>calculated</code>. Bin edges as printed; the latest month is placed by value (+2.0% and +2.2% both fall in 2-to-3). "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labelled in the report. The forecast-volatility pages (10, 15) are image-only in the PDF and are not reproduced.</p>',
+    '<h4>Slide 7 · Market context</h4><p><b>Source:</b> p. 5 table (Bloomberg, State Street), p. 4 notable items, p. 6 key macro indicators. <b>Classification:</b> <code>reported_public</code>; the finding line is <code>calculated</code> (best/worst row). Kept separate from fund performance by design: index moves explain the environment the benchmarks moved in, not the Fund\'s result against them. FYTD equals 1 Y because the fiscal year ends June 30; NCREIF ODCE (net) is the latest available quarter.</p>',
+    '<h4>Slide 8 · Geographic exposure</h4><p><b>Source:</b> "Geographic Exposure by AUM as of May 2026", p. 11 (Pension Fund) and p. 16 (OPEB Master Trust). <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8 / 11–12):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries are the report\'s top five in each group; the remaining markets (68 for the Pension Fund, 51 for OPEB) are not itemized. One fixed 0–80% scale is used for both groups so the U.S. weight is drawn to size.</p>',
+    '<h4>Slide 9 · Items for attention</h4><p><b>Source:</b> p. 19 (initiatives and personnel searches), p. 20 (manager/consultant updates), p. 24 (quiet period). Statuses are reproduced as printed; the report gives no dates or owners. The "for attention" grouping (a named manager personnel change; an external search process) is an editorial grouping to help the reader, not a report category.</p>',
   ];
 
   /* ============ deck engine ============ */
   const stage = $('#stage');
   const slides = $$('.slide');
+  const idx = id => slides.findIndex(s => s.dataset.id === id);
   const tip = $('#tip');
-  let cur = -1, frag = 0, scale = 1;
-  const enterHooks = [], leaveHooks = [];
+  let cur = -1, frag = 0, scale = 1, entity = 'pension', pvHook = null;
+  const enterHooks = [], leaveHooks = [], fragHooks = [], entityHooks = [];
+  const E = () => ENT[entity];
+  const isPresenter = new URLSearchParams(location.search).has('presenter');
+  const bc = ('BroadcastChannel' in window && location.protocol !== 'file:') ? new BroadcastChannel('cio-decision-deck') : null;
+  const send = cmd => { if (bc) bc.postMessage({ type: 'cmd', cmd }); };
+  function sync() { if (bc && !isPresenter) bc.postMessage({ type: 'state', cur, frag, entity }); if (pvHook) pvHook(); }
+  const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc']], ['Context', ['hist', 'market', 'geo']], ['Attention', ['ops']]];
 
   function fit() {
     const vp = $('.viewport').getBoundingClientRect();
@@ -689,8 +863,6 @@
     stage.style.transform = 'translate(-50%,-50%) scale(' + scale + ')';
   }
   window.addEventListener('resize', fit);
-  // Entrance transitions start when .armed lands one frame after .active; a timer backs up
-  // requestAnimationFrame so a deck opened in a background tab still animates once shown.
   function arm(s) {
     const add = () => { if (s.classList.contains('active')) { void s.offsetWidth; s.classList.add('armed'); } };
     requestAnimationFrame(() => requestAnimationFrame(add));
@@ -702,19 +874,8 @@
     const s = $('.slide.active');
     if (s && !s.classList.contains('armed')) arm(s);
   });
-
   function fragsOf(i) { return +(slides[i].dataset.frags || 0); }
-  function applyFrag(i) {
-    const fn = fragHooks[i];
-    if (fn) fn(frag);
-    const hint = i === 3 ? $('#buildhint') : null;
-    if (hint) {
-      const msgs = ['BUILD 1 OF 3 — press → to add the policy benchmark', 'BUILD 2 OF 3 — press → to add the actuarial hurdle', 'BUILD 3 OF 3 — press → for the callout', ''];
-      hint.textContent = msgs[frag];
-    }
-  }
-  const fragHooks = [];
-
+  function applyFrag(i) { if (fragHooks[i]) fragHooks[i](frag); }
   function go(n, opts) {
     opts = opts || {};
     n = Math.max(0, Math.min(slides.length - 1, n));
@@ -741,60 +902,75 @@
     $('#notes').innerHTML = NOTES[n];
     hideTip();
     if (location.hash !== '#' + (n + 1)) history.replaceState(null, '', '#' + (n + 1));
+    const aid = slides[n].dataset.id, ai = ACTS.findIndex(a => a[1].includes(aid));
+    $$('.act').forEach((b, i) => { b.classList.toggle('now', i === ai); b.classList.toggle('done', i < ai); });
+    sync();
   }
-  function next() {
-    if (frag < fragsOf(cur)) { frag++; applyFrag(cur); return; }
-    go(cur + 1);
-  }
-  function prev() {
-    if (frag > 0) { frag--; applyFrag(cur); return; }
-    go(cur - 1, { atEnd: true });
-  }
+  function next() { if (frag < fragsOf(cur)) { frag++; applyFrag(cur); sync(); return; } go(cur + 1); }
+  function prev() { if (frag > 0) { frag--; applyFrag(cur); sync(); return; } go(cur - 1, { atEnd: true }); }
+  $('#acts').innerHTML = ACTS.map((a, i) => '<button class="act" data-i="' + i + '">' + a[0] + '<small>' + a[1].map(id => slides[idx(id)].dataset.title).join(' · ') + '</small></button>').join('');
+  $$('#acts .act').forEach(b => b.addEventListener('click', () => go(idx(ACTS[+b.dataset.i][1][0]))));
+  function toggleFull() { if (!document.fullscreenElement) { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); } else document.exitFullscreen(); }
+  document.addEventListener('fullscreenchange', () => setTimeout(fit, 50));
+  function toggleHelp() { $('#help').hidden = !$('#help').hidden; }
+  $('#help').addEventListener('click', toggleHelp);
+  $('#help-btn').addEventListener('click', toggleHelp);
+  $('#full-btn').addEventListener('click', toggleFull);
+  function openPresenter() { const u = new URL(location.href); u.searchParams.set('presenter', '1'); u.hash = '#' + (cur + 1); window.open(u.toString(), 'cio-presenter', 'width=980,height=680'); }
+  $('#pres-btn').addEventListener('click', openPresenter);
+  (function swipe() { let x0 = null; const vp = $('.viewport'); vp.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true }); vp.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 60) { if (dx < 0) next(); else prev(); } }); })();
+  if (bc && !isPresenter) bc.onmessage = ev => { const m = ev.data || {}; if (m.type !== 'cmd') return; if (m.cmd === 'next') next(); else if (m.cmd === 'prev') prev(); else if (m.cmd === 'entity') setEntity(entity === 'pension' ? 'opeb' : 'pension'); };
   $('#next').addEventListener('click', next);
   $('#prev').addEventListener('click', prev);
   $('#notes-btn').addEventListener('click', toggleNotes);
-  function toggleNotes() {
-    const nEl = $('#notes');
-    nEl.hidden = !nEl.hidden;
-    $('#notes-btn').setAttribute('aria-pressed', String(!nEl.hidden));
-    fit();
+  $('#print-btn').addEventListener('click', () => window.print());
+  function toggleNotes() { const nEl = $('#notes'); nEl.hidden = !nEl.hidden; $('#notes-btn').setAttribute('aria-pressed', String(!nEl.hidden)); fit(); }
+  function setEntity(v) {
+    if (v === entity) return;
+    entity = v;
+    $$('#entity-seg .seg-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+    $$('.ent-chip').forEach(c => c.textContent = E().short);
+    entityHooks.forEach(fn => fn());
+    sync();
   }
+  $('#entity-seg').addEventListener('click', e => { const b = e.target.closest('.seg-btn'); if (b) setEntity(b.dataset.v); });
   document.addEventListener('keydown', e => {
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (isPresenter) {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); send('next'); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); send('prev'); }
+      else if (e.key === 'e' || e.key === 'E') send('entity');
+      return;
+    }
+    if (!$('#help').hidden && e.key !== '?') { toggleHelp(); }
     switch (e.key) {
+      case '?': toggleHelp(); break;
+      case 'f': case 'F': toggleFull(); break;
+      case 'p': case 'P': openPresenter(); break;
       case 'ArrowRight': case ' ': case 'PageDown': e.preventDefault(); next(); break;
       case 'ArrowLeft': case 'PageUp': e.preventDefault(); prev(); break;
       case 'Home': e.preventDefault(); go(0); break;
       case 'End': e.preventDefault(); go(slides.length - 1); break;
       case 'n': case 'N': toggleNotes(); break;
+      case 'e': case 'E': setEntity(entity === 'pension' ? 'opeb' : 'pension'); break;
       case 't': case 'T': { const seg = $('.slide.active [data-toggle-view]'); if (seg) { const cv = $('#' + seg.dataset.toggleView + '-wrap'); setView(seg, cv.dataset.view === 'chart' ? 'table' : 'chart'); } break; }
     }
   });
-
-  /* chart / table toggles */
-  function setView(seg, v) {
-    const wrap = $('#' + seg.dataset.toggleView + '-wrap');
-    wrap.dataset.view = v;
-    $$('.seg-btn', seg).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
-  }
-  $$('[data-toggle-view]').forEach(seg => {
-    seg.addEventListener('click', e => { const b = e.target.closest('.seg-btn'); if (b) setView(seg, b.dataset.v); });
-  });
+  function setView(seg, v) { const wrap = $('#' + seg.dataset.toggleView + '-wrap'); wrap.dataset.view = v; $$('.seg-btn', seg).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
+  $$('[data-toggle-view]').forEach(seg => seg.addEventListener('click', e => { const b = e.target.closest('.seg-btn'); if (b) setView(seg, b.dataset.v); }));
   function segControl(id, onChange) {
     const seg = $('#' + id);
-    seg.addEventListener('click', e => {
-      const b = e.target.closest('.seg-btn'); if (!b) return;
-      $$('.seg-btn', seg).forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-      onChange(b.dataset.v);
+    seg.addEventListener('click', e => { const b = e.target.closest('.seg-btn'); if (!b) return; $$('.seg-btn', seg).forEach(x => x.setAttribute('aria-pressed', String(x === b))); onChange(b.dataset.v); });
+  }
+  function pillRow(hostId, labels, initial, onChange) {
+    const host = $('#' + hostId);
+    labels.forEach((p, i) => {
+      const b = document.createElement('button'); b.className = 'pill'; b.textContent = p; b.setAttribute('aria-pressed', String(i === initial));
+      b.addEventListener('click', () => { $$('.pill', host).forEach((x, j) => x.setAttribute('aria-pressed', String(j === i))); onChange(i); });
+      host.appendChild(b);
     });
   }
-
-  /* tooltip — positioned in stage coordinates (the stage is CSS-scaled) */
-  function showTip(html, ev) {
-    tip.innerHTML = html;
-    tip.classList.add('on');
-    moveTip(ev);
-  }
+  function showTip(html, ev) { tip.innerHTML = html; tip.classList.add('on'); moveTip(ev); }
   function moveTip(ev) {
     const r = stage.getBoundingClientRect();
     let x = (ev.clientX - r.left) / scale + 16, y = (ev.clientY - r.top) / scale + 16;
@@ -803,172 +979,159 @@
     tip.style.left = x + 'px'; tip.style.top = y + 'px';
   }
   function hideTip() { tip.classList.remove('on'); }
-  function bindTip(el, htmlFn) {
-    el.addEventListener('mouseenter', e => showTip(htmlFn(), e));
-    el.addEventListener('mousemove', moveTip);
-    el.addEventListener('mouseleave', hideTip);
+  function bindTip(el, htmlFn) { el.addEventListener('mouseenter', e => showTip(htmlFn(), e)); el.addEventListener('mousemove', moveTip); el.addEventListener('mouseleave', hideTip); }
+  function countUp(el, to, fmt, from) {
+    from = from == null ? 0 : from;
+    if (REDUCED) { el.textContent = fmt(to); return; }
+    const t0 = performance.now(), dur = 1000;
+    (function step(t) { const k = Math.min(1, (t - t0) / dur); el.textContent = fmt(from + (to - from) * ease(k)); if (k < 1) requestAnimationFrame(step); })(t0);
   }
-
-  /* count-up numbers */
-  function fmtCount(v, f) {
-    if (f === '$#B') return '$' + v.toFixed(1) + 'B';
-    if (f === '#%') return v.toFixed(1) + '%';
-    if (f === '$#.##') return '$' + v.toFixed(2);
-    if (f === '$#,###M') return '$' + Math.round(v).toLocaleString('en-US') + 'M';
-    if (f === '#.##') return v.toFixed(2);
-    if (f === '#.#') return v.toFixed(1);
-    return String(Math.round(v));
-  }
-  function countUp(el, to, f, from) {
-    from = from || 0;
-    if (REDUCED) { el.textContent = fmtCount(to, f); return; }
-    const t0 = performance.now(), dur = 1100;
-    (function step(t) {
-      const k = Math.min(1, (t - t0) / dur);
-      el.textContent = fmtCount(from + (to - from) * ease(k), f);
-      if (k < 1) requestAnimationFrame(step);
-    })(t0);
-  }
-  function countAll(root) { $$('[data-count]', root).forEach(el => countUp(el, +el.dataset.count, el.dataset.fmt)); }
-
   function tableHTML(head, rows) {
     return '<table class="dt"><thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>' +
       rows.map(r => r.grp ? '<tr class="trg"><td colspan="' + head.length + '">' + r.grp + '</td></tr>' :
         '<tr>' + r.map((c, i) => '<td' + (i > 0 && typeof c === 'number' && c < 0 ? ' class="neg"' : '') + '>' + (typeof c === 'number' ? f1(c) : c) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
   }
+  const chip = (v, d) => '<b class="' + (v > 0 ? 'pos-c' : v < 0 ? 'neg-c' : '') + '">' + sgn(v, d) + ' pts</b>';
 
-  /* ============ slide 1 · market performance ============ */
-  (function marketSlide() {
-    const host = $('#mkt');
-    const rows = [];
-    const heads = [];
-    const zero = document.createElement('div'); zero.className = 'zero'; host.appendChild(zero);
-    MKT.forEach(g => {
-      const h = document.createElement('div'); h.className = 'ghead'; h.textContent = g.g; host.appendChild(h);
-      heads.push({ el: h, g: g.g });
-      g.rows.forEach(r => {
-        const el = document.createElement('div'); el.className = 'mrow';
-        el.innerHTML = '<div class="mname">' + r.n + '</div><div class="mbar pos"></div><div class="mval"></div><div class="hit"></div>';
-        host.appendChild(el);
-        const o = { el, r, g: g.g, bar: $('.mbar', el), val: $('.mval', el) };
-        rows.push(o);
-        bindTip($('.hit', el), () => '<b>' + r.n + '</b><span class="dim">' + r.i + '</span><table>' + PERIODS.map((p, i) => '<tr><td class="dim">' + p + '</td><td>' + f1(r.v[i]) + '%</td></tr>').join('') + '</table>');
-      });
-    });
-    const state = { p: 2, sorted: false };
-    const pillHost = $('#mkt-periods');
-    PERIODS.forEach((p, i) => {
-      const b = document.createElement('button'); b.className = 'pill'; b.textContent = p; b.setAttribute('aria-pressed', String(i === state.p));
-      b.addEventListener('click', () => { state.p = i; $$('.pill', pillHost).forEach((x, j) => x.setAttribute('aria-pressed', String(j === i))); layout(); });
-      pillHost.appendChild(b);
-    });
-    segControl('mkt-order', v => { state.sorted = v === 'sorted'; layout(); });
-
-    function layout() {
-      const p = state.p, H = 462;
-      const vals = rows.map(o => o.r.v[p]);
-      const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
-      const X0 = 250, W = 950, PAD = 52;
-      const ppu = (W - 2 * PAD) / (hi - lo);
-      const zx = X0 + PAD + (-lo) * ppu;
-      zero.style.left = zx + 'px';
-      const slots = state.sorted ? rows.length : rows.length + heads.length;
-      const sh = H / slots;
-      let order;
-      if (state.sorted) {
-        order = rows.slice().sort((a, b) => b.r.v[p] - a.r.v[p]);
-        heads.forEach(h => h.el.classList.add('off'));
-      } else {
-        order = [];
-        heads.forEach((h, gi) => { order.push(h); rows.filter(o => o.g === h.g).forEach(o => order.push(o)); h.el.classList.remove('off'); });
-      }
-      order.forEach((o, i) => {
-        o.el.style.top = (i * sh) + 'px';
-        o.el.style.height = sh + 'px';
-        if (!o.r) return;
-        const v = o.r.v[p], w = Math.abs(v) * ppu;
-        const neg = v < 0;
-        o.bar.classList.toggle('neg', neg); o.bar.classList.toggle('pos', !neg);
-        o.bar.style.left = (neg ? zx - w : zx) + 'px';
-        o.bar.style.width = Math.max(w, v === 0 ? 2 : 0) + 'px';
-        o.bar.style.setProperty('--d', (i * 0.04) + 's');
-        o.val.style.setProperty('--d', (i * 0.04) + 's');
-        o.val.classList.toggle('neg', neg);
-        o.val.style.left = (neg ? zx - w - 6 : zx + w + 6) + 'px';
-        o.val.textContent = f1(v) + '%';
-      });
-      const best = rows.reduce((a, b) => b.r.v[p] > a.r.v[p] ? b : a);
-      const worst = rows.reduce((a, b) => b.r.v[p] < a.r.v[p] ? b : a);
-      $('#mkt-finding').textContent = PERIODS[p] + ': ' + best.r.n.replace('¹', '') + ' led at ' + f1(best.r.v[p]) + '%; ' + worst.r.n.replace('¹', '') + ' lagged at ' + f1(worst.r.v[p]) + '%';
+  /* ============ slide 1 · executive read ============ */
+  (function execSlide() {
+    const heads = $('#heads'), tiles = $('#tiles6');
+    let prev = null;
+    function render(animate) {
+      const e = E(), t = e.total;
+      const ex = t.r.map((v, i) => v - t.b[i]);
+      const led = PERIODS.filter((p, i) => ex[i] > 0), trail = PERIODS.filter((p, i) => ex[i] < 0);
+      const gaps = e.comps.map(c => ({ c, d: c.pct - c.tgt }));
+      const maxGap = gaps.reduce((a, b) => Math.abs(b.d) > Math.abs(a.d) ? b : a);
+      const attr = pi => { const arr = e.comps.map(c => ({ c, v: (c.r[pi] - c.b[pi]) * c.pct / 100 })); return arr.reduce((a, b) => b.v < a.v ? b : a); };
+      const a1 = attr(0), aF = attr(2), aY = attr(4);
+      const ovlMay = e.overlays ? e.overlays.reduce((s, o) => s + o.may, 0) : null;
+      const ovlSI = e.overlays ? e.overlays.reduce((s, o) => s + o.si, 0) : null;
+      $('#s1-finding').textContent = 'May: ' + pct(t.r[0]) + ' net, ' + sgn(ex[0]) + ' pts vs. benchmark · FYTD ' + pct(t.r[2]) + ': ' + sgn(ex[2]) + ' pts vs. benchmark, ' + sgn(t.r[2] - t.h[2]) + ' pts vs. actuarial hurdle';
+      const H = [
+        ['On track vs. policy and hurdle?', 'The ' + e.short + ' returned <b>' + pct(t.r[0]) + '</b> net in May against a <b>' + pct(t.b[0]) + '</b> policy benchmark (' + sgn(ex[0]) + ' pts). ' + (led.length ? 'Ahead over ' + led.join(', ') : 'Ahead over no period') + (trail.length ? '; behind over ' + trail.join(', ') : '') + '. Above the actuarial hurdle over every period of one year or longer.', 'Slide 3 · p. ' + (entity === 'pension' ? '9' : '14')],
+        ['Where did the gap come from?', 'Indicatively, May\'s shortfall traces to <b>' + a1.c.short + '</b> (' + pct(a1.c.r[0]) + ' vs. ' + pct(a1.c.b[0]) + ' benchmark); the fiscal-year and one-year gaps trace to <b>' + aF.c.short + '</b>' + (aY.c.k === aF.c.k ? '' : ' and <b>' + aY.c.short + '</b>') + '.', 'Slide 4 · proxy estimate, residual shown'],
+        ['Positioned per policy?', 'Every category is within 1 pt of its 2024 SAA target (largest gap: <b>' + maxGap.c.short + ' ' + sgn(maxGap.d) + ' pts</b>). May flows netted ' + money(e.netflow) + 'M' + (ovlMay != null ? '; overlay programs added <b>' + money(ovlMay) + 'M</b>.' : '.'), 'Slides 2, 5 · pp. 9/14, 18'],
+        ['Risk and market context', 'May\'s ' + sgn(e.hist.latest) + '% sits above ' + Math.round(e.hist.c.slice(0, e.hist.latestBin).reduce((a, b) => a + b, 0) / 120 * 100) + '% of the last 120 months; ' + e.hist.c.slice(0, 5).reduce((a, b) => a + b, 0) + ' months fell below −2%. Emerging markets led the fiscal year (+43.5%); PCE inflation 4.1%, Fed funds held at 3.50–3.75%.', 'Slides 6–8 · pp. 4–6, 9/14']
+      ];
+      heads.innerHTML = H.map((h, i) => '<div class="head" data-q="' + i + '"><i class="' + (i === 0 ? '' : 'q') + '"></i><p><b>' + h[0] + '</b> ' + h[1] + '<small>' + h[2] + '</small></p></div>').join('');
+      const T = [
+        { l: 'Total market value', v: e.aum, f: v => '$' + v.toFixed(1) + 'B', d: 'Cash equivalents ' + money(e.cash) + 'M · growth of a dollar (5 Y) $' + e.god.toFixed(2), go: 'summary' },
+        { l: 'May net return', v: t.r[0], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + pct(t.b[0]) + ' · ' + chip(ex[0]), go: 'perf' },
+        { l: 'Fiscal year to date', v: t.r[2], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + chip(ex[2]) + ' · vs. hurdle ' + chip(t.r[2] - t.h[2]), go: 'perf' },
+        { l: 'Ten years, annualized', v: t.r[7], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + chip(ex[7]) + ' · vs. hurdle ' + chip(t.r[7] - t.h[7]), go: 'perf' },
+        { l: 'Largest allocation gap', v: maxGap.d, f: v => sgn(v) + ' pts', d: maxGap.c.short + ' ' + pct(maxGap.c.pct) + ' vs. ' + pct(maxGap.c.tgt) + ' target', go: 'alloc' },
+        ovlMay != null ? { l: 'Overlay programs, May', v: ovlMay, f: v => money(v) + 'M', d: 'Since inception ' + money(ovlSI) + 'M · currency hedge + cash/rebalance overlay', go: 'alloc' }
+                       : { l: 'May net rebalancing', v: e.netflow, f: v => money(v) + 'M', d: 'Overlay program gains are reported for the Total Fund only', go: 'alloc' }
+      ];
+      const QOF = [0, 0, 0, 0, 2, 2];
+      tiles.innerHTML = T.map((x, i) => '<div class="tile" tabindex="0" role="button" data-go="' + x.go + '" data-q="' + QOF[i] + '"><span class="go">slide ' + (idx(x.go) + 1) + ' →</span><div class="l">' + x.l + '</div><div class="v" data-i="' + i + '"></div><div class="d">' + x.d + '</div></div>').join('');
+      $$('.tile', tiles).forEach(el => { const j = () => go(idx(el.dataset.go)); el.addEventListener('click', j); el.addEventListener('keydown', ev => { if (ev.key === 'Enter') j(); }); });
+      T.forEach((x, i) => countUp($('.v[data-i="' + i + '"]', tiles), x.v, x.f, animate && prev ? prev[i] : 0));
+      prev = T.map(x => x.v);
+      applyExec(cur === idx('exec') ? frag : 0);
     }
-    layout();
-    const trows = [];
-    MKT.forEach(g => { trows.push({ grp: g.g }); g.rows.forEach(r => trows.push([r.n + ' <span style="color:var(--muted);font-weight:400">' + r.i + '</span>', ...r.v])); });
-    $('#mkt-table').innerHTML = tableHTML(['Index', ...PERIODS], trows);
-    enterHooks[1] = () => {};
+    function applyExec(f) {
+      $$('.head', heads).forEach((h, i) => h.classList.toggle('on', i <= f));
+      $$('.tile', tiles).forEach(t => t.classList.toggle('qhl', +t.dataset.q === f));
+      const hints = ['1 OF 4 — press → for the next question', '2 OF 4 — press → for positioning', '3 OF 4 — press → for risk and market context', ''];
+      $('#exec-hint').textContent = hints[f] || '';
+    }
+    render(false);
+    fragHooks[idx('exec')] = applyExec;
+    enterHooks[idx('exec')] = () => { prev = null; render(false); };
+    entityHooks.push(() => { if (cur === idx('exec')) render(true); else prev = null; });
   })();
 
-  /* ============ slide 2 · summary + allocation ============ */
+  /* ============ slide 2 · fund at a glance ============ */
   (function summarySlide() {
-    const actual = $('#stack-actual'), target = $('#stack-target'), legend = $('#alloc-legend'), det = $('#det');
-    const segs = COMPS.filter(c => c.k !== 'total');
-    segs.forEach((c, i) => {
-      const a = document.createElement('div');
-      a.className = 'seg-a' + (c.dark ? ' dark-text' : '');
-      a.style.width = c.pct + '%'; a.style.background = c.c; a.style.setProperty('--d', (i * 0.12) + 's');
-      a.innerHTML = c.pct > 8 ? '<span>' + (c.short || c.n) + ' ' + c.pct.toFixed(1) + '%</span>' : '';
-      a.setAttribute('role', 'button'); a.tabIndex = 0; a.setAttribute('aria-label', c.n + ' ' + c.pct.toFixed(1) + '% of Total Fund');
-      a.addEventListener('click', () => select(c.k));
-      a.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(c.k); } });
-      bindTip(a, () => '<b>' + c.n + '</b><table><tr><td class="dim">Market value</td><td>$' + c.mv.toLocaleString('en-US') + ' mm</td></tr><tr><td class="dim">Actual weight</td><td>' + c.pct.toFixed(1) + '%</td></tr><tr><td class="dim">2024 SAA target</td><td>' + (c.tgt ? c.tgt.toFixed(1) + '%' : 'n/a') + '</td></tr></table><span class="dim">Click to drill down</span>');
-      actual.appendChild(a);
-      const t = document.createElement('div');
-      t.className = 'seg-a'; t.style.width = (c.tgt || 0) + '%'; t.style.background = c.c; t.style.setProperty('--d', (0.5 + i * 0.12) + 's');
-      if (!c.tgt) t.style.display = 'none';
-      target.appendChild(t);
-      const b = document.createElement('button');
-      b.innerHTML = '<i class="sw" style="background:' + c.c + '"></i>' + c.n;
-      b.addEventListener('click', () => select(c.k));
-      legend.appendChild(b);
-    });
-    const tb = document.createElement('button'); tb.innerHTML = '<i class="sw" style="background:var(--paper);border:2px solid var(--navy)"></i>Total Fund'; tb.addEventListener('click', () => select('total')); legend.prepend(tb);
-
+    const tiles = $('#sum-tiles'), actual = $('#stack-actual'), target = $('#stack-target'), legend = $('#alloc-legend'), det = $('#det');
+    const COLORS = { growth: 'var(--a1)', credit: 'var(--a2)', ra: 'var(--a3)', rrm: 'var(--a4)', other: 'var(--gray)' };
+    const BARLAB = { growth: 'Growth', credit: 'Credit', ra: 'Real Assets', rrm: 'Risk Reduction & Mit.' };
+    let sel = 'total', prevT = null;
+    function segsOf(e) {
+      const s = e.comps.slice();
+      if (e.other) s.push({ k: 'other', n: e.other.n, short: 'Overlays + Other', mv: e.other.mv, pct: e.other.pct, tgt: 0, r: null, b: null });
+      return s;
+    }
+    function render(animate) {
+      const e = E(), t = e.total;
+      $('#sum-title').textContent = e.short + ' — performance summary';
+      $('#sum-finding').textContent = 'The ' + e.short + ' returned ' + pct(t.r[0]) + ' net in May 2026 (policy benchmark ' + pct(t.b[0]) + ') and closed the month at $' + e.aum.toFixed(1) + ' billion; click a segment to drill into its returns';
+      const T = [
+        ['Total market value', e.aum, v => '$' + v.toFixed(1) + 'B', (entity === 'pension' ? 'Total Fund' : 'Master Trust') + ' AUM, Investment Book'],
+        ['Monthly return (net)', t.r[0], v => v.toFixed(1) + '%', 'May 2026 · policy benchmark ' + pct(t.b[0])],
+        ['Growth of a dollar', e.god, v => '$' + v.toFixed(2), 'Trailing 5 years, net'],
+        ['Cash equivalents', e.cash, v => '$' + Math.round(v).toLocaleString('en-US') + 'M', 'In $ millions']
+      ];
+      tiles.innerHTML = T.map((x, i) => '<div class="tile"><div class="l">' + x[0] + '</div><div class="v" data-i="' + i + '"></div><div class="s">' + x[3] + '</div></div>').join('');
+      T.forEach((x, i) => countUp($('.v[data-i="' + i + '"]', tiles), x[1], x[2], animate && prevT ? prevT[i] : 0));
+      prevT = T.map(x => x[1]);
+      actual.innerHTML = ''; target.innerHTML = ''; legend.innerHTML = '';
+      segsOf(e).forEach((c, i) => {
+        const color = COLORS[c.k];
+        const a = document.createElement('div');
+        a.className = 'seg-a' + (c.k === 'rrm' ? ' dark-text' : '');
+        a.style.width = c.pct + '%'; a.style.background = color; a.style.setProperty('--d', (i * 0.12) + 's');
+        a.innerHTML = c.pct > 8 ? '<span>' + (BARLAB[c.k] || c.short) + ' ' + c.pct.toFixed(1) + '%</span>' : '';
+        a.setAttribute('role', 'button'); a.tabIndex = 0; a.setAttribute('aria-label', c.n + ' ' + c.pct.toFixed(1) + '%');
+        a.addEventListener('click', () => select(c.k));
+        a.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(c.k); } });
+        bindTip(a, () => '<b>' + c.n + '</b><table><tr><td class="dim">Market value</td><td>$' + c.mv.toLocaleString('en-US') + ' mm</td></tr><tr><td class="dim">Actual weight</td><td>' + pct(c.pct) + '</td></tr><tr><td class="dim">2024 SAA target</td><td>' + (c.tgt ? pct(c.tgt) : 'n/a') + '</td></tr></table><span class="dim">Click to drill down</span>');
+        actual.appendChild(a);
+        const tg = document.createElement('div');
+        tg.className = 'seg-a'; tg.style.width = (c.tgt || 0) + '%'; tg.style.background = color; tg.style.setProperty('--d', (0.5 + i * 0.12) + 's');
+        if (!c.tgt) tg.style.display = 'none';
+        target.appendChild(tg);
+        const b = document.createElement('button');
+        b.innerHTML = '<i class="sw" style="background:' + color + '"></i>' + c.n;
+        b.addEventListener('click', () => select(c.k));
+        legend.appendChild(b);
+      });
+      const tb = document.createElement('button');
+      tb.innerHTML = '<i class="sw" style="background:var(--paper);border:2px solid var(--navy)"></i>' + e.short + ' (total)';
+      tb.addEventListener('click', () => select('total'));
+      legend.prepend(tb);
+      $('#sum-note').textContent = e.other
+        ? 'Overlays & Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are shown together as the sliver at the right; neither has a policy target.'
+        : 'The OPEB Master Trust reports no overlay or other-asset sliver; its four functional categories sum to 100%.';
+      select(sel);
+    }
     function select(k) {
-      const c = COMPS.find(x => x.k === k);
+      const e = E();
+      if (k === 'other' && !e.other) k = 'total';
+      sel = k;
+      const c = k === 'total' ? Object.assign({ n: e.short + ' (total)', short: e.short, k: 'total', mv: e.mv, pct: 100, tgt: 100 }, e.total) : segsOf(e).find(x => x.k === k);
+      const segs = segsOf(e);
       $$('.seg-a', actual).forEach((el, i) => el.classList.toggle('sel', segs[i].k === k));
-      const dTgt = c.tgt != null && c.k !== 'other' ? c.pct - c.tgt : null;
+      const hasTgt = c.k !== 'total' && c.k !== 'other';
       let html = '<div class="fade"><div class="name">' + c.n + '</div><div class="row">' +
         '<div class="kv">Market value<b>$' + c.mv.toLocaleString('en-US') + ' mm</b></div>' +
-        '<div class="kv">Weight vs. 2024 SAA target<b>' + c.pct.toFixed(1) + '% <span style="font-size:13px;font-weight:400;color:var(--cat)">vs ' + (c.tgt != null && c.k !== 'other' ? c.tgt.toFixed(1) + '% target' : 'no target') + (dTgt != null && c.k !== 'total' ? ' · ' + sgn(dTgt) + ' pts' : '') + '</span></b>' +
-        (c.k !== 'total' && c.k !== 'other' ? '<div class="meter"><i style="width:' + (c.pct / 50 * 100) + '%"></i><s style="left:' + (c.tgt / 50 * 100) + '%"></s></div><div style="font-size:10.5px;color:var(--muted);margin-top:4px">Bar = actual, tick = target, scale 0–50%</div>' : '') +
+        '<div class="kv">Weight vs. 2024 SAA target<b>' + pct(c.pct) + ' <span style="font-size:13px;font-weight:400;color:var(--cat)">vs ' + (hasTgt ? pct(c.tgt) + ' target · ' + sgn(c.pct - c.tgt) + ' pts' : c.k === 'total' ? '100.0% target' : 'no target') + '</span></b>' +
+        (hasTgt ? '<div class="meter"><i style="width:' + (c.pct / 50 * 100) + '%"></i><s style="left:' + (c.tgt / 50 * 100) + '%"></s></div><div style="font-size:10.5px;color:var(--muted);margin-top:4px">Bar = actual, tick = target, scale 0–50%</div>' : '') +
         '</div></div>';
       if (c.r) {
-        const idx = [0, 2, 4, 6];
-        html += '<table><tr><th>Net return</th>' + idx.map(i => '<th>' + PERIODS[i] + '</th>').join('') + '</tr>' +
-          '<tr><td>' + (c.k === 'total' ? 'Total Fund' : c.short || c.n) + '</td>' + idx.map(i => '<td><b>' + pct(c.r[i]) + '</b></td>').join('') + '</tr>' +
-          '<tr><td>Policy benchmark</td>' + idx.map(i => '<td>' + pct(c.b[i]) + '</td>').join('') + '</tr>' +
-          '<tr><td>Difference (pts)</td>' + idx.map(i => { const d = c.r[i] - c.b[i]; return '<td class="' + (d < 0 ? 'neg' : '') + '">' + sgn(d) + '</td>'; }).join('') + '</tr></table>';
+        const ix = [0, 2, 4, 6];
+        html += '<table><tr><th>Net return</th>' + ix.map(i => '<th>' + PERIODS[i] + '</th>').join('') + '</tr>' +
+          '<tr><td>' + (c.k === 'total' ? e.short : c.short) + '</td>' + ix.map(i => '<td><b>' + pct(c.r[i]) + '</b></td>').join('') + '</tr>' +
+          '<tr><td>Policy benchmark</td>' + ix.map(i => '<td>' + pct(c.b[i]) + '</td>').join('') + '</tr>' +
+          '<tr><td>Difference (pts)</td>' + ix.map(i => { const d = c.r[i] - c.b[i]; return '<td class="' + (d < 0 ? 'neg' : '') + '">' + sgn(d) + '</td>'; }).join('') + '</tr></table>';
       } else {
         html += '<p style="font-size:12.5px;color:var(--cat);margin:14px 0 0">Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm) have no policy target or composite return in the public report. Other Asset is an operational holding.</p>';
       }
       det.innerHTML = html + '</div>';
     }
-    select('total');
-    enterHooks[2] = () => countAll(slides[2]);
+    render(false);
+    enterHooks[idx('summary')] = () => { prevT = null; render(false); };
+    entityHooks.push(() => { render(cur === idx('summary')); });
   })();
 
-  /* ============ slide 3 · fund vs benchmark ============ */
+  /* ============ slide 2 · scorecard ============ */
   (function perfSlide() {
     const plot = $('#plot');
-    const pills = $('#perf-comps');
-    const comps = COMPS.filter(c => c.r);
-    let cur = comps[0];
-    let fragState = 0;
-    comps.forEach((c, i) => {
-      const b = document.createElement('button'); b.className = 'pill'; b.textContent = c.short || c.n; b.setAttribute('aria-pressed', String(i === 0));
-      b.addEventListener('click', () => { cur = c; $$('.pill', pills).forEach(x => x.setAttribute('aria-pressed', String(x === b))); render(); });
-      pills.appendChild(b);
-    });
+    let comp = 'total', mode = 'levels', fragState = 0;
+    pillRow('perf-comps', ['Total Fund', 'Growth', 'Credit', 'Real Assets & IH', 'Risk Reduction & Mit.'], 0, i => { comp = ['total', 'growth', 'credit', 'ra', 'rrm'][i]; render(); });
+    segControl('perf-mode', v => { mode = v; render(); });
     const GW = 1200 / 8, PH = 372, BOT = 30;
     const base = document.createElement('div'); base.className = 'base'; plot.appendChild(base);
     const groups = PERIODS.map((p, i) => {
@@ -977,134 +1140,351 @@
         '<div class="vl fund" style="left:' + (GW / 2 - 57) + 'px;--d:' + (i * 0.06) + 's"></div><div class="vl bm" style="left:' + (GW / 2 + 1) + 'px;--d:' + (i * 0.06) + 's"></div>' +
         '<div class="tick"><span class="tl"></span></div><div class="cat-l">' + p + '</div><div class="hit"></div>';
       plot.appendChild(g);
-      const o = { el: g, fund: $('.col.fund', g), bm: $('.col.bm', g), vf: $('.vl.fund', g), vb: $('.vl.bm', g), tick: $('.tick', g), tl: $('.tl', g) };
+      const o = { fund: $('.col.fund', g), bm: $('.col.bm', g), vf: $('.vl.fund', g), vb: $('.vl.bm', g), tick: $('.tick', g), tl: $('.tl', g) };
       bindTip($('.hit', g), () => {
-        const r = cur.r[i], b = cur.b[i];
+        const c = current(), r = c.r[i], b = c.b[i];
         if (r == null) return '<b>' + p + '</b><span class="dim">No ' + p + ' figure for this composite in the report</span>';
-        let h = '<b>' + (cur.short || cur.n) + ' · ' + p + '</b><table><tr><td class="dim">Net return</td><td>' + pct(r) + '</td></tr><tr><td class="dim">Policy benchmark</td><td>' + pct(b) + '</td></tr><tr><td class="dim">Difference</td><td>' + sgn(r - b) + ' pts</td></tr>';
-        if (cur.h) h += '<tr><td class="dim">Actuarial hurdle</td><td>' + pct(cur.h[i]) + '</td></tr>';
+        let h = '<b>' + c.n + ' · ' + p + '</b><table><tr><td class="dim">Net return</td><td>' + pct(r) + '</td></tr><tr><td class="dim">Policy benchmark</td><td>' + pct(b) + '</td></tr><tr><td class="dim">Excess</td><td>' + sgn(r - b) + ' pts</td></tr>';
+        if (c.h) h += '<tr><td class="dim">Actuarial hurdle</td><td>' + pct(c.h[i]) + '</td></tr><tr><td class="dim">vs. hurdle</td><td>' + sgn(r - c.h[i]) + ' pts</td></tr>';
         return h + '</table>';
       });
       return o;
     });
+    function current() { const e = E(); return comp === 'total' ? Object.assign({ n: e.short + ' (total)', short: e.short, k: 'total' }, e.total) : e.comps.find(c => c.k === comp); }
     function render() {
-      const vals = [...cur.r, ...cur.b, ...(cur.h || [])].filter(v => v != null);
-      const lo = Math.min(0, ...vals), hi = Math.max(...vals);
-      const usable = PH - BOT - 34;
-      const ppu = usable / (hi - lo);
-      const baseB = BOT + (-lo) * ppu;
+      const c = current(), e = E();
+      const excess = mode === 'excess';
+      const vals = excess ? c.r.map((v, i) => v == null ? null : v - c.b[i]).filter(v => v != null) : [...c.r, ...c.b, ...(c.h || [])].filter(v => v != null);
+      const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+      const usable = PH - BOT - 34, ppu = usable / ((hi - lo) || 1), baseB = BOT + (-lo) * ppu;
       base.style.bottom = baseB + 'px';
       groups.forEach((g, i) => {
-        const r = cur.r[i], b = cur.b[i];
+        const r = c.r[i], b = c.b[i];
+        if (excess) {
+          const v = r == null ? null : r - b;
+          g.bm.style.opacity = '0'; g.vb.textContent = '';
+          g.fund.style.left = (GW / 2 - 12) + 'px'; g.vf.style.left = (GW / 2 - 28) + 'px'; g.vf.classList.add('center');
+          if (v == null) { g.fund.style.height = '0px'; g.fund.style.bottom = baseB + 'px'; g.vf.textContent = 'n/a'; g.vf.style.bottom = (baseB + 6) + 'px'; g.fund.style.opacity = '0'; return; }
+          g.fund.style.opacity = '1';
+          const h = Math.abs(v) * ppu;
+          g.fund.classList.toggle('neg', v < 0); g.fund.classList.toggle('pos', v >= 0); g.fund.classList.toggle('warm', v < 0);
+          g.fund.style.height = h + 'px'; g.fund.style.bottom = (v < 0 ? baseB - h : baseB) + 'px';
+          g.vf.textContent = sgn(v); g.vf.style.bottom = (v < 0 ? baseB - h - 18 : baseB + h + 4) + 'px';
+          return;
+        }
+        g.fund.classList.remove('warm'); g.vf.classList.remove('center');
+        g.fund.style.left = (GW / 2 - 25) + 'px'; g.vf.style.left = (GW / 2 - 57) + 'px'; g.bm.style.opacity = '1';
         [[g.fund, g.vf, r], [g.bm, g.vb, b]].forEach(([col, lab, v]) => {
           if (v == null) { col.style.height = '0px'; col.style.bottom = baseB + 'px'; lab.textContent = col === g.fund ? 'n/a' : ''; lab.style.bottom = (baseB + 6) + 'px'; col.style.opacity = '0'; return; }
           col.style.opacity = '1';
           const h = Math.abs(v) * ppu;
           col.classList.toggle('neg', v < 0); col.classList.toggle('pos', v >= 0);
-          col.style.height = h + 'px';
-          col.style.bottom = (v < 0 ? baseB - h : baseB) + 'px';
-          lab.textContent = f1(v) + '%';
-          lab.style.bottom = (v < 0 ? baseB - h - 18 : baseB + h + 4) + 'px';
+          col.style.height = h + 'px'; col.style.bottom = (v < 0 ? baseB - h : baseB) + 'px';
+          lab.textContent = f1(v) + '%'; lab.style.bottom = (v < 0 ? baseB - h - 18 : baseB + h + 4) + 'px';
         });
-        if (cur.h) { g.tick.style.bottom = (baseB + cur.h[i] * ppu) + 'px'; g.tl.textContent = i === 7 ? f1(cur.h[i]) + '%' : ''; }
+        if (c.h) { g.tick.style.bottom = (baseB + c.h[i] * ppu) + 'px'; g.tl.textContent = i === 7 ? f1(c.h[i]) + '%' : ''; }
       });
-      const hasH = !!cur.h;
-      $('#hist-title').textContent = (cur.k === 'total' ? 'Total Fund' : cur.n) + ' — Historical Net Performance';
-      const diffs = cur.r.map((v, i) => v == null ? null : v - cur.b[i]);
+      const diffs = c.r.map((v, i) => v == null ? null : v - c.b[i]);
       const led = PERIODS.filter((p, i) => diffs[i] != null && diffs[i] > 0), trailed = PERIODS.filter((p, i) => diffs[i] != null && diffs[i] < 0);
-      $('#perf-finding').textContent = cur.k === 'total' ? 'The Fund trailed its policy benchmark over one month to three years, but led over five and ten years' :
-        (cur.short || cur.n) + ' ' + (!led.length ? 'trailed its policy benchmark over every reported period (1 M through 5 Y)' :
-          !trailed.length ? 'led its policy benchmark over every reported period (1 M through 5 Y)' :
-          'led its policy benchmark over ' + led.join(', ') + ' and trailed over ' + trailed.join(', '));
-      $('#perf-callout').innerHTML = cur.k === 'total' ? '<b>Ten-year view.</b> 9.1% net annualized vs. 8.8% for the policy benchmark (+0.3 pts) and a 7.0% actuarial hurdle (+2.1 pts). The one-year gap of −2.9 pts is the largest shortfall in the table.' :
-        '<b>' + cur.n + '.</b> Largest gap vs. its policy benchmark: ' + (function () { let bi = 0; diffs.forEach((d, i) => { if (d != null && Math.abs(d) > Math.abs(diffs[bi])) bi = i; }); return PERIODS[bi] + ' at ' + sgn(diffs[bi]) + ' pts'; })() + '. No 10-year composite figure is published on p. 9.';
-      $('#leg-h').style.display = hasH ? '' : 'none';
+      const who = comp === 'total' ? 'The ' + e.short : c.short;
+      $('#perf-finding').textContent = !led.length ? who + ' trailed its policy benchmark over every reported period' : !trailed.length ? who + ' led its policy benchmark over every reported period' : who + ' led its policy benchmark over ' + led.join(', ') + ' and trailed over ' + trailed.join(', ');
+      $('#perf-title').textContent = (comp === 'total' ? e.short : c.n) + ' — performance vs. policy';
+      $('#leg-f-t').textContent = excess ? 'Ahead of benchmark' : 'Net return';
+      $('#perf-callout').style.display = excess ? 'none' : '';
+      $('#leg-w').style.display = excess ? '' : 'none';
+      $('#leg-bm').style.display = excess ? 'none' : ''; $('#leg-h').style.display = (excess || !c.h) ? 'none' : '';
+      let bi = 0; diffs.forEach((d, i) => { if (d != null && Math.abs(d) > Math.abs(diffs[bi] == null ? 0 : diffs[bi])) bi = i; });
+      $('#perf-callout').innerHTML = comp === 'total'
+        ? '<b>Ten-year view.</b> ' + pct(c.r[7]) + ' net annualized vs. ' + pct(c.b[7]) + ' policy benchmark (' + sgn(diffs[7]) + ' pts) and a ' + pct(c.h[7]) + ' actuarial hurdle (' + sgn(c.r[7] - c.h[7]) + ' pts). Largest gap in the table: ' + PERIODS[bi] + ' at ' + sgn(diffs[bi]) + ' pts.'
+        : '<b>' + c.n + '.</b> Largest gap vs. its policy benchmark: ' + PERIODS[bi] + ' at ' + sgn(diffs[bi]) + ' pts. No 10-year composite figure is published.';
       applyFrag(fragState);
-      // table
-      const rows = [[cur.k === 'total' ? 'Total Fund (net)' : cur.n + ' (net)', ...cur.r], ['Policy benchmark', ...cur.b]];
-      if (cur.h) rows.push(['Actuarial hurdle', ...cur.h]);
-      rows.push(['Difference vs benchmark (pts, calculated)', ...cur.r.map((v, i) => v == null ? null : +(v - cur.b[i]).toFixed(1))]);
-      $('#perf-table').innerHTML = tableHTML(['', ...PERIODS], rows.map(r => r.map(c => c == null ? '—' : c)));
+      const rows = [[comp === 'total' ? e.short + ' (net)' : c.n + ' (net)', ...c.r], ['Policy benchmark', ...c.b]];
+      if (c.h) rows.push(['Actuarial hurdle', ...c.h]);
+      rows.push(['Excess vs. benchmark (pts, calculated)', ...diffs.map(d => d == null ? null : +d.toFixed(1))]);
+      if (c.h) rows.push(['vs. hurdle (pts, calculated)', ...c.r.map((v, i) => +(v - c.h[i]).toFixed(1))]);
+      $('#perf-table').innerHTML = tableHTML(['', ...PERIODS], rows.map(r => r.map(v => v == null ? '—' : v)));
     }
     function applyFrag(f) {
       fragState = f;
-      const showBm = f >= 1 || cur.k !== 'total';
-      const showH = (f >= 2 || cur.k !== 'total') && !!cur.h;
+      const c = current();
+      const all = comp !== 'total' || mode === 'excess';
+      const showBm = (f >= 1 || all) && mode !== 'excess';
+      const showH = (f >= 2 || all) && !!c.h && mode !== 'excess';
       groups.forEach(g => { g.bm.classList.toggle('on', showBm); g.vb.classList.toggle('on', showBm); g.tick.classList.toggle('on', showH); });
-      $('#leg-bm').classList.toggle('off', !showBm);
-      $('#leg-h').classList.toggle('off', !showH);
-      $('#perf-callout').classList.toggle('on', f >= 3 || cur.k !== 'total');
+      $('#leg-bm').classList.toggle('off', !showBm); $('#leg-h').classList.toggle('off', !showH);
+      $('#perf-callout').classList.toggle('on', f >= 3 || all);
+      const msgs = ['BUILD 1 OF 3 — press → to add the policy benchmark', 'BUILD 2 OF 3 — press → to add the actuarial hurdle', 'BUILD 3 OF 3 — press → for the callout', ''];
+      $('#buildhint').textContent = all ? '' : msgs[f];
     }
     render();
-    fragHooks[3] = applyFrag;
-    leaveHooks[3] = () => { fragState = 0; };
+    fragHooks[idx('perf')] = applyFrag;
+    leaveHooks[idx('perf')] = () => { fragState = 0; };
+    entityHooks.push(render);
   })();
 
-  /* ============ slide 4 · histogram ============ */
+  /* ============ slide 3 · attribution waterfall ============ */
+  (function wfSlide() {
+    const wf = $('#wf'), form = $('#wf-formula');
+    let p = 0;
+    pillRow('wf-periods', PERIODS.slice(0, 7), 0, i => { p = i; render(); });
+    const W = 900, N = 6, XS = i => (i + 0.5) * (W / N), H = 380, BOT = 40, TOP = 40;
+    const baseEl = document.createElement('div'); baseEl.className = 'wbase'; wf.appendChild(baseEl);
+    const cols = [], labs = [], cats = [], conns = [], hits = [];
+    for (let i = 0; i < N; i++) {
+      const c = document.createElement('div'); c.className = 'wcol up'; c.style.left = XS(i) + 'px'; c.style.setProperty('--d', (i * 0.14) + 's'); wf.appendChild(c); cols.push(c);
+      const l = document.createElement('div'); l.className = 'wlab'; l.style.left = XS(i) + 'px'; l.style.setProperty('--d', (i * 0.14) + 's'); wf.appendChild(l); labs.push(l);
+      const k = document.createElement('div'); k.className = 'wcat'; k.style.left = XS(i) + 'px'; wf.appendChild(k); cats.push(k);
+      if (i < N - 1) { const cn = document.createElement('div'); cn.className = 'wconn'; cn.style.left = (XS(i) + 30) + 'px'; cn.style.width = (W / N - 60) + 'px'; wf.appendChild(cn); conns.push(cn); }
+      const h = document.createElement('div'); h.className = 'hit'; h.style.left = XS(i) + 'px'; wf.appendChild(h); hits.push(h);
+    }
+    let steps = [];
+    hits.forEach((h, i) => bindTip(h, () => { const s = steps[i]; if (!s) return ''; return '<b>' + s.n + '</b>' + (s.detail || '') + '<table>' + s.rows.map(r => '<tr><td class="dim">' + r[0] + '</td><td>' + r[1] + '</td></tr>').join('') + '</table>'; }));
+    function render() {
+      const e = E(), t = e.total;
+      const total = t.r[p] - t.b[p];
+      const parts = e.comps.map(c => { const ex = c.r[p] - c.b[p]; return { n: c.short, ex, w: c.pct, v: ex * c.pct / 100, c }; });
+      const sum = parts.reduce((a, b) => a + b.v, 0), resid = total - sum;
+      steps = parts.map(x => ({ n: x.n, v: x.v, kind: 'part', rows: [['Net return', pct(x.c.r[p])], ['Policy benchmark', pct(x.c.b[p])], ['Excess', sgn(x.ex) + ' pts'], ['Weight, May 31', pct(x.w)], ['Indicative contribution', sgn(x.v, 2) + ' pts']] }));
+      steps.push({ n: 'Residual', v: resid, kind: 'resid', rows: [['Reported total excess', sgn(total) + ' pts'], ['Sum of contributions', sgn(sum, 2) + ' pts'], ['Residual', sgn(resid, 2) + ' pts']], detail: '<span class="dim">Allocation effect, weight drift, compounding, overlays, cash, rounding</span>' });
+      steps.push({ n: e.short + ' excess', v: total, kind: 'total', rows: [['Net return', pct(t.r[p])], ['Policy benchmark', pct(t.b[p])], ['Excess', sgn(total) + ' pts']] });
+      let cum = 0; const seq = [];
+      steps.forEach(s => { if (s.kind === 'total') seq.push({ from: 0, to: s.v }); else { seq.push({ from: cum, to: cum + s.v }); cum += s.v; } });
+      const lo = Math.min(0, ...seq.map(s => Math.min(s.from, s.to))), hi = Math.max(0, ...seq.map(s => Math.max(s.from, s.to)));
+      const ppu = (H - BOT - TOP) / ((hi - lo) || 1), y = v => BOT + (v - lo) * ppu;
+      baseEl.style.bottom = y(0) + 'px';
+      seq.forEach((s, i) => {
+        const st = steps[i], up = s.to >= s.from, h = Math.abs(s.to - s.from) * ppu;
+        const col = cols[i];
+        col.className = 'wcol ' + (up ? 'up' : 'down') + (st.kind === 'total' ? ' total' : '');
+        col.style.background = st.kind === 'total' ? 'var(--navy)' : st.kind === 'resid' ? 'var(--gray)' : up ? 'var(--blue)' : 'var(--warm)';
+        col.style.bottom = y(Math.min(s.from, s.to)) + 'px'; col.style.height = Math.max(h, 2) + 'px';
+        labs[i].textContent = sgn(st.v, 2); labs[i].style.bottom = (y(Math.max(s.from, s.to)) + 6) + 'px';
+        cats[i].textContent = st.n;
+        if (i < N - 1) { conns[i].style.bottom = y(s.to) + 'px'; conns[i].style.opacity = st.kind === 'resid' ? '0' : '.8'; }
+      });
+      const worst = parts.reduce((a, b) => b.v < a.v ? b : a), best = parts.reduce((a, b) => b.v > a.v ? b : a);
+      $('#wf-finding').textContent = PERIODS[p] + ' excess ' + sgn(total) + ' pts: ' + worst.n + ' is the largest drag (' + pct(worst.c.r[p]) + ' vs. ' + pct(worst.c.b[p]) + ')' + (best.v > 0 ? '; ' + best.n + ' ' + sgn(best.v, 2) : '') + '; residual ' + sgn(resid, 2);
+      const open = form.classList.contains('open');
+      form.innerHTML = '<h3>Reported ' + PERIODS[p] + ' excess</h3><div class="big">' + sgn(total) + ' pts</div><div style="font-size:11.5px;color:var(--cat);margin-bottom:8px">' + pct(t.r[p]) + ' net − ' + pct(t.b[p]) + ' benchmark · explained ' + sgn(sum, 2) + ', residual ' + sgn(resid, 2) + '</div>' +
+        '<div class="detail">' + parts.map(x => '<div class="row"><span>' + x.n + '</span><span>' + sgn(x.ex) + ' × ' + pct(x.w) + ' = <b class="' + (x.v < 0 ? 'neg-c' : 'pos-c') + '">' + sgn(x.v, 2) + '</b></span></div>').join('') +
+        '<div class="row"><span>Sum of contributions</span><b>' + sgn(sum, 2) + '</b></div><div class="row"><span>Residual (not explained)</span><b>' + sgn(resid, 2) + '</b></div>' +
+        '<div class="cav">Proxy: excess × end-of-May weight. The residual is ' + Math.round(Math.abs(resid) / Math.max(Math.abs(total), 0.05) * 100) + '% of the reported excess for ' + PERIODS[p] + '; the longer the period, the less an end-weight proxy explains.</div></div>' +
+        '<button class="more" type="button">' + (open ? 'Hide the arithmetic ▲' : 'Show the arithmetic ▼') + '</button>';
+      $('.more', form).addEventListener('click', () => { form.classList.toggle('open'); $('.more', form).textContent = form.classList.contains('open') ? 'Hide the arithmetic ▲' : 'Show the arithmetic ▼'; });
+      $('#wf-table').innerHTML = tableHTML(['Composite', 'Net return %', 'Benchmark %', 'Excess pts', 'Weight May 31 %', 'Contribution pts (proxy)'],
+        parts.map(x => [x.n, x.c.r[p], x.c.b[p], +x.ex.toFixed(1), x.w, +x.v.toFixed(2)]).concat([['Sum of contributions', '', '', '', '', +sum.toFixed(2)], ['Residual', '', '', '', '', +resid.toFixed(2)], [e.short + ' (reported)', t.r[p], t.b[p], +total.toFixed(1), 100, +total.toFixed(2)]]));
+    }
+    render();
+    entityHooks.push(render);
+  })();
+
+  /* ============ slide 4 · allocation & flows ============ */
+  (function allocSlide() {
+    const drift = $('#drift'), flows = $('#flows'), ovl = $('#ovl');
+    function hbars(host, rows, opts) {
+      host.innerHTML = '';
+      const X0 = 170, W = 380 - 20, RH = 44;
+      const maxAbs = Math.max(...rows.map(r => Math.abs(r.v)), opts.min || 1);
+      const ppu = (W / 2 - 60) / maxAbs, zx = X0 + W / 2;
+      const z = document.createElement('div'); z.className = 'hzero'; z.style.left = zx + 'px'; host.appendChild(z);
+      rows.forEach((r, i) => {
+        const el = document.createElement('div'); el.className = 'hrow'; el.style.top = (i * RH) + 'px';
+        const w = Math.abs(r.v) * ppu, neg = r.v < 0;
+        el.innerHTML = '<div class="hn">' + r.n + (r.sub ? '<small>' + r.sub + '</small>' : '') + '</div>' +
+          '<div class="hb ' + (neg ? 'neg' : 'pos') + (r.net ? ' net' : '') + (r.v === 0 ? ' zero' : '') + '" style="left:' + (neg ? zx - w : zx) + 'px;width:' + Math.max(w, r.v === 0 ? 3 : 0) + 'px;--d:' + (i * 0.1) + 's"></div>' +
+          '<div class="hv' + (neg ? ' neg' : '') + '" style="left:' + (neg ? zx - w - 6 : zx + w + 6) + 'px;--d:' + (i * 0.1) + 's">' + r.lab + '</div><div class="hit"></div>';
+        host.appendChild(el);
+        bindTip($('.hit', el), () => '<b>' + r.n + '</b><table>' + r.tip.map(t => '<tr><td class="dim">' + t[0] + '</td><td>' + t[1] + '</td></tr>').join('') + '</table>');
+      });
+    }
+    function render() {
+      const e = E();
+      const d = e.comps.map(c => ({ n: c.short, sub: pct(c.pct) + ' actual · ' + pct(c.tgt) + ' target', v: c.pct - c.tgt, lab: sgn(c.pct - c.tgt) + ' pts', tip: [['Market value', '$' + c.mv.toLocaleString('en-US') + ' mm'], ['Actual weight', pct(c.pct)], ['2024 SAA target', pct(c.tgt)], ['Difference', sgn(c.pct - c.tgt) + ' pts']] }));
+      if (e.other) d.push({ n: 'Overlays + Other', sub: pct(e.other.pct) + ' of fund · no target', v: 0, lab: pct(e.other.pct) + ' (no target)', tip: [['Market value', '$' + e.other.mv.toLocaleString('en-US') + ' mm'], ['Weight', pct(e.other.pct)], ['Target', 'none in report']] });
+      hbars(drift, d, { min: 1 });
+      const dir = c => { const gap = c.pct - c.tgt; if (c.flow === 0) return 'no flow'; return (gap > 0 && c.flow > 0) || (gap < 0 && c.flow < 0) ? 'away from target' : 'toward target'; };
+      const f = e.comps.map(c => ({ n: c.short, sub: dir(c), v: c.flow, lab: money(c.flow) + 'M', tip: [['May flow', money(c.flow) + 'M'], ['Weight vs. target', sgn(c.pct - c.tgt) + ' pts'], ['Direction', dir(c)]] }));
+      if (e.other) f.push({ n: 'Overlays & Hedges', sub: '', v: e.other.flow, lab: money(e.other.flow) + 'M', tip: [['May flow', money(e.other.flow) + 'M']] });
+      f.push({ n: 'Net rebalancing', sub: 'as reported', v: e.netflow, lab: money(e.netflow) + 'M', net: true, tip: [['Net rebalancing activity', money(e.netflow) + 'M']] });
+      hbars(flows, f, { min: 50 });
+      if (e.overlays) {
+        const may = e.overlays.reduce((s, o) => s + o.may, 0), si = e.overlays.reduce((s, o) => s + o.si, 0);
+        ovl.innerHTML = e.overlays.map(o => '<div class="tile"><div class="l">' + o.n + ' · May gain / (loss)</div><div class="v">' + money(o.may) + 'M</div><div class="d">Since inception ' + money(o.si) + 'M</div></div>').join('') +
+          '<div class="tile"><div class="l">Overlay programs combined (calculated)</div><div class="v">' + money(may) + 'M</div><div class="d">Since inception ' + money(si) + 'M · Total Fund only (p. 18)</div></div>';
+      } else {
+        ovl.innerHTML = '<div class="tile" style="grid-column:1/-1"><div class="l">Overlay programs</div><div class="d" style="margin-top:2px">The report shows overlay and hedge program gains for the Total Fund only (p. 18); none are published for the OPEB Master Trust.</div></div>';
+      }
+      const maxGap = e.comps.reduce((a, b) => Math.abs(b.pct - b.tgt) > Math.abs(a.pct - a.tgt) ? b : a);
+      const away = e.comps.filter(c => dir(c) === 'away from target').map(c => c.short);
+      $('#al-finding').textContent = 'Within 1 pt of every target (largest: ' + maxGap.short + ' ' + sgn(maxGap.pct - maxGap.tgt) + ' pts); May flows net ' + money(e.netflow) + 'M' + (away.length ? '; ' + away.join(', ') + ' moved away from target' : '; all flows toward target');
+      $('#al-table').innerHTML = tableHTML(['Category', 'Market value $mm', 'Actual %', 'Target %', 'Difference pts', 'May flow $M', 'Direction'],
+        e.comps.map(c => [c.n, c.mv.toLocaleString('en-US'), c.pct, c.tgt, +(c.pct - c.tgt).toFixed(1), money(c.flow), dir(c)]).concat(e.other ? [[e.other.n, e.other.mv.toLocaleString('en-US'), e.other.pct, '—', '—', money(e.other.flow), '—']] : [], [['Net rebalancing activity', '', '', '', '', money(e.netflow), '']]));
+    }
+    render();
+    entityHooks.push(render);
+    fragHooks[idx('alloc')] = f => {
+      $('#al-flows').classList.toggle('on', f >= 1);
+      $('#ovl').classList.toggle('on', f >= 2);
+      $('#al-hint').textContent = ['1 OF 3 — press → for May flows', '2 OF 3 — press → for the overlay programs', ''][f] || '';
+    };
+  })();
+
+  /* ============ slide 5 · histogram ============ */
   (function histSlide() {
     const host = $('#hist'), stats = $('#hist-stats');
-    const N = HIST.bins.length, BW = 910 / N, H = 380, TOP = 40;
-    const bins = HIST.bins.map((b, i) => {
+    const N = BINS.length, BW = 890 / N, H = 380, TOP = 40;
+    const bins = BINS.map((b, i) => {
       const el = document.createElement('div'); el.className = 'hbin'; el.style.left = (i * BW) + 'px'; el.style.width = BW + 'px';
-      el.innerHTML = '<div class="hcol" style="--d:' + (i * 0.05) + 's"></div><div class="hv" style="--d:' + (i * 0.05) + 's"></div><div class="hl">' + b + '</div><div class="hit"></div>';
+      el.innerHTML = '<div class="hcol" style="--d:' + (i * 0.05) + 's"></div><div class="hvv" style="--d:' + (i * 0.05) + 's"></div><div class="hl">' + b + '</div><div class="hit"></div>';
       host.appendChild(el);
-      return { el, col: $('.hcol', el), v: $('.hv', el), i };
+      return { el, col: $('.hcol', el), v: $('.hvv', el), i };
     });
-    const baseEl = document.createElement('div'); baseEl.className = 'hbase'; host.appendChild(baseEl);
+    host.appendChild(Object.assign(document.createElement('div'), { className: 'hbase' }));
     const tag = document.createElement('div'); tag.className = 'latest-tag'; host.appendChild(tag);
-    let key = 'pension', prevStats = null;
-    bins.forEach(b => bindTip($('.hit', b.el), () => { const d = HIST[key]; const c = d.c[b.i]; return '<b>' + HIST.bins[b.i] + ' %</b><table><tr><td class="dim">Months</td><td>' + c + ' of 120</td></tr><tr><td class="dim">Share</td><td>' + (c / 120 * 100).toFixed(1) + '%</td></tr></table>'; }));
+    let prevStats = null;
+    bins.forEach(b => bindTip($('.hit', b.el), () => { const d = E().hist, c = d.c[b.i]; const cumul = d.c.slice(0, b.i + 1).reduce((a, x) => a + x, 0); return '<b>' + BINS[b.i] + ' %</b><table><tr><td class="dim">Months</td><td>' + c + ' of 120</td></tr><tr><td class="dim">Share</td><td>' + (c / 120 * 100).toFixed(1) + '%</td></tr><tr><td class="dim">Months at or below this bin</td><td>' + cumul + ' (' + (cumul / 120 * 100).toFixed(0) + '%)</td></tr></table>'; }));
     function render() {
-      const d = HIST[key];
-      const max = Math.max(...d.c);
-      const ppu = (H - TOP) / max;
-      bins.forEach(b => {
-        const c = d.c[b.i], h = c * ppu;
-        b.col.style.height = h + 'px';
-        b.col.classList.toggle('latest', b.i === d.latestBin);
-        b.v.textContent = c;
-        b.v.style.bottom = (h + 4) + 'px';
-      });
-      const lb = bins[d.latestBin];
-      tag.style.left = (d.latestBin * BW + BW / 2) + 'px';
-      tag.style.bottom = (d.c[d.latestBin] * ppu + 22) + 'px';
-      tag.innerHTML = d.month + ': ' + sgn(d.latest) + '%<i></i>';
-      const mid = d.c[7] + d.c[8];
-      $('#hist-finding').textContent = key === 'pension' ? mid + ' of the last 120 months returned between 0% and +2%; May 2026’s +2.0% sits one bin higher' :
-        'OPEB: ' + mid + ' of 120 months fell between 0% and +2%, with fatter tails on both sides (' + (d.c[0] + d.c[1] + d.c[2]) + ' months below −4%, ' + (d.c[12] + d.c[13]) + ' above +5%)';
-      const items = [['Mean monthly return', d.mean, '#.##', '%'], ['2024 SAA expected return', d.saa, '#.##', '%'], ['Standard deviation', d.sd, '#.##', '%'], ['Minimum month', d.min, '#.#', '%'], ['Maximum month', d.max, '#.#', '%'], ['Months observed', 120, '#', '']];
-      stats.innerHTML = '<h3>' + d.n + '</h3><div class="sub">Monthly returns (net), 06/2016 – 05/2026</div><table>' + items.map((it, i) => '<tr><td>' + it[0] + '</td><td><span data-k="' + i + '"></span>' + it[3] + '</td></tr>').join('') + '</table>';
-      items.forEach((it, i) => countUp($('[data-k="' + i + '"]', stats), it[1], it[2], prevStats ? prevStats[i][1] : 0));
-      prevStats = items;
+      const e = E(), d = e.hist, max = Math.max(...d.c), ppu = (H - TOP) / max;
+      bins.forEach(b => { const c = d.c[b.i], h = c * ppu; b.col.style.height = h + 'px'; b.col.classList.toggle('latest', b.i === d.latestBin); b.v.textContent = c; b.v.style.bottom = (h + 4) + 'px'; });
+      tag.style.left = (d.latestBin * BW + BW / 2) + 'px'; tag.style.bottom = (d.c[d.latestBin] * ppu + 22) + 'px'; tag.innerHTML = 'May 2026: ' + sgn(d.latest) + '%<i></i>';
+      const below2 = d.c.slice(0, 5).reduce((a, b) => a + b, 0), above2 = d.c.slice(9).reduce((a, b) => a + b, 0), mid = d.c[7] + d.c[8];
+      const below = d.c.slice(0, d.latestBin).reduce((a, b) => a + b, 0);
+      $('#hist-finding').textContent = mid + ' of 120 months between 0% and +2%; ' + below2 + ' below −2%, ' + above2 + ' above +2% (σ ' + d.sd.toFixed(2) + '); May 2026 sits above ' + Math.round(below / 120 * 100) + '% of months';
+      const items = [['Mean monthly return', d.mean, v => v.toFixed(2) + '%'], ['2024 SAA expected return', d.saa, v => v.toFixed(2) + '%'], ['Standard deviation', d.sd, v => v.toFixed(2) + '%'], ['Worst month', d.min, v => v.toFixed(1) + '%'], ['Best month', d.max, v => v.toFixed(1) + '%'],
+        ['sec', 'Calculated from bin counts'], ['Months below −2%', below2, v => Math.round(v) + ' of 120'], ['Months above +2%', above2, v => Math.round(v) + ' of 120'], ['Months at or below May\'s bin', 120 - d.c.slice(d.latestBin + 1).reduce((a, b) => a + b, 0), v => Math.round(v) + ' of 120']];
+      stats.innerHTML = '<h3>' + e.name + '</h3><div class="sub">Monthly returns (net), 06/2016 – 05/2026</div><table>' + items.map((it, i) => it[0] === 'sec' ? '<tr class="sec"><td colspan="2">' + it[1] + '</td></tr>' : '<tr><td>' + it[0] + '</td><td><span data-k="' + i + '"></span></td></tr>').join('') + '</table>';
+      items.forEach((it, i) => { if (it[0] !== 'sec') countUp($('[data-k="' + i + '"]', stats), it[1], it[2], prevStats ? prevStats[i] : 0); });
+      prevStats = items.map(it => it[0] === 'sec' ? 0 : it[1]);
       $('#hist-table').innerHTML = tableHTML(['Monthly return bin (%)', 'Pension Fund months', 'Pension share', 'OPEB months', 'OPEB share'],
-        HIST.bins.map((b, i) => [b, String(HIST.pension.c[i]), (HIST.pension.c[i] / 120 * 100).toFixed(1) + '%', String(HIST.opeb.c[i]), (HIST.opeb.c[i] / 120 * 100).toFixed(1) + '%']));
+        BINS.map((b, i) => [b, String(ENT.pension.hist.c[i]), (ENT.pension.hist.c[i] / 120 * 100).toFixed(1) + '%', String(ENT.opeb.hist.c[i]), (ENT.opeb.hist.c[i] / 120 * 100).toFixed(1) + '%']));
     }
-    segControl('hist-toggle', v => { key = v; render(); });
     render();
-    enterHooks[4] = () => { prevStats = null; render(); };
+    enterHooks[idx('hist')] = () => { prevStats = null; render(); };
+    entityHooks.push(render);
+    fragHooks[idx('hist')] = f => { stats.classList.toggle('on', f >= 1); $('#hist-hint').textContent = f >= 1 ? '' : 'PRESS → FOR THE STATISTICS'; };
   })();
 
-  /* ============ slide 5 · geography ============ */
-  (function geoSlide() {
-    const host = $('#grows');
-    const RH = 36, X0 = 160, W = 800, ppu = W / 80;
-    const rows = GEO.map((c, i) => {
-      const el = document.createElement('div'); el.className = 'grow'; el.style.top = (i * RH) + 'px';
-      el.innerHTML = '<div class="gn"><i class="sw" style="background:' + (c.g === 'dm' ? 'var(--blue)' : 'var(--cyan)') + '"></i>' + c.n + '</div>' +
-        '<div class="gb ' + c.g + '" style="width:' + Math.max(c.v * ppu, 2) + 'px;--d:' + (i * 0.07) + 's"></div><div class="gv" style="left:' + (X0 + c.v * ppu + 8) + 'px;--d:' + (i * 0.07) + 's">' + c.v.toFixed(1) + '%</div><div class="hit"></div>';
-      host.appendChild(el);
-      bindTip($('.hit', el), () => '<b>' + c.n + '</b><table><tr><td class="dim">Share of Total Fund AUM</td><td>' + c.v.toFixed(1) + '%</td></tr><tr><td class="dim">Group</td><td>' + (c.g === 'dm' ? 'Developed' : 'Emerging / frontier') + '</td></tr></table>');
-      return { el, c };
+  /* ============ slide 6 · market ============ */
+  (function marketSlide() {
+    const host = $('#mkt'), rows = [], heads = [];
+    const zero = document.createElement('div'); zero.className = 'zero'; host.appendChild(zero);
+    MKT.forEach(g => {
+      const h = document.createElement('div'); h.className = 'ghead'; h.textContent = g.g; host.appendChild(h); heads.push({ el: h, g: g.g });
+      g.rows.forEach(r => {
+        const el = document.createElement('div'); el.className = 'mrow';
+        el.innerHTML = '<div class="mname">' + r.n + '</div><div class="mbar pos"></div><div class="mval"></div><div class="hit"></div>';
+        host.appendChild(el);
+        const o = { el, r, g: g.g, bar: $('.mbar', el), val: $('.mval', el) }; rows.push(o);
+        bindTip($('.hit', el), () => '<b>' + r.n + '</b><span class="dim">' + r.i + '</span><table>' + PERIODS.map((p, i) => '<tr><td class="dim">' + p + '</td><td>' + f1(r.v[i]) + '%</td></tr>').join('') + '</table>');
+      });
     });
-    const grid = document.createElement('div'); grid.style.cssText = 'position:absolute;left:' + X0 + 'px;right:0;top:0;bottom:0;pointer-events:none';
-    [0, 20, 40, 60, 80].forEach(v => { const l = document.createElement('div'); l.style.cssText = 'position:absolute;top:0;bottom:0;width:1px;background:var(--line);left:' + (v * ppu) + 'px'; const t = document.createElement('span'); t.style.cssText = 'position:absolute;bottom:-4px;left:-10px;font-size:10.5px;color:var(--muted);font-weight:700'; t.textContent = v + '%'; l.appendChild(t); grid.appendChild(l); });
-    host.prepend(grid);
-    segControl('geo-filter', v => rows.forEach(r => r.el.classList.toggle('dim', v !== 'all' && r.c.g !== v)));
-    $('#geo-table').innerHTML = tableHTML(['Country', 'Group', 'Share of Total Fund AUM'], GEO.map(c => [c.n, c.g === 'dm' ? 'Developed' : 'Emerging / frontier', c.v.toFixed(1) + '%']));
-    enterHooks[5] = () => countAll(slides[5]);
+    const state = { p: 2, sorted: false };
+    pillRow('mkt-periods', PERIODS, state.p, i => { state.p = i; layout(); });
+    segControl('mkt-order', v => { state.sorted = v === 'sorted'; layout(); });
+    function layout() {
+      const p = state.p, H = 380;
+      const vals = rows.map(o => o.r.v[p]);
+      const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+      const X0 = 250, W = 950, PAD = 52, ppu = (W - 2 * PAD) / (hi - lo), zx = X0 + PAD + (-lo) * ppu;
+      zero.style.left = zx + 'px';
+      const slots = state.sorted ? rows.length : rows.length + heads.length, sh = H / slots;
+      let order;
+      if (state.sorted) { order = rows.slice().sort((a, b) => b.r.v[p] - a.r.v[p]); heads.forEach(h => h.el.classList.add('off')); }
+      else { order = []; heads.forEach(h => { order.push(h); rows.filter(o => o.g === h.g).forEach(o => order.push(o)); h.el.classList.remove('off'); }); }
+      order.forEach((o, i) => {
+        o.el.style.top = (i * sh) + 'px'; o.el.style.height = sh + 'px';
+        if (!o.r) return;
+        const v = o.r.v[p], w = Math.abs(v) * ppu, neg = v < 0;
+        o.bar.classList.toggle('neg', neg); o.bar.classList.toggle('pos', !neg);
+        o.bar.style.left = (neg ? zx - w : zx) + 'px'; o.bar.style.width = Math.max(w, v === 0 ? 2 : 0) + 'px';
+        o.bar.style.setProperty('--d', (i * 0.04) + 's'); o.val.style.setProperty('--d', (i * 0.04) + 's');
+        o.val.classList.toggle('neg', neg); o.val.style.left = (neg ? zx - w - 6 : zx + w + 6) + 'px'; o.val.textContent = f1(v) + '%';
+      });
+      const best = rows.reduce((a, b) => b.r.v[p] > a.r.v[p] ? b : a), worst = rows.reduce((a, b) => b.r.v[p] < a.r.v[p] ? b : a);
+      $('#mkt-finding').textContent = PERIODS[p] + ': ' + best.r.n.replace('¹', '') + ' led at ' + f1(best.r.v[p]) + '%; ' + worst.r.n.replace('¹', '') + ' lagged at ' + f1(worst.r.v[p]) + '%';
+    }
+    layout();
+    $('#macro').innerHTML = MACRO.map(m => '<div class="mchip"><small>' + m.l + '</small><b>' + m.v + '</b>' + m.s + '</div>').join('');
+    fragHooks[idx('market')] = f => { $('#macro').classList.toggle('on', f >= 1); $('#mkt-hint').textContent = f >= 1 ? '' : 'PRESS → FOR THE MACRO STRIP (pp. 4–6)'; };
+    const trows = []; MKT.forEach(g => { trows.push({ grp: g.g }); g.rows.forEach(r => trows.push([r.n + ' <span style="color:var(--muted);font-weight:400">' + r.i + '</span>', ...r.v])); });
+    $('#mkt-table').innerHTML = tableHTML(['Index', ...PERIODS], trows);
   })();
+
+  /* ============ slide 8 · geographic exposure ============ */
+  (function geoSlide() {
+    const host = $('#grows'), split = $('#geo-split'), chips = $('#geo-chips');
+    let filter = 'all', prevC = null;
+    segControl('geo-filter', v => { filter = v; applyFilter(); });
+    function applyFilter() { $$('.grow', host).forEach(el => el.classList.toggle('dim', filter !== 'all' && el.dataset.g !== filter)); }
+    function render(animate) {
+      const e = E(), g = e.geo;
+      split.innerHTML = '<div class="dm" style="width:' + g.dm + '%">' + g.dm + '% developed</div><div class="em" style="width:' + g.em + '%;--d:.5s"></div>';
+      $('#geo-split-lab').innerHTML = '<span><i class="sw" style="background:var(--blue);vertical-align:-2px"></i> Developed ' + g.dm + '%</span><span><i class="sw" style="background:var(--cyan);vertical-align:-2px"></i> Emerging &amp; frontier ' + g.em + '%</span>';
+      const C = [[g.total, 'markets held, by MSCI classification', 'wide'], [g.dmN, 'developed markets', ''], [g.emN, 'emerging & frontier markets', '']];
+      chips.innerHTML = C.map((c, i) => '<div class="chip ' + c[2] + '"><div class="v" data-i="' + i + '"></div><div class="l">' + c[1] + '</div></div>').join('');
+      C.forEach((c, i) => countUp($('.v[data-i="' + i + '"]', chips), c[0], v => String(Math.round(v)), animate && prevC ? prevC[i] : 0));
+      prevC = C.map(c => c[0]);
+      host.innerHTML = '';
+      const RH = 36, X0 = 160, W = 600, ppu = W / 80;
+      const grid = document.createElement('div'); grid.style.cssText = 'position:absolute;left:' + X0 + 'px;width:' + W + 'px;top:0;bottom:0;pointer-events:none';
+      [0, 20, 40, 60, 80].forEach(v => { const l = document.createElement('div'); l.style.cssText = 'position:absolute;top:0;bottom:0;width:1px;background:var(--line);left:' + (v * ppu) + 'px'; const t = document.createElement('span'); t.style.cssText = 'position:absolute;bottom:-4px;left:-10px;font-size:10.5px;color:var(--muted);font-weight:700'; t.textContent = v + '%'; l.appendChild(t); grid.appendChild(l); });
+      host.appendChild(grid);
+      g.top.forEach((c, i) => {
+        const el = document.createElement('div'); el.className = 'grow'; el.dataset.g = c[2]; el.style.top = (i * RH) + 'px';
+        el.innerHTML = '<div class="gn"><i class="sw" style="background:' + (c[2] === 'dm' ? 'var(--blue)' : 'var(--cyan)') + '"></i>' + c[0] + '</div>' +
+          '<div class="gb ' + c[2] + '" style="width:' + Math.max(c[1] * ppu, 2) + 'px;--d:' + (i * 0.07) + 's"></div><div class="gv" style="left:' + (X0 + c[1] * ppu + 8) + 'px;--d:' + (i * 0.07) + 's">' + c[1].toFixed(1) + '%</div><div class="hit"></div>';
+        host.appendChild(el);
+        bindTip($('.hit', el), () => '<b>' + c[0] + '</b><table><tr><td class="dim">Share of ' + e.short + ' AUM</td><td>' + c[1].toFixed(1) + '%</td></tr><tr><td class="dim">Group</td><td>' + (c[2] === 'dm' ? 'Developed' : 'Emerging / frontier') + '</td></tr></table>');
+      });
+      applyFilter();
+      $('#geo-title').textContent = e.short + ' — geographic exposure by AUM';
+      $('#geo-finding').textContent = g.dm + '% of assets are domiciled in developed markets; the United States alone is ' + g.top[0][1].toFixed(1) + '% of the ' + (entity === 'pension' ? 'Fund' : 'Trust') + ' across ' + g.total + ' markets';
+      const em1 = g.top.find(c => c[2] === 'em');
+      $('#geo-note').textContent = 'One fixed 0–80% scale for both groups, so the gap between the U.S. and the largest emerging market (' + em1[0] + ', ' + em1[1].toFixed(1) + '%) is drawn to size. Source page ' + g.page + '.';
+      $('#geo-table').innerHTML = tableHTML(['Country', 'Group', 'Share of AUM'], g.top.map(c => [c[0], c[2] === 'dm' ? 'Developed' : 'Emerging / frontier', c[1].toFixed(1) + '%']));
+    }
+    render(false);
+    enterHooks[idx('geo')] = () => { prevC = null; render(false); };
+    entityHooks.push(() => render(cur === idx('geo')));
+  })();
+
+  /* ============ slide 9 · operations ============ */
+  (function opsSlide() {
+    const t = $('#ops-t');
+    t.innerHTML = '<thead><tr><th style="width:150px">Area</th><th>Item</th><th style="width:130px">Status</th><th style="width:50px">Page</th></tr></thead><tbody>' +
+      OPS.map((o, i) => '<tr data-e="' + o.e + '" style="--d:' + (i * 0.05) + 's"><td><b>' + o.e + '</b></td><td>' + o.item + '</td><td><span class="st ' + STATUS[o.st][1] + '">' + STATUS[o.st][0] + '</span></td><td style="color:var(--muted)">p. ' + o.p + '</td></tr>').join('') + '</tbody>';
+    const groups = ['For attention', 'Total Fund', 'OPEB Master Trust', 'Investments Division', 'All'];
+    const match = (g, e) => g === 'All' || e === g || (g === 'For attention' && (e === 'Manager update' || e === 'Consultant search'));
+    const apply = g => $$('tbody tr', t).forEach(tr => tr.classList.toggle('hid', !match(g, tr.dataset.e)));
+    pillRow('ops-filter', groups.map(g => g + ' (' + OPS.filter(o => match(g, o.e)).length + ')'), 0, i => apply(groups[i]));
+    apply(groups[0]);
+  })();
+
+  /* ============ presenter view (second window, synced over BroadcastChannel) ============ */
+  if (isPresenter) {
+    document.body.classList.add('presenter');
+    const pv = document.createElement('div'); pv.className = 'pv';
+    pv.innerHTML = '<div class="cur"><h2 id="pv-title"></h2><div class="f" id="pv-finding"></div><div class="notesbox"><h4>Speaker notes</h4><div id="pv-notes"></div></div></div>' +
+      '<div class="side"><div class="timer" id="pv-timer">00:00</div><div class="nxt">Next<b id="pv-next"></b></div><div style="display:flex;gap:8px"><button id="pv-prev">◀ Back</button><button id="pv-go">Next ▶</button></div><button id="pv-ent">Switch entity (E)</button><div class="warn" id="pv-warn"></div></div>';
+    document.body.appendChild(pv);
+    const t0 = Date.now();
+    setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); $('#pv-timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }, 1000);
+    pvHook = () => {
+      const s = slides[cur], nf = fragsOf(cur);
+      $('#pv-title').textContent = (cur + 1) + ' / ' + slides.length + ' · ' + s.dataset.title + (nf ? ' — step ' + (frag + 1) + ' of ' + (nf + 1) : '') + ' · ' + E().short;
+      const f = $('.finding', s); $('#pv-finding').textContent = f ? f.textContent : '';
+      $('#pv-notes').innerHTML = NOTES[cur];
+      $('#pv-next').textContent = frag < nf ? 'Next step on this slide' : cur + 1 < slides.length ? (cur + 2) + ' · ' + slides[cur + 1].dataset.title : 'End of deck';
+    };
+    $('#pv-prev').addEventListener('click', () => send('prev'));
+    $('#pv-go').addEventListener('click', () => send('next'));
+    $('#pv-ent').addEventListener('click', () => send('entity'));
+    if (!bc) $('#pv-warn').textContent = 'Live sync needs the deck served from a web address. Opened from a file, this window shows notes but will not follow the main window — use N in the main window instead.';
+    else bc.onmessage = ev => { const m = ev.data || {}; if (m.type !== 'state') return; if (m.entity !== entity) setEntity(m.entity); if (m.cur !== cur) go(m.cur); frag = m.frag; applyFrag(cur); pvHook(); };
+  }
 
   /* ============ start ============ */
+  $$('.ent-chip').forEach(c => c.textContent = E().short);
   fit();
   const start = Math.max(0, Math.min(slides.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));
   go(start);
