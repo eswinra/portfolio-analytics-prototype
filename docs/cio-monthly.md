@@ -70,3 +70,21 @@ the newest public report that precedes it. The public sample
 round-trips it exactly, which is the test that the two paths agree. Geography and the market
 table are not part of the feed; the tab says so instead of filling them in.
 
+## Reading the tab
+
+The tab opens with a **two-minute read**: four standing questions answered from the figures on
+the page by `app/src/lib/cioNarrative.ts`. Nothing there is written for a particular month — the
+hurdle sentence flips when a period falls below it, the attribution sentence says "lead" or
+"shortfall" as the sign requires, and that answer carries the `proxy_estimate` badge. Each answer
+links to the panel holding its evidence. **What changed** lists the moves an analyst would act on
+against the prior report (half a point of weight, a tenth of a point of return, an excess that
+changed sign, any policy-target change) with direction chips.
+
+The deck carries an equivalent narrative implementation in its own file, because it must stay
+self-contained. Both read the same fixture; if the wording changes in one, change it in the other
+(`app/public/deck/index.html`, the executive slide).
+
+State that changes what a panel shows lives in the URL — `?e=` fund, `?v=` report, `perf`,
+`attr`, `trend`, `compare` — so a pasted link reproduces the screen. Every table panel offers
+"copy table as CSV", and the footer glossary defines the terms.
+

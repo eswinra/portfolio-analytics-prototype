@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Glossary } from './components/Glossary';
 import { cioFor, longDate } from './fixtures/cioMonthly';
 import { boardBrief, publishedFor } from './fixtures/published';
 import { useCioVintage } from './lib/cioVintage';
@@ -397,6 +398,7 @@ function Shell() {
             the dashboard quotes published documents while the workstation demonstrates the
             pipeline.
           </div>
+          <Glossary />
           <div className="meta">
             Exploratory prototype for the Portfolio Analytics team. All figures are quoted from
             published LACERA documents as of the dates shown; this is not an official LACERA system,
@@ -409,14 +411,16 @@ function Shell() {
 }
 
 export default function App() {
+  // EntityProvider is inside the router: the selected fund lives in the URL (?e=OPEB) so a
+  // pasted link reproduces what the sender was looking at.
   return (
-    <EntityProvider>
-      <DatasetProvider>
-        <HashRouter>
+    <HashRouter>
+      <EntityProvider>
+        <DatasetProvider>
           <EntitySync />
           <Shell />
-        </HashRouter>
-      </DatasetProvider>
-    </EntityProvider>
+        </DatasetProvider>
+      </EntityProvider>
+    </HashRouter>
   );
 }

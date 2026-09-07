@@ -1,5 +1,52 @@
 # Changelog
 
+## 2026-09-07 — Revision 13: user-experience pass (items 1–8 of the improvement list)
+
+- **Overview leads with the monthly vintage.** A "latest monthly report" strip
+  sits above the fiscal-year block: market value, month return against its
+  benchmark, fiscal-year-to-date against the hurdle, and the widest allocation
+  gap, with its own report date, its own citation, and a stated warning that
+  this is the investment portfolio's market value rather than the fiscal-year
+  fiduciary net position. A labelled divider opens the FY2025 block.
+- **Two-minute read on the CIO Monthly tab.** Four standing questions — on track
+  against policy and the hurdle, where the difference came from, positioned per
+  policy, risk and market context — answered from the figures on the page by
+  `app/src/lib/cioNarrative.ts` (13 unit tests). Nothing is written for a
+  particular month: the hurdle sentence flips when a period falls below it, the
+  attribution sentence says "lead" or "shortfall" as the sign requires, and the
+  attribution answer carries the proxy-estimate badge. Each answer links to the
+  panel holding its evidence.
+- **What changed since the prior report**, as a list with direction chips: weight
+  moves of half a point or more, return moves of a tenth or more, an excess that
+  changed sign, any policy-target change (flagged because drift is not
+  comparable across policy versions), and the market value. Tile subtitles now
+  carry ▲/▼ chips with a sign and a unit rather than a sentence.
+- **Trend across reports switches between chart and table.** Four small multiples
+  (market value, monthly return, fiscal-year-to-date against benchmark, Growth
+  weight against target) drawn from the same values the table lists; a report
+  that does not print a period leaves a gap in the line.
+- **Compare both funds**: the performance and composites panels put Pension and
+  OPEB side by side for the same report, each against its own benchmark and its
+  own policy targets, with a note that the return columns are not a like-for-like
+  ranking.
+- **Shareable state.** The fund (`?e=`), the selected report (`?v=`), the
+  Returns/Excess view, the attribution period, the trend view and compare mode
+  all live in the URL, so a pasted link reproduces the screen. `EntityProvider`
+  moved inside the router to make the fund URL-backed.
+- **Copy any table as CSV**: every panel holding a table offers it (values as
+  displayed, formula-injection guarded); panels without a table hide the action
+  via `:has()`.
+- **Definitions**: a glossary in the footer of every page — TWR, MWR, policy
+  benchmark, hurdle, FYTD, SAA and ½-step, drift and near bound, IBOR/ABOR,
+  fiduciary net position, funded ratio and UAAL, bp and pp, lagged benchmarks —
+  plus every classification badge, linked from the performance note.
+- **Sticky section bar** on the CIO Monthly tab (eleven panels) and the ACFR
+  workflow, following the panel nearest the top of the viewport.
+- Verification: Prettier · ESLint · tsc · Vitest 392/392 (+12) · production build
+  · Playwright 70/70 (+7 covering the read, URL state, trend toggle, compare,
+  the Overview strip, the glossary and the copy action; axe still clean on every
+  route) · zero page errors · no horizontal overflow at 320–375 px.
+
 ## 2026-09-07 — Revision 12.3: monthly QA discipline and the audit residuals
 
 - Visual regression as local QA: `npm run test:visual` compares full-page

@@ -132,3 +132,18 @@ Import, mobile Overview/Performance/Holdings, print Overview).
 Re-verified 2026-09-07 after the corrections: Prettier ✓ · ESLint ✓ · `tsc` ✓ · Vitest 172/172 ✓ ·
 production build ✓ · Playwright 53/53 ✓ · rendered citation links checked in a browser (PAFR
 pp. 4–7, Pension IPS p. 20, OPEB IPS p. 21) ✓ · zero page errors ✓.
+
+## Revision 13 — user-experience pass, 2026-09-07
+
+Eight improvements from the post-audit review, in the order they change a first-time reader's
+experience: the Overview now leads with the latest monthly report (a separate vintage block above
+a labelled fiscal-year divider); the CIO Monthly tab opens with a computed two-minute read and a
+"what changed" list; tile subtitles carry direction chips; the trend panel switches between small
+multiples and the table; both funds can be shown side by side; view state travels in the URL;
+every table can be copied as CSV; a glossary sits in the footer of every page; and the two long
+views carry a sticky section bar.
+
+Checked in a browser at 1280 px and 375 px: no horizontal overflow, no console or page errors,
+axe clean on all eleven routes, and the copy action produces the displayed values with a
+formula-injection guard. Renders under `outputs/renders/rev14/`.
+

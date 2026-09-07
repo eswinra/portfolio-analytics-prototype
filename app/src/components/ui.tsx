@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { CONFIG } from '../config';
+import { CopyCsvButton } from './CopyCsvButton';
 import { SOURCES, type SourceId, type SourceRecord } from '../fixtures/sources';
 import { CATEGORY_LABELS } from '../lib/contract/schema';
 
@@ -91,6 +92,8 @@ export function Panel({
       {sub !== undefined ? <div className="panel-sub">{sub}</div> : null}
       {children}
       {note !== undefined ? <p className="panel-note">{note}</p> : null}
+      {/* self-hiding: renders only when this panel actually holds a table */}
+      <CopyCsvButton />
     </section>
   );
 }
@@ -186,4 +189,28 @@ export function ClassBadge({ c }: { c: string }) {
   const def = CLASS_DEFINITIONS[c];
   const label = c.replace('_', ' ');
   return <Tag variant="neutral">{def ? <abbr title={def}>{label}</abbr> : label}</Tag>;
+}
+
+/** Signed change against a stated comparison — direction as a glyph AND a sign, never colour
+ *  alone. `up` says which direction is drawn as an increase; nothing here judges good or bad. */
+export function ChangeChip({
+  delta,
+  unit,
+  dp = 1,
+  title,
+}: {
+  delta: number | null | undefined;
+  unit: string;
+  dp?: number;
+  title?: string;
+}) {
+  if (delta === null || delta === undefined || !Number.isFinite(delta)) return null;
+  const flat = Math.abs(delta) < Math.pow(10, -dp) / 2;
+  const glyph = flat ? '=' : delta > 0 ? '▲' : '▼';
+  const text = `${flat ? '' : delta > 0 ? '+' : '−'}${Math.abs(delta).toFixed(dp)} ${unit}`;
+  return (
+    <span className={`chip-change${flat ? '' : delta > 0 ? ' up' : ' down'}`} title={title}>
+      <span aria-hidden="true">{glyph}</span> {text}
+    </span>
+  );
 }

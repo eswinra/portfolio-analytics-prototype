@@ -144,6 +144,88 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     await expect(page.locator('.grid-kpi .stat-value').first()).toHaveText('$93.9B');
   });
 
+  test('the two-minute read answers the standing questions from the data', async ({ page }) => {
+    await ready(page, '/cio');
+    const read = page.locator('#cio-read');
+    await expect(read.getByText('On track against policy and the hurdle?')).toBeVisible();
+    // the answer quotes the reported month return and its benchmark
+    await expect(read).toContainText('returned 0.1% net in June');
+    await expect(read).toContainText('policy benchmark');
+    // and each answer offers the evidence
+    await expect(read.getByRole('button', { name: 'See the figures ↓' })).toHaveCount(4);
+  });
+
+  test('view state travels in the URL and a pasted link reproduces it', async ({ page }) => {
+    await ready(page, '/cio');
+    await page.getByRole('button', { name: 'OPEB Trust' }).click();
+    await page.getByRole('button', { name: 'Excess vs. benchmark' }).click();
+    await page.getByRole('combobox', { name: 'Report' }).selectOption('2026-03-31');
+    const url = page.url();
+    expect(url).toContain('e=OPEB');
+    expect(url).toContain('perf=excess');
+    expect(url).toContain('v=2026-03-31');
+    // a fresh visit to that link shows the same screen
+    await page.goto('/');
+    await page.goto(url);
+    await expect(page.locator('#view-title')).toContainText('March 31, 2026');
+    await expect(page.locator('.band .entity')).toContainText('OPEB');
+    await expect(page.getByRole('button', { name: 'Excess vs. benchmark' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  test('the trend panel switches between chart and table', async ({ page }) => {
+    await ready(page, '/cio');
+    const trend = page.locator('#cio-trend');
+    await expect(trend.locator('figure.spark')).toHaveCount(4);
+    await trend.getByRole('button', { name: 'Table', exact: true }).click();
+    await expect(trend.locator('table')).toBeVisible();
+    await expect(page).toHaveURL(/trend=table/);
+  });
+
+  test('compare mode shows both funds against their own benchmarks', async ({ page }) => {
+    await ready(page, '/cio');
+    await page.getByLabel('Compare both funds').check();
+    await expect(page.locator('#cio-perf thead')).toContainText('Pension Fund');
+    await expect(page.locator('#cio-perf thead')).toContainText('OPEB Master Trust');
+    await expect(page.locator('#cio-comps')).toContainText('compare the drift columns');
+  });
+
+  test('the Overview leads with the monthly vintage and keeps it apart from FY2025', async ({
+    page,
+  }) => {
+    await ready(page, '/');
+    const strip = page.locator('.monthly-strip');
+    await expect(strip).toContainText('Latest monthly report');
+    await expect(strip).toContainText('data through June 30, 2026');
+    await expect(strip).toContainText('not the fiduciary net position at the fiscal year end');
+    await expect(page.locator('.fy-divider')).toContainText('Fiscal year ended June 30, 2025');
+    await strip.getByRole('link', { name: 'Open the CIO Monthly view' }).click();
+    await expect(page).toHaveURL(/#\/cio/);
+  });
+
+  test('every page offers the definitions glossary', async ({ page }) => {
+    for (const route of ['/', '/cio', '/holdings']) {
+      await ready(page, route);
+      await expect(page.locator('#glossary summary')).toBeVisible();
+    }
+    await page.locator('#glossary summary').click();
+    await expect(page.getByText('TWR — time-weighted return')).toBeVisible();
+  });
+
+  test('tables offer a copy action and panels without one do not', async ({ page }) => {
+    await ready(page, '/cio');
+    // the performance panel has a table
+    await expect(
+      page.locator('#cio-perf').getByRole('button', { name: /Copy table as CSV/ }),
+    ).toBeVisible();
+    // the two-minute read has none, so its slot is hidden
+    await expect(
+      page.locator('#cio-read').getByRole('button', { name: /Copy table as CSV/ }),
+    ).toBeHidden();
+  });
+
   test('switching funds says when it discards an applied import', async ({ page }) => {
     await ready(page, '/import');
     await page.locator('input[type="file"]').setInputFiles(CIO_FEED_CSV);

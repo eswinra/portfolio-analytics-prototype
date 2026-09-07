@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 
-import { ClassBadge, excessTag, Panel, SourceLine, Tag } from '../components/ui';
+import { ChangeChip, ClassBadge, excessTag, Panel, SourceLine, Tag } from '../components/ui';
+import { CIO_LATEST, cioFor, longDate, PERIOD_INDEX, priorVintage } from '../fixtures/cioMonthly';
 import { GROWTH_YEARS, HORIZONS, publishedFor } from '../fixtures/published';
 import { useEntity } from '../lib/entity';
 
-/** Overview — KPI row, decade growth bars, allocation strip, returns vs benchmark, and the
- *  FY2025 flows list. All figures quoted from the 2025 PAFR / ACFR / IPS. */
+/** Overview — the latest monthly state of the fund, then the fiscal-year picture: KPI row,
+ *  decade growth bars, allocation strip, returns vs benchmark, and the FY2025 flows list.
+ *  The two vintages sit in separate blocks with their own dates and are never combined. */
 
 export function PulseView() {
   const { entity } = useEntity();
@@ -15,8 +17,89 @@ export function PulseView() {
   const gMax = Math.max(...d.growth);
   const mixTotal = d.mix.reduce((s, m) => s + m.pct, 0);
 
+  // monthly strip: the newest CIO Monthly Report, kept visually and textually apart from the
+  // fiscal-year figures below it
+  const { oneMonth, fytd } = PERIOD_INDEX;
+  const m = cioFor(entity, CIO_LATEST);
+  const mPrior = priorVintage(CIO_LATEST);
+  const mp = mPrior ? cioFor(entity, mPrior) : null;
+  const mPct = (v: number | null | undefined) =>
+    v === null || v === undefined ? '—' : `${v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}%`;
+  const mSigned = (v: number | null | undefined) =>
+    v === null || v === undefined
+      ? '—'
+      : `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}`;
+  const mExcess = (i: number) => {
+    const f = m.total.r[i];
+    const b = m.total.b[i];
+    return f === null || f === undefined || b === null || b === undefined ? null : f - b;
+  };
+  const widestGap = m.comps.reduce((a, b) =>
+    Math.abs(b.pct - b.tgt) > Math.abs(a.pct - a.tgt) ? b : a,
+  );
+
   return (
     <>
+      <Panel
+        className="monthly-strip"
+        kicker={`Latest monthly report — ${CIO_LATEST.reportLabel}`}
+        title={`Where the ${m.short} stands, data through ${longDate(CIO_LATEST.dataThrough)}`}
+        sub="A different reporting vintage from the fiscal-year figures below: this is the investment portfolio's market value and monthly performance, not the fiduciary net position at the fiscal year end"
+      >
+        <div className="strip-figures">
+          <div>
+            <div className="l">Market value</div>
+            <div className="v">${m.aum.toFixed(1)}B</div>
+            <div className="s">
+              {mp ? <ChangeChip delta={m.mv - mp.mv} unit="$M" dp={0} /> : null} since the prior
+              report
+            </div>
+          </div>
+          <div>
+            <div className="l">Month return, net</div>
+            <div className="v">{mPct(m.total.r[oneMonth])}</div>
+            <div className="s">
+              Policy benchmark {mPct(m.total.b[oneMonth])} · {mSigned(mExcess(oneMonth))} pp excess
+            </div>
+          </div>
+          <div>
+            <div className="l">Fiscal year to date</div>
+            <div className="v">{mPct(m.total.r[fytd])}</div>
+            <div className="s">
+              Benchmark {mPct(m.total.b[fytd])} · hurdle {mPct(m.total.h[fytd])}
+            </div>
+          </div>
+          <div>
+            <div className="l">Widest allocation gap</div>
+            <div className="v">{mSigned(widestGap.pct - widestGap.tgt)} pp</div>
+            <div className="s">
+              {widestGap.short} {mPct(widestGap.pct)} against a {mPct(widestGap.tgt)} target
+            </div>
+          </div>
+        </div>
+        <p className="panel-note">
+          <Link to="/cio">Open the CIO Monthly view</Link> for the two-minute read, what changed
+          since the prior report, and sixteen months of history. Excess and the allocation gap are
+          calculated from the printed figures.
+        </p>
+        <SourceLine
+          records={[
+            {
+              id: 'CIO_OVERVIEW',
+              label: `CIO Monthly Report (${CIO_LATEST.reportLabel})`,
+              doc: 'Chief Investment Officer Monthly Report',
+              pageTable: m.pages,
+              asOf: longDate(CIO_LATEST.dataThrough),
+              ...(CIO_LATEST.url ? { url: CIO_LATEST.url } : {}),
+            },
+          ]}
+        />
+      </Panel>
+
+      <div className="fy-divider" role="separator">
+        <span>Fiscal year ended June 30, 2025 — annual reports</span>
+      </div>
+
       <div className="grid-kpi">
         {d.kpis.map(([kicker, value, sub]) => (
           <Panel key={kicker} tight kicker={kicker}>

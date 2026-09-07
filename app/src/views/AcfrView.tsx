@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import acfrCsv from '../../../data/sample/demo_acfr_status_v1.csv?raw';
+import { SectionNav } from '../components/SectionNav';
 import { Panel, SourceLine, Tag, type TagVariant } from '../components/ui';
 import {
   CROSSWALK,
@@ -86,7 +87,7 @@ function SectionCard({
   });
 
   return (
-    <Panel className="acfr-card">
+    <Panel id={`acfr-${section.sectionId}`} className="acfr-card">
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <h2 style={{ margin: 0 }}>{section.label}</h2>
         <span style={{ fontSize: 11.5, letterSpacing: '0.1em', color: 'var(--muted-65)' }}>
@@ -296,6 +297,9 @@ export function AcfrView() {
 
   return (
     <>
+      <SectionNav
+        sections={board.sections.map((s) => [`acfr-${s.sectionId}`, s.label] as [string, string])}
+      />
       <div className="muted-note" style={{ margin: '-6px 0 18px', maxWidth: 960, fontSize: 13 }}>
         Section readiness for the ACFR production cycle, through {board.refDate ?? 'n/a'}: the
         latest status row per section is the state, and the full row history is the change log — the
