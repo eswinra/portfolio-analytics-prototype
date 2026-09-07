@@ -28,7 +28,7 @@ const COMPOSITES: [CompositeKey, string, string, string][] = [
   ['ra', 'RAIH', 'Real Assets & Inflation Hedges', 'Real Assets & IH'],
   ['rrm', 'RRM', 'Risk Reduction & Mitigation', 'Risk Reduction & Mit.'],
 ];
-const STAT_KEYS = ['MEAN', 'SAA', 'SD', 'MIN', 'MAX', 'LATEST'] as const;
+type StatKey = 'MEAN' | 'SAA' | 'SD' | 'MIN' | 'MAX' | 'LATEST';
 const EDGES = [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
 
 const r1 = (v: number) => Math.round(v * 10) / 10;
@@ -86,7 +86,7 @@ export function buildCioFeed(records: readonly ContractRecord[]): CioFeed | null
     return v === null ? 0 : Math.round(v);
   });
   const histPresent = cur.some((r) => r.metric_id === 'hist_count');
-  const stat = (k: (typeof STAT_KEYS)[number]) => {
+  const stat = (k: StatKey) => {
     const v = num('hist_stat', k);
     return v === null ? 0 : r2(v * 100);
   };
