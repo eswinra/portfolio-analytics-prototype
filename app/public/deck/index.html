@@ -1039,7 +1039,7 @@
       tb.addEventListener('click', () => select('total'));
       legend.prepend(tb);
       $('#sum-note').textContent = e.other
-        ? 'Overlays & Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are shown together as the sliver at the right; neither has a policy target.'
+        ? e.other.n + ' ($' + Math.round(e.other.mv).toLocaleString('en-US') + ' mm combined) are shown together as the sliver at the right; neither has a policy target.'
         : 'The OPEB Master Trust reports no overlay or other-asset sliver; its four functional categories sum to 100%.';
       select(sel);
     }
@@ -1063,7 +1063,7 @@
           '<tr><td>Policy benchmark</td>' + ix.map(i => '<td>' + pct(c.b[i]) + '</td>').join('') + '</tr>' +
           '<tr><td>Difference (pts)</td>' + ix.map(i => { const d = c.r[i] - c.b[i]; return '<td class="' + (d < 0 ? 'neg' : '') + '">' + sgn(d) + '</td>'; }).join('') + '</tr></table>';
       } else {
-        html += '<p style="font-size:12.5px;color:var(--cat);margin:14px 0 0">Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm) have no policy target or composite return in the public report. Other Asset is an operational holding.</p>';
+        html += '<p style="font-size:12.5px;color:var(--cat);margin:14px 0 0">' + (E().other ? E().other.n.replace(/&/g, '&amp;') + ' ($' + Math.round(E().other.mv).toLocaleString('en-US') + ' mm combined)' : 'Overlays &amp; Hedges and Other Asset') + ' have no policy target or composite return in the public report. Other Asset is an operational holding.</p>';
       }
       det.innerHTML = html + '</div>';
     }

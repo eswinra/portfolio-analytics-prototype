@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-07 — Revision 12.1: interactivity that moves a reader to the evidence
+
+- CIO Monthly tab: each headline tile jumps to the panel that supports it
+  (composites, by-period table, gap attribution, trend across reports); the
+  performance panel has a Returns / Excess-vs-benchmark view with signed bars
+  and the margin over the hurdle; the gap-attribution panel's second period is
+  selectable (1 M … 10 Y next to FYTD); every panel links to its slide in the
+  deck when the latest report is shown.
+- Composites table gains the IPS range and the distance to the nearer bound,
+  comparing the month-end weight with the policy in force (IPS Table 1, restated
+  June 12, 2024) — labelled calculated and explicitly not a compliance
+  statement; “near bound” and “outside” tags use the same threshold as Policy
+  Monitoring; cited to the IPS alongside the report.
+- Classification badges carry a definition tooltip everywhere they appear
+  (reported_public, synthetic, proxy_estimate, calculated, stale, missing).
+- Deck: the two slide-2 notes that still quoted July's overlay and other-asset
+  dollar figures are now written from the data.
+- Verification: Prettier · ESLint · tsc · Vitest · production build · Playwright
+  · rendered controls checked in a browser · zero page errors.
+
 ## 2026-09-07 — Revision 12: CIO Monthly history, extractor, and vintage-driven deck
 
 - Sixteen CIO Monthly Reports (April 2025 – August 2026; data through February 2025

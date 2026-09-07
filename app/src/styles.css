@@ -491,6 +491,59 @@ a:hover {
   background: var(--accent-200);
 }
 
+/* small segmented control inside a panel (Returns | Excess) */
+.seg-mini {
+  display: inline-flex;
+  margin: 0 0 10px;
+  border: 1px solid var(--divider);
+}
+
+.seg-mini button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  background: #fff;
+  color: var(--accent-800);
+  border: none;
+  cursor: pointer;
+}
+
+.seg-mini button + button {
+  border-left: 1px solid var(--divider);
+}
+
+.seg-mini button[aria-pressed='true'] {
+  background: var(--accent-700);
+  color: #fff;
+}
+
+.seg-mini button:focus-visible {
+  outline: 2px solid var(--accent-700);
+  outline-offset: -2px;
+}
+
+.deck-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.excess-cell .fill {
+  height: 10px;
+  background: var(--accent-500);
+  border: 1px solid var(--accent-700);
+}
+
+.excess-cell .fill.neg {
+  background: #fff;
+  border-color: var(--accent-800);
+}
+
+.tag abbr {
+  text-decoration: none;
+  cursor: help;
+}
+
 .vintage-note {
   margin: 4px 0 18px;
 }

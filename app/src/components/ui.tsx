@@ -62,6 +62,7 @@ export function SourceLine({
 }
 
 export function Panel({
+  id,
   kicker,
   title,
   sub,
@@ -70,6 +71,8 @@ export function Panel({
   className,
   children,
 }: {
+  /** anchor for in-page jump links (hash routing rules out fragment links) */
+  id?: string;
   kicker?: ReactNode;
   title?: ReactNode;
   sub?: ReactNode;
@@ -79,7 +82,10 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className={`panel${tight ? ' panel-tight' : ''}${className ? ` ${className}` : ''}`}>
+    <section
+      id={id}
+      className={`panel${tight ? ' panel-tight' : ''}${className ? ` ${className}` : ''}`}
+    >
       {kicker !== undefined ? <Kicker>{kicker}</Kicker> : null}
       {title !== undefined ? <h2 className={sub !== undefined ? 'snug' : ''}>{title}</h2> : null}
       {sub !== undefined ? <div className="panel-sub">{sub}</div> : null}
@@ -166,6 +172,18 @@ export function statusTone(status: string): PillTone {
   }
 }
 
+/** What each classification promises — shown as a tooltip wherever a badge appears. */
+export const CLASS_DEFINITIONS: Record<string, string> = {
+  reported_public: 'Reproduced from a cited public document for the exact stated period.',
+  synthetic: 'Generated demonstration data; not a real figure.',
+  proxy_estimate: 'An estimate built from proxies; not a reported or official figure.',
+  calculated: 'Derived from the figures shown, by the formula stated beside it.',
+  stale: 'Older than the freshness threshold for its frequency.',
+  missing: 'Not present in the data for the stated period.',
+};
+
 export function ClassBadge({ c }: { c: string }) {
-  return <Tag variant="neutral">{c.replace('_', ' ')}</Tag>;
+  const def = CLASS_DEFINITIONS[c];
+  const label = c.replace('_', ' ');
+  return <Tag variant="neutral">{def ? <abbr title={def}>{label}</abbr> : label}</Tag>;
 }

@@ -1,6 +1,7 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 
 import { DateLine } from '../components/DateLine';
+import { CONFIG } from '../config';
 import { ClassBadge, excessTag, Panel, SourceLine, Tag, type TagVariant } from '../components/ui';
 import {
   BINS,
@@ -17,6 +18,7 @@ import {
   type CioVintage,
   type OpsStatus,
 } from '../fixtures/cioMonthly';
+import { publishedFor } from '../fixtures/published';
 import type { SourceRecord } from '../fixtures/sources';
 import { useCioVintage } from '../lib/cioVintage';
 import { useEntity } from '../lib/entity';
@@ -58,6 +60,18 @@ function cioSource(v: CioVintage, pages: string, firstPage: number | null): Sour
   };
 }
 
+/** Slide index in the deck (its URL hash is the slide number). */
+const SLIDE = { summary: 2, perf: 3, wf: 4, alloc: 5, hist: 6, market: 7, geo: 8, ops: 9 } as const;
+
+function DeckLink({ n, show }: { n: number; show: boolean }) {
+  if (!show) return null;
+  return (
+    <a className="deck-link" href={`deck/#${n}`}>
+      Slide {n} in the deck ↗
+    </a>
+  );
+}
+
 function entityPages(v: CioVintage, key: 'pension' | 'opeb') {
   const [summary, table, hist, geo] = v.pages[key];
   const last = Math.max(table, hist);
@@ -94,10 +108,29 @@ export function CioMonthlyView() {
       ? ` · vs prior report ${signed(cur - prev)} ${unit}`
       : '';
 
+  const [perfView, setPerfView] = useState<'returns' | 'excess'>('returns');
+  const [attrPeriod, setAttrPeriod] = useState<number>(oneYear);
+  const jump = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const excessMax = Math.max(0.1, ...PERIODS.map((_, i) => Math.abs(excess(e, i) ?? 0)));
+
+  // IPS range for a composite: the policy in force (IPS Table 1, restated June 12, 2024) against
+  // the month-end weight — calculated here; the IPS defines no mechanical trigger
+  const majors = publishedFor(entity).majors;
+  const norm = (s: string) =>
+    s
+      .replace(/^OPEB /, '')
+      .replace('&', 'and')
+      .toLowerCase();
+  const ipsFor = (name: string) => {
+    const m = majors.find((row) => norm(row[0]) === norm(name));
+    return m ? { lo: m[1] - m[2], hi: m[1] + m[2] } : null;
+  };
+
   // proxy attribution, as on the deck's slide 4: (composite return − its benchmark) × month-end
   // weight; the residual carries everything the proxy cannot see (allocation effect, overlays,
   // cash, compounding, beginning-of-period weights) and is shown, never hidden
-  const attribution = [fytd, oneYear].map((i) => {
+  const attribution = [fytd, attrPeriod].map((i) => {
     const rows = e.comps.map((c) => ({
       label: c.short,
       contrib: c.r[i] !== null && c.b[i] !== null ? (c.r[i]! - c.b[i]!) * (c.pct / 100) : null,
@@ -163,28 +196,40 @@ export function CioMonthlyView() {
           <div className="stat-value">${e.aum.toFixed(1)}B</div>
           <div className="stat-sub">
             ${mm(e.mv)}M · cash and equivalents ${mm(e.cash)}M
-            {ep ? ` · vs prior report ${signed((e.mv - ep.mv) / 1000)} $B` : ''}
+            {ep ? ` · vs prior report ${signed((e.mv - ep.mv) / 1000)} $B` : ''}{' '}
+            <button type="button" className="linklike" onClick={() => jump('cio-comps')}>
+              composites ↓
+            </button>
           </div>
         </Panel>
         <Panel tight kicker="Net return — 1 month">
           <div className="stat-value">{pct(e.total.r[oneMonth])}</div>
           <div className="stat-sub">
             Policy benchmark {pct(e.total.b[oneMonth])} · {signed(excess(e, oneMonth))} pp
-            {ep ? ` · prior month ${pct(ep.total.r[oneMonth])}` : ''}
+            {ep ? ` · prior month ${pct(ep.total.r[oneMonth])}` : ''}{' '}
+            <button type="button" className="linklike" onClick={() => jump('cio-perf')}>
+              by period ↓
+            </button>
           </div>
         </Panel>
         <Panel tight kicker="Net return — fiscal year to date">
           <div className="stat-value">{pct(e.total.r[fytd])}</div>
           <div className="stat-sub">
             Benchmark {pct(e.total.b[fytd])} · actuarial hurdle {pct(e.total.h[fytd])}
-            {vsPrior(e.total.r[fytd], ep?.total.r[fytd], 'pp')}
+            {vsPrior(e.total.r[fytd], ep?.total.r[fytd], 'pp')}{' '}
+            <button type="button" className="linklike" onClick={() => jump('cio-attr')}>
+              where the gap came from ↓
+            </button>
           </div>
         </Panel>
         <Panel tight kicker="Net return — 1 year">
           <div className="stat-value">{pct(e.total.r[oneYear])}</div>
           <div className="stat-sub">
             Policy benchmark {pct(e.total.b[oneYear])} · {signed(excess(e, oneYear))} pp
-            {vsPrior(e.total.r[oneYear], ep?.total.r[oneYear], 'pp')}
+            {vsPrior(e.total.r[oneYear], ep?.total.r[oneYear], 'pp')}{' '}
+            <button type="button" className="linklike" onClick={() => jump('cio-trend')}>
+              across reports ↓
+            </button>
           </div>
         </Panel>
       </div>
@@ -200,70 +245,144 @@ export function CioMonthlyView() {
 
       <div className="grid-panels mt">
         <Panel
+          id="cio-perf"
           kicker="Net of fees — total fund"
           title="Performance vs. policy benchmark and actuarial hurdle"
           sub={CIO_VINTAGE.periodNote}
         >
+          <div className="seg-mini" role="group" aria-label="View">
+            <button
+              type="button"
+              aria-pressed={perfView === 'returns'}
+              onClick={() => setPerfView('returns')}
+            >
+              Returns
+            </button>
+            <button
+              type="button"
+              aria-pressed={perfView === 'excess'}
+              onClick={() => setPerfView('excess')}
+            >
+              Excess vs. benchmark
+            </button>
+          </div>
           <div
             className="table-scroll"
             role="region"
             aria-label="Performance by period"
             tabIndex={0}
           >
-            <table className="table">
-              <caption>
-                Total fund return, policy benchmark, excess, and actuarial hurdle by period
-                {ep ? '; prior column = the same period in the prior report' : ''}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Period</th>
-                  <th scope="col" className="num">
-                    Fund
-                  </th>
-                  <th scope="col" className="num">
-                    Benchmark
-                  </th>
-                  <th scope="col" className="num">
-                    Excess
-                  </th>
-                  <th scope="col" className="num">
-                    Hurdle
-                  </th>
-                  {ep ? (
+            {perfView === 'returns' ? (
+              <table className="table">
+                <caption>
+                  Total fund return, policy benchmark, excess, and actuarial hurdle by period
+                  {ep ? '; prior column = the same period in the prior report' : ''}
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Period</th>
                     <th scope="col" className="num">
-                      Prior report
+                      Fund
                     </th>
-                  ) : null}
-                </tr>
-              </thead>
-              <tbody>
-                {PERIODS.map((p, i) => {
-                  const t = tagFor(e.total.r[i], e.total.b[i]);
-                  return (
-                    <tr key={p}>
-                      <td>{p}</td>
-                      <td className="num" style={{ fontWeight: 500 }}>
-                        {pct(e.total.r[i])}
-                      </td>
-                      <td className="num">{pct(e.total.b[i])}</td>
-                      <td className="num">{t ? <Tag variant={t.variant}>{t.text}</Tag> : '—'}</td>
-                      <td className="num">{pct(e.total.h[i])}</td>
-                      {ep ? <td className="num">{pct(ep.total.r[i])}</td> : null}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    <th scope="col" className="num">
+                      Benchmark
+                    </th>
+                    <th scope="col" className="num">
+                      Excess
+                    </th>
+                    <th scope="col" className="num">
+                      Hurdle
+                    </th>
+                    {ep ? (
+                      <th scope="col" className="num">
+                        Prior report
+                      </th>
+                    ) : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {PERIODS.map((p, i) => {
+                    const t = tagFor(e.total.r[i], e.total.b[i]);
+                    return (
+                      <tr key={p}>
+                        <td>{p}</td>
+                        <td className="num" style={{ fontWeight: 500 }}>
+                          {pct(e.total.r[i])}
+                        </td>
+                        <td className="num">{pct(e.total.b[i])}</td>
+                        <td className="num">{t ? <Tag variant={t.variant}>{t.text}</Tag> : '—'}</td>
+                        <td className="num">{pct(e.total.h[i])}</td>
+                        {ep ? <td className="num">{pct(ep.total.r[i])}</td> : null}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <table className="table">
+                <caption>
+                  Excess = fund − benchmark and margin over the actuarial hurdle, by period
+                  (calculated, percentage points); bar length is relative to the largest excess
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Period</th>
+                    <th scope="col" className="num">
+                      Excess
+                    </th>
+                    <th scope="col">Signed bar</th>
+                    <th scope="col" className="num">
+                      vs. hurdle
+                    </th>
+                    {ep ? (
+                      <th scope="col" className="num">
+                        Prior report excess
+                      </th>
+                    ) : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {PERIODS.map((p, i) => {
+                    const x = excess(e, i);
+                    const h = diff(e.total.r[i], e.total.h[i]);
+                    return (
+                      <tr key={p}>
+                        <td>{p}</td>
+                        <td className="num" style={{ fontWeight: 500 }}>
+                          {x === null ? '—' : `${signed(x)} pp`}
+                        </td>
+                        <td className="excess-cell">
+                          {x === null ? null : (
+                            <div
+                              className={`fill${x < 0 ? ' neg' : ''}`}
+                              style={{ width: `${((Math.abs(x) / excessMax) * 100).toFixed(1)}%` }}
+                              aria-hidden="true"
+                            />
+                          )}
+                        </td>
+                        <td className="num">{h === null ? '—' : `${signed(h)} pp`}</td>
+                        {ep ? (
+                          <td className="num">
+                            {excess(ep, i) === null ? '—' : `${signed(excess(ep, i))} pp`}
+                          </td>
+                        ) : null}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
           <p className="panel-note">
             Excess = fund − benchmark (calculated). The actuarial hurdle applies at the total-fund
             level only. A period the report does not print shows as —.
           </p>
           <SourceLine records={[src.main]} />
+          <DeckLink n={SLIDE.perf} show={isLatest} />
         </Panel>
 
         <Panel
+          id="cio-attr"
           kicker="Where the benchmark gap came from"
           title="Composite excess × month-end weight"
           sub="Proxy estimate — a pointer to where to look, not a manager value-add figure"
@@ -274,6 +393,22 @@ export function CioMonthlyView() {
               Contribution = (composite return − its policy benchmark) × month-end weight. Not the
               report's attribution and not a Brinson decomposition.
             </span>
+            <label className="footnote">
+              Second period{' '}
+              <select
+                aria-label="Attribution period"
+                value={attrPeriod}
+                onChange={(ev) => setAttrPeriod(Number(ev.target.value))}
+              >
+                {PERIODS.map((p, i) =>
+                  i === fytd ? null : (
+                    <option key={p} value={i}>
+                      {p}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
           </div>
           <div className="table-scroll" role="region" aria-label="Gap attribution" tabIndex={0}>
             <table className="table">
@@ -334,19 +469,23 @@ export function CioMonthlyView() {
             all folded into the residual, shown so the reader can see how much the proxy explains.
           </p>
           <SourceLine records={[src.main]} />
+          <DeckLink n={SLIDE.wf} show={isLatest} />
         </Panel>
       </div>
 
       <Panel
+        id="cio-comps"
         className="mt"
         kicker={`Composites — ${monthLabel}`}
-        title="Market value, weight vs. 2024 SAA target, and returns vs. benchmark"
+        title="Market value, weight vs. 2024 SAA target and IPS range, returns vs. benchmark"
       >
         <div className="table-scroll" role="region" aria-label="Composites" tabIndex={0}>
           <table className="table cardable">
             <caption>
-              Drift = weight − target; Δ weight = change against the prior report (both calculated).
-              Return cells show composite / policy benchmark.
+              Drift = weight − target; Δ weight = change against the prior report; IPS range and
+              distance to the nearer bound compare the month-end weight with the policy in force
+              (IPS Table 1, restated June 12, 2024) — all calculated. Return cells show composite /
+              policy benchmark.
             </caption>
             <thead>
               <tr>
@@ -367,6 +506,12 @@ export function CioMonthlyView() {
                   Δ weight
                 </th>
                 <th scope="col" className="num">
+                  IPS range
+                </th>
+                <th scope="col" className="num">
+                  To bound
+                </th>
+                <th scope="col" className="num">
                   1 M
                 </th>
                 <th scope="col" className="num">
@@ -380,6 +525,8 @@ export function CioMonthlyView() {
             <tbody>
               {e.comps.map((c) => {
                 const pc = ep?.comps.find((x) => x.k === c.k);
+                const ips = ipsFor(c.n);
+                const dist = ips ? Math.min(c.pct - ips.lo, ips.hi - c.pct) : null;
                 return (
                   <tr key={c.k}>
                     <td data-label="Composite">{c.n}</td>
@@ -397,6 +544,23 @@ export function CioMonthlyView() {
                     </td>
                     <td className="num" data-label="Δ weight">
                       {pc ? `${signed(c.pct - pc.pct)} pp` : '—'}
+                    </td>
+                    <td className="num" data-label="IPS range">
+                      {ips ? `${ips.lo}–${ips.hi}%` : '—'}
+                    </td>
+                    <td className="num" data-label="To bound">
+                      {dist === null ? (
+                        '—'
+                      ) : (
+                        <>
+                          {dist.toFixed(1)} pp{' '}
+                          {dist < 0 ? (
+                            <Tag variant="blocked">outside</Tag>
+                          ) : dist <= CONFIG.nearBoundPp ? (
+                            <Tag variant="outline">near bound</Tag>
+                          ) : null}
+                        </>
+                      )}
                     </td>
                     {[oneMonth, fytd, oneYear].map((i) => (
                       <td className="num" data-label={PERIODS[i]} key={i}>
@@ -422,6 +586,12 @@ export function CioMonthlyView() {
                     no policy weight
                   </td>
                   <td className="num" data-label="Δ weight">
+                    —
+                  </td>
+                  <td className="num" data-label="IPS range">
+                    —
+                  </td>
+                  <td className="num" data-label="To bound">
                     —
                   </td>
                   <td className="num" data-label="1 M">
@@ -452,6 +622,12 @@ export function CioMonthlyView() {
                 <td className="num" data-label="Δ weight">
                   —
                 </td>
+                <td className="num" data-label="IPS range">
+                  —
+                </td>
+                <td className="num" data-label="To bound">
+                  —
+                </td>
                 {[oneMonth, fytd, oneYear].map((i) => (
                   <td className="num" data-label={PERIODS[i]} key={i}>
                     {pct(e.total.r[i])} / {pct(e.total.b[i])}
@@ -462,15 +638,19 @@ export function CioMonthlyView() {
           </table>
         </div>
         <p className="panel-note">
-          Policy ranges live in the IPS, not the monthly report, so no in/out-of-range judgement is
-          drawn here — see the Allocation tab for the ranges. Composites have no 10-year figure in
-          the report. Real estate and private equity values are best-available cash-flow-adjusted
-          market values.
+          The IPS range is the policy in force, quoted from IPS Table 1, set against the month-end
+          weight as printed; “near bound” flags a weight within {CONFIG.nearBoundPp.toFixed(1)} pp
+          of a boundary. Range status is a factual report — the IPS defines no mechanical trade
+          trigger, and this is not a compliance statement. Composites have no 10-year figure in the
+          report. Real estate and private equity values are best-available cash-flow-adjusted market
+          values.
         </p>
-        <SourceLine records={[src.main]} />
+        <SourceLine sources={P ? ['IPS_T1'] : ['IPS_OPEB_T1']} records={[src.main]} />
+        <DeckLink n={SLIDE.alloc} show={isLatest} />
       </Panel>
 
       <Panel
+        id="cio-trend"
         className="mt"
         kicker="Across reports"
         title="Trend by report, oldest first"
@@ -609,6 +789,7 @@ export function CioMonthlyView() {
               : ' The report prints no overlay programs for the OPEB Master Trust.'}
           </p>
           <SourceLine records={[flowsSrc]} />
+          <DeckLink n={SLIDE.alloc} show={isLatest} />
         </Panel>
 
         <Panel
@@ -663,6 +844,7 @@ export function CioMonthlyView() {
             the PDF and are not reproduced.
           </p>
           <SourceLine records={[src.main]} />
+          <DeckLink n={SLIDE.hist} show={isLatest} />
         </Panel>
       </div>
 
@@ -731,6 +913,7 @@ export function CioMonthlyView() {
           </p>
         )}
         <SourceLine records={[marketSrc]} />
+        <DeckLink n={SLIDE.market} show={isLatest} />
       </Panel>
 
       {isLatest ? (
@@ -758,6 +941,7 @@ export function CioMonthlyView() {
             >
               <GeoTable e={e} />
               <SourceLine records={[src.geo]} />
+              <DeckLink n={SLIDE.geo} show={isLatest} />
             </Panel>
           </div>
 
@@ -806,6 +990,7 @@ export function CioMonthlyView() {
               quiet period — an editorial grouping to help the reader, not a report category.
             </p>
             <SourceLine records={[cioSource(vintage, 'pp. 19–20, 24', 19)]} />
+            <DeckLink n={SLIDE.ops} show={isLatest} />
           </Panel>
         </>
       ) : (
