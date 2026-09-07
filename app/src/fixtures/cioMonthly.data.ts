@@ -1,437 +1,123 @@
-import type { CioDeckData } from './cioMonthly';
+import type { OpsStatus } from './cioMonthly';
 
 /**
- * CIO Monthly Report figures (July 8, 2026; data through May 31, 2026) — the single source for
- * the CIO Monthly tab and for the slide deck served at /deck/ (whose embedded data block is
- * generated from this file by `npm run sync:deck`). Lifted verbatim from the deck's own data
- * block on 2026-09-07 by evaluating it, not by retyping. All values reported_public from the
- * pages named in each entity's `pages` field and in the source registry.
+ * Editorial content of the CIO Monthly Report — the parts a reader writes rather than a table
+ * prints (notable items, key macro indicators, initiatives, personnel, manager and consultant
+ * updates). Hand-maintained for the LATEST report only; the numeric vintages live in
+ * `cioVintages.data.ts` (generated). `EDITORIAL_FOR` names the report this content belongs to,
+ * and a unit test fails when a newer vintage is extracted without refreshing it.
  */
-export const DECK_DATA: CioDeckData = {
-  PERIODS: ['1 M', '3 M', 'FYTD', 'YTD', '1 Y', '3 Y', '5 Y', '10 Y'],
-  ENT: {
-    pension: {
-      name: 'LACERA Pension Fund',
-      short: 'Pension Fund',
-      aum: 93.9,
-      mv: 93948,
-      cash: 1228,
-      god: 1.44,
-      pages: 'pp. 8–9',
-      total: {
-        r: [2, 2.5, 12, 5.8, 15.1, 11.1, 7.6, 9.1],
-        b: [2.6, 4.4, 16.3, 7.1, 18, 13.3, 7.5, 8.8],
-        h: [0.6, 1.7, 6.4, 2.9, 7, 7, 7, 7],
-      },
-      comps: [
-        {
-          k: 'growth',
-          n: 'Growth',
-          short: 'Growth',
-          mv: 45822,
-          pct: 48.8,
-          tgt: 48,
-          flow: 212,
-          r: [2.9, 4.4, 17.6, 8.2, 21.2, 15.3, 10.2, null],
-          b: [3.7, 6.9, 26.9, 11, 28.7, 21, 11.3, null],
-        },
-        {
-          k: 'credit',
-          n: 'Credit',
-          short: 'Credit',
-          mv: 11760,
-          pct: 12.5,
-          tgt: 13,
-          flow: -191,
-          r: [2.4, 2.3, 5.8, 4.6, 13.6, 12.9, 8.1, null],
-          b: [1.4, 1.2, 6.2, 2, 8, 9.2, 5, null],
-        },
-        {
-          k: 'ra',
-          n: 'Real Assets & Inflation Hedges',
-          short: 'Real Assets & IH',
-          mv: 13658,
-          pct: 14.5,
-          tgt: 15,
-          flow: -37,
-          r: [-0.1, 0.3, 9.1, 4.6, 10.2, 5.2, 5.6, null],
-          b: [3.9, 7.3, 12.9, 8.5, 14.5, 6.2, 5.7, null],
-        },
-        {
-          k: 'rrm',
-          n: 'Risk Reduction & Mitigation',
-          short: 'Risk Reduction & Mit.',
-          mv: 22158,
-          pct: 23.6,
-          tgt: 24,
-          flow: 0,
-          r: [0.7, -0.7, 4.9, 1.4, 6.1, 4.5, 1.3, null],
-          b: [0.4, -0.6, 4.1, 1, 5.4, 4.1, 0.9, null],
-        },
-      ],
-      other: {
-        n: 'Overlays & Hedges + Other Asset',
-        mv: 549,
-        pct: 0.6,
-        flow: -4,
-      },
-      netflow: -20,
-      overlays: [
-        {
-          n: 'Currency hedge',
-          may: 4.2,
-          si: 1546.1,
-        },
-        {
-          n: 'Cash / rebalance overlay',
-          may: 66.9,
-          si: 810.8,
-        },
-      ],
-      hist: {
-        c: [1, 0, 1, 3, 6, 10, 11, 24, 37, 17, 6, 3, 0, 1],
-        mean: 0.75,
-        saa: 0.6,
-        sd: 1.94,
-        min: -6.9,
-        max: 6.6,
-        latest: 2,
-        latestBin: 9,
-      },
-      geo: {
-        dm: 94,
-        em: 6,
-        dmN: 26,
-        emN: 52,
-        total: 78,
-        page: 11,
-        top: [
-          ['United States', 75.3, 'dm'],
-          ['United Kingdom', 4.1, 'dm'],
-          ['Canada', 2.6, 'dm'],
-          ['Japan', 1.9, 'dm'],
-          ['China', 1.7, 'em'],
-          ['Germany', 1.6, 'dm'],
-          ['Taiwan', 1.1, 'em'],
-          ['South Korea', 1, 'em'],
-          ['Brazil', 0.5, 'em'],
-          ['India', 0.4, 'em'],
-        ],
-      },
-    },
-    opeb: {
-      name: 'OPEB Master Trust',
-      short: 'OPEB Master Trust',
-      aum: 6.3,
-      mv: 6264,
-      cash: 199,
-      god: 1.38,
-      pages: 'pp. 13–14',
-      total: {
-        r: [2.2, 3.2, 14.1, 6.9, 17.1, 13.5, 6.7, 9.4],
-        b: [2.6, 3.4, 14.7, 6.7, 17.6, 13, 6.3, 8.5],
-        h: [0.5, 1, 5.7, 2.6, 6.2, 6.2, 6.1, 6],
-      },
-      comps: [
-        {
-          k: 'growth',
-          n: 'OPEB Growth',
-          short: 'Growth',
-          mv: 2840,
-          pct: 45.3,
-          tgt: 45,
-          flow: -95,
-          r: [4.6, 7, 25, 12.2, 30.7, 22.2, 11.2, null],
-          b: [4.6, 7.2, 25.9, 12.2, 30.4, 22.3, 11, null],
-        },
-        {
-          k: 'credit',
-          n: 'OPEB Credit',
-          short: 'Credit',
-          mv: 989,
-          pct: 15.8,
-          tgt: 16,
-          flow: 23,
-          r: [0.4, 1.5, 5.7, 1.6, 7, 8.1, 4.4, null],
-          b: [1.4, 1.2, 6.2, 2, 8, 9.3, 4.8, null],
-        },
-        {
-          k: 'ra',
-          n: 'OPEB Real Assets & Inflation Hedges',
-          short: 'Real Assets & IH',
-          mv: 756,
-          pct: 12.1,
-          tgt: 13,
-          flow: -37,
-          r: [0, 1.5, 10.1, 7, 10, 8.5, 4.3, null],
-          b: [1.4, 2.4, 11.1, 6.3, 12.7, 5.7, 3, null],
-        },
-        {
-          k: 'rrm',
-          n: 'OPEB Risk Reduction & Mitigation',
-          short: 'Risk Reduction & Mit.',
-          mv: 1678,
-          pct: 26.8,
-          tgt: 26,
-          flow: 44,
-          r: [0.3, -1.7, 3.4, 0.5, 5.1, 3.1, 0.3, null],
-          b: [0.3, -1.7, 3.2, 0.3, 4.9, 2.9, -0.1, null],
-        },
-      ],
-      other: null,
-      netflow: -65,
-      overlays: null,
-      hist: {
-        c: [3, 2, 2, 5, 9, 8, 6, 18, 31, 14, 10, 4, 3, 5],
-        mean: 0.8,
-        saa: 0.55,
-        sd: 3.11,
-        min: -12.2,
-        max: 8.6,
-        latest: 2.2,
-        latestBin: 9,
-      },
-      geo: {
-        dm: 94,
-        em: 6,
-        dmN: 26,
-        emN: 35,
-        total: 61,
-        page: 16,
-        top: [
-          ['United States', 79.8, 'dm'],
-          ['Japan', 2.7, 'dm'],
-          ['Canada', 2.3, 'dm'],
-          ['United Kingdom', 2, 'dm'],
-          ['Taiwan', 1.5, 'em'],
-          ['South Korea', 1.3, 'em'],
-          ['China', 1.1, 'em'],
-          ['France', 1, 'dm'],
-          ['India', 0.7, 'em'],
-          ['Brazil', 0.2, 'em'],
-        ],
-      },
-    },
+
+export const EDITORIAL_FOR = '2026-08-12';
+
+export const PERIODS = ['1 M', '3 M', 'FYTD', 'YTD', '1 Y', '3 Y', '5 Y', '10 Y'];
+
+export const BINS = [
+  '≤ -6',
+  '-6 to -5',
+  '-5 to -4',
+  '-4 to -3',
+  '-3 to -2',
+  '-2 to -1',
+  '-1 to 0',
+  '0 to 1',
+  '1 to 2',
+  '2 to 3',
+  '3 to 4',
+  '4 to 5',
+  '5 to 6',
+  '≥ 6',
+];
+
+/** August 12, 2026 report, pp. 4 and 6 (Bloomberg, St. Louis Federal Reserve). */
+export const MACRO: { l: string; v: string; s: string }[] = [
+  {
+    l: 'PCE inflation, June 2026',
+    v: '3.7% y/y',
+    s: 'Core 3.3%; easing driven largely by a temporary drop in energy prices after the mid-June ceasefire, since reversed (p. 4)',
   },
-  BINS: [
-    '≤ -6',
-    '-6 to -5',
-    '-5 to -4',
-    '-4 to -3',
-    '-3 to -2',
-    '-2 to -1',
-    '-1 to 0',
-    '0 to 1',
-    '1 to 2',
-    '2 to 3',
-    '3 to 4',
-    '4 to 5',
-    '5 to 6',
-    '≥ 6',
-  ],
-  MKT: [
-    {
-      g: 'Reference portfolio',
-      rows: [
-        {
-          n: '60:40 Equity:Bond',
-          i: '60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate',
-          v: [-0.3, 9.1, 15.8, 7.4, 15.8, 13.2, 6.4, 8.3],
-        },
-      ],
-    },
-    {
-      g: 'Global equity',
-      rows: [
-        {
-          n: 'U.S. Large Cap',
-          i: 'S&P 500 Total Return',
-          v: [-1, 15.2, 22.3, 10.2, 22.3, 20.6, 13.4, 15.5],
-        },
-        {
-          n: 'U.S. Small Cap',
-          i: 'Russell 2000 Total Return',
-          v: [3.7, 21.5, 40.8, 22.6, 40.8, 18.6, 7, 11.6],
-        },
-        {
-          n: 'Non-U.S. All Cap',
-          i: 'MSCI ACWI ex-U.S. IMI Total Return',
-          v: [-1, 13.8, 26.6, 13.1, 26.6, 18.5, 8.4, 9.8],
-        },
-        {
-          n: 'Emerging Markets',
-          i: 'MSCI Emerging Markets Total Return',
-          v: [-1.4, 24.1, 43.5, 23.8, 43.5, 23, 7.2, 10.1],
-        },
-      ],
-    },
-    {
-      g: 'Private equity',
-      rows: [
-        {
-          n: 'Private Equity Buyout',
-          i: 'Thomson Reuters PE Buyout Index',
-          v: [0.1, 20.5, 26.1, 12.3, 26.1, 26.7, 9.1, 14],
-        },
-      ],
-    },
-    {
-      g: 'Fixed income',
-      rows: [
-        {
-          n: 'U.S. Corporate High Yield',
-          i: 'Bloomberg U.S. Corporate High Yield Total Return',
-          v: [0.3, 2.5, 5.9, 2, 5.9, 8.8, 4.2, 5.8],
-        },
-        {
-          n: 'U.S. Long-Term Treasuries',
-          i: 'Bloomberg Long Term U.S. Treasury Total Return',
-          v: [1, 0.9, 2.9, 0.4, 2.9, -0.5, -5.6, -1.3],
-        },
-        {
-          n: 'DM Leveraged Loans',
-          i: 'Credit Suisse Leveraged Loan Total Return',
-          v: [0.1, 1.8, 4.3, 1.4, 4.3, 7.6, 5.9, 5.5],
-        },
-      ],
-    },
-    {
-      g: 'Real assets & inflation hedges',
-      rows: [
-        {
-          n: 'Natural Resources',
-          i: 'S&P Global Natural Resources Total Return',
-          v: [-7.8, -8.5, 28.4, 9.7, 28.4, 11.9, 9.3, 10.4],
-        },
-        {
-          n: 'Global Infrastructure',
-          i: 'Dow Jones Brookfield Global Infrastructure Composite',
-          v: [-0.2, -0.2, 13.2, 11, 13.2, 13.4, 8.4, 7],
-        },
-        {
-          n: 'TIPS 0–5 Years',
-          i: 'Bloomberg U.S. Treasury TIPS 0–5 Years Total Return',
-          v: [-0.4, 0.6, 3.6, 1.6, 3.6, 5.1, 3.3, 3.1],
-        },
-        {
-          n: 'Real Estate (ODCE, net)¹',
-          i: 'NCREIF Fund Index – ODCE (Net), latest available quarter',
-          v: [0, 1, 2.3, 1, 3.1, -2.8, 2.3, 3.8],
-        },
-      ],
-    },
-  ],
-  MACRO: [
-    {
-      l: 'PCE inflation, May 2026',
-      v: '4.1% y/y',
-      s: 'Highest since April 2023 (p. 4)',
-    },
-    {
-      l: 'Federal funds rate, June meeting',
-      v: '3.50–3.75%',
-      s: 'Fourth consecutive pause in 2026 (p. 4)',
-    },
-    {
-      l: 'U.S. Dollar Index, YTD to 6/30',
-      v: '+2.9%',
-      s: 'EUR −2.8 · JPY −3.6 · GBP −1.6 · CAD −3.3 · MXN +3.0 · CNY +3.0 (p. 6)',
-    },
-    {
-      l: 'Labor force participation',
-      v: '61.8%',
-      s: 'Prior-month data used during the government shutdown (p. 6, fn. 2)',
-    },
-    {
-      l: 'Themes to watch',
-      v: 'Tariffs · AI · rates',
-      s: 'Section 301 tariffs, Strait of Hormuz, earnings concentrated in IT/AI (p. 4)',
-    },
-  ],
-  OPS: [
-    {
-      e: 'Total Fund',
-      item: 'April 2024 approved Strategic Asset Allocation implementation',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'Total Fund',
-      item: 'Adhering to the BOI-approved 2026 Strategic Framework',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'Total Fund',
-      item: 'Planning for the Strategic Framework and Initiatives Refresh',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'Total Fund',
-      item: 'Risk system onboarding',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'OPEB Master Trust',
-      item: 'April 2024 approved Strategic Asset Allocation implementation',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'OPEB Master Trust',
-      item: 'Risk system onboarding',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'Investments Division',
-      item: 'Principal Investment Officer — 1 position',
-      st: 'dev',
-      p: 19,
-    },
-    {
-      e: 'Investments Division',
-      item: 'Finance Analyst III — 4 positions',
-      st: 'dev',
-      p: 19,
-    },
-    {
-      e: 'Investments Division',
-      item: 'Finance Analyst III — 1 position',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'Investments Division',
-      item: 'Finance Analyst II — 1 position',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'Investments Division',
-      item: 'Finance Analyst Fellowship — 2 positions',
-      st: 'prog',
-      p: 19,
-    },
-    {
-      e: 'Manager update',
-      item: 'Invesco Real Estate Asia Fund (core private real estate, $111.2 mm): lead PM Ian Schilling retires Q3 2026 after 15 years; successor Phinex Wong, 8 years on the Fund team',
-      st: 'info',
-      p: 20,
-    },
-    {
-      e: 'Consultant search',
-      item: 'Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q2 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)',
-      st: 'quiet',
-      p: 24,
-    },
-  ],
-  STATUS: {
-    prog: ['In progress', 'prog'],
-    dev: ['In development', 'dev'],
-    info: ['For attention', 'info'],
-    quiet: ['Quiet period', 'quiet'],
+  {
+    l: 'Federal funds rate, July meeting',
+    v: '3.50–3.75%',
+    s: 'Fifth consecutive pause; three dissents in favor of an increase (p. 4)',
   },
+  {
+    l: 'U.S. Dollar Index, YTD to 7/31',
+    v: '+1.6%',
+    s: 'GBP +0.1 · EUR −1.9 · JPY −0.4 · CAD −2.1 · MXN +3.8 · CNY +3.5 (p. 6)',
+  },
+  {
+    l: 'Unemployment and participation',
+    v: '4.2% · 61.5%',
+    s: 'Unemployment rate and labor force participation, latest print (p. 6)',
+  },
+  {
+    l: 'Themes to watch',
+    v: 'Tariffs · AI · rates',
+    s: 'Tariffs of 10–12.5% now cover over 99% of U.S. imports; Strait of Hormuz disruption; Q2 earnings beat with AI capex in focus (p. 4)',
+  },
+];
+
+/** August 12, 2026 report, p. 19 (initiatives, personnel), p. 20 (manager updates), p. 24 (quiet period). */
+export const OPS: { e: string; item: string; st: OpsStatus; p: number }[] = [
+  {
+    e: 'Total Fund',
+    item: 'April 2024 approved Strategic Asset Allocation implementation',
+    st: 'prog',
+    p: 19,
+  },
+  {
+    e: 'Total Fund',
+    item: 'Adhering to the BOI-approved 2026 Strategic Framework',
+    st: 'prog',
+    p: 19,
+  },
+  {
+    e: 'Total Fund',
+    item: 'Planning for the Strategic Framework and Initiatives Refresh',
+    st: 'prog',
+    p: 19,
+  },
+  { e: 'Total Fund', item: 'Risk system onboarding', st: 'prog', p: 19 },
+  {
+    e: 'OPEB Master Trust',
+    item: 'April 2024 approved Strategic Asset Allocation implementation',
+    st: 'prog',
+    p: 19,
+  },
+  { e: 'OPEB Master Trust', item: 'Risk system onboarding', st: 'prog', p: 19 },
+  {
+    e: 'Investments Division',
+    item: 'Principal Investment Officer — 1 position',
+    st: 'dev',
+    p: 19,
+  },
+  { e: 'Investments Division', item: 'Finance Analyst III — 5 positions', st: 'dev', p: 19 },
+  { e: 'Investments Division', item: 'Finance Analyst II — 1 position', st: 'prog', p: 19 },
+  {
+    e: 'Investments Division',
+    item: 'Finance Analyst Fellowship — 2 positions',
+    st: 'done',
+    p: 19,
+  },
+  {
+    e: 'Manager update',
+    item: 'Acadian Asset Management (global equities separate account, $1,023 mm): Alexandre Voitenok appointed co-Chief Investment Officer effective January 1, 2027, after serving as Deputy CIO since 2024',
+    st: 'info',
+    p: 20,
+  },
+  {
+    e: 'Consultant search',
+    item: 'Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q3 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)',
+    st: 'quiet',
+    p: 24,
+  },
+];
+
+export const STATUS: Record<OpsStatus, [label: string, cls: string]> = {
+  prog: ['In progress', 'prog'],
+  dev: ['In development', 'dev'],
+  info: ['For attention', 'info'],
+  quiet: ['Quiet period', 'quiet'],
+  done: ['Completed', 'done'],
 };

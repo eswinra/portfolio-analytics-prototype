@@ -2,8 +2,9 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { CIO_VINTAGE, cioFor } from './fixtures/cioMonthly';
+import { cioFor, longDate } from './fixtures/cioMonthly';
 import { boardBrief, publishedFor } from './fixtures/published';
+import { useCioVintage } from './lib/cioVintage';
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { EntityProvider, useEntity } from './lib/entity';
 import { AllocationView } from './views/AllocationView';
@@ -49,7 +50,7 @@ const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/funded', 'Funded Status', 'Funded status and membership'],
   ['/risk', 'Policy Monitoring', 'Policy monitoring'],
   ['/holdings', 'Holdings & Fees', 'Holdings & fees'],
-  ['/cio', 'CIO Monthly', 'CIO Monthly Report — data through May 31, 2026'],
+  ['/cio', 'CIO Monthly', 'CIO Monthly Report'],
 ];
 
 /** Workstation mode — where the work is populated: the synthetic contract-data pipeline
@@ -104,7 +105,12 @@ function TitleBand() {
   const isOverview = !workstation && view[0] === '/';
   const isAcfr = pathname === '/acfr';
   const isCio = pathname === '/cio';
-  const bandTitle = pathname === '/funded' && entity === 'OPEB' ? 'Benefits & prefunding' : view[2];
+  const { vintage } = useCioVintage();
+  const bandTitle = isCio
+    ? `CIO Monthly Report — data through ${longDate(vintage.dataThrough)}`
+    : pathname === '/funded' && entity === 'OPEB'
+      ? 'Benefits & prefunding'
+      : view[2];
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   async function copyBrief() {
@@ -144,7 +150,7 @@ function TitleBand() {
                 ? 'Workstation · ACFR tracker — illustrative demo values'
                 : `Workstation · synthetic ${dataset.meta.entityId} data`
               : isCio
-                ? cioFor(entity).name
+                ? cioFor(entity, vintage).name
                 : d.label}
           </span>
           {isOverview ? (
@@ -219,6 +225,7 @@ function Shell() {
   const { pathname } = useLocation();
   const workstation = isWorkstationPath(pathname);
   const cio = pathname === '/cio';
+  const { vintage } = useCioVintage();
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
   const mainRef = useRef<HTMLElement>(null);
 
@@ -237,7 +244,7 @@ function Shell() {
       <div className="notice-bar" role="note">
         <span>
           {cio
-            ? `Prototype — published monthly figures (CIO Monthly Report, ${CIO_VINTAGE.reportDate})`
+            ? `Prototype — published monthly figures (CIO Monthly Report, ${vintage.reportLabel})`
             : 'Prototype — published FY2025 figures (PAFR · ACFR · IPS)'}
         </span>
         <span className="right">Not an official LACERA system or performance report</span>
@@ -281,8 +288,8 @@ function Shell() {
               </>
             ) : cio ? (
               <>
-                Data through <strong>{CIO_VINTAGE.dataThrough}</strong> · CIO Monthly Report,{' '}
-                {CIO_VINTAGE.reportDate}
+                Data through <strong>{longDate(vintage.dataThrough)}</strong> · CIO Monthly Report,{' '}
+                {vintage.reportLabel}
               </>
             ) : (
               <>
@@ -362,7 +369,7 @@ function Shell() {
           <div className="meta">
             Sources: 2025 Popular Annual Financial Report · 2025 Annual Comprehensive Financial
             Report · Investment Policy Statement (restated June 12, 2024) · OPEB Investment Policy
-            Statement · Chief Investment Officer Monthly Report (July 8, 2026)
+            Statement · Chief Investment Officer Monthly Reports (April 2025 – August 2026)
           </div>
           <div className="meta">
             Workstation (synthetic contract data):{' '}

@@ -106,4 +106,21 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
       'deck/',
     );
   });
+
+  test('selecting an earlier report moves the masthead, band and panels together', async ({
+    page,
+  }) => {
+    await ready(page, '/cio');
+    const select = page.getByRole('combobox', { name: 'Report' });
+    const options = await select.locator('option').allTextContents();
+    expect(options.length).toBeGreaterThan(1);
+    // the second option is the prior report
+    const priorValue = await select.locator('option').nth(1).getAttribute('value');
+    await select.selectOption(priorValue!);
+    await expect(page).toHaveURL(new RegExp(`v=${priorValue}`));
+    const priorLabel = options[1]!.split(' — data through ')[1]!;
+    await expect(page.locator('.asof')).toContainText(priorLabel);
+    await expect(page.locator('#view-title')).toContainText(priorLabel);
+    await expect(page.getByText(/The slide deck always shows the latest report/)).toBeVisible();
+  });
 });

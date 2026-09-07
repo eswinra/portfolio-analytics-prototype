@@ -353,6 +353,7 @@
   .st.dev { background: #F3F4F6; color: var(--cat); border: 1px solid var(--line); }
   .st.info { background: #FFF7EE; color: #7A4A2A; border: 1px solid #EBD6C2; }
   .st.quiet { background: #F3F4F6; color: var(--cat); border: 1px solid var(--line); }
+  .st.done { background: #EAF6EE; color: #1E5A34; border: 1px solid #BFE3CB; }
 
   .fade { animation: fadein .35s ease both; }
   @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
@@ -387,7 +388,7 @@
 
 <div class="app">
   <div class="topbar">
-    <div><span class="tag">PROTOTYPE SAMPLE</span><b>CIO Monthly — decision deck</b> · public figures from the report presented July 8, 2026 · not an official LACERA publication</div>
+    <div><span class="tag">PROTOTYPE SAMPLE</span><b>CIO Monthly — decision deck</b> · public figures from the report presented <span class="v-report"></span> · not an official LACERA publication</div>
     <div class="entity">Entity
       <div class="seg" id="entity-seg">
         <button class="seg-btn" data-v="pension" aria-pressed="true">Pension Fund</button>
@@ -423,7 +424,7 @@
             <h2 id="s1-title">Chief Investment Officer Monthly Report — Executive read</h2>
             <p class="finding" id="s1-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>Board of Investments, July 8, 2026<span class="ent-chip" id="s1-ent"></span></div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>Net of fees · USD<br>Board of Investments, <span class="v-report"></span><span class="ent-chip" id="s1-ent"></span></div>
         </div>
         <div class="bd">
           <div class="exec">
@@ -432,7 +433,7 @@
           </div>
           <div class="nb">
             <div class="note"><span class="buildhint" id="exec-hint"></span> Four questions, one at a time; the highlighted tiles belong to the question on screen. Click a tile to jump to its slide.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 8–9, 13–14, 18. Differences (pts) and sums are calculated from reported figures.<br><span class="cls">reported_public · calculated</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 8–9, 13–14, 18. Differences (pts) and sums are calculated from reported figures.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">1</span></div>
@@ -445,7 +446,7 @@
             <h2 id="sum-title">Total Fund — Performance Summary</h2>
             <p class="finding" id="sum-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>Market values in $ millions<span class="ent-chip"></span></div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>Net of fees · USD<br>Market values in $ millions<span class="ent-chip"></span></div>
         </div>
         <div class="bd">
           <div class="sum">
@@ -463,7 +464,7 @@
           </div>
           <div class="nb">
             <div class="note" id="sum-note"></div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 8–9 (Pension) and pp. 13–14 (OPEB). Differences vs. target and vs. benchmark are calculated from the reported figures.<br><span class="cls">reported_public · calculated</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 8–9 (Pension) and pp. 13–14 (OPEB). Differences vs. target and vs. benchmark are calculated from the reported figures.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">2</span></div>
@@ -476,7 +477,7 @@
             <h2 id="perf-title">Performance vs. policy benchmark and actuarial hurdle</h2>
             <p class="finding" id="perf-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>≥ 3 Y annualized<span class="ent-chip" id="s2-ent"></span></div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>Net of fees · USD<br>≥ 3 Y annualized<span class="ent-chip" id="s2-ent"></span></div>
         </div>
         <div class="bd">
           <div class="ctl">
@@ -507,7 +508,7 @@
           </div>
           <div class="nb">
             <div class="note" id="perf-note"><span class="buildhint" id="buildhint"></span></div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 9 (Pension) and p. 14 (OPEB). Excess = net return − policy benchmark, calculated in percentage points.<br><span class="cls">reported_public · calculated</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 9 (Pension) and p. 14 (OPEB). Excess = net return − policy benchmark, calculated in percentage points.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">3</span></div>
@@ -520,7 +521,7 @@
             <h2>Where the benchmark gap came from</h2>
             <p class="finding" id="wf-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of May 31, 2026</b>Net of fees · USD<br>Weights at May 31<span class="ent-chip" id="s3-ent"></span></div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>Net of fees · USD<br>Weights at <span class="v-through"></span><span class="ent-chip" id="s3-ent"></span></div>
         </div>
         <div class="bd">
           <div class="ctl">
@@ -543,21 +544,21 @@
             <div class="tablev" id="wf-table"></div>
           </div>
           <div class="nb">
-            <div class="note">Indicative only: each composite's excess return × its May 31 weight. Beginning-of-period weights are not in the monthly report, so the residual carries allocation effect, weight drift, compounding, overlays and cash.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 9 / p. 14 (returns, benchmarks, weights). Contributions and residual are a proxy estimate, not reported attribution.<br><span class="cls">reported_public · proxy_estimate</span></div>
+            <div class="note">Indicative only: each composite's excess return × its <span class="v-through"></span> weight. Beginning-of-period weights are not in the monthly report, so the residual carries allocation effect, weight drift, compounding, overlays and cash.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 9 / p. 14 (returns, benchmarks, weights). Contributions and residual are a proxy estimate, not reported attribution.<br><span class="cls">reported_public · proxy_estimate</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">4</span></div>
       </section>
 
       <!-- 5 · allocation & flows -->
-      <section class="slide" data-title="Allocation vs. policy and May flows" data-id="alloc" data-frags="2">
+      <section class="slide" data-title="Allocation vs. policy and monthly flows" data-id="alloc" data-frags="2">
         <div class="hd">
           <div>
-            <h2>Allocation vs. policy, May flows, overlay programs</h2>
+            <h2>Allocation vs. policy, <span class="v-month"></span> flows, overlay programs</h2>
             <p class="finding" id="al-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of May 31, 2026</b>Market values in $ millions<br>Targets: 2024 SAA<span class="ent-chip" id="s4-ent"></span></div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>Market values in $ millions<br>Targets: 2024 SAA<span class="ent-chip" id="s4-ent"></span></div>
         </div>
         <div class="bd">
           <div class="ctl" style="height:30px">
@@ -571,7 +572,7 @@
             <div class="chartv">
               <div class="alloc2">
                 <div><h3>Actual weight minus policy target</h3><div class="sub">Percentage points · each row shows actual vs. target</div><div class="hbars" id="drift"></div></div>
-                <div class="rev" id="al-flows"><h3>May rebalancing activity</h3><div class="sub">$ millions, net flow by functional category</div><div class="hbars" id="flows"></div></div>
+                <div class="rev" id="al-flows"><h3><span class="v-month"></span> rebalancing activity</h3><div class="sub">$ millions, net flow by functional category</div><div class="hbars" id="flows"></div></div>
               </div>
               <div class="ovl rev" id="ovl"></div>
             </div>
@@ -579,7 +580,7 @@
           </div>
           <div class="nb">
             <div class="note" id="al-note"><span class="buildhint" id="al-hint"></span> Flows are the report's "rebalancing activity" and can include capital calls, distributions and cash needs — direction vs. target is shown, not judged.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 8–9, 13–14 (weights, targets) and p. 18 (rebalancing, overlay gains). Drift and flow direction are calculated.<br><span class="cls">reported_public · calculated</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 8–9, 13–14 (weights, targets) and p. 18 (rebalancing, overlay gains). Drift and flow direction are calculated.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">5</span></div>
@@ -592,11 +593,11 @@
             <h2>Monthly return distribution, last 120 months</h2>
             <p class="finding" id="hist-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>June 2016 – May 2026</b>120 months · net of fees<br>Bins in percentage points<span class="ent-chip" id="s5-ent"></span></div>
+          <div class="asof"><b><span class="v-histrange"></span></b>120 months · net of fees<br>Bins in percentage points<span class="ent-chip" id="s5-ent"></span></div>
         </div>
         <div class="bd">
           <div class="ctl" style="height:30px">
-            <div class="leg"><span><i class="k" style="background:var(--blue)"></i>Months in bin</span><span><i class="k" style="background:var(--cyan)"></i>Bin containing May 2026</span></div>
+            <div class="leg"><span><i class="k" style="background:var(--blue)"></i>Months in bin</span><span><i class="k" style="background:var(--cyan)"></i>Bin containing <span class="v-monthyear"></span></span></div>
             <div class="seg" data-toggle-view="hist">
               <button class="seg-btn" data-v="chart" aria-pressed="true">Chart</button>
               <button class="seg-btn" data-v="table" aria-pressed="false">Table</button>
@@ -608,7 +609,7 @@
           </div>
           <div class="nb">
             <div class="note" id="hist-note"><span class="buildhint" id="hist-hint"></span> Press E to morph between the Pension Fund and the OPEB Master Trust distributions.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 9 and 14. Shares of months and tail counts are calculated from the reported bin counts.<br><span class="cls">reported_public · calculated</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 9 and 14. Shares of months and tail counts are calculated from the reported bin counts.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">6</span></div>
@@ -621,7 +622,7 @@
             <h2>Market context — not fund performance</h2>
             <p class="finding" id="mkt-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of June 30, 2026</b>Index total returns, USD<br>&lt; 1 Y cumulative · ≥ 3 Y annualized</div>
+          <div class="asof"><b>As of <span class="v-market"></span></b>Index total returns, USD<br>&lt; 1 Y cumulative · ≥ 3 Y annualized</div>
         </div>
         <div class="bd">
           <div class="ctl">
@@ -646,7 +647,7 @@
           </div>
           <div class="nb">
             <div class="note"><span class="buildhint" id="mkt-hint"></span> Public index moves are context for the Fund's benchmark-relative results, not a measure of them.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, pp. 4–6 (Bloomberg, State Street, St. Louis Fed). ¹NCREIF ODCE (net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 4–6 (Bloomberg, State Street, St. Louis Fed). ¹NCREIF ODCE (net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">7</span></div>
@@ -659,7 +660,7 @@
             <h2 id="geo-title">Total Fund — Geographic Exposure by AUM</h2>
             <p class="finding" id="geo-finding">&nbsp;</p>
           </div>
-          <div class="asof"><b>As of May 31, 2026</b>Ex overlays &amp; hedges<br>By domicile of security / asset<span class="ent-chip"></span></div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>Ex overlays &amp; hedges<br>By domicile of security / asset<span class="ent-chip"></span></div>
         </div>
         <div class="bd">
           <div class="geo">
@@ -692,7 +693,7 @@
           </div>
           <div class="nb">
             <div class="note" id="geo-note">One fixed scale for both groups, so the gap between the U.S. and the largest emerging market is drawn to size.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 11 (Pension) and p. 16 (OPEB); footnotes 7–8 / 11–12: domicile-based, best available holdings-level transparency, MSCI Market Classification.<br><span class="cls">reported_public</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 11 (Pension) and p. 16 (OPEB); footnotes 7–8 / 11–12: domicile-based, best available holdings-level transparency, MSCI Market Classification.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">8</span></div>
@@ -705,7 +706,7 @@
             <h2>Portfolio, structural and operational items</h2>
             <p class="finding">Six initiatives in progress, nine positions open, one manager personnel change, one consultant search in quiet period</p>
           </div>
-          <div class="asof"><b>July 8, 2026 report</b>Status as reported<br>pp. 18–20, 24</div>
+          <div class="asof"><b><span class="v-report"></span> report</b>Status as reported<br>pp. 18–20, 24</div>
         </div>
         <div class="bd">
           <div class="ctl" style="height:30px">
@@ -715,7 +716,7 @@
           <div class="ops"><table class="ops-t" id="ops-t"></table></div>
           <div class="nb">
             <div class="note">Opens on the two items that need a decision or a watch; the other filters list the initiatives and searches as printed, with no target dates given in the report.</div>
-            <div class="src">Source: LACERA CIO Monthly Report, July 8, 2026, p. 19 (initiatives, personnel), p. 20 (manager updates), p. 24 (quiet period).<br><span class="cls">reported_public</span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 19 (initiatives, personnel), p. 20 (manager updates), p. 24 (quiet period).<br><span class="cls">reported_public</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">9</span></div>
@@ -755,24 +756,25 @@
   const money = v => (v < 0 ? '−$' : '$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 1 });
   const ease = t => 1 - Math.pow(1 - t, 3);
 
-  /* ==== SHARED DATA — generated from src/fixtures/cioMonthly.data.ts by `npm run sync:deck`; edit the fixture, not this block ==== */
+  /* ==== SHARED DATA — generated from src/fixtures/cioMonthly.ts (latest vintage) by `npm run sync:deck`; edit the fixtures, not this block ==== */
   const PERIODS = ["1 M","3 M","FYTD","YTD","1 Y","3 Y","5 Y","10 Y"];
-  const ENT = {"pension":{"name":"LACERA Pension Fund","short":"Pension Fund","aum":93.9,"mv":93948,"cash":1228,"god":1.44,"pages":"pp. 8–9","total":{"r":[2,2.5,12,5.8,15.1,11.1,7.6,9.1],"b":[2.6,4.4,16.3,7.1,18,13.3,7.5,8.8],"h":[0.6,1.7,6.4,2.9,7,7,7,7]},"comps":[{"k":"growth","n":"Growth","short":"Growth","mv":45822,"pct":48.8,"tgt":48,"flow":212,"r":[2.9,4.4,17.6,8.2,21.2,15.3,10.2,null],"b":[3.7,6.9,26.9,11,28.7,21,11.3,null]},{"k":"credit","n":"Credit","short":"Credit","mv":11760,"pct":12.5,"tgt":13,"flow":-191,"r":[2.4,2.3,5.8,4.6,13.6,12.9,8.1,null],"b":[1.4,1.2,6.2,2,8,9.2,5,null]},{"k":"ra","n":"Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":13658,"pct":14.5,"tgt":15,"flow":-37,"r":[-0.1,0.3,9.1,4.6,10.2,5.2,5.6,null],"b":[3.9,7.3,12.9,8.5,14.5,6.2,5.7,null]},{"k":"rrm","n":"Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":22158,"pct":23.6,"tgt":24,"flow":0,"r":[0.7,-0.7,4.9,1.4,6.1,4.5,1.3,null],"b":[0.4,-0.6,4.1,1,5.4,4.1,0.9,null]}],"other":{"n":"Overlays & Hedges + Other Asset","mv":549,"pct":0.6,"flow":-4},"netflow":-20,"overlays":[{"n":"Currency hedge","may":4.2,"si":1546.1},{"n":"Cash / rebalance overlay","may":66.9,"si":810.8}],"hist":{"c":[1,0,1,3,6,10,11,24,37,17,6,3,0,1],"mean":0.75,"saa":0.6,"sd":1.94,"min":-6.9,"max":6.6,"latest":2,"latestBin":9},"geo":{"dm":94,"em":6,"dmN":26,"emN":52,"total":78,"page":11,"top":[["United States",75.3,"dm"],["United Kingdom",4.1,"dm"],["Canada",2.6,"dm"],["Japan",1.9,"dm"],["China",1.7,"em"],["Germany",1.6,"dm"],["Taiwan",1.1,"em"],["South Korea",1,"em"],["Brazil",0.5,"em"],["India",0.4,"em"]]}},"opeb":{"name":"OPEB Master Trust","short":"OPEB Master Trust","aum":6.3,"mv":6264,"cash":199,"god":1.38,"pages":"pp. 13–14","total":{"r":[2.2,3.2,14.1,6.9,17.1,13.5,6.7,9.4],"b":[2.6,3.4,14.7,6.7,17.6,13,6.3,8.5],"h":[0.5,1,5.7,2.6,6.2,6.2,6.1,6]},"comps":[{"k":"growth","n":"OPEB Growth","short":"Growth","mv":2840,"pct":45.3,"tgt":45,"flow":-95,"r":[4.6,7,25,12.2,30.7,22.2,11.2,null],"b":[4.6,7.2,25.9,12.2,30.4,22.3,11,null]},{"k":"credit","n":"OPEB Credit","short":"Credit","mv":989,"pct":15.8,"tgt":16,"flow":23,"r":[0.4,1.5,5.7,1.6,7,8.1,4.4,null],"b":[1.4,1.2,6.2,2,8,9.3,4.8,null]},{"k":"ra","n":"OPEB Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":756,"pct":12.1,"tgt":13,"flow":-37,"r":[0,1.5,10.1,7,10,8.5,4.3,null],"b":[1.4,2.4,11.1,6.3,12.7,5.7,3,null]},{"k":"rrm","n":"OPEB Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":1678,"pct":26.8,"tgt":26,"flow":44,"r":[0.3,-1.7,3.4,0.5,5.1,3.1,0.3,null],"b":[0.3,-1.7,3.2,0.3,4.9,2.9,-0.1,null]}],"other":null,"netflow":-65,"overlays":null,"hist":{"c":[3,2,2,5,9,8,6,18,31,14,10,4,3,5],"mean":0.8,"saa":0.55,"sd":3.11,"min":-12.2,"max":8.6,"latest":2.2,"latestBin":9},"geo":{"dm":94,"em":6,"dmN":26,"emN":35,"total":61,"page":16,"top":[["United States",79.8,"dm"],["Japan",2.7,"dm"],["Canada",2.3,"dm"],["United Kingdom",2,"dm"],["Taiwan",1.5,"em"],["South Korea",1.3,"em"],["China",1.1,"em"],["France",1,"dm"],["India",0.7,"em"],["Brazil",0.2,"em"]]}}};
+  const ENT = {"pension":{"name":"LACERA Pension Fund","short":"Pension Fund","aum":93.9,"mv":93916,"cash":1309,"god":1.43,"pages":"pp. 8–9","total":{"r":[0.1,5.3,12.2,5.9,12.2,10.3,7.4,9.1],"b":[-1.4,5.3,14.8,5.6,14.8,11.9,7,8.6],"h":[0.6,1.7,7,3.4,7,7,7,7]},"comps":[{"k":"growth","n":"Growth","short":"Growth","mv":45687,"pct":48.6,"tgt":48,"r":[-0.1,9.5,17.5,8.1,17.5,13.9,9.8,null],"b":[-2.9,8.1,23.3,7.8,23.3,18.1,10.4,null],"flow":41},{"k":"credit","n":"Credit","short":"Credit","mv":11749,"pct":12.5,"tgt":13,"r":[0.9,3.5,6.7,5.6,6.7,12.8,8.2,null],"b":[0.6,2.2,6.8,2.5,6.8,9.2,5,null],"flow":-79},{"k":"ra","n":"Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":13501,"pct":14.4,"tgt":15,"r":[-1.1,-0.4,7.9,3.5,7.9,4.4,5.4,null],"b":[-1,6,11.8,7.4,11.8,5.3,5.5,null],"flow":-4},{"k":"rrm","n":"Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":22354,"pct":23.8,"tgt":24,"r":[0.5,0.8,5.5,1.9,5.5,4.7,1.3,null],"b":[0.4,1,4.5,1.4,4.5,4.3,0.9,null],"flow":0}],"other":{"n":"Overlays & Hedges + Other Asset","mv":624,"pct":0.7,"flow":-18},"netflow":-60,"overlays":[{"n":"Currency hedge","may":17.6,"si":1563.7},{"n":"Cash / rebalance overlay","may":-6.4,"si":804.3}],"hist":{"c":[1,0,1,3,6,10,11,24,37,17,6,3,0,1],"mean":0.75,"saa":0.6,"sd":1.94,"min":-6.9,"max":6.6,"latest":0.1,"latestBin":7},"geo":{"dm":94,"em":6,"dmN":26,"emN":53,"total":79,"page":11,"top":[["United States",75.7,"dm"],["United Kingdom",4.1,"dm"],["Canada",2.5,"dm"],["Japan",1.9,"dm"],["China",1.7,"em"],["Germany",1.6,"dm"],["Taiwan",1.1,"em"],["South Korea",1,"em"],["Brazil",0.4,"em"],["India",0.4,"em"]]}},"opeb":{"name":"OPEB Master Trust","short":"OPEB Master Trust","aum":6.4,"mv":6447,"cash":145,"god":1.37,"pages":"pp. 13–14","total":{"r":[0.2,7.6,14.4,7.2,14.4,12.2,6.5,9.5],"b":[-0.6,6.4,14,6.1,14,11.6,6,8.5],"h":[0.5,1.5,6.2,3.1,6.2,6.2,6.1,6]},"comps":[{"k":"growth","n":"OPEB Growth","short":"Growth","mv":2910,"pct":45.2,"tgt":45,"r":[-0.2,14.4,24.7,12,24.7,19.8,10.9,null],"b":[-1.3,12.9,24.2,10.7,24.2,19.5,10.4,null],"flow":77},{"k":"credit","n":"OPEB Credit","short":"Credit","mv":1016,"pct":15.8,"tgt":16,"r":[0.2,1.9,5.9,1.8,5.9,7.4,4.3,null],"b":[0.6,2.2,6.8,2.5,6.8,8.9,4.9,null],"flow":24},{"k":"ra","n":"OPEB Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":845,"pct":13.1,"tgt":13,"r":[1.7,5.9,12,8.9,12,8,4.3,null],"b":[-1.7,1,9.3,4.6,9.3,4.7,2.3,null],"flow":-30},{"k":"rrm","n":"OPEB Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":1670,"pct":25.9,"tgt":26,"r":[0.4,0.7,3.8,0.9,3.8,3.3,0.3,null],"b":[0.4,0.7,3.7,0.7,3.7,3.1,-0.2,null],"flow":41}],"other":{"n":"Not itemized (report total less listed composites)","mv":6,"pct":0,"flow":0},"netflow":112,"overlays":null,"hist":{"c":[3,2,2,5,9,8,5,18,31,15,10,4,3,5],"mean":0.81,"saa":0.55,"sd":3.11,"min":-12.2,"max":8.6,"latest":0.2,"latestBin":7},"geo":{"dm":94,"em":6,"dmN":26,"emN":35,"total":61,"page":16,"top":[["United States",79.6,"dm"],["Japan",2.7,"dm"],["Canada",2.3,"dm"],["United Kingdom",2,"dm"],["Taiwan",1.6,"em"],["South Korea",1.3,"em"],["France",1,"dm"],["China",1,"em"],["India",0.7,"em"],["Brazil",0.2,"em"]]}}};
   const BINS = ["≤ -6","-6 to -5","-5 to -4","-4 to -3","-3 to -2","-2 to -1","-1 to 0","0 to 1","1 to 2","2 to 3","3 to 4","4 to 5","5 to 6","≥ 6"];
-  const MKT = [{"g":"Reference portfolio","rows":[{"n":"60:40 Equity:Bond","i":"60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate","v":[-0.3,9.1,15.8,7.4,15.8,13.2,6.4,8.3]}]},{"g":"Global equity","rows":[{"n":"U.S. Large Cap","i":"S&P 500 Total Return","v":[-1,15.2,22.3,10.2,22.3,20.6,13.4,15.5]},{"n":"U.S. Small Cap","i":"Russell 2000 Total Return","v":[3.7,21.5,40.8,22.6,40.8,18.6,7,11.6]},{"n":"Non-U.S. All Cap","i":"MSCI ACWI ex-U.S. IMI Total Return","v":[-1,13.8,26.6,13.1,26.6,18.5,8.4,9.8]},{"n":"Emerging Markets","i":"MSCI Emerging Markets Total Return","v":[-1.4,24.1,43.5,23.8,43.5,23,7.2,10.1]}]},{"g":"Private equity","rows":[{"n":"Private Equity Buyout","i":"Thomson Reuters PE Buyout Index","v":[0.1,20.5,26.1,12.3,26.1,26.7,9.1,14]}]},{"g":"Fixed income","rows":[{"n":"U.S. Corporate High Yield","i":"Bloomberg U.S. Corporate High Yield Total Return","v":[0.3,2.5,5.9,2,5.9,8.8,4.2,5.8]},{"n":"U.S. Long-Term Treasuries","i":"Bloomberg Long Term U.S. Treasury Total Return","v":[1,0.9,2.9,0.4,2.9,-0.5,-5.6,-1.3]},{"n":"DM Leveraged Loans","i":"Credit Suisse Leveraged Loan Total Return","v":[0.1,1.8,4.3,1.4,4.3,7.6,5.9,5.5]}]},{"g":"Real assets & inflation hedges","rows":[{"n":"Natural Resources","i":"S&P Global Natural Resources Total Return","v":[-7.8,-8.5,28.4,9.7,28.4,11.9,9.3,10.4]},{"n":"Global Infrastructure","i":"Dow Jones Brookfield Global Infrastructure Composite","v":[-0.2,-0.2,13.2,11,13.2,13.4,8.4,7]},{"n":"TIPS 0–5 Years","i":"Bloomberg U.S. Treasury TIPS 0–5 Years Total Return","v":[-0.4,0.6,3.6,1.6,3.6,5.1,3.3,3.1]},{"n":"Real Estate (ODCE, net)¹","i":"NCREIF Fund Index – ODCE (Net), latest available quarter","v":[0,1,2.3,1,3.1,-2.8,2.3,3.8]}]}];
-  const MACRO = [{"l":"PCE inflation, May 2026","v":"4.1% y/y","s":"Highest since April 2023 (p. 4)"},{"l":"Federal funds rate, June meeting","v":"3.50–3.75%","s":"Fourth consecutive pause in 2026 (p. 4)"},{"l":"U.S. Dollar Index, YTD to 6/30","v":"+2.9%","s":"EUR −2.8 · JPY −3.6 · GBP −1.6 · CAD −3.3 · MXN +3.0 · CNY +3.0 (p. 6)"},{"l":"Labor force participation","v":"61.8%","s":"Prior-month data used during the government shutdown (p. 6, fn. 2)"},{"l":"Themes to watch","v":"Tariffs · AI · rates","s":"Section 301 tariffs, Strait of Hormuz, earnings concentrated in IT/AI (p. 4)"}];
-  const OPS = [{"e":"Total Fund","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"Total Fund","item":"Adhering to the BOI-approved 2026 Strategic Framework","st":"prog","p":19},{"e":"Total Fund","item":"Planning for the Strategic Framework and Initiatives Refresh","st":"prog","p":19},{"e":"Total Fund","item":"Risk system onboarding","st":"prog","p":19},{"e":"OPEB Master Trust","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"OPEB Master Trust","item":"Risk system onboarding","st":"prog","p":19},{"e":"Investments Division","item":"Principal Investment Officer — 1 position","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 4 positions","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst II — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst Fellowship — 2 positions","st":"prog","p":19},{"e":"Manager update","item":"Invesco Real Estate Asia Fund (core private real estate, $111.2 mm): lead PM Ian Schilling retires Q3 2026 after 15 years; successor Phinex Wong, 8 years on the Fund team","st":"info","p":20},{"e":"Consultant search","item":"Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q2 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)","st":"quiet","p":24}];
-  const STATUS = {"prog":["In progress","prog"],"dev":["In development","dev"],"info":["For attention","info"],"quiet":["Quiet period","quiet"]};
+  const MKT = [{"g":"Reference portfolio","rows":[{"n":"60:40 Equity:Bond","i":"60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate","v":[-0.7,2.2,-0.7,6.6,14.3,12.1,6.1,7.9]}]},{"g":"Global equity","rows":[{"n":"U.S. Large Cap","i":"S&P 500 Total Return","v":[-0.1,4.2,-0.1,10.1,19.6,19.3,12.9,15.1]},{"n":"U.S. Small Cap","i":"Russell 2000 Total Return","v":[-3,5,-3,18.9,34.2,15.1,7.1,10.6]},{"n":"Non-U.S. All Cap","i":"MSCI ACWI ex-U.S. IMI Total Return","v":[0.2,4,0.2,13.3,27.1,16.9,8.8,9.3]},{"n":"Emerging Markets","i":"MSCI Emerging Markets Total Return","v":[-3.1,4.8,-3.1,20,36.4,19.3,8,9.2]}]},{"g":"Private equity","rows":[{"n":"Private Equity Buyout","i":"Thomson Reuters PE Buyout Index","v":[-0.5,6.5,-0.5,11.8,22.3,24.3,8.6,13.4]}]},{"g":"Fixed income","rows":[{"n":"U.S. Corporate High Yield","i":"Bloomberg U.S. Corporate High Yield Total Return","v":[-0.2,0.5,-0.2,1.7,5.2,8.3,4,5.5]},{"n":"U.S. Long-Term Treasuries","i":"Bloomberg Long Term U.S. Treasury Total Return","v":[-4,-2.5,-4,-3.6,-0.3,-1.1,-7,-2]},{"n":"DM Leveraged Loans","i":"Credit Suisse Leveraged Loan Total Return","v":[0.8,1.4,0.8,2.2,4.3,7.4,6.1,5.4]}]},{"g":"Real assets & inflation hedges","rows":[{"n":"Natural Resources","i":"S&P Global Natural Resources Total Return","v":[7.5,-1.8,7.5,17.9,37,11.8,11,10.7]},{"n":"Global Infrastructure","i":"Dow Jones Brookfield Global Infrastructure Composite","v":[1.1,-2,1.1,12.2,15.8,13.3,8.5,7]},{"n":"TIPS 0–5 Years","i":"Bloomberg U.S. Treasury TIPS 0–5 Years Total Return","v":[0.2,-0.1,0.2,1.8,3.5,5,3.1,3.1]},{"n":"Real Estate (ODCE, net)¹","i":"NCREIF Fund Index – ODCE (Net), latest available quarter","v":[0,1.3,0,2.3,3.6,-1.4,1.9,3.7]}]}];
+  const MACRO = [{"l":"PCE inflation, June 2026","v":"3.7% y/y","s":"Core 3.3%; easing driven largely by a temporary drop in energy prices after the mid-June ceasefire, since reversed (p. 4)"},{"l":"Federal funds rate, July meeting","v":"3.50–3.75%","s":"Fifth consecutive pause; three dissents in favor of an increase (p. 4)"},{"l":"U.S. Dollar Index, YTD to 7/31","v":"+1.6%","s":"GBP +0.1 · EUR −1.9 · JPY −0.4 · CAD −2.1 · MXN +3.8 · CNY +3.5 (p. 6)"},{"l":"Unemployment and participation","v":"4.2% · 61.5%","s":"Unemployment rate and labor force participation, latest print (p. 6)"},{"l":"Themes to watch","v":"Tariffs · AI · rates","s":"Tariffs of 10–12.5% now cover over 99% of U.S. imports; Strait of Hormuz disruption; Q2 earnings beat with AI capex in focus (p. 4)"}];
+  const OPS = [{"e":"Total Fund","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"Total Fund","item":"Adhering to the BOI-approved 2026 Strategic Framework","st":"prog","p":19},{"e":"Total Fund","item":"Planning for the Strategic Framework and Initiatives Refresh","st":"prog","p":19},{"e":"Total Fund","item":"Risk system onboarding","st":"prog","p":19},{"e":"OPEB Master Trust","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"OPEB Master Trust","item":"Risk system onboarding","st":"prog","p":19},{"e":"Investments Division","item":"Principal Investment Officer — 1 position","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 5 positions","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst II — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst Fellowship — 2 positions","st":"done","p":19},{"e":"Manager update","item":"Acadian Asset Management (global equities separate account, $1,023 mm): Alexandre Voitenok appointed co-Chief Investment Officer effective January 1, 2027, after serving as Deputy CIO since 2024","st":"info","p":20},{"e":"Consultant search","item":"Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q3 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)","st":"quiet","p":24}];
+  const STATUS = {"prog":["In progress","prog"],"dev":["In development","dev"],"info":["For attention","info"],"quiet":["Quiet period","quiet"],"done":["Completed","done"]};
+  const VINTAGE = {"reportLabel":"August 12, 2026","throughLabel":"June 30, 2026","month":"June","monthYear":"June 2026","marketLabel":"July 31, 2026","histRange":"July 2016 – June 2026","url":"https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-Aug-2026.pdf"};
   /* ==== END SHARED DATA ==== */
   const NOTES = [
     '<h4>Slide 1 · Executive read</h4><p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
     '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are combined into one sliver with no policy target. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
     '<h4>Slide 3 · Performance vs. policy</h4><p><b>Source:</b> p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; excess in pts <code>calculated</code>. "Returns" view builds fund → benchmark → hurdle on click; "Excess vs. benchmark" draws the signed gap directly, which is the decision quantity. Hurdle ticks apply at the total-fund level only. Composites have no 10-year figure in the report. Periods under one year are cumulative, three years and longer annualized; net of fees.</p>',
-    '<h4>Slide 4 · Where the gap came from</h4><p><b>Classification:</b> <code>proxy_estimate</code>. Contribution = (composite return − its policy benchmark) × May 31 weight. This is not the report\'s attribution and not a Brinson decomposition: beginning-of-period weights, the allocation effect, overlays, cash and compounding are all folded into the residual, which is shown as its own bar so the reader can see how much the proxy explains. Use it to decide where to look, not to quantify manager value-add. For the Pension Fund the 1 M shortfall traces mainly to Real Assets &amp; Inflation Hedges; FYTD and 1 Y trace mainly to Growth.</p>',
-    '<h4>Slide 5 · Allocation and flows</h4><p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); May rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
-    '<h4>Slide 6 · Return distribution</h4><p><b>Source:</b> pp. 9 and 14. <b>Classification:</b> <code>reported_public</code> counts and statistics; shares, tail counts and the latest month\'s bin percentile <code>calculated</code>. Bin edges as printed; the latest month is placed by value (+2.0% and +2.2% both fall in 2-to-3). "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labelled in the report. The forecast-volatility pages (10, 15) are image-only in the PDF and are not reproduced.</p>',
+    '<h4>Slide 4 · Where the gap came from</h4><p><b>Classification:</b> <code>proxy_estimate</code>. Contribution = (composite return − its policy benchmark) × month-end weight. This is not the report\'s attribution and not a Brinson decomposition: beginning-of-period weights, the allocation effect, overlays, cash and compounding are all folded into the residual, which is shown as its own bar so the reader can see how much the proxy explains. Use it to decide where to look, not to quantify manager value-add. The slide names the composites that explain most of the 1 M, FYTD and 1 Y gaps.</p>',
+    '<h4>Slide 5 · Allocation and flows</h4><p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); monthly rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
+    '<h4>Slide 6 · Return distribution</h4><p><b>Source:</b> pp. 9 and 14. <b>Classification:</b> <code>reported_public</code> counts and statistics; shares, tail counts and the latest month\'s bin percentile <code>calculated</code>. Bin edges as printed; the latest month is placed by value. "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labelled in the report. The forecast-volatility pages (10, 15) are image-only in the PDF and are not reproduced.</p>',
     '<h4>Slide 7 · Market context</h4><p><b>Source:</b> p. 5 table (Bloomberg, State Street), p. 4 notable items, p. 6 key macro indicators. <b>Classification:</b> <code>reported_public</code>; the finding line is <code>calculated</code> (best/worst row). Kept separate from fund performance by design: index moves explain the environment the benchmarks moved in, not the Fund\'s result against them. FYTD equals 1 Y because the fiscal year ends June 30; NCREIF ODCE (net) is the latest available quarter.</p>',
-    '<h4>Slide 8 · Geographic exposure</h4><p><b>Source:</b> "Geographic Exposure by AUM as of May 2026", p. 11 (Pension Fund) and p. 16 (OPEB Master Trust). <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8 / 11–12):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries are the report\'s top five in each group; the remaining markets (68 for the Pension Fund, 51 for OPEB) are not itemized. One fixed 0–80% scale is used for both groups so the U.S. weight is drawn to size.</p>',
+    '<h4>Slide 8 · Geographic exposure</h4><p><b>Source:</b> "Geographic Exposure by AUM as of ' + VINTAGE.monthYear + '", p. 11 (Pension Fund) and p. 16 (OPEB Master Trust). <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8 / 11–12):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries are the report\'s top five in each group; the remaining markets are not itemized. One fixed 0–80% scale is used for both groups so the U.S. weight is drawn to size.</p>',
     '<h4>Slide 9 · Items for attention</h4><p><b>Source:</b> p. 19 (initiatives and personnel searches), p. 20 (manager/consultant updates), p. 24 (quiet period). Statuses are reproduced as printed; the report gives no dates or owners. The "for attention" grouping (a named manager personnel change; an external search process) is an editorial grouping to help the reader, not a report category.</p>',
   ];
 
@@ -784,6 +786,9 @@
   let cur = -1, frag = 0, scale = 1, entity = 'pension', pvHook = null;
   const enterHooks = [], leaveHooks = [], fragHooks = [], entityHooks = [];
   const E = () => ENT[entity];
+  // vintage labels come with the generated data block: no month or report date is hardcoded in the prose
+  const VFILL = { 'v-report': VINTAGE.reportLabel, 'v-through': VINTAGE.throughLabel, 'v-month': VINTAGE.month, 'v-monthyear': VINTAGE.monthYear, 'v-market': VINTAGE.marketLabel, 'v-histrange': VINTAGE.histRange };
+  Object.keys(VFILL).forEach(k => $$('.' + k).forEach(el => { el.textContent = VFILL[k]; }));
   const isPresenter = new URLSearchParams(location.search).has('presenter');
   const bc = ('BroadcastChannel' in window && location.protocol !== 'file:') ? new BroadcastChannel('cio-decision-deck') : null;
   const send = cmd => { if (bc) bc.postMessage({ type: 'cmd', cmd }); };
@@ -937,26 +942,33 @@
       const led = PERIODS.filter((p, i) => ex[i] > 0), trail = PERIODS.filter((p, i) => ex[i] < 0);
       const gaps = e.comps.map(c => ({ c, d: c.pct - c.tgt }));
       const maxGap = gaps.reduce((a, b) => Math.abs(b.d) > Math.abs(a.d) ? b : a);
-      const attr = pi => { const arr = e.comps.map(c => ({ c, v: (c.r[pi] - c.b[pi]) * c.pct / 100 })); return arr.reduce((a, b) => b.v < a.v ? b : a); };
-      const a1 = attr(0), aF = attr(2), aY = attr(4);
+      const attr = (pi, worst) => { const arr = e.comps.filter(c => c.r[pi] != null && c.b[pi] != null).map(c => ({ c, v: (c.r[pi] - c.b[pi]) * c.pct / 100 })); return arr.reduce((a, b) => (worst ? b.v < a.v : b.v > a.v) ? b : a); };
+      const a1 = attr(0, ex[0] < 0), aF = attr(2, ex[2] < 0), aY = attr(4, ex[4] < 0);
       const ovlMay = e.overlays ? e.overlays.reduce((s, o) => s + o.may, 0) : null;
       const ovlSI = e.overlays ? e.overlays.reduce((s, o) => s + o.si, 0) : null;
-      $('#s1-finding').textContent = 'May: ' + pct(t.r[0]) + ' net, ' + sgn(ex[0]) + ' pts vs. benchmark · FYTD ' + pct(t.r[2]) + ': ' + sgn(ex[2]) + ' pts vs. benchmark, ' + sgn(t.r[2] - t.h[2]) + ' pts vs. actuarial hurdle';
+      const hurdleIdx = [4, 5, 6, 7].filter(i => t.r[i] != null && t.h[i] != null);
+      const belowHurdle = hurdleIdx.filter(i => t.r[i] <= t.h[i]).map(i => PERIODS[i]);
+      const hurdleText = belowHurdle.length ? 'Below the actuarial hurdle over ' + belowHurdle.join(', ') + '; above it over the other periods of one year or longer.' : 'Above the actuarial hurdle over every period of one year or longer.';
+      const mktRows = MKT.flatMap(g => g.rows).filter(r => r.v[2] != null);
+      const mktLead = mktRows.length ? mktRows.reduce((a, b) => b.v[2] > a.v[2] ? b : a) : null;
+      const marketLead = mktLead ? mktLead.n + ' led the fiscal year (' + sgn(mktLead.v[2]) + '%); ' : '';
+      const macroLine = MACRO.slice(0, 2).map(m => m.l.replace(/,.*$/, '') + ' ' + m.v).join(', ') + '.';
+      $('#s1-finding').textContent = VINTAGE.month + ': ' + pct(t.r[0]) + ' net, ' + sgn(ex[0]) + ' pts vs. benchmark · FYTD ' + pct(t.r[2]) + ': ' + sgn(ex[2]) + ' pts vs. benchmark, ' + sgn(t.r[2] - t.h[2]) + ' pts vs. actuarial hurdle';
       const H = [
-        ['On track vs. policy and hurdle?', 'The ' + e.short + ' returned <b>' + pct(t.r[0]) + '</b> net in May against a <b>' + pct(t.b[0]) + '</b> policy benchmark (' + sgn(ex[0]) + ' pts). ' + (led.length ? 'Ahead over ' + led.join(', ') : 'Ahead over no period') + (trail.length ? '; behind over ' + trail.join(', ') : '') + '. Above the actuarial hurdle over every period of one year or longer.', 'Slide 3 · p. ' + (entity === 'pension' ? '9' : '14')],
-        ['Where did the gap come from?', 'Indicatively, May\'s shortfall traces to <b>' + a1.c.short + '</b> (' + pct(a1.c.r[0]) + ' vs. ' + pct(a1.c.b[0]) + ' benchmark); the fiscal-year and one-year gaps trace to <b>' + aF.c.short + '</b>' + (aY.c.k === aF.c.k ? '' : ' and <b>' + aY.c.short + '</b>') + '.', 'Slide 4 · proxy estimate, residual shown'],
-        ['Positioned per policy?', 'Every category is within 1 pt of its 2024 SAA target (largest gap: <b>' + maxGap.c.short + ' ' + sgn(maxGap.d) + ' pts</b>). May flows netted ' + money(e.netflow) + 'M' + (ovlMay != null ? '; overlay programs added <b>' + money(ovlMay) + 'M</b>.' : '.'), 'Slides 2, 5 · pp. 9/14, 18'],
-        ['Risk and market context', 'May\'s ' + sgn(e.hist.latest) + '% sits above ' + Math.round(e.hist.c.slice(0, e.hist.latestBin).reduce((a, b) => a + b, 0) / 120 * 100) + '% of the last 120 months; ' + e.hist.c.slice(0, 5).reduce((a, b) => a + b, 0) + ' months fell below −2%. Emerging markets led the fiscal year (+43.5%); PCE inflation 4.1%, Fed funds held at 3.50–3.75%.', 'Slides 6–8 · pp. 4–6, 9/14']
+        ['On track vs. policy and hurdle?', 'The ' + e.short + ' returned <b>' + pct(t.r[0]) + '</b> net in ' + VINTAGE.month + ' against a <b>' + pct(t.b[0]) + '</b> policy benchmark (' + sgn(ex[0]) + ' pts). ' + (led.length ? 'Ahead over ' + led.join(', ') : 'Ahead over no period') + (trail.length ? '; behind over ' + trail.join(', ') : '') + '. ' + hurdleText, 'Slide 3 · p. ' + (entity === 'pension' ? '9' : '14')],
+        ['Where did the gap come from?', 'Indicatively, ' + VINTAGE.month + (ex[0] < 0 ? '\'s shortfall traces to <b>' : '\'s lead came mainly from <b>') + a1.c.short + '</b> (' + pct(a1.c.r[0]) + ' vs. ' + pct(a1.c.b[0]) + ' benchmark); the fiscal-year and one-year ' + (ex[2] < 0 ? 'gaps trace' : 'results trace') + ' to <b>' + aF.c.short + '</b>' + (aY.c.k === aF.c.k ? '' : ' and <b>' + aY.c.short + '</b>') + '.', 'Slide 4 · proxy estimate, residual shown'],
+        ['Positioned per policy?', (Math.abs(maxGap.d) <= 1 ? 'Every category is within 1 pt of its 2024 SAA target' : 'Not every category is within 1 pt of its 2024 SAA target') + ' (largest gap: <b>' + maxGap.c.short + ' ' + sgn(maxGap.d) + ' pts</b>). ' + VINTAGE.month + ' flows netted ' + money(e.netflow) + 'M' + (ovlMay != null ? '; overlay programs added <b>' + money(ovlMay) + 'M</b>.' : '.'), 'Slides 2, 5 · pp. 9/14, 18'],
+        ['Risk and market context', VINTAGE.month + '\'s ' + sgn(e.hist.latest) + '% sits above ' + Math.round(e.hist.c.slice(0, e.hist.latestBin).reduce((a, b) => a + b, 0) / 120 * 100) + '% of the last 120 months; ' + e.hist.c.slice(0, 5).reduce((a, b) => a + b, 0) + ' months fell below −2%. ' + marketLead + macroLine, 'Slides 6–8 · pp. 4–6, 9/14'],
       ];
       heads.innerHTML = H.map((h, i) => '<div class="head" data-q="' + i + '"><i class="' + (i === 0 ? '' : 'q') + '"></i><p><b>' + h[0] + '</b> ' + h[1] + '<small>' + h[2] + '</small></p></div>').join('');
       const T = [
-        { l: 'Total market value', v: e.aum, f: v => '$' + v.toFixed(1) + 'B', d: 'Cash equivalents ' + money(e.cash) + 'M · growth of a dollar (5 Y) $' + e.god.toFixed(2), go: 'summary' },
-        { l: 'May net return', v: t.r[0], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + pct(t.b[0]) + ' · ' + chip(ex[0]), go: 'perf' },
+        { l: 'Total market value', v: e.aum, f: v => '$' + v.toFixed(1) + 'B', d: 'Cash equivalents ' + money(e.cash) + 'M · growth of a dollar (5 Y) ' + (e.god == null ? '—' : '$' + e.god.toFixed(2)), go: 'summary' },
+        { l: VINTAGE.month + ' net return', v: t.r[0], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + pct(t.b[0]) + ' · ' + chip(ex[0]), go: 'perf' },
         { l: 'Fiscal year to date', v: t.r[2], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + chip(ex[2]) + ' · vs. hurdle ' + chip(t.r[2] - t.h[2]), go: 'perf' },
         { l: 'Ten years, annualized', v: t.r[7], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + chip(ex[7]) + ' · vs. hurdle ' + chip(t.r[7] - t.h[7]), go: 'perf' },
         { l: 'Largest allocation gap', v: maxGap.d, f: v => sgn(v) + ' pts', d: maxGap.c.short + ' ' + pct(maxGap.c.pct) + ' vs. ' + pct(maxGap.c.tgt) + ' target', go: 'alloc' },
-        ovlMay != null ? { l: 'Overlay programs, May', v: ovlMay, f: v => money(v) + 'M', d: 'Since inception ' + money(ovlSI) + 'M · currency hedge + cash/rebalance overlay', go: 'alloc' }
-                       : { l: 'May net rebalancing', v: e.netflow, f: v => money(v) + 'M', d: 'Overlay program gains are reported for the Total Fund only', go: 'alloc' }
+        ovlMay != null ? { l: 'Overlay programs, ' + VINTAGE.month, v: ovlMay, f: v => money(v) + 'M', d: 'Since inception ' + money(ovlSI) + 'M · currency hedge + cash/rebalance overlay', go: 'alloc' }
+                       : { l: VINTAGE.month + ' net rebalancing', v: e.netflow, f: v => money(v) + 'M', d: 'Overlay program gains are reported for the Total Fund only', go: 'alloc' }
       ];
       const QOF = [0, 0, 0, 0, 2, 2];
       tiles.innerHTML = T.map((x, i) => '<div class="tile" tabindex="0" role="button" data-go="' + x.go + '" data-q="' + QOF[i] + '"><span class="go">slide ' + (idx(x.go) + 1) + ' →</span><div class="l">' + x.l + '</div><div class="v" data-i="' + i + '"></div><div class="d">' + x.d + '</div></div>').join('');
@@ -991,11 +1003,11 @@
     function render(animate) {
       const e = E(), t = e.total;
       $('#sum-title').textContent = e.short + ' — performance summary';
-      $('#sum-finding').textContent = 'The ' + e.short + ' returned ' + pct(t.r[0]) + ' net in May 2026 (policy benchmark ' + pct(t.b[0]) + ') and closed the month at $' + e.aum.toFixed(1) + ' billion; click a segment to drill into its returns';
+      $('#sum-finding').textContent = 'The ' + e.short + ' returned ' + pct(t.r[0]) + ' net in ' + VINTAGE.monthYear + ' (policy benchmark ' + pct(t.b[0]) + ') and closed the month at $' + e.aum.toFixed(1) + ' billion; click a segment to drill into its returns';
       const T = [
         ['Total market value', e.aum, v => '$' + v.toFixed(1) + 'B', (entity === 'pension' ? 'Total Fund' : 'Master Trust') + ' AUM, Investment Book'],
-        ['Monthly return (net)', t.r[0], v => v.toFixed(1) + '%', 'May 2026 · policy benchmark ' + pct(t.b[0])],
-        ['Growth of a dollar', e.god, v => '$' + v.toFixed(2), 'Trailing 5 years, net'],
+        ['Monthly return (net)', t.r[0], v => v.toFixed(1) + '%', VINTAGE.monthYear + ' · policy benchmark ' + pct(t.b[0])],
+        ...(e.god == null ? [] : [['Growth of a dollar', e.god, v => '$' + v.toFixed(2), 'Trailing 5 years, net']]),
         ['Cash equivalents', e.cash, v => '$' + Math.round(v).toLocaleString('en-US') + 'M', 'In $ millions']
       ];
       tiles.innerHTML = T.map((x, i) => '<div class="tile"><div class="l">' + x[0] + '</div><div class="v" data-i="' + i + '"></div><div class="s">' + x[3] + '</div></div>').join('');
@@ -1178,7 +1190,7 @@
       const total = t.r[p] - t.b[p];
       const parts = e.comps.map(c => { const ex = c.r[p] - c.b[p]; return { n: c.short, ex, w: c.pct, v: ex * c.pct / 100, c }; });
       const sum = parts.reduce((a, b) => a + b.v, 0), resid = total - sum;
-      steps = parts.map(x => ({ n: x.n, v: x.v, kind: 'part', rows: [['Net return', pct(x.c.r[p])], ['Policy benchmark', pct(x.c.b[p])], ['Excess', sgn(x.ex) + ' pts'], ['Weight, May 31', pct(x.w)], ['Indicative contribution', sgn(x.v, 2) + ' pts']] }));
+      steps = parts.map(x => ({ n: x.n, v: x.v, kind: 'part', rows: [['Net return', pct(x.c.r[p])], ['Policy benchmark', pct(x.c.b[p])], ['Excess', sgn(x.ex) + ' pts'], ['Weight, month end', pct(x.w)], ['Indicative contribution', sgn(x.v, 2) + ' pts']] }));
       steps.push({ n: 'Residual', v: resid, kind: 'resid', rows: [['Reported total excess', sgn(total) + ' pts'], ['Sum of contributions', sgn(sum, 2) + ' pts'], ['Residual', sgn(resid, 2) + ' pts']], detail: '<span class="dim">Allocation effect, weight drift, compounding, overlays, cash, rounding</span>' });
       steps.push({ n: e.short + ' excess', v: total, kind: 'total', rows: [['Net return', pct(t.r[p])], ['Policy benchmark', pct(t.b[p])], ['Excess', sgn(total) + ' pts']] });
       let cum = 0; const seq = [];
@@ -1202,10 +1214,10 @@
       form.innerHTML = '<h3>Reported ' + PERIODS[p] + ' excess</h3><div class="big">' + sgn(total) + ' pts</div><div style="font-size:11.5px;color:var(--cat);margin-bottom:8px">' + pct(t.r[p]) + ' net − ' + pct(t.b[p]) + ' benchmark · explained ' + sgn(sum, 2) + ', residual ' + sgn(resid, 2) + '</div>' +
         '<div class="detail">' + parts.map(x => '<div class="row"><span>' + x.n + '</span><span>' + sgn(x.ex) + ' × ' + pct(x.w) + ' = <b class="' + (x.v < 0 ? 'neg-c' : 'pos-c') + '">' + sgn(x.v, 2) + '</b></span></div>').join('') +
         '<div class="row"><span>Sum of contributions</span><b>' + sgn(sum, 2) + '</b></div><div class="row"><span>Residual (not explained)</span><b>' + sgn(resid, 2) + '</b></div>' +
-        '<div class="cav">Proxy: excess × end-of-May weight. The residual is ' + Math.round(Math.abs(resid) / Math.max(Math.abs(total), 0.05) * 100) + '% of the reported excess for ' + PERIODS[p] + '; the longer the period, the less an end-weight proxy explains.</div></div>' +
+        '<div class="cav">Proxy: excess × end-of-' + VINTAGE.month + ' weight. The residual is ' + Math.round(Math.abs(resid) / Math.max(Math.abs(total), 0.05) * 100) + '% of the reported excess for ' + PERIODS[p] + '; the longer the period, the less an end-weight proxy explains.</div></div>' +
         '<button class="more" type="button">' + (open ? 'Hide the arithmetic ▲' : 'Show the arithmetic ▼') + '</button>';
       $('.more', form).addEventListener('click', () => { form.classList.toggle('open'); $('.more', form).textContent = form.classList.contains('open') ? 'Hide the arithmetic ▲' : 'Show the arithmetic ▼'; });
-      $('#wf-table').innerHTML = tableHTML(['Composite', 'Net return %', 'Benchmark %', 'Excess pts', 'Weight May 31 %', 'Contribution pts (proxy)'],
+      $('#wf-table').innerHTML = tableHTML(['Composite', 'Net return %', 'Benchmark %', 'Excess pts', 'Weight month-end %', 'Contribution pts (proxy)'],
         parts.map(x => [x.n, x.c.r[p], x.c.b[p], +x.ex.toFixed(1), x.w, +x.v.toFixed(2)]).concat([['Sum of contributions', '', '', '', '', +sum.toFixed(2)], ['Residual', '', '', '', '', +resid.toFixed(2)], [e.short + ' (reported)', t.r[p], t.b[p], +total.toFixed(1), 100, +total.toFixed(2)]]));
     }
     render();
@@ -1237,21 +1249,21 @@
       if (e.other) d.push({ n: 'Overlays + Other', sub: pct(e.other.pct) + ' of fund · no target', v: 0, lab: pct(e.other.pct) + ' (no target)', tip: [['Market value', '$' + e.other.mv.toLocaleString('en-US') + ' mm'], ['Weight', pct(e.other.pct)], ['Target', 'none in report']] });
       hbars(drift, d, { min: 1 });
       const dir = c => { const gap = c.pct - c.tgt; if (c.flow === 0) return 'no flow'; return (gap > 0 && c.flow > 0) || (gap < 0 && c.flow < 0) ? 'away from target' : 'toward target'; };
-      const f = e.comps.map(c => ({ n: c.short, sub: dir(c), v: c.flow, lab: money(c.flow) + 'M', tip: [['May flow', money(c.flow) + 'M'], ['Weight vs. target', sgn(c.pct - c.tgt) + ' pts'], ['Direction', dir(c)]] }));
-      if (e.other) f.push({ n: 'Overlays & Hedges', sub: '', v: e.other.flow, lab: money(e.other.flow) + 'M', tip: [['May flow', money(e.other.flow) + 'M']] });
+      const f = e.comps.map(c => ({ n: c.short, sub: dir(c), v: c.flow, lab: money(c.flow) + 'M', tip: [[VINTAGE.month + ' flow', money(c.flow) + 'M'], ['Weight vs. target', sgn(c.pct - c.tgt) + ' pts'], ['Direction', dir(c)]] }));
+      if (e.other) f.push({ n: 'Overlays & Hedges', sub: '', v: e.other.flow, lab: money(e.other.flow) + 'M', tip: [[VINTAGE.month + ' flow', money(e.other.flow) + 'M']] });
       f.push({ n: 'Net rebalancing', sub: 'as reported', v: e.netflow, lab: money(e.netflow) + 'M', net: true, tip: [['Net rebalancing activity', money(e.netflow) + 'M']] });
       hbars(flows, f, { min: 50 });
       if (e.overlays) {
         const may = e.overlays.reduce((s, o) => s + o.may, 0), si = e.overlays.reduce((s, o) => s + o.si, 0);
-        ovl.innerHTML = e.overlays.map(o => '<div class="tile"><div class="l">' + o.n + ' · May gain / (loss)</div><div class="v">' + money(o.may) + 'M</div><div class="d">Since inception ' + money(o.si) + 'M</div></div>').join('') +
+        ovl.innerHTML = e.overlays.map(o => '<div class="tile"><div class="l">' + o.n + ' · ' + VINTAGE.month + ' gain / (loss)</div><div class="v">' + money(o.may) + 'M</div><div class="d">Since inception ' + money(o.si) + 'M</div></div>').join('') +
           '<div class="tile"><div class="l">Overlay programs combined (calculated)</div><div class="v">' + money(may) + 'M</div><div class="d">Since inception ' + money(si) + 'M · Total Fund only (p. 18)</div></div>';
       } else {
         ovl.innerHTML = '<div class="tile" style="grid-column:1/-1"><div class="l">Overlay programs</div><div class="d" style="margin-top:2px">The report shows overlay and hedge program gains for the Total Fund only (p. 18); none are published for the OPEB Master Trust.</div></div>';
       }
       const maxGap = e.comps.reduce((a, b) => Math.abs(b.pct - b.tgt) > Math.abs(a.pct - a.tgt) ? b : a);
       const away = e.comps.filter(c => dir(c) === 'away from target').map(c => c.short);
-      $('#al-finding').textContent = 'Within 1 pt of every target (largest: ' + maxGap.short + ' ' + sgn(maxGap.pct - maxGap.tgt) + ' pts); May flows net ' + money(e.netflow) + 'M' + (away.length ? '; ' + away.join(', ') + ' moved away from target' : '; all flows toward target');
-      $('#al-table').innerHTML = tableHTML(['Category', 'Market value $mm', 'Actual %', 'Target %', 'Difference pts', 'May flow $M', 'Direction'],
+      $('#al-finding').textContent = 'Within 1 pt of every target (largest: ' + maxGap.short + ' ' + sgn(maxGap.pct - maxGap.tgt) + ' pts); ' + VINTAGE.month + ' flows net ' + money(e.netflow) + 'M' + (away.length ? '; ' + away.join(', ') + ' moved away from target' : '; all flows toward target');
+      $('#al-table').innerHTML = tableHTML(['Category', 'Market value $mm', 'Actual %', 'Target %', 'Difference pts', VINTAGE.month + ' flow $M', 'Direction'],
         e.comps.map(c => [c.n, c.mv.toLocaleString('en-US'), c.pct, c.tgt, +(c.pct - c.tgt).toFixed(1), money(c.flow), dir(c)]).concat(e.other ? [[e.other.n, e.other.mv.toLocaleString('en-US'), e.other.pct, '—', '—', money(e.other.flow), '—']] : [], [['Net rebalancing activity', '', '', '', '', money(e.netflow), '']]));
     }
     render();
@@ -1259,7 +1271,7 @@
     fragHooks[idx('alloc')] = f => {
       $('#al-flows').classList.toggle('on', f >= 1);
       $('#ovl').classList.toggle('on', f >= 2);
-      $('#al-hint').textContent = ['1 OF 3 — press → for May flows', '2 OF 3 — press → for the overlay programs', ''][f] || '';
+      $('#al-hint').textContent = ['1 OF 3 — press → for ' + VINTAGE.month + ' flows', '2 OF 3 — press → for the overlay programs', ''][f] || '';
     };
   })();
 
@@ -1280,12 +1292,12 @@
     function render() {
       const e = E(), d = e.hist, max = Math.max(...d.c), ppu = (H - TOP) / max;
       bins.forEach(b => { const c = d.c[b.i], h = c * ppu; b.col.style.height = h + 'px'; b.col.classList.toggle('latest', b.i === d.latestBin); b.v.textContent = c; b.v.style.bottom = (h + 4) + 'px'; });
-      tag.style.left = (d.latestBin * BW + BW / 2) + 'px'; tag.style.bottom = (d.c[d.latestBin] * ppu + 22) + 'px'; tag.innerHTML = 'May 2026: ' + sgn(d.latest) + '%<i></i>';
+      tag.style.left = (d.latestBin * BW + BW / 2) + 'px'; tag.style.bottom = (d.c[d.latestBin] * ppu + 22) + 'px'; tag.innerHTML = VINTAGE.monthYear + ': ' + sgn(d.latest) + '%<i></i>';
       const below2 = d.c.slice(0, 5).reduce((a, b) => a + b, 0), above2 = d.c.slice(9).reduce((a, b) => a + b, 0), mid = d.c[7] + d.c[8];
       const below = d.c.slice(0, d.latestBin).reduce((a, b) => a + b, 0);
-      $('#hist-finding').textContent = mid + ' of 120 months between 0% and +2%; ' + below2 + ' below −2%, ' + above2 + ' above +2% (σ ' + d.sd.toFixed(2) + '); May 2026 sits above ' + Math.round(below / 120 * 100) + '% of months';
+      $('#hist-finding').textContent = mid + ' of 120 months between 0% and +2%; ' + below2 + ' below −2%, ' + above2 + ' above +2% (σ ' + d.sd.toFixed(2) + '); ' + VINTAGE.monthYear + ' sits above ' + Math.round(below / 120 * 100) + '% of months';
       const items = [['Mean monthly return', d.mean, v => v.toFixed(2) + '%'], ['2024 SAA expected return', d.saa, v => v.toFixed(2) + '%'], ['Standard deviation', d.sd, v => v.toFixed(2) + '%'], ['Worst month', d.min, v => v.toFixed(1) + '%'], ['Best month', d.max, v => v.toFixed(1) + '%'],
-        ['sec', 'Calculated from bin counts'], ['Months below −2%', below2, v => Math.round(v) + ' of 120'], ['Months above +2%', above2, v => Math.round(v) + ' of 120'], ['Months at or below May\'s bin', 120 - d.c.slice(d.latestBin + 1).reduce((a, b) => a + b, 0), v => Math.round(v) + ' of 120']];
+        ['sec', 'Calculated from bin counts'], ['Months below −2%', below2, v => Math.round(v) + ' of 120'], ['Months above +2%', above2, v => Math.round(v) + ' of 120'], ['Months at or below ' + VINTAGE.month + '\'s bin', 120 - d.c.slice(d.latestBin + 1).reduce((a, b) => a + b, 0), v => Math.round(v) + ' of 120']];
       stats.innerHTML = '<h3>' + e.name + '</h3><div class="sub">Monthly returns (net), 06/2016 – 05/2026</div><table>' + items.map((it, i) => it[0] === 'sec' ? '<tr class="sec"><td colspan="2">' + it[1] + '</td></tr>' : '<tr><td>' + it[0] + '</td><td><span data-k="' + i + '"></span></td></tr>').join('') + '</table>';
       items.forEach((it, i) => { if (it[0] !== 'sec') countUp($('[data-k="' + i + '"]', stats), it[1], it[2], prevStats ? prevStats[i] : 0); });
       prevStats = items.map(it => it[0] === 'sec' ? 0 : it[1]);

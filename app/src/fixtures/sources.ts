@@ -28,13 +28,6 @@ const IPS_URL =
   'https://www.lacera.gov/sites/default/files/assets/documents/board/Governing%20Documents/BOI%20Policies/invest_policy_stmt.pdf';
 const IPS_OPEB_URL =
   'https://www.lacera.gov/sites/default/files/assets/documents/general/IPS-OPEB.pdf';
-// CIO Monthly Report (July 8, 2026): verified 2026-09-07 as byte-identical to the reference copy;
-// in this file the PDF index equals the printed page number
-const CIO_URL =
-  'https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-July-2026.pdf';
-const cioPage = (printed: number) => `${CIO_URL}#page=${printed}`;
-const CIO_DOC = 'Chief Investment Officer Monthly Report, July 8, 2026';
-const CIO_ASOF = 'May 31, 2026';
 
 export const SOURCES = {
   PAFR_GROWTH: {
@@ -125,72 +118,6 @@ export const SOURCES = {
       'pp. 112–113 (total investment rates of return — Pension Plan / OPEB Master Trust: TWR, MWR, assumed rate, funded ratio)',
     asOf: 'June 30, 2025',
     url: acfrPage(112),
-  },
-  CIO_PENSION: {
-    id: 'CIO_PENSION',
-    label: 'CIO Monthly Report (Jul 8, 2026), pp. 8–9',
-    doc: CIO_DOC,
-    pageTable: 'pp. 8–9 (Total Fund: performance summary, composites, return distribution)',
-    asOf: CIO_ASOF,
-    url: cioPage(8),
-  },
-  CIO_OPEB: {
-    id: 'CIO_OPEB',
-    label: 'CIO Monthly Report (Jul 8, 2026), pp. 13–14',
-    doc: CIO_DOC,
-    pageTable:
-      'pp. 13–14 (OPEB Master Trust: performance summary, composites, return distribution)',
-    asOf: CIO_ASOF,
-    url: cioPage(13),
-  },
-  CIO_PENSION_GEO: {
-    id: 'CIO_PENSION_GEO',
-    label: 'CIO Monthly Report (Jul 8, 2026), p. 11',
-    doc: CIO_DOC,
-    pageTable: 'p. 11 (Total Fund geographic exposure by AUM)',
-    asOf: CIO_ASOF,
-    url: cioPage(11),
-  },
-  CIO_OPEB_GEO: {
-    id: 'CIO_OPEB_GEO',
-    label: 'CIO Monthly Report (Jul 8, 2026), p. 16',
-    doc: CIO_DOC,
-    pageTable: 'p. 16 (OPEB Master Trust geographic exposure by AUM)',
-    asOf: CIO_ASOF,
-    url: cioPage(16),
-  },
-  CIO_MARKET: {
-    id: 'CIO_MARKET',
-    label: 'CIO Monthly Report (Jul 8, 2026), p. 5',
-    doc: CIO_DOC,
-    pageTable: 'p. 5 (market performance; Bloomberg, State Street)',
-    asOf: 'June 30, 2026 (index returns as printed)',
-    url: cioPage(5),
-  },
-  CIO_MACRO: {
-    id: 'CIO_MACRO',
-    label: 'CIO Monthly Report (Jul 8, 2026), pp. 4–6',
-    doc: CIO_DOC,
-    pageTable: 'pp. 4–6 (notable items, key macro indicators)',
-    asOf: 'June 2026 (as printed)',
-    url: cioPage(4),
-  },
-  CIO_FLOWS: {
-    id: 'CIO_FLOWS',
-    label: 'CIO Monthly Report (Jul 8, 2026), p. 18',
-    doc: CIO_DOC,
-    pageTable: 'p. 18 (overlays and hedges, May rebalancing activity)',
-    asOf: CIO_ASOF,
-    url: cioPage(18),
-  },
-  CIO_OPS: {
-    id: 'CIO_OPS',
-    label: 'CIO Monthly Report (Jul 8, 2026), pp. 19–20, 24',
-    doc: CIO_DOC,
-    pageTable:
-      'pp. 19–20, 24 (key initiatives, personnel, manager and consultant updates, quiet period)',
-    asOf: 'July 8, 2026 (report date)',
-    url: cioPage(19),
   },
   ACFR_TOC: {
     id: 'ACFR_TOC',

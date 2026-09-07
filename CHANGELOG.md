@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-07 — Revision 12: CIO Monthly history, extractor, and vintage-driven deck
+
+- Sixteen CIO Monthly Reports (April 2025 – August 2026; data through February 2025
+  – June 2026) are now in the fixture, extracted from the public PDFs by
+  `tools/extract_cio_report.py`: pages are found by content, cells are read by word
+  coordinates and assigned to header anchors, and every report must pass the
+  identities it prints (weights to 100, composites to the total, histogram to the
+  month count, flows to the net, five countries per group) or it is rejected with
+  the reason. January 2026 is excluded (its performance table is an image). The
+  July 2026 extraction reproduces the hand-lifted deck data exactly.
+- The CIO Monthly tab selects any report (`#/cio?v=<data-through>`); the masthead,
+  notice bar and title band follow the selection. Tiles and the performance table
+  show changes against the prior report, the composites table gains a Δ-weight
+  column, and a new "Trend by report" panel lists every vintage (market value,
+  1 M, FYTD, 1 Y excess, weights, net flow) with row selection. Reports whose
+  market table is not machine-readable say so; editorial panels (macro strip,
+  items for attention) are shown for the latest report and linked for older ones.
+- Citations are built per vintage (report date, pages, deep link into that PDF);
+  the fixed July 2026 records left the source registry.
+- The deck is generated from the latest vintage: its data block now carries a
+  `VINTAGE` record and every month or report date in the prose is a placeholder
+  filled from it; the executive slide's hurdle, gap-source, target-proximity and
+  market/macro sentences are computed from the data instead of written for one
+  month. It now shows the August 12, 2026 report (data through June 30, 2026).
+- Editorial content for the August report (macro strip; initiatives, personnel,
+  Acadian co-CIO appointment, real-estate consultant quiet period) with an
+  `EDITORIAL_FOR` guard that fails the tests when a newer vintage lacks it.
+- `npm run cio:diff` prints what changed between two reports — the monthly
+  checklist; `docs/cio-monthly.md` documents the pipeline.
+- Verification: Prettier · ESLint · tsc · Vitest 374/374 (16 vintages × identities)
+  · production build · Playwright 61/61 (incl. report selection moving masthead,
+  band and panels together; deck renders from the regenerated block) · zero page
+  errors · no horizontal overflow at 320–375 px.
+
 ## 2026-09-07 — Revision 11: CIO Monthly integrated with the dashboard
 
 - The CIO Monthly decision deck (`/deck/`, still served exactly where people

@@ -453,7 +453,44 @@ a:hover {
   margin-top: 0;
 }
 
-/* CIO Monthly tab: vintage notice and the in-table histogram bars */
+/* CIO Monthly tab: report selector, vintage notice, trend highlight, histogram bars */
+.vintage-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 2px 0 14px;
+  font-size: 13px;
+}
+
+.vintage-bar label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.vintage-bar select {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--divider);
+  background: #fff;
+  color: inherit;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.vintage-bar select:focus-visible {
+  outline: 2px solid var(--accent-700);
+  outline-offset: 2px;
+}
+
+.trend-current td {
+  background: var(--accent-200);
+}
+
 .vintage-note {
   margin: 4px 0 18px;
 }

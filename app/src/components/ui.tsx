@@ -28,27 +28,34 @@ export function Kicker({ children }: { children: ReactNode }) {
 /** Per-panel source citation from the source registry, gated by CONFIG.showSources.
  *  Registry entries with a stable public URL render as links; the rest render as
  *  document + page text (no fabricated links). */
-export function SourceLine({ sources, children }: { sources?: SourceId[]; children?: ReactNode }) {
+export function SourceLine({
+  sources,
+  records,
+  children,
+}: {
+  sources?: SourceId[];
+  /** source records built at render time (e.g. one per CIO Monthly vintage) */
+  records?: SourceRecord[];
+  children?: ReactNode;
+}) {
   if (!CONFIG.showSources) return null;
+  const list: SourceRecord[] = [...(sources ?? []).map((id) => SOURCES[id]), ...(records ?? [])];
   return (
     <div className="source-line">
       Source:{' '}
-      {sources
-        ? sources.map((id, i) => {
-            const s: SourceRecord = SOURCES[id];
-            return (
-              <span key={id}>
-                {i > 0 ? ' · ' : ''}
-                {s.url ? (
-                  <a href={s.url} target="_blank" rel="noreferrer">
-                    {s.label}
-                  </a>
-                ) : (
-                  <span title={`${s.doc} — ${s.pageTable} (as of ${s.asOf})`}>{s.label}</span>
-                )}
-              </span>
-            );
-          })
+      {list.length > 0
+        ? list.map((s, i) => (
+            <span key={s.id}>
+              {i > 0 ? ' · ' : ''}
+              {s.url ? (
+                <a href={s.url} target="_blank" rel="noreferrer">
+                  {s.label}
+                </a>
+              ) : (
+                <span title={`${s.doc} — ${s.pageTable} (as of ${s.asOf})`}>{s.label}</span>
+              )}
+            </span>
+          ))
         : children}
     </div>
   );
