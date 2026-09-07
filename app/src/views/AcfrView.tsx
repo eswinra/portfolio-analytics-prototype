@@ -206,6 +206,9 @@ function SectionCard({
                     ? 'Row copied ✓ — append to the tracker and re-import'
                     : 'Mark complete (copies a CSV row)'}
                 </button>
+                <span className="visually-hidden" role="status" aria-live="polite">
+                  {copied ? 'Completion row copied to the clipboard.' : ''}
+                </span>
               </span>
             </div>
           ) : (
@@ -266,12 +269,15 @@ export function AcfrView() {
       : '';
 
   async function copyComplete(section: AcfrSection, reviewer: string) {
+    // record ids must be unique within the tracker (V04); section + reference date is unique per
+    // completion and reproducible, unlike a random draw
+    const stamp = (board.refDate ?? section.lastUpdated).replaceAll('-', '');
     const rowCsv = completeRowCsv(
       board,
       section,
       'PA-LEAD-1',
       reviewer,
-      `ACF-${9000 + Math.floor(Math.random() * 999)}`,
+      `ACF-DONE-${section.sectionId}-${stamp}`,
     );
     try {
       await navigator.clipboard.writeText(rowCsv);

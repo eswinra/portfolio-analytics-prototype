@@ -151,7 +151,7 @@ export function ExceptionsView() {
               </tr>
             </thead>
             <tbody>
-              {checks.map((c) => (
+              {passing.map((c) => (
                 <tr key={c.id}>
                   <td>
                     <code>{c.id}</code>
@@ -234,8 +234,10 @@ export function ExceptionsView() {
         <div className="table-scroll">
           <table className="table">
             <caption>
-              Cited public reference values — the only reported_public value rows in the synthetic
-              dataset; none feeds a portfolio calculation
+              Cited public reference values, quoted for context. Together with the IPS policy-band
+              rows (which set the ranges the allocation checks test against) these are the only
+              reported_public rows in the synthetic dataset; none enters a return, contribution, or
+              reconciliation calculation
             </caption>
             <thead>
               <tr>

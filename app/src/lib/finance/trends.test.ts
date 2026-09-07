@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bestWorstDay,
   dailyReadThroughSeries,
+  lastDailyReturn,
   maxDrawdown,
   monthToDateChange,
   observationChange,
@@ -106,6 +107,49 @@ describe('dailyReadThroughSeries', () => {
     expect(days).toHaveLength(1);
     expect(days[0]!.impact).toBeCloseTo(0.3 * 0.01, 12); // bond excluded, not imputed
     expect(days[0]!.coverage).toBeCloseTo(0.3, 12);
+  });
+  it('never books a multi-day move across a missing close to a single date', () => {
+    const eq = {
+      weight: 0.3,
+      points: mk([
+        ['2026-06-29', 100],
+        ['2026-06-30', null],
+        ['2026-07-01', 110],
+      ]),
+    };
+    // the 10% move spans two trading days: neither day gets a return for this proxy
+    expect(dailyReadThroughSeries([eq])).toEqual([]);
+  });
+});
+
+describe('lastDailyReturn', () => {
+  it('uses the observation immediately before the last close', () => {
+    const s = mk([
+      ['2026-06-26', 100],
+      ['2026-06-29', 102],
+      ['2026-06-30', 104.04],
+    ]);
+    expect(lastDailyReturn(s)).toBeCloseTo(0.02, 12);
+  });
+  it('reports null instead of splicing across a missing prior close', () => {
+    const gap = mk([
+      ['2026-06-26', 100],
+      ['2026-06-29', null],
+      ['2026-06-30', 110],
+    ]);
+    expect(lastDailyReturn(gap)).toBeNull();
+  });
+  it('looks back past a missing latest close to the last present pair', () => {
+    const missingAtEnd = mk([
+      ['2026-06-26', 100],
+      ['2026-06-29', 101],
+      ['2026-06-30', null],
+    ]);
+    expect(lastDailyReturn(missingAtEnd)).toBeCloseTo(0.01, 12);
+  });
+  it('needs at least two observations', () => {
+    expect(lastDailyReturn(mk([['2026-06-30', 100]]))).toBeNull();
+    expect(lastDailyReturn([])).toBeNull();
   });
 });
 

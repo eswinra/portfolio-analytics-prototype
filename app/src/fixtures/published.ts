@@ -44,6 +44,10 @@ export interface PublishedEntity {
   growthUnit: string;
   growthNote: string;
   ret: { f: number[]; b: number[] };
+  /** Actuarial assumed rate of return the published returns are read against (ACFR rates-of-
+   *  return schedule): the rate in force at the latest valuation and the highest rate in the
+   *  ten-year window, so an "exceeds at every horizon" statement can be tested, not asserted. */
+  assumedRate: { current: number; decadeMax: number; basis: string };
   retNote: string;
   trackNote: string;
   chg: ChangeRow[];
@@ -80,6 +84,12 @@ export const PENSION: PublishedEntity = {
   growthNote:
     'A $38.4 billion net increase over the decade, bringing the Pension Plan to $86.2 billion at June 30, 2025.',
   ret: { f: [9.7, 8.4, 9.8, 7.9], b: [9.7, 8.6, 8.5, 7.4] },
+  assumedRate: {
+    current: 7.0,
+    decadeMax: 7.25,
+    basis:
+      '7.00% since FY2019, 7.25% for FY2016–FY2018; the FY2025 valuation was not yet available',
+  },
   retNote:
     'Met the policy benchmark over one year, trailed over three, and outperformed over five and ten.',
   trackNote:
@@ -210,6 +220,11 @@ export const OPEB: PublishedEntity = {
   growthNote:
     'From a $448 million initial employer contribution in 2012 to a $5.0 billion trust at June 30, 2025, driven by prefunding contributions and investment gains.',
   ret: { f: [11.1, 10.5, 9.0, 7.8], b: [10.3, 9.6, 8.5, 6.7] },
+  assumedRate: {
+    current: 6.25,
+    decadeMax: 6.25,
+    basis: '6.25% for FY2024, 6.00% for FY2018–FY2023; the FY2025 valuation was not yet available',
+  },
   retNote: 'The OPEB Master Trust exceeded its policy benchmark for all reported periods.',
   trackNote:
     'The Trust leads its policy benchmark at every horizon — by 0.8, 0.9, 0.5 and 1.1 pp over one, three, five and ten years.',
@@ -228,7 +243,7 @@ export const OPEB: PublishedEntity = {
   cumUnit: '$ millions',
   cumEnd: '$1,485.6M',
   cumNote:
-    'Cumulative net investment income since FY2016. Contributions presented in the changes table include both prefunding and pay-as-you-go adjustments.',
+    'Cumulative net investment income since FY2016. Contributions presented in the changes table include both prefunding and pay-as-you-go adjustments. Verification open: as transcribed, the FY2022–FY2023 steps of this series do not agree with the statement’s net investment income (the FY2023 step is −$41.0M against $248M of NII); re-check against the 2025 PAFR before quoting anything earlier than FY2024.',
   mix: [
     { label: 'Growth', pct: 45, color: 'var(--accent-700)', note: '½-step target · range ±10' },
     {

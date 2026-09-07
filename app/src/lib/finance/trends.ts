@@ -22,12 +22,25 @@ export interface ProxyTrend {
   observations: number;
 }
 
+const isPresent = (p: DailyPoint): p is { date: string; close: number } =>
+  p.close !== null && Number.isFinite(p.close);
+
 function presentSeries(points: readonly DailyPoint[]): { date: string; close: number }[] {
-  return points
-    .filter(
-      (p): p is { date: string; close: number } => p.close !== null && Number.isFinite(p.close),
-    )
-    .sort((a, b) => a.date.localeCompare(b.date));
+  return points.filter(isPresent).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** One-day change: the last present close against the observation immediately before it in the
+ *  series. A missing close directly before it means the move spans more than one trading day,
+ *  so the daily return is unavailable (null) rather than spliced across the gap. */
+export function lastDailyReturn(points: readonly DailyPoint[]): number | null {
+  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
+  let i = sorted.length - 1;
+  while (i >= 0 && !isPresent(sorted[i]!)) i--;
+  if (i < 1) return null;
+  const last = sorted[i]!;
+  const prior = sorted[i - 1]!;
+  if (!isPresent(last) || !isPresent(prior)) return null;
+  return last.close / prior.close - 1;
 }
 
 /** Change over the last `n` present observations: last / close[len-1-n] − 1. */
@@ -194,13 +207,18 @@ export interface WeightedProxySeries {
 export function dailyReadThroughSeries(proxies: readonly WeightedProxySeries[]): ReadThroughDay[] {
   const byDate = new Map<string, { impact: number; coverage: number }>();
   for (const { weight, points } of proxies) {
-    const s = presentSeries(points);
+    const s = [...points].sort((a, b) => a.date.localeCompare(b.date));
     for (let i = 1; i < s.length; i++) {
-      const r = s[i]!.close / s[i - 1]!.close - 1;
-      const e = byDate.get(s[i]!.date) ?? { impact: 0, coverage: 0 };
+      const prior = s[i - 1]!;
+      const cur = s[i]!;
+      // a day's return needs this close and the one immediately before it; a gap is a day
+      // without a return for this proxy, never a multi-day move booked to one date
+      if (!isPresent(prior) || !isPresent(cur)) continue;
+      const r = cur.close / prior.close - 1;
+      const e = byDate.get(cur.date) ?? { impact: 0, coverage: 0 };
       e.impact += weight * r;
       e.coverage += weight;
-      byDate.set(s[i]!.date, e);
+      byDate.set(cur.date, e);
     }
   }
   return [...byDate.entries()]

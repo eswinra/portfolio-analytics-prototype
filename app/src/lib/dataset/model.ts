@@ -19,6 +19,7 @@ import { buildReconPairs, type ReconPair } from '../finance/recon';
 import { policyReadThrough, type ReadThrough } from '../finance/readThrough';
 import {
   dailyReadThroughSeries,
+  lastDailyReturn,
   proxyTrend,
   type ProxyTrend,
   type ReadThroughDay,
@@ -408,7 +409,6 @@ export function buildDataset(
     points.sort((a, b) => a.date.localeCompare(b.date));
     const present = points.filter((p) => p.close !== null);
     const last = present[present.length - 1];
-    const prev = present[present.length - 2];
     const lastPoint = points[points.length - 1];
     const missingAtEnd = lastPoint !== undefined && lastPoint.close === null;
     const ageState = dataState(false, last?.date ?? asOf, marketDate ?? asOf, 'Daily');
@@ -416,7 +416,7 @@ export function buildDataset(
     return {
       proxyId,
       category: proxyCategory.get(proxyId) ?? '',
-      lastReturn: last && prev && prev.close ? last.close! / prev.close - 1 : null,
+      lastReturn: lastDailyReturn(points),
       state,
       lastDate: last?.date ?? null,
     };
@@ -677,6 +677,11 @@ export function buildDataset(
   // ineligible to publish
   const publishBlockers = [
     ...exceptions.filter((e) => e.tier === 'blocking').map((e) => e.description),
+    ...(reconciliation?.status === 'FAIL'
+      ? [
+          `Contribution reconciliation break: residual ${(reconciliation.residual * 1e4).toFixed(1)} bps exceeds tolerance ${(reconciliation.tolerance * 1e4).toFixed(0)} bps`,
+        ]
+      : []),
     ...recons
       .filter((p) => p.status === 'outside')
       .map(

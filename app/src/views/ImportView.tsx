@@ -18,7 +18,8 @@ function downloadText(name: string, text: string) {
   a.href = url;
   a.download = name;
   a.click();
-  URL.revokeObjectURL(url);
+  // the click is dispatched asynchronously in some browsers; revoking synchronously can cancel it
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function ImportView() {
@@ -165,6 +166,7 @@ export function ImportView() {
                   </button>
                 ) : (
                   <button
+                    type="button"
                     className="linklike"
                     onClick={() =>
                       downloadText(
@@ -183,7 +185,7 @@ export function ImportView() {
                     Download error report (CSV)
                   </button>
                 )}{' '}
-                <button className="linklike" onClick={discardStaged}>
+                <button type="button" className="linklike" onClick={discardStaged}>
                   Discard
                 </button>
               </p>
@@ -193,7 +195,7 @@ export function ImportView() {
             <p className="panel-note">
               <strong>Import applied.</strong> The workflow views now show the imported dataset
               (browser memory only).{' '}
-              <button className="linklike" onClick={resetToFixture}>
+              <button type="button" className="linklike" onClick={resetToFixture}>
                 Restore the bundled demo dataset
               </button>
             </p>
@@ -202,7 +204,7 @@ export function ImportView() {
         {source === 'import' && !applied ? (
           <p className="footnote" style={{ marginTop: 12 }}>
             Currently showing a previously imported dataset.{' '}
-            <button className="linklike" onClick={resetToFixture}>
+            <button type="button" className="linklike" onClick={resetToFixture}>
               Restore the bundled demo dataset
             </button>
           </p>
@@ -218,6 +220,7 @@ export function ImportView() {
         <ul style={{ margin: 0, paddingLeft: 18 }}>
           <li>
             <button
+              type="button"
               className="linklike"
               onClick={() => downloadText('market_pulse_template.csv', templateCsv)}
             >
@@ -226,6 +229,7 @@ export function ImportView() {
           </li>
           <li>
             <button
+              type="button"
               className="linklike"
               onClick={() => downloadText('invalid_sample.csv', invalidSampleCsv)}
             >

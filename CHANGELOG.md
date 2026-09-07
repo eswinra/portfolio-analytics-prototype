@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-09-06 — Revision 10: live-site audit and improvements
+
+- Audit of the deployed prototype (eswinra.github.io/portfolio-analytics-prototype)
+  on desktop, 375/360/320-px phones, and print, plus a code-level review of the
+  financial logic, provenance, and accessibility. Record: `docs/product-review.md`
+  (“Revision 10 audit — 2026-09-06”); renders under `outputs/renders/audit*/`.
+- Citations: the three ACFR deep links opened the wrong pages (printed page n is
+  PDF page n + 2 in the FY2025 file); anchors now resolve through `acfrPage()`.
+  New `ACFR_RETURNS` source (pp. 112–113, rates of return incl. assumed rate).
+- Provenance: the four Overview KPI tiles carry a `reported_public` badge and a
+  source line; source lines added to the Overview changes panel, the Policy
+  Monitoring compliance table, and the IPS tables; the cumulative-income chart
+  is labelled `calculated` (sum of quoted annual figures).
+- Published-figure consistency test (`app/src/fixtures/published.test.ts`, 41
+  tests): statement identities, tile/flow/statement agreement, mix and IPS sums,
+  fee arithmetic, and every derived sentence. It found two transcription
+  discrepancies, now disclosed on screen and open for verification against the
+  PAFR / OPEB IPS: the OPEB cumulative-NII series steps −$41.0M in FY2023 against
+  $248M of NII, and the OPEB Real Assets ½-step sub-rows sum to 15.5% vs the
+  category's 16.5%.
+- “Exceeds the actuarial assumed rate at every horizon” is now computed against
+  the decade-high assumed rate from the ACFR (7.25%/7.00% Pension, 6.00%/6.25%
+  OPEB) instead of asserted in prose.
+- Workstation: contribution reconciliation is shown on the Reconciliation view
+  (arithmetic sum vs chain-linked QTD return, residual vs 10 bps tolerance) and a
+  FAIL now blocks the demonstrated publication gate; a proxy's one-day return
+  requires the immediately preceding close (`lastDailyReturn`) and the daily
+  read-through series no longer books a multi-day move across a missing close to
+  one date; the Exceptions caption no longer claims that no reported_public row
+  feeds a calculation (the IPS policy-band rows set the ranges the allocation
+  checks test); the passing-controls table lists passing controls only; ACFR
+  completion rows get a deterministic record id.
+- Shell: Workstation views lazy-loaded behind a per-route error boundary (main
+  chunk 531 KB → 370 KB; unused `recharts` removed); single-row scrollable nav
+  and scroll-shadowed tables on phones; print stylesheet; `theme-color`;
+  aria-live outcomes for “Copy board brief” and ACFR completion copy;
+  `type="button"` on link-styled buttons.
+- Verification: Prettier · ESLint · tsc · Vitest 172/172 (+46) · production
+  build · Playwright 53/53 with axe on all ten routes (was two) · zero console
+  or page errors.
+
 ## 2026-08-13 — Revision 9.1: post-audit follow-ups
 
 - Import confidentiality copy hardened per the second external audit: browser-local

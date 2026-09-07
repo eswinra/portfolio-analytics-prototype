@@ -4,9 +4,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 /** Smoke suite for the trust-and-controls tranche: every route renders, nothing scrolls
- *  the page body horizontally at any audited viewport, axe passes on the two entry
- *  surfaces, and the three demonstrated controls (cross-entity block, ACFR completion
- *  gate, publication gate) are visible in a real browser. */
+ *  the page body horizontally at any audited viewport, axe passes on every route, and the
+ *  three demonstrated controls (cross-entity block, ACFR completion gate, publication gate)
+ *  are visible in a real browser. */
 
 const ROUTES = [
   '/',
@@ -48,15 +48,11 @@ test.describe('routes render without horizontal overflow', () => {
 
 test.describe('accessibility (axe, desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
-  for (const route of ['/', '/import']) {
+  for (const route of ROUTES) {
     test(`axe clean on ${route}`, async ({ page }) => {
       await ready(page, route);
-      const results = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa'])
-        .analyze();
-      expect(
-        results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`),
-      ).toEqual([]);
+      const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
     });
   }
 });

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { excessTag, Panel, SourceLine, Tag } from '../components/ui';
+import { ClassBadge, excessTag, Panel, SourceLine, Tag } from '../components/ui';
 import { GROWTH_YEARS, HORIZONS, publishedFor } from '../fixtures/published';
 import { useEntity } from '../lib/entity';
 
@@ -24,6 +24,14 @@ export function PulseView() {
             <div className="stat-sub">{sub}</div>
           </Panel>
         ))}
+      </div>
+      <div className="kpi-provenance">
+        <ClassBadge c="reported_public" />
+        <span>
+          Headline figures as printed in the 2025 PAFR
+          {P ? '; the funded ratio is the June 30, 2024 actuarial valuation (Milliman)' : ''}.
+        </span>
+        <SourceLine sources={P ? ['PAFR_PENSION'] : ['PAFR_OPEB', 'PAFR_OPEB_ENROLL']} />
       </div>
 
       <div className="grid-panels mt">
@@ -145,6 +153,7 @@ export function PulseView() {
           <p className="panel-note">
             Three-year detail on the <Link to="/performance">Performance</Link> view.
           </p>
+          <SourceLine sources={['PAFR_CHANGES']} />
         </Panel>
       </div>
     </>

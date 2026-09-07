@@ -23,8 +23,10 @@ const STATUS_LABEL: Record<ReconStatus, string> = {
 
 export function ReconView() {
   const { dataset } = useDataset();
-  const { recons, meta } = dataset;
+  const { recons, meta, contributions, reconciliation } = dataset;
   const breaks = recons.filter((p) => p.status === 'outside').length;
+  const pct = (v: number) => `${(v * 100).toFixed(2)}%`;
+  const bps = (v: number) => `${(v * 1e4).toFixed(1)} bps`;
 
   return (
     <>
@@ -126,6 +128,65 @@ export function ReconView() {
           </div>
         </Panel>
       )}
+
+      {reconciliation ? (
+        <Panel
+          className="mt"
+          kicker="Contribution reconciliation — computed on screen"
+          title={`Quarter-to-date contribution by category — ${
+            reconciliation.status === 'PASS' ? 'reconciles within tolerance' : 'outside tolerance'
+          }`}
+          note="Each contribution is beginning-of-period weight × category return; their arithmetic sum is compared with the fund's own chain-linked quarterly return. The difference is the compounding residual — expected, disclosed, and required to stay within the documented tolerance. A total return is never an average of component returns."
+        >
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Contribution reconciliation"
+            tabIndex={0}
+          >
+            <table className="table">
+              <caption>
+                Synthetic DEMOFUND quarter. A residual outside tolerance is a publication blocker on
+                the workstation gate.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col" className="num">
+                    Contribution
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {contributions.map((c) => (
+                  <tr key={c.categoryId}>
+                    <td>{c.categoryId}</td>
+                    <td className="num">{pct(c.value)}</td>
+                  </tr>
+                ))}
+                <tr style={{ fontWeight: 600 }}>
+                  <td>Arithmetic sum of contributions</td>
+                  <td className="num">{pct(reconciliation.arithmeticTotal)}</td>
+                </tr>
+                <tr style={{ fontWeight: 600 }}>
+                  <td>Chain-linked total return (QTD)</td>
+                  <td className="num">{pct(reconciliation.chainLinked)}</td>
+                </tr>
+                <tr>
+                  <td>Compounding residual</td>
+                  <td className="num">
+                    {bps(reconciliation.residual)}{' '}
+                    <Tag variant={reconciliation.status === 'PASS' ? 'accent' : 'blocked'}>
+                      {reconciliation.status === 'PASS' ? 'Within' : 'Outside'}{' '}
+                      {bps(reconciliation.tolerance)} tolerance
+                    </Tag>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      ) : null}
     </>
   );
 }

@@ -10,6 +10,8 @@ export function PerformanceView() {
   const { entity } = useEntity();
   const d = publishedFor(entity);
   const P = entity === 'PENSION';
+  // tested against the highest assumed rate of the ten-year window, not just the current one
+  const aboveAssumed = d.ret.f.every((f) => f > d.assumedRate.decadeMax);
 
   const rMax = Math.max(...d.ret.f, ...d.ret.b);
 
@@ -82,8 +84,10 @@ export function PerformanceView() {
             </table>
           </div>
           <p className="panel-note">
-            {d.retNote} Returns exceeded the actuarial assumed rate of return at every horizon
-            (PAFR).
+            {d.retNote}{' '}
+            {aboveAssumed
+              ? `Every horizon also exceeds the actuarial assumed rate of return (${d.assumedRate.basis}).`
+              : `Not every horizon exceeds the actuarial assumed rate of return (${d.assumedRate.basis}).`}
           </p>
           <p className="footnote">
             Time-weighted returns (TWR), net of investment-management fees, annualized for periods
@@ -91,7 +95,9 @@ export function PerformanceView() {
             the two are not comparable. Private-market benchmarks are lagged 1–3 months (IPS Table
             2).
           </p>
-          <SourceLine sources={P ? ['PAFR_PENSION'] : ['PAFR_OPEB']} />
+          <SourceLine
+            sources={P ? ['PAFR_PENSION', 'ACFR_RETURNS'] : ['PAFR_OPEB', 'ACFR_RETURNS']}
+          />
         </Panel>
 
         <Panel kicker="Fund vs benchmark by horizon" title="Percent, annualized">
@@ -225,7 +231,7 @@ export function PerformanceView() {
         <Panel
           kicker="Net investment activities"
           title="Cumulative investment income, FY2016–FY2025"
-          sub={`${d.cumUnit} · 10-year cumulative results`}
+          sub={`${d.cumUnit} · 10-year cumulative total, summed from the quoted annual figures (calculated)`}
         >
           <div style={{ position: 'relative', marginTop: 14 }}>
             <svg

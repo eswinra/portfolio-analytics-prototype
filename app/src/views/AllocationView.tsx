@@ -231,7 +231,11 @@ export function AllocationView() {
         <p className="panel-note">
           Private-market benchmarks are lagged one to three months per IPS Table 2. Confirm the
           governing policy version (long-term vs ½-step) before any compliance statement.
+          {P
+            ? ''
+            : ' As transcribed, the ½-step sub-targets under Real Assets and Inflation Hedges sum to 15.5% against the category’s 16.5% — verify the sub-class figures against the OPEB IPS before relying on them.'}
         </p>
+        <SourceLine sources={['IPS_T1']} />
       </Panel>
     </>
   );

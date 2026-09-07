@@ -1,19 +1,36 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { boardBrief, publishedFor } from './fixtures/published';
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { EntityProvider, useEntity } from './lib/entity';
-import { AcfrView } from './views/AcfrView';
 import { AllocationView } from './views/AllocationView';
-import { ExceptionsView } from './views/ExceptionsView';
 import { FundedView } from './views/FundedView';
 import { HoldingsView } from './views/HoldingsView';
-import { ImportView } from './views/ImportView';
 import { PerformanceView } from './views/PerformanceView';
 import { PulseView } from './views/PulseView';
-import { ReconView } from './views/ReconView';
 import { RiskView } from './views/RiskView';
+
+/** Workstation views load on demand: the presentation-mode bundle no longer carries the
+ *  import surface, reconciliation, exceptions triage, and tracker code that only the
+ *  pipeline demo needs. Dashboard views stay eager so the first paint is complete. */
+const AcfrView = lazy(() => import('./views/AcfrView').then((m) => ({ default: m.AcfrView })));
+const ExceptionsView = lazy(() =>
+  import('./views/ExceptionsView').then((m) => ({ default: m.ExceptionsView })),
+);
+const ImportView = lazy(() =>
+  import('./views/ImportView').then((m) => ({ default: m.ImportView })),
+);
+const ReconView = lazy(() => import('./views/ReconView').then((m) => ({ default: m.ReconView })));
+
+function ViewLoading() {
+  return (
+    <p className="view-loading" role="status">
+      Loading view…
+    </p>
+  );
+}
 
 /** LACERA Portfolio Analytics shell (design handoff): notice bar, wordmark header with the
  *  entity segmented control, seven-view nav, title band, and mission footer. Published FY2025
@@ -81,17 +98,30 @@ function TitleBand() {
   const isOverview = !workstation && view[0] === '/';
   const isAcfr = pathname === '/acfr';
   const bandTitle = pathname === '/funded' && entity === 'OPEB' ? 'Benefits & prefunding' : view[2];
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   async function copyBrief() {
     try {
       await navigator.clipboard.writeText(boardBrief(entity));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
+      setCopyState('copied');
     } catch {
-      setCopied(false);
+      setCopyState('failed');
     }
+    setTimeout(() => setCopyState('idle'), 2600);
   }
+  const copyLabel =
+    copyState === 'copied'
+      ? 'Copied ✓'
+      : copyState === 'failed'
+        ? 'Copy failed'
+        : 'Copy board brief';
+  // announced to assistive technology; the button label alone is not read out on change
+  const copyAnnouncement =
+    copyState === 'copied'
+      ? 'Board brief copied to the clipboard.'
+      : copyState === 'failed'
+        ? 'Copy failed: the browser blocked clipboard access. Select the figures and copy them manually.'
+        : '';
 
   return (
     <>
@@ -111,8 +141,11 @@ function TitleBand() {
           {isOverview ? (
             <span className="actions">
               <button type="button" className="btn-band" onClick={copyBrief}>
-                {copied ? 'Copied ✓' : 'Copy board brief'}
+                {copyLabel}
               </button>
+              <span className="visually-hidden" role="status" aria-live="polite">
+                {copyAnnouncement}
+              </span>
             </span>
           ) : null}
         </div>
@@ -237,11 +270,13 @@ function Shell() {
 
       <nav className="mainnav" aria-label="Views">
         <div className="mainnav-inner">
-          {modeViews.map(([path, label]) => (
-            <NavLink key={path} to={path} end={path === '/'}>
-              {label}
-            </NavLink>
-          ))}
+          <div className="mainnav-links">
+            {modeViews.map(([path, label]) => (
+              <NavLink key={path} to={path} end={path === '/'}>
+                {label}
+              </NavLink>
+            ))}
+          </div>
           <div className="mode-switch" role="group" aria-label="Mode">
             <NavLink to="/" end className={!workstation ? 'mode-active' : ''}>
               Dashboard
@@ -256,37 +291,41 @@ function Shell() {
       <TitleBand />
 
       <main id="main" ref={mainRef} tabIndex={-1} className="shell-main">
-        <Routes>
-          <Route path="/" element={<PulseView />} />
-          <Route path="/performance" element={<PerformanceView />} />
-          <Route path="/allocation" element={<AllocationView />} />
-          <Route path="/funded" element={<FundedView />} />
-          <Route path="/risk" element={<RiskView />} />
-          <Route path="/holdings" element={<HoldingsView />} />
-          <Route path="/acfr" element={<AcfrView />} />
-          {/* team workflow demo — synthetic contract data */}
-          <Route path="/import" element={<ImportView />} />
-          <Route path="/recon" element={<ReconView />} />
-          <Route path="/exceptions" element={<ExceptionsView />} />
-          {/* legacy routes from revisions 1–7 */}
-          <Route path="/trends" element={<Navigate to="/performance" replace />} />
-          <Route path="/contribution" element={<Navigate to="/performance" replace />} />
-          <Route path="/data-quality" element={<Navigate to="/exceptions" replace />} />
-          <Route path="/policy" element={<Navigate to="/allocation" replace />} />
-          <Route path="/methodology" element={<Navigate to="/" replace />} />
-          <Route path="/limitations" element={<Navigate to="/" replace />} />
-          <Route
-            path="*"
-            element={
-              <>
-                <h2>Not found</h2>
-                <p>
-                  That view does not exist. <NavLink to="/">Back to the overview.</NavLink>
-                </p>
-              </>
-            }
-          />
-        </Routes>
+        <ErrorBoundary key={pathname}>
+          <Suspense fallback={<ViewLoading />}>
+            <Routes>
+              <Route path="/" element={<PulseView />} />
+              <Route path="/performance" element={<PerformanceView />} />
+              <Route path="/allocation" element={<AllocationView />} />
+              <Route path="/funded" element={<FundedView />} />
+              <Route path="/risk" element={<RiskView />} />
+              <Route path="/holdings" element={<HoldingsView />} />
+              <Route path="/acfr" element={<AcfrView />} />
+              {/* team workflow demo — synthetic contract data */}
+              <Route path="/import" element={<ImportView />} />
+              <Route path="/recon" element={<ReconView />} />
+              <Route path="/exceptions" element={<ExceptionsView />} />
+              {/* legacy routes from revisions 1–7 */}
+              <Route path="/trends" element={<Navigate to="/performance" replace />} />
+              <Route path="/contribution" element={<Navigate to="/performance" replace />} />
+              <Route path="/data-quality" element={<Navigate to="/exceptions" replace />} />
+              <Route path="/policy" element={<Navigate to="/allocation" replace />} />
+              <Route path="/methodology" element={<Navigate to="/" replace />} />
+              <Route path="/limitations" element={<Navigate to="/" replace />} />
+              <Route
+                path="*"
+                element={
+                  <>
+                    <h2>Not found</h2>
+                    <p>
+                      That view does not exist. <NavLink to="/">Back to the overview.</NavLink>
+                    </p>
+                  </>
+                }
+              />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
       <footer className="site-footer">

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { excessTag, Panel, Tag } from '../components/ui';
+import { excessTag, Panel, SourceLine, Tag } from '../components/ui';
 import { CONFIG } from '../config';
 import { HORIZONS, PENSION, publishedFor } from '../fixtures/published';
 import { useEntity } from '../lib/entity';
@@ -21,21 +21,23 @@ export function RiskView() {
   const P = entity === 'PENSION';
   const nb = CONFIG.nearBoundPp;
 
-  const compRows = PENSION.majors.map(([cat, t, r, , act]) => {
+  const compRows = PENSION.majors.flatMap(([cat, t, r, , act]) => {
+    if (act === null) return [];
     const lo = t - r;
     const hi = t + r;
-    const a = act ?? 0;
-    const dm = Math.min(a - lo, hi - a);
+    const dm = Math.min(act - lo, hi - act);
     const near = dm <= nb;
-    return {
-      cat,
-      act: `${act}%`,
-      t: `${t}%`,
-      band: `${lo}–${hi}%`,
-      dist: `${dm.toFixed(1)} pp`,
-      tag: dm < 0 ? 'Out of range' : near ? 'Near bound' : 'Within range',
-      variant: (dm < 0 || near ? 'outline' : 'accent') as 'outline' | 'accent',
-    };
+    return [
+      {
+        cat,
+        act: `${act}%`,
+        t: `${t}%`,
+        band: `${lo}–${hi}%`,
+        dist: `${dm.toFixed(1)} pp`,
+        tag: dm < 0 ? 'Out of range' : near ? 'Near bound' : 'Within range',
+        variant: (dm < 0 || near ? 'outline' : 'accent') as 'outline' | 'accent',
+      },
+    ];
   });
   const breaches = compRows.filter((c) => c.tag === 'Out of range').length;
   const nearC = compRows.filter((c) => c.tag === 'Near bound').length;
@@ -110,6 +112,7 @@ export function RiskView() {
             trade trigger. Overlays &amp; Hedges and Other Assets (2% combined) carry no policy
             weight and are not range-monitored.
           </p>
+          <SourceLine sources={['PAFR_PENSION', 'IPS_T1']} />
         </Panel>
       ) : (
         <Panel kicker="Policy range compliance" title="OPEB Master Trust">

@@ -17,6 +17,9 @@ export interface SourceRecord {
 
 const ACFR_URL =
   'https://www.lacera.gov/sites/default/files/assets/documents/annual_reports/ACFR-2025.pdf';
+// the FY2025 file's front matter puts printed page n at PDF page n + 2, and #page= addresses
+// the PDF index — anchoring on the printed number opens the wrong table
+const acfrPage = (printed: number) => `${ACFR_URL}#page=${printed + 2}`;
 
 export const SOURCES = {
   PAFR_GROWTH: {
@@ -67,7 +70,7 @@ export const SOURCES = {
     doc: '2025 Annual Comprehensive Financial Report',
     pageTable: 'p. 114 (largest equity holdings)',
     asOf: 'June 30, 2025',
-    url: `${ACFR_URL}#page=114`,
+    url: acfrPage(114),
   },
   ACFR_FI: {
     id: 'ACFR_FI',
@@ -75,7 +78,7 @@ export const SOURCES = {
     doc: '2025 Annual Comprehensive Financial Report',
     pageTable: 'p. 115 (largest fixed income holdings)',
     asOf: 'June 30, 2025',
-    url: `${ACFR_URL}#page=115`,
+    url: acfrPage(115),
   },
   ACFR_FEES: {
     id: 'ACFR_FEES',
@@ -83,7 +86,16 @@ export const SOURCES = {
     doc: '2025 Annual Comprehensive Financial Report',
     pageTable: 'p. 116 (investment management fees)',
     asOf: 'June 30, 2025',
-    url: `${ACFR_URL}#page=116`,
+    url: acfrPage(116),
+  },
+  ACFR_RETURNS: {
+    id: 'ACFR_RETURNS',
+    label: '2025 ACFR, pp. 112–113',
+    doc: '2025 Annual Comprehensive Financial Report',
+    pageTable:
+      'pp. 112–113 (total investment rates of return — Pension Plan / OPEB Master Trust: TWR, MWR, assumed rate, funded ratio)',
+    asOf: 'June 30, 2025',
+    url: acfrPage(112),
   },
   ACFR_TOC: {
     id: 'ACFR_TOC',

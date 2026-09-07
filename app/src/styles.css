@@ -229,6 +229,45 @@ a:hover {
   flex-wrap: wrap;
 }
 
+.mainnav-links {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Phones: one scrollable row of view links (with edge shadows while more links are
+   off-screen) and the mode switch on its own row, instead of four stacked rows that
+   pushed the headline below the fold. */
+@media (max-width: 640px) {
+  .mainnav-inner {
+    gap: 6px 16px;
+  }
+
+  .mainnav-links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 20px;
+    width: 100%;
+    scrollbar-width: thin;
+    background:
+      linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0%)) left / 32px 100% no-repeat,
+      linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0%)) right / 32px 100% no-repeat,
+      linear-gradient(to right, rgb(31 42 55 / 16%), rgb(31 42 55 / 0%)) left / 12px 100% no-repeat,
+      linear-gradient(to left, rgb(31 42 55 / 16%), rgb(31 42 55 / 0%)) right / 12px 100% no-repeat;
+    background-attachment: local, local, scroll, scroll;
+  }
+
+  .mainnav-links a {
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .mode-switch {
+    margin: 0 0 8px;
+  }
+}
+
 .mainnav a {
   padding: 15px 2px 12px;
   font-size: 15px;
@@ -400,6 +439,20 @@ a:hover {
   gap: 22px;
 }
 
+.kpi-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--muted-72);
+}
+
+.kpi-provenance .source-line {
+  margin-top: 0;
+}
+
 .grid-panels {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
@@ -453,8 +506,41 @@ a:hover {
   clip: rect(0 0 0 0);
 }
 
+/* Scrolling shadows: the white "cover" layers travel with the content, the grey layers stay
+   on the container edges, so a shadow appears only on the side that still has columns
+   hidden — a visible affordance that a wide table scrolls sideways. */
 .table-scroll {
   overflow-x: auto;
+  background:
+    linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0%)) left / 40px 100% no-repeat,
+    linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0%)) right / 40px 100% no-repeat,
+    linear-gradient(to right, rgb(31 42 55 / 18%), rgb(31 42 55 / 0%)) left / 14px 100% no-repeat,
+    linear-gradient(to left, rgb(31 42 55 / 18%), rgb(31 42 55 / 0%)) right / 14px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* Phones: compact cells so four-column tables (period / fund / benchmark / excess, or a
+   line item with three fiscal years) fit a 375px screen without hiding the last column
+   behind a scroll. */
+@media (max-width: 480px) {
+  .table {
+    font-size: 12.5px;
+  }
+
+  .table th {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 6px 5px;
+  }
+
+  .table td {
+    padding: 6px 5px;
+  }
+
+  .table .tag {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
 }
 
 /* ---- tags ---------------------------------------------------------------- */
@@ -1121,6 +1207,115 @@ details.panel > summary {
   .table.cardable td[data-label='Status'],
   .table.cardable td[data-label='Tier'] {
     order: -1;
+  }
+}
+
+/* ---- deliberate loading / error states ------------------------------------------ */
+
+.view-loading {
+  padding: 48px 0;
+  text-align: center;
+  color: var(--muted-72);
+  font-size: 14px;
+}
+
+.error-state {
+  border-left: 4px solid var(--accent-700);
+}
+
+.error-state .error-message {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 12px;
+  color: var(--neutral-700);
+  word-break: break-word;
+}
+
+.error-state button {
+  background: none;
+  border: 1px solid var(--accent-600);
+  color: var(--accent-800);
+  padding: 6px 12px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.error-state button:focus-visible {
+  outline: 2px solid var(--accent-700);
+  outline-offset: 2px;
+}
+
+/* ---- print: a board-packet page, not a screen capture ------------------------------ */
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .skip-link,
+  .mainnav,
+  .band-spacer,
+  .band-strip,
+  .band .actions,
+  .workflow-banner {
+    display: none !important;
+  }
+
+  .notice-bar {
+    background: none;
+    color: #000;
+    padding: 4px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .masthead {
+    padding: 10px 0;
+  }
+
+  .band {
+    background: none;
+    border-bottom: 2px solid #000;
+  }
+
+  .band-inner {
+    padding: 8px 0;
+  }
+
+  .band h1,
+  .band .entity {
+    color: #000;
+  }
+
+  .panel {
+    break-inside: avoid;
+    border: 1px solid #999;
+    box-shadow: none;
+  }
+
+  .table-scroll {
+    overflow: visible;
+    background: none;
+  }
+
+  .site-footer {
+    background: none;
+    color: #000;
+    border-top: 1px solid #000;
+    margin-top: 12px;
+  }
+
+  .site-footer .mission {
+    font-size: 14px;
+    color: #000;
+  }
+
+  .site-footer .meta,
+  .site-footer a {
+    color: #000 !important;
   }
 }
 
