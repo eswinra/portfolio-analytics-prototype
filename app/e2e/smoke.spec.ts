@@ -26,6 +26,9 @@ const hash = (route: string) => `/#${route}`;
 const PENSION_CSV = fileURLToPath(
   new URL('../../data/sample/demofund_export_v1.csv', import.meta.url),
 );
+const CIO_FEED_CSV = fileURLToPath(
+  new URL('../../data/sample/cio_monthly_feed_demofund.csv', import.meta.url),
+);
 
 async function ready(page: Page, route: string) {
   await page.goto(hash(route));
@@ -121,6 +124,23 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     const priorLabel = options[1]!.split(' — data through ')[1]!;
     await expect(page.locator('.asof')).toContainText(priorLabel);
     await expect(page.locator('#view-title')).toContainText(priorLabel);
-    await expect(page.getByText(/The slide deck always shows the latest report/)).toBeVisible();
+    await expect(
+      page.getByText(/The slide deck always shows the latest public report/),
+    ).toBeVisible();
+  });
+
+  test('an imported schema-1.4 feed appears as the Workstation dataset on the tab', async ({
+    page,
+  }) => {
+    await ready(page, '/import');
+    await page.locator('input[type="file"]').setInputFiles(CIO_FEED_CSV);
+    await page.getByRole('button', { name: 'Apply this dataset' }).click();
+    await expect(page.getByText(/Import applied/)).toBeVisible();
+    await page.goto(hash('/cio?v=workstation'));
+    await expect(page.getByText(/Workstation feed \(schema 1\.4\)/)).toBeVisible();
+    await expect(page.locator('.asof')).toContainText('workstation feed');
+    await expect(page.locator('#view-title')).toContainText('June 30, 2026');
+    // the feed round-trips the latest public vintage, so the headline tile matches it
+    await expect(page.locator('.grid-kpi .stat-value').first()).toHaveText('$93.9B');
   });
 });

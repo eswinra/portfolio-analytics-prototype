@@ -1,5 +1,6 @@
 import { useRef, useState, type DragEvent } from 'react';
 
+import cioFeedCsv from '../../../data/sample/cio_monthly_feed_demofund.csv?raw';
 import invalidSampleCsv from '../../../data/sample/invalid/bad_schema_version.csv?raw';
 import templateCsv from '../../../data/sample/market_pulse_template.csv?raw';
 import { Panel, Pill } from '../components/ui';
@@ -236,6 +237,17 @@ export function ImportView() {
               Download an invalid sample (bad schema version)
             </button>{' '}
             — try importing it to see a rejection.
+          </li>
+          <li>
+            <button
+              type="button"
+              className="linklike"
+              onClick={() => downloadText('cio_monthly_feed_demofund.csv', cioFeedCsv)}
+            >
+              Download the CIO Monthly feed sample (schema 1.4)
+            </button>{' '}
+            — the latest public report re-expressed as <code>cio_monthly</code> rows; import it
+            here, then open the CIO Monthly tab and choose “Workstation dataset”.
           </li>
           <li>
             <a

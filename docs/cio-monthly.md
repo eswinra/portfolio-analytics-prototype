@@ -58,3 +58,15 @@ performance table is an image in the PDF.
 Every figure is `reported_public` from the page cited beside it. Excess returns, drift, changes
 against the prior report and the gap attribution are `calculated`; the attribution is a
 `proxy_estimate` (composite excess × month-end weight) and its residual is always shown.
+
+## Workstation feed (schema 1.4)
+
+The internal version does not read PDFs: the same figures arrive as `cio_monthly` contract rows
+(see `docs/data-contract.md`, 1.4.0). `app/src/lib/dataset/cioFeed.ts` assembles them into the
+entity shape the tab renders; an applied import that carries the feed appears in the report
+selector as "Workstation dataset", with the publication gate shown and changes computed against
+the newest public report that precedes it. The public sample
+(`data/sample/cio_monthly_feed_demofund.csv`) is generated from the latest extracted vintage and
+round-trips it exactly, which is the test that the two paths agree. Geography and the market
+table are not part of the feed; the tab says so instead of filling them in.
+

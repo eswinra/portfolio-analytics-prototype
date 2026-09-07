@@ -14,6 +14,7 @@ import {
 import { reconcileContribution, type Reconciliation } from '../finance/contribution';
 import { dataState, type DataState } from '../finance/staleness';
 import { growthIndex, periodsComparable, type MonthPoint } from '../finance/returns';
+import { buildCioFeed, type CioFeed } from './cioFeed';
 import { buildPmSleeves, type PmSleeve } from '../finance/privateMarkets';
 import { buildReconPairs, type ReconPair } from '../finance/recon';
 import { policyReadThrough, type ReadThrough } from '../finance/readThrough';
@@ -159,6 +160,8 @@ export interface Dataset {
   /** demonstrated publication gate: blocking exceptions + out-of-tolerance recon breaks */
   publishEligible: boolean;
   publishBlockers: string[];
+  /** schema 1.4: the CIO Monthly feed carried by the file, or null */
+  cioFeed: CioFeed | null;
 }
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -728,5 +731,6 @@ export function buildDataset(
     freshness,
     publishEligible,
     publishBlockers,
+    cioFeed: buildCioFeed(scoped),
   };
 }

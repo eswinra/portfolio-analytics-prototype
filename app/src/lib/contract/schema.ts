@@ -23,7 +23,26 @@ export const RECORD_TYPES = [
   'acfr_artifact_link',
   'pm_commitment',
   'pm_capital_account',
+  // schema 1.4: the CIO Monthly feed — the monthly report's figures as contract rows
+  'cio_monthly',
 ] as const;
+
+/** schema 1.4: metric vocabulary of the cio_monthly feed (see docs/data-contract.md) */
+export const CIO_METRICS = [
+  'return',
+  'benchmark_return',
+  'hurdle_return',
+  'market_value',
+  'weight',
+  'target_weight',
+  'flow',
+  'cash',
+  'hist_count',
+  'hist_stat',
+] as const;
+export const CIO_RETURN_METRICS = new Set<string>(['return', 'benchmark_return', 'hurdle_return']);
+/** period tokens of the feed, in the report's column order */
+export const CIO_PERIOD_TOKENS = ['1M', '3M', 'FYTD', 'YTD', '1Y', '3Y', '5Y', '10Y'] as const;
 
 /** schema 1.3: ACFR section workflow states (acfr_section_status value column, V22) */
 export const ACFR_STATUSES = [
@@ -42,7 +61,23 @@ export const CLASSIFICATIONS = [
   'calculated',
 ] as const;
 
-export const PERIOD_TYPES = ['D', 'M', 'Q', 'FY', '1M', 'QTD', 'FYTD', '1Y', 'ITD'] as const;
+export const PERIOD_TYPES = [
+  'D',
+  'M',
+  'Q',
+  'FY',
+  '1M',
+  'QTD',
+  'FYTD',
+  '1Y',
+  'ITD',
+  // schema 1.4: the CIO Monthly report's remaining trailing periods
+  '3M',
+  'YTD',
+  '3Y',
+  '5Y',
+  '10Y',
+] as const;
 export const FREQUENCIES = ['Daily', 'Monthly', 'Quarterly', 'Annual', 'Ad Hoc'] as const;
 export const QUALITY_STATUSES = ['ok', 'missing'] as const;
 export const BOOKS = ['IBOR', 'ABOR', 'n/a'] as const;

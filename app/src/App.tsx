@@ -225,7 +225,7 @@ function Shell() {
   const { pathname } = useLocation();
   const workstation = isWorkstationPath(pathname);
   const cio = pathname === '/cio';
-  const { vintage } = useCioVintage();
+  const { vintage, feed } = useCioVintage();
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
   const mainRef = useRef<HTMLElement>(null);
 
@@ -244,7 +244,9 @@ function Shell() {
       <div className="notice-bar" role="note">
         <span>
           {cio
-            ? `Prototype — published monthly figures (CIO Monthly Report, ${vintage.reportLabel})`
+            ? feed
+              ? 'Prototype — imported workstation feed (schema 1.4 cio_monthly rows), not a published report'
+              : `Prototype — published monthly figures (CIO Monthly Report, ${vintage.reportLabel})`
             : 'Prototype — published FY2025 figures (PAFR · ACFR · IPS)'}
         </span>
         <span className="right">Not an official LACERA system or performance report</span>
@@ -288,8 +290,10 @@ function Shell() {
               </>
             ) : cio ? (
               <>
-                Data through <strong>{longDate(vintage.dataThrough)}</strong> · CIO Monthly Report,{' '}
-                {vintage.reportLabel}
+                Data through <strong>{longDate(vintage.dataThrough)}</strong> ·{' '}
+                {feed
+                  ? 'workstation feed (imported dataset)'
+                  : `CIO Monthly Report, ${vintage.reportLabel}`}
               </>
             ) : (
               <>

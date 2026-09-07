@@ -20,7 +20,8 @@ import {
 } from '../fixtures/cioMonthly';
 import { publishedFor } from '../fixtures/published';
 import type { SourceRecord } from '../fixtures/sources';
-import { useCioVintage } from '../lib/cioVintage';
+import { FEED_KEY, useCioVintage } from '../lib/cioVintage';
+import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 
 /** CIO Monthly — the monthly vintage rendered as dashboard panels from the same fixture that
@@ -50,10 +51,15 @@ const STATUS_VARIANT: Record<OpsStatus, TagVariant> = {
 /** Source record for one report's pages, built per vintage (the registry holds fixed documents). */
 function cioSource(v: CioVintage, pages: string, firstPage: number | null): SourceRecord {
   const url = v.url && firstPage ? `${v.url}#page=${firstPage}` : null;
+  const isFeed = v.url === null && v.pages.flows === 0;
   return {
     id: `CIO_${v.dataThrough}_${pages}`,
-    label: `CIO Monthly Report (${v.reportLabel}), ${pages}`,
-    doc: 'Chief Investment Officer Monthly Report',
+    label: isFeed
+      ? `imported dataset ${v.file} (${pages})`
+      : `CIO Monthly Report (${v.reportLabel}), ${pages}`,
+    doc: isFeed
+      ? 'Workstation dataset — schema 1.4 cio_monthly rows'
+      : 'Chief Investment Officer Monthly Report',
     pageTable: pages,
     asOf: longDate(v.dataThrough),
     ...(url ? { url } : {}),
@@ -83,7 +89,8 @@ function entityPages(v: CioVintage, key: 'pension' | 'opeb') {
 
 export function CioMonthlyView() {
   const { entity } = useEntity();
-  const { vintage, prior, isLatest, select } = useCioVintage();
+  const { dataset } = useDataset();
+  const { vintage, prior, isLatest, feed, feedAvailable, select } = useCioVintage();
   const P = entity === 'PENSION';
   const key = P ? 'pension' : 'opeb';
   const e = cioFor(entity, vintage);
@@ -161,9 +168,15 @@ export function CioMonthlyView() {
           Report{' '}
           <select
             aria-label="Report"
-            value={vintage.dataThrough}
+            value={feed ? FEED_KEY : vintage.dataThrough}
             onChange={(ev) => select(ev.target.value)}
           >
+            {feedAvailable ? (
+              <option value={FEED_KEY}>
+                Workstation dataset ({feedAvailable.entityId}) — data through{' '}
+                {longDate(feedAvailable.asOf)}
+              </option>
+            ) : null}
             {[...CIO_VINTAGES].reverse().map((v) => (
               <option key={v.dataThrough} value={v.dataThrough}>
                 {v.reportLabel} — data through {longDate(v.dataThrough)}
@@ -175,14 +188,33 @@ export function CioMonthlyView() {
           {prior
             ? `Changes are shown against the ${prior.reportLabel} report (data through ${longDate(prior.dataThrough)}).`
             : 'Earliest report in the series — no prior report to compare.'}
-          {isLatest ? '' : ' The slide deck always shows the latest report.'}
+          {isLatest ? '' : ' The slide deck always shows the latest public report.'}
         </span>
       </div>
+      {feed ? (
+        <div
+          className={`publish-banner ${dataset.publishEligible ? 'ok' : 'blocked'}`}
+          role="status"
+        >
+          <strong>Workstation feed (schema 1.4):</strong> {feed.rowCount} cio_monthly rows for{' '}
+          {feed.entityId}, data through {longDate(feed.asOf)}, from {feed.sourceName} (
+          {feed.pageTable}); classification {feed.classifications.join(', ')}. Publication gate
+          (demonstrated):{' '}
+          {dataset.publishEligible
+            ? 'ELIGIBLE — no blocking conditions in the active dataset.'
+            : `INELIGIBLE — ${dataset.publishBlockers.join(' · ')}.`}{' '}
+          In the internal version this feed also regenerates the deck; on this public site the deck
+          shows the latest public report.
+        </div>
+      ) : null}
       <div className="muted-note vintage-note" role="note">
-        <strong>Monthly vintage, kept apart from the fiscal-year tabs.</strong> This tab quotes the{' '}
-        {CIO_VINTAGE.title} of {vintage.reportLabel}, with fund data through {monthLabel}. The
-        fund's market value here is not the June 30, 2025 fiduciary net position on the Overview,
-        and monthly periods are not fiscal-year horizons; the two vintages are never combined.
+        <strong>Monthly vintage, kept apart from the fiscal-year tabs.</strong>{' '}
+        {feed
+          ? `This tab renders the imported workstation dataset (${feed.entityId}) with fund data through ${monthLabel} — not a published report.`
+          : `This tab quotes the ${CIO_VINTAGE.title} of ${vintage.reportLabel}, with fund data through ${monthLabel}.`}{' '}
+        The fund's market value here is not the June 30, 2025 fiduciary net position on the
+        Overview, and monthly periods are not fiscal-year horizons; the two vintages are never
+        combined.
         {isLatest ? (
           <>
             {' '}
@@ -908,8 +940,9 @@ export function CioMonthlyView() {
           </>
         ) : (
           <p className="muted-note">
-            The market table in this report is not machine-readable, so it is not reproduced; the
-            printed page is in the PDF.
+            {feed
+              ? 'The feed does not carry the market table.'
+              : 'The market table in this report is not machine-readable, so it is not reproduced; the printed page is in the PDF.'}
           </p>
         )}
         <SourceLine records={[marketSrc]} />
@@ -934,15 +967,17 @@ export function CioMonthlyView() {
               <SourceLine records={[cioSource(vintage, 'pp. 4–6', 4)]} />
             </Panel>
 
-            <Panel
-              kicker={`Geographic exposure by AUM — ${e.short}`}
-              title={`Developed ${e.geo.dm}% · emerging ${e.geo.em}% · ${e.geo.total} markets`}
-              sub={`${e.geo.dmN} developed and ${e.geo.emN} emerging markets; the report's top five in each group`}
-            >
-              <GeoTable e={e} />
-              <SourceLine records={[src.geo]} />
-              <DeckLink n={SLIDE.geo} show={isLatest} />
-            </Panel>
+            {e.geo.top.length > 0 ? (
+              <Panel
+                kicker={`Geographic exposure by AUM — ${e.short}`}
+                title={`Developed ${e.geo.dm}% · emerging ${e.geo.em}% · ${e.geo.total} markets`}
+                sub={`${e.geo.dmN} developed and ${e.geo.emN} emerging markets; the report's top five in each group`}
+              >
+                <GeoTable e={e} />
+                <SourceLine records={[src.geo]} />
+                <DeckLink n={SLIDE.geo} show={isLatest} />
+              </Panel>
+            ) : null}
           </div>
 
           <Panel
@@ -995,20 +1030,23 @@ export function CioMonthlyView() {
         </>
       ) : (
         <div className="grid-panels mt">
-          <Panel
-            kicker={`Geographic exposure by AUM — ${e.short}`}
-            title={`Developed ${e.geo.dm}% · emerging ${e.geo.em}% · ${e.geo.total} markets`}
-            sub={`${e.geo.dmN} developed and ${e.geo.emN} emerging markets; the report's top five in each group`}
-          >
-            <GeoTable e={e} />
-            <SourceLine records={[src.geo]} />
-          </Panel>
+          {e.geo.top.length > 0 ? (
+            <Panel
+              kicker={`Geographic exposure by AUM — ${e.short}`}
+              title={`Developed ${e.geo.dm}% · emerging ${e.geo.em}% · ${e.geo.total} markets`}
+              sub={`${e.geo.dmN} developed and ${e.geo.emN} emerging markets; the report's top five in each group`}
+            >
+              <GeoTable e={e} />
+              <SourceLine records={[src.geo]} />
+            </Panel>
+          ) : null}
           <Panel kicker="Editorial pages" title="Macro strip and items for attention">
             <p className="muted-note">
-              The macro strip and the items for attention are maintained for the latest report only.
-              For this month, read the report's pages 4–6 and 19–20 in the PDF.
+              {feed
+                ? 'The macro strip and the items for attention are editorial pages of the public report and are not part of the feed.'
+                : "The macro strip and the items for attention are maintained for the latest report only. For this month, read the report's pages 4–6 and 19–20 in the PDF."}
             </p>
-            <SourceLine records={[cioSource(vintage, 'pp. 4–6, 19–20', 4)]} />
+            {feed ? null : <SourceLine records={[cioSource(vintage, 'pp. 4–6, 19–20', 4)]} />}
           </Panel>
         </div>
       )}

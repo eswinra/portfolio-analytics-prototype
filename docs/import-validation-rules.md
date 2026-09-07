@@ -48,6 +48,19 @@ The declared `schema_version` must match the column set on every row (32 cols �
 severity then row; downloadable as CSV from the UI. The report never echoes more than the
 offending cell value.
 
+## V24 — CIO Monthly feed (schema 1.4)
+
+| Rule | Severity | Check |
+|---|---|---|
+| V24 (row) | reject | `cio_monthly.metric_id` must be one of `return`, `benchmark_return`, `hurdle_return`, `market_value`, `weight`, `target_weight`, `flow`, `cash`, `hist_count`, `hist_stat`; return metrics in `%` are subject to the V10 plausibility bound |
+| V24 (dataset) | reject | per (entity, as_of): composite `weight` rows sum to 1 ±0.003; composite `market_value` rows sum to the `TOTAL` value within max(2, 0.3%); `hist_count` rows, when present, are exactly 14 and sum to 120; every composite `return` has a `benchmark_return` for the same `period_type`; `TOTAL` carries `return` for `1M`, `FYTD` and `1Y` |
+
+V05's natural key includes `period_type` for `cio_monthly` rows: at fiscal year end FYTD and 1Y
+share one span but are distinct printed columns.
+
+`cio_monthly` is a quotation type for V15 (`reported_public` allowed) because a feed can re-express
+the public report; a workbook-produced feed is classified `calculated`.
+
 ## Security notes
 
 - Parsing uses PapaParse with `download:false`, worker mode, and no dynamic typing beyond the

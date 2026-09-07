@@ -2,6 +2,8 @@ import Papa from 'papaparse';
 
 import {
   ACFR_STATUSES,
+  CIO_METRICS,
+  CIO_RETURN_METRICS,
   COLUMNS_V12,
   type ContractRecord,
   PROVENANCE_COLUMNS,
@@ -11,7 +13,7 @@ import {
   SCHEMA_MAJOR,
 } from './schema';
 
-/** Import validator — implements docs/import-validation-rules.md (V01–V23). */
+/** Import validator — implements docs/import-validation-rules.md (V01–V24). */
 
 export interface ImportError {
   ruleId: string;
@@ -49,10 +51,19 @@ const NUMERIC_RECORD_TYPES = new Set([
   'pm_commitment',
   'pm_capital_account',
   'acfr_artifact_link', // 1 = received; blank + missing = outstanding
+  // schema 1.4
+  'cio_monthly',
 ]);
 
-/** Record types allowed to carry the reported_public classification (quotations). */
-const QUOTE_RECORD_TYPES = new Set(['public_reference', 'policy_target', 'benchmark_definition']);
+/** Record types allowed to carry the reported_public classification (quotations). The CIO
+ *  monthly feed is one when it re-expresses the public report; a workbook feed of the same
+ *  rows is classified calculated. */
+const QUOTE_RECORD_TYPES = new Set([
+  'public_reference',
+  'policy_target',
+  'benchmark_definition',
+  'cio_monthly',
+]);
 
 const PERIOD_SPAN_REQUIRED = new Set([
   'monthly_return',
@@ -208,7 +219,9 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
     seenIds.add(raw.record_id);
 
     // V05 natural key — recon_value alone keys on source_name too: the two sides of a
-    // reconciliation pair share every other key component by design (schema 1.3).
+    // reconciliation pair share every other key component by design (schema 1.3). The CIO
+    // monthly feed keys on period_type as well: at fiscal year end FYTD and 1Y share one span
+    // but are distinct printed columns (schema 1.4).
     const key = [
       raw.record_type,
       raw.entity_id,
@@ -218,6 +231,7 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
       raw.period_start,
       raw.period_end,
       raw.record_type === 'recon_value' ? raw.source_name : '',
+      raw.record_type === 'cio_monthly' ? raw.period_type : '',
     ].join('|');
     if (seenKeys.has(key)) {
       errors.push(
@@ -275,7 +289,10 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
       value = n;
       // V10 percent plausibility — return/contribution records only. Allocation weights and
       // other % levels may legitimately exceed the bound (e.g. a 61% Growth weight).
-      if (raw.unit === '%' && PCT_BOUND_TYPES.has(raw.record_type) && Math.abs(n) > PCT_BOUND) {
+      const boundApplies =
+        PCT_BOUND_TYPES.has(raw.record_type) ||
+        (raw.record_type === 'cio_monthly' && CIO_RETURN_METRICS.has(raw.metric_id));
+      if (raw.unit === '%' && boundApplies && Math.abs(n) > PCT_BOUND) {
         errors.push(
           err(
             'V10',
@@ -306,6 +323,23 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
     // V11 retrieved date sanity
     if (raw.record_type === 'public_reference' && raw.retrieved_date < raw.as_of_date) {
       warnings.push(warn('V11', rowNo, 'retrieved_date', 'retrieved before as-of date'));
+    }
+
+    // V24 (row half): the feed's metric vocabulary is closed
+    if (
+      raw.record_type === 'cio_monthly' &&
+      !(CIO_METRICS as readonly string[]).includes(raw.metric_id)
+    ) {
+      errors.push(
+        err(
+          'V24',
+          rowNo,
+          'metric_id',
+          `cio_monthly metric must be one of ${CIO_METRICS.join('/')}`,
+          raw.metric_id,
+        ),
+      );
+      return;
     }
 
     // V15 reported_public confinement (quotation record types only)
@@ -435,6 +469,88 @@ export function parseContractCsv(text: string, fixtureEntityId?: string): Import
       errors.push(
         err('V23', 0, 'source_name', `recon key ${k} carries ${s.size} sources; a pair is two`),
       );
+    }
+  }
+
+  // V24 CIO monthly feed identities (schema 1.4), per (entity, as_of): the report's own
+  // arithmetic — composite weights sum to 1, composite market values sum to the total, a
+  // histogram has 14 bins summing to 120 months, every composite return has its benchmark for
+  // the same period, and the total fund carries 1M/FYTD/1Y returns
+  const cioGroups = new Map<string, ContractRecord[]>();
+  for (const r of records) {
+    if (r.record_type !== 'cio_monthly') continue;
+    const k = `${r.entity_id}|${r.as_of_date}`;
+    cioGroups.set(k, [...(cioGroups.get(k) ?? []), r]);
+  }
+  for (const [k, rows] of cioGroups) {
+    const numeric = (rs: ContractRecord[]) =>
+      rs.reduce((s, r) => s + (typeof r.value === 'number' ? r.value : 0), 0);
+    const weights = rows.filter((r) => r.metric_id === 'weight' && r.category_id !== 'TOTAL');
+    if (weights.length > 0 && Math.abs(numeric(weights) - 1) > 0.003) {
+      errors.push(
+        err(
+          'V24',
+          0,
+          'value',
+          `cio_monthly weights for ${k} sum to ${numeric(weights).toFixed(4)}, not 1`,
+        ),
+      );
+    }
+    const total = rows.find((r) => r.metric_id === 'market_value' && r.category_id === 'TOTAL');
+    const parts = rows.filter((r) => r.metric_id === 'market_value' && r.category_id !== 'TOTAL');
+    if (total && typeof total.value === 'number' && parts.length > 0) {
+      const s = numeric(parts);
+      if (Math.abs(s - total.value) > Math.max(2, total.value * 0.003)) {
+        errors.push(
+          err(
+            'V24',
+            0,
+            'value',
+            `cio_monthly market values for ${k} sum to ${s}, total is ${total.value}`,
+          ),
+        );
+      }
+    }
+    const hist = rows.filter((r) => r.metric_id === 'hist_count');
+    if (hist.length > 0 && (hist.length !== 14 || numeric(hist) !== 120)) {
+      errors.push(
+        err(
+          'V24',
+          0,
+          'value',
+          `cio_monthly histogram for ${k}: ${hist.length} bins summing to ${numeric(hist)} (14 bins, 120 months expected)`,
+        ),
+      );
+    }
+    for (const r of rows) {
+      if (r.metric_id !== 'return') continue;
+      const paired = rows.some(
+        (b) =>
+          b.metric_id === 'benchmark_return' &&
+          b.category_id === r.category_id &&
+          b.period_type === r.period_type,
+      );
+      if (!paired) {
+        errors.push(
+          err(
+            'V24',
+            0,
+            'metric_id',
+            `cio_monthly return ${r.category_id}/${r.period_type} in ${k} has no benchmark_return`,
+          ),
+        );
+      }
+    }
+    for (const p of ['1M', 'FYTD', '1Y']) {
+      if (
+        !rows.some(
+          (r) => r.metric_id === 'return' && r.category_id === 'TOTAL' && r.period_type === p,
+        )
+      ) {
+        errors.push(
+          err('V24', 0, 'period_type', `cio_monthly TOTAL return for ${p} missing in ${k}`),
+        );
+      }
     }
   }
 

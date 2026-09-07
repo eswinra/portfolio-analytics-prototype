@@ -192,8 +192,34 @@ export const PERIOD_INDEX = { oneMonth: 0, fytd: 2, oneYear: 4 } as const;
 export const cioFor = (e: EntityId, v: CioVintage = CIO_LATEST): CioEntity =>
   e === 'OPEB' ? v.ENT.opeb : v.ENT.pension;
 
-/** The vintage before `v` (by data-through), or null for the oldest. */
+/** The vintage before `v` (by data-through), or null for the oldest. For a vintage that is
+ *  not in the public series (a workstation feed) the prior is the newest public report whose
+ *  data-through precedes it. */
 export function priorVintage(v: CioVintage): CioVintage | null {
   const i = CIO_VINTAGES.indexOf(v);
-  return i > 0 ? CIO_VINTAGES[i - 1]! : null;
+  if (i >= 0) return i > 0 ? CIO_VINTAGES[i - 1]! : null;
+  const earlier = CIO_VINTAGES.filter((x) => x.dataThrough < v.dataThrough);
+  return earlier.length ? earlier[earlier.length - 1]! : null;
+}
+
+/** A workstation feed (schema 1.4 cio_monthly rows) expressed as a vintage, so the tab renders
+ *  it with the same panels; it is never added to the public series. */
+export function vintageFromFeed(feed: {
+  entityId: string;
+  asOf: string;
+  entity: CioEntity;
+  sourceName: string;
+  pageTable: string;
+}): CioVintage {
+  return {
+    reportDate: feed.asOf,
+    reportLabel: `Workstation dataset (${feed.entityId})`,
+    dataThrough: feed.asOf,
+    marketAsOf: null,
+    file: feed.sourceName,
+    url: null,
+    pages: { market: null, flows: 0, pension: [0, 0, 0, 0], opeb: [0, 0, 0, 0] },
+    ENT: { pension: feed.entity, opeb: feed.entity },
+    MKT: null,
+  };
 }
