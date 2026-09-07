@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CIO_VINTAGE, cioFor } from './fixtures/cioMonthly';
 import { boardBrief, publishedFor } from './fixtures/published';
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { EntityProvider, useEntity } from './lib/entity';
@@ -23,6 +24,10 @@ const ImportView = lazy(() =>
   import('./views/ImportView').then((m) => ({ default: m.ImportView })),
 );
 const ReconView = lazy(() => import('./views/ReconView').then((m) => ({ default: m.ReconView })));
+// the monthly vintage is its own section; loaded when the tab is opened
+const CioMonthlyView = lazy(() =>
+  import('./views/CioMonthlyView').then((m) => ({ default: m.CioMonthlyView })),
+);
 
 function ViewLoading() {
   return (
@@ -44,6 +49,7 @@ const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/funded', 'Funded Status', 'Funded status and membership'],
   ['/risk', 'Policy Monitoring', 'Policy monitoring'],
   ['/holdings', 'Holdings & Fees', 'Holdings & fees'],
+  ['/cio', 'CIO Monthly', 'CIO Monthly Report — data through May 31, 2026'],
 ];
 
 /** Workstation mode — where the work is populated: the synthetic contract-data pipeline
@@ -97,6 +103,7 @@ function TitleBand() {
   const view = workstation ?? DASHBOARD_VIEWS.find(([p]) => p === pathname) ?? DASHBOARD_VIEWS[0]!;
   const isOverview = !workstation && view[0] === '/';
   const isAcfr = pathname === '/acfr';
+  const isCio = pathname === '/cio';
   const bandTitle = pathname === '/funded' && entity === 'OPEB' ? 'Benefits & prefunding' : view[2];
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
@@ -136,7 +143,9 @@ function TitleBand() {
               ? isAcfr
                 ? 'Workstation · ACFR tracker — illustrative demo values'
                 : `Workstation · synthetic ${dataset.meta.entityId} data`
-              : d.label}
+              : isCio
+                ? cioFor(entity).name
+                : d.label}
           </span>
           {isOverview ? (
             <span className="actions">
@@ -146,6 +155,12 @@ function TitleBand() {
               <span className="visually-hidden" role="status" aria-live="polite">
                 {copyAnnouncement}
               </span>
+            </span>
+          ) : isCio ? (
+            <span className="actions">
+              <a className="btn-band" href="deck/">
+                Open as slides
+              </a>
             </span>
           ) : null}
         </div>
@@ -203,6 +218,7 @@ function Shell() {
   const { dataset } = useDataset();
   const { pathname } = useLocation();
   const workstation = isWorkstationPath(pathname);
+  const cio = pathname === '/cio';
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
   const mainRef = useRef<HTMLElement>(null);
 
@@ -219,7 +235,11 @@ function Shell() {
       <RouteFocusReset mainRef={mainRef} />
 
       <div className="notice-bar" role="note">
-        <span>Prototype — published FY2025 figures (PAFR · ACFR · IPS)</span>
+        <span>
+          {cio
+            ? `Prototype — published monthly figures (CIO Monthly Report, ${CIO_VINTAGE.reportDate})`
+            : 'Prototype — published FY2025 figures (PAFR · ACFR · IPS)'}
+        </span>
         <span className="right">Not an official LACERA system or performance report</span>
       </div>
 
@@ -258,6 +278,11 @@ function Shell() {
               <>
                 Data through <strong>{dataset.freshness.latestAsOf ?? 'n/a'}</strong> · synthetic
                 workstation dataset
+              </>
+            ) : cio ? (
+              <>
+                Data through <strong>{CIO_VINTAGE.dataThrough}</strong> · CIO Monthly Report,{' '}
+                {CIO_VINTAGE.reportDate}
               </>
             ) : (
               <>
@@ -300,6 +325,7 @@ function Shell() {
               <Route path="/funded" element={<FundedView />} />
               <Route path="/risk" element={<RiskView />} />
               <Route path="/holdings" element={<HoldingsView />} />
+              <Route path="/cio" element={<CioMonthlyView />} />
               <Route path="/acfr" element={<AcfrView />} />
               {/* team workflow demo — synthetic contract data */}
               <Route path="/import" element={<ImportView />} />
@@ -336,7 +362,7 @@ function Shell() {
           <div className="meta">
             Sources: 2025 Popular Annual Financial Report · 2025 Annual Comprehensive Financial
             Report · Investment Policy Statement (restated June 12, 2024) · OPEB Investment Policy
-            Statement
+            Statement · Chief Investment Officer Monthly Report (July 8, 2026)
           </div>
           <div className="meta">
             Workstation (synthetic contract data):{' '}

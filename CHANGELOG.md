@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-07 — Revision 11: CIO Monthly integrated with the dashboard
+
+- The CIO Monthly decision deck (`/deck/`, still served exactly where people
+  view it) and the dashboard now share one data source. The deck's embedded
+  figures were lifted verbatim into `app/src/fixtures/cioMonthly.data.ts` by
+  evaluating the deck's own data block (not retyped), and that block is now
+  regenerated from the fixture by `npm run sync:deck` between marker comments.
+  A unit test fails if the block on disk differs from the fixture, so the two
+  surfaces cannot drift. The deck's behaviour, presenter view and single-file
+  portability are unchanged.
+- New Dashboard tab “CIO Monthly” (`#/cio`, lazy-loaded): the monthly vintage
+  (CIO Monthly Report of July 8, 2026, data through May 31, 2026) as panels —
+  headline tiles, performance vs. benchmark and actuarial hurdle by period, the
+  gap-attribution proxy with its residual shown (`proxy_estimate`), composites
+  with drift vs. the 2024 SAA targets, May flows and overlay programs, the
+  120-month return distribution, market context, the macro strip, geographic
+  exposure, and items for attention — each with a classification badge and a
+  page-level citation. The masthead date, notice bar and title band switch to
+  the monthly vintage on this tab, and a note states that monthly figures are
+  never combined with the fiscal-year tabs.
+- Links both ways: “Open as slides” in the tab's title band; “Dashboard ↗” in
+  the deck's control bar.
+- Source registry: eight CIO Monthly Report records with verified deep links
+  (the lacera.gov file is byte-identical to the reference copy; the PDF index
+  equals the printed page).
+- Consistency test for the monthly figures (composites sum to the fund, weights
+  to 100%, May flows to the net, 120 months per histogram, latest month placed
+  in its bin, geography lists five per group in order) — all pass on the lifted
+  data.
+- Verification: Prettier · ESLint · tsc · Vitest 189/189 (+17) · production
+  build · Playwright 60/60 (the new route on four viewports plus axe; deck
+  renders from the shared block and links back) · zero page errors · no
+  horizontal overflow at 375 px.
+
 ## 2026-09-07 — Revision 10.1: open items resolved against the source documents
 
 - Located and downloaded the two public documents the audit was missing

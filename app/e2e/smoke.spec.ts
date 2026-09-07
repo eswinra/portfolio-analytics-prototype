@@ -19,6 +19,7 @@ const ROUTES = [
   '/recon',
   '/exceptions',
   '/acfr',
+  '/cio',
 ];
 
 const hash = (route: string) => `/#${route}`;
@@ -81,5 +82,28 @@ test.describe('demonstrated controls (desktop project)', () => {
   test('workstation surfaces the demonstrated publication gate', async ({ page }) => {
     await ready(page, '/recon');
     await expect(page.getByText(/Publication gate \(demonstrated\)/)).toBeVisible();
+  });
+});
+
+test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('deck renders from the shared data block and links back to the dashboard', async ({
+    page,
+  }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (e) => pageErrors.push(String(e)));
+    await page.goto('/deck/');
+    await expect(page.locator('#s1-title')).toContainText('Executive read');
+    await expect(page.locator('#dash-link')).toHaveAttribute('href', '../#/cio');
+    expect(pageErrors).toEqual([]);
+  });
+
+  test('the dashboard tab links to the deck', async ({ page }) => {
+    await ready(page, '/cio');
+    await expect(page.getByRole('link', { name: 'Open as slides' })).toHaveAttribute(
+      'href',
+      'deck/',
+    );
   });
 });

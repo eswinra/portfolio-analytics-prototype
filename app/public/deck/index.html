@@ -732,6 +732,7 @@
     <span class="counter" id="counter">1 / 8</span>
     <button id="next" aria-label="Next">▶</button>
     <span id="slide-title" style="color:var(--chrome-ink);font-weight:700"></span>
+    <a id="dash-link" href="../#/cio" style="color:var(--chrome-ink);font-weight:700;margin-left:10px">Dashboard ↗</a>
     <span class="spacer"></span>
     <span><kbd>→</kbd><kbd>←</kbd> navigate · <kbd>E</kbd> entity · <kbd>T</kbd> chart/table · <kbd>?</kbd> help</span>
     <button id="help-btn" aria-label="Keyboard help">?</button>
@@ -748,88 +749,21 @@
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const PERIODS = ['1 M', '3 M', 'FYTD', 'YTD', '1 Y', '3 Y', '5 Y', '10 Y'];
   const f1 = v => v == null ? '—' : v.toFixed(1);
   const pct = v => v == null ? '—' : v.toFixed(1) + '%';
   const sgn = (v, d) => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d == null ? 1 : d);
   const money = v => (v < 0 ? '−$' : '$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 1 });
   const ease = t => 1 - Math.pow(1 - t, 3);
 
-  /* ============ DATA — reproduced from the public July 8, 2026 CIO Monthly Report ============ */
-  const ENT = {
-    pension: {
-      name: 'LACERA Pension Fund', short: 'Pension Fund', aum: 93.9, mv: 93948, cash: 1228, god: 1.44, pages: 'pp. 8–9',
-      total: { r: [2.0, 2.5, 12.0, 5.8, 15.1, 11.1, 7.6, 9.1], b: [2.6, 4.4, 16.3, 7.1, 18.0, 13.3, 7.5, 8.8], h: [0.6, 1.7, 6.4, 2.9, 7.0, 7.0, 7.0, 7.0] },
-      comps: [
-        { k: 'growth', n: 'Growth', short: 'Growth', mv: 45822, pct: 48.8, tgt: 48.0, flow: 212, r: [2.9, 4.4, 17.6, 8.2, 21.2, 15.3, 10.2, null], b: [3.7, 6.9, 26.9, 11.0, 28.7, 21.0, 11.3, null] },
-        { k: 'credit', n: 'Credit', short: 'Credit', mv: 11760, pct: 12.5, tgt: 13.0, flow: -191, r: [2.4, 2.3, 5.8, 4.6, 13.6, 12.9, 8.1, null], b: [1.4, 1.2, 6.2, 2.0, 8.0, 9.2, 5.0, null] },
-        { k: 'ra', n: 'Real Assets & Inflation Hedges', short: 'Real Assets & IH', mv: 13658, pct: 14.5, tgt: 15.0, flow: -37, r: [-0.1, 0.3, 9.1, 4.6, 10.2, 5.2, 5.6, null], b: [3.9, 7.3, 12.9, 8.5, 14.5, 6.2, 5.7, null] },
-        { k: 'rrm', n: 'Risk Reduction & Mitigation', short: 'Risk Reduction & Mit.', mv: 22158, pct: 23.6, tgt: 24.0, flow: 0, r: [0.7, -0.7, 4.9, 1.4, 6.1, 4.5, 1.3, null], b: [0.4, -0.6, 4.1, 1.0, 5.4, 4.1, 0.9, null] }
-      ],
-      other: { n: 'Overlays & Hedges + Other Asset', mv: 549, pct: 0.6, flow: -4 },
-      netflow: -20,
-      overlays: [{ n: 'Currency hedge', may: 4.2, si: 1546.1 }, { n: 'Cash / rebalance overlay', may: 66.9, si: 810.8 }],
-      hist: { c: [1, 0, 1, 3, 6, 10, 11, 24, 37, 17, 6, 3, 0, 1], mean: 0.75, saa: 0.60, sd: 1.94, min: -6.9, max: 6.6, latest: 2.0, latestBin: 9 },
-      geo: { dm: 94, em: 6, dmN: 26, emN: 52, total: 78, page: 11, top: [['United States', 75.3, 'dm'], ['United Kingdom', 4.1, 'dm'], ['Canada', 2.6, 'dm'], ['Japan', 1.9, 'dm'], ['China', 1.7, 'em'], ['Germany', 1.6, 'dm'], ['Taiwan', 1.1, 'em'], ['South Korea', 1.0, 'em'], ['Brazil', 0.5, 'em'], ['India', 0.4, 'em']] }
-    },
-    opeb: {
-      name: 'OPEB Master Trust', short: 'OPEB Master Trust', aum: 6.3, mv: 6264, cash: 199, god: 1.38, pages: 'pp. 13–14',
-      total: { r: [2.2, 3.2, 14.1, 6.9, 17.1, 13.5, 6.7, 9.4], b: [2.6, 3.4, 14.7, 6.7, 17.6, 13.0, 6.3, 8.5], h: [0.5, 1.0, 5.7, 2.6, 6.2, 6.2, 6.1, 6.0] },
-      comps: [
-        { k: 'growth', n: 'OPEB Growth', short: 'Growth', mv: 2840, pct: 45.3, tgt: 45.0, flow: -95, r: [4.6, 7.0, 25.0, 12.2, 30.7, 22.2, 11.2, null], b: [4.6, 7.2, 25.9, 12.2, 30.4, 22.3, 11.0, null] },
-        { k: 'credit', n: 'OPEB Credit', short: 'Credit', mv: 989, pct: 15.8, tgt: 16.0, flow: 23, r: [0.4, 1.5, 5.7, 1.6, 7.0, 8.1, 4.4, null], b: [1.4, 1.2, 6.2, 2.0, 8.0, 9.3, 4.8, null] },
-        { k: 'ra', n: 'OPEB Real Assets & Inflation Hedges', short: 'Real Assets & IH', mv: 756, pct: 12.1, tgt: 13.0, flow: -37, r: [0.0, 1.5, 10.1, 7.0, 10.0, 8.5, 4.3, null], b: [1.4, 2.4, 11.1, 6.3, 12.7, 5.7, 3.0, null] },
-        { k: 'rrm', n: 'OPEB Risk Reduction & Mitigation', short: 'Risk Reduction & Mit.', mv: 1678, pct: 26.8, tgt: 26.0, flow: 44, r: [0.3, -1.7, 3.4, 0.5, 5.1, 3.1, 0.3, null], b: [0.3, -1.7, 3.2, 0.3, 4.9, 2.9, -0.1, null] }
-      ],
-      other: null,
-      netflow: -65,
-      overlays: null,
-      hist: { c: [3, 2, 2, 5, 9, 8, 6, 18, 31, 14, 10, 4, 3, 5], mean: 0.80, saa: 0.55, sd: 3.11, min: -12.2, max: 8.6, latest: 2.2, latestBin: 9 },
-      geo: { dm: 94, em: 6, dmN: 26, emN: 35, total: 61, page: 16, top: [['United States', 79.8, 'dm'], ['Japan', 2.7, 'dm'], ['Canada', 2.3, 'dm'], ['United Kingdom', 2.0, 'dm'], ['Taiwan', 1.5, 'em'], ['South Korea', 1.3, 'em'], ['China', 1.1, 'em'], ['France', 1.0, 'dm'], ['India', 0.7, 'em'], ['Brazil', 0.2, 'em']] }
-    }
-  };
-  const BINS = ['≤ -6', '-6 to -5', '-5 to -4', '-4 to -3', '-3 to -2', '-2 to -1', '-1 to 0', '0 to 1', '1 to 2', '2 to 3', '3 to 4', '4 to 5', '5 to 6', '≥ 6'];
-  const MKT = [
-    { g: 'Reference portfolio', rows: [{ n: '60:40 Equity:Bond', i: '60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate', v: [-0.3, 9.1, 15.8, 7.4, 15.8, 13.2, 6.4, 8.3] }] },
-    { g: 'Global equity', rows: [
-      { n: 'U.S. Large Cap', i: 'S&P 500 Total Return', v: [-1.0, 15.2, 22.3, 10.2, 22.3, 20.6, 13.4, 15.5] },
-      { n: 'U.S. Small Cap', i: 'Russell 2000 Total Return', v: [3.7, 21.5, 40.8, 22.6, 40.8, 18.6, 7.0, 11.6] },
-      { n: 'Non-U.S. All Cap', i: 'MSCI ACWI ex-U.S. IMI Total Return', v: [-1.0, 13.8, 26.6, 13.1, 26.6, 18.5, 8.4, 9.8] },
-      { n: 'Emerging Markets', i: 'MSCI Emerging Markets Total Return', v: [-1.4, 24.1, 43.5, 23.8, 43.5, 23.0, 7.2, 10.1] }] },
-    { g: 'Private equity', rows: [{ n: 'Private Equity Buyout', i: 'Thomson Reuters PE Buyout Index', v: [0.1, 20.5, 26.1, 12.3, 26.1, 26.7, 9.1, 14.0] }] },
-    { g: 'Fixed income', rows: [
-      { n: 'U.S. Corporate High Yield', i: 'Bloomberg U.S. Corporate High Yield Total Return', v: [0.3, 2.5, 5.9, 2.0, 5.9, 8.8, 4.2, 5.8] },
-      { n: 'U.S. Long-Term Treasuries', i: 'Bloomberg Long Term U.S. Treasury Total Return', v: [1.0, 0.9, 2.9, 0.4, 2.9, -0.5, -5.6, -1.3] },
-      { n: 'DM Leveraged Loans', i: 'Credit Suisse Leveraged Loan Total Return', v: [0.1, 1.8, 4.3, 1.4, 4.3, 7.6, 5.9, 5.5] }] },
-    { g: 'Real assets & inflation hedges', rows: [
-      { n: 'Natural Resources', i: 'S&P Global Natural Resources Total Return', v: [-7.8, -8.5, 28.4, 9.7, 28.4, 11.9, 9.3, 10.4] },
-      { n: 'Global Infrastructure', i: 'Dow Jones Brookfield Global Infrastructure Composite', v: [-0.2, -0.2, 13.2, 11.0, 13.2, 13.4, 8.4, 7.0] },
-      { n: 'TIPS 0–5 Years', i: 'Bloomberg U.S. Treasury TIPS 0–5 Years Total Return', v: [-0.4, 0.6, 3.6, 1.6, 3.6, 5.1, 3.3, 3.1] },
-      { n: 'Real Estate (ODCE, net)¹', i: 'NCREIF Fund Index – ODCE (Net), latest available quarter', v: [0.0, 1.0, 2.3, 1.0, 3.1, -2.8, 2.3, 3.8] }] }
-  ];
-  const MACRO = [
-    { l: 'PCE inflation, May 2026', v: '4.1% y/y', s: 'Highest since April 2023 (p. 4)' },
-    { l: 'Federal funds rate, June meeting', v: '3.50–3.75%', s: 'Fourth consecutive pause in 2026 (p. 4)' },
-    { l: 'U.S. Dollar Index, YTD to 6/30', v: '+2.9%', s: 'EUR −2.8 · JPY −3.6 · GBP −1.6 · CAD −3.3 · MXN +3.0 · CNY +3.0 (p. 6)' },
-    { l: 'Labor force participation', v: '61.8%', s: 'Prior-month data used during the government shutdown (p. 6, fn. 2)' },
-    { l: 'Themes to watch', v: 'Tariffs · AI · rates', s: 'Section 301 tariffs, Strait of Hormuz, earnings concentrated in IT/AI (p. 4)' }
-  ];
-  const OPS = [
-    { e: 'Total Fund', item: 'April 2024 approved Strategic Asset Allocation implementation', st: 'prog', p: 19 },
-    { e: 'Total Fund', item: 'Adhering to the BOI-approved 2026 Strategic Framework', st: 'prog', p: 19 },
-    { e: 'Total Fund', item: 'Planning for the Strategic Framework and Initiatives Refresh', st: 'prog', p: 19 },
-    { e: 'Total Fund', item: 'Risk system onboarding', st: 'prog', p: 19 },
-    { e: 'OPEB Master Trust', item: 'April 2024 approved Strategic Asset Allocation implementation', st: 'prog', p: 19 },
-    { e: 'OPEB Master Trust', item: 'Risk system onboarding', st: 'prog', p: 19 },
-    { e: 'Investments Division', item: 'Principal Investment Officer — 1 position', st: 'dev', p: 19 },
-    { e: 'Investments Division', item: 'Finance Analyst III — 4 positions', st: 'dev', p: 19 },
-    { e: 'Investments Division', item: 'Finance Analyst III — 1 position', st: 'prog', p: 19 },
-    { e: 'Investments Division', item: 'Finance Analyst II — 1 position', st: 'prog', p: 19 },
-    { e: 'Investments Division', item: 'Finance Analyst Fellowship — 2 positions', st: 'prog', p: 19 },
-    { e: 'Manager update', item: 'Invesco Real Estate Asia Fund (core private real estate, $111.2 mm): lead PM Ian Schilling retires Q3 2026 after 15 years; successor Phinex Wong, 8 years on the Fund team', st: 'info', p: 20 },
-    { e: 'Consultant search', item: 'Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q2 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)', st: 'quiet', p: 24 }
-  ];
-  const STATUS = { prog: ['In progress', 'prog'], dev: ['In development', 'dev'], info: ['For attention', 'info'], quiet: ['Quiet period', 'quiet'] };
+  /* ==== SHARED DATA — generated from src/fixtures/cioMonthly.data.ts by `npm run sync:deck`; edit the fixture, not this block ==== */
+  const PERIODS = ["1 M","3 M","FYTD","YTD","1 Y","3 Y","5 Y","10 Y"];
+  const ENT = {"pension":{"name":"LACERA Pension Fund","short":"Pension Fund","aum":93.9,"mv":93948,"cash":1228,"god":1.44,"pages":"pp. 8–9","total":{"r":[2,2.5,12,5.8,15.1,11.1,7.6,9.1],"b":[2.6,4.4,16.3,7.1,18,13.3,7.5,8.8],"h":[0.6,1.7,6.4,2.9,7,7,7,7]},"comps":[{"k":"growth","n":"Growth","short":"Growth","mv":45822,"pct":48.8,"tgt":48,"flow":212,"r":[2.9,4.4,17.6,8.2,21.2,15.3,10.2,null],"b":[3.7,6.9,26.9,11,28.7,21,11.3,null]},{"k":"credit","n":"Credit","short":"Credit","mv":11760,"pct":12.5,"tgt":13,"flow":-191,"r":[2.4,2.3,5.8,4.6,13.6,12.9,8.1,null],"b":[1.4,1.2,6.2,2,8,9.2,5,null]},{"k":"ra","n":"Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":13658,"pct":14.5,"tgt":15,"flow":-37,"r":[-0.1,0.3,9.1,4.6,10.2,5.2,5.6,null],"b":[3.9,7.3,12.9,8.5,14.5,6.2,5.7,null]},{"k":"rrm","n":"Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":22158,"pct":23.6,"tgt":24,"flow":0,"r":[0.7,-0.7,4.9,1.4,6.1,4.5,1.3,null],"b":[0.4,-0.6,4.1,1,5.4,4.1,0.9,null]}],"other":{"n":"Overlays & Hedges + Other Asset","mv":549,"pct":0.6,"flow":-4},"netflow":-20,"overlays":[{"n":"Currency hedge","may":4.2,"si":1546.1},{"n":"Cash / rebalance overlay","may":66.9,"si":810.8}],"hist":{"c":[1,0,1,3,6,10,11,24,37,17,6,3,0,1],"mean":0.75,"saa":0.6,"sd":1.94,"min":-6.9,"max":6.6,"latest":2,"latestBin":9},"geo":{"dm":94,"em":6,"dmN":26,"emN":52,"total":78,"page":11,"top":[["United States",75.3,"dm"],["United Kingdom",4.1,"dm"],["Canada",2.6,"dm"],["Japan",1.9,"dm"],["China",1.7,"em"],["Germany",1.6,"dm"],["Taiwan",1.1,"em"],["South Korea",1,"em"],["Brazil",0.5,"em"],["India",0.4,"em"]]}},"opeb":{"name":"OPEB Master Trust","short":"OPEB Master Trust","aum":6.3,"mv":6264,"cash":199,"god":1.38,"pages":"pp. 13–14","total":{"r":[2.2,3.2,14.1,6.9,17.1,13.5,6.7,9.4],"b":[2.6,3.4,14.7,6.7,17.6,13,6.3,8.5],"h":[0.5,1,5.7,2.6,6.2,6.2,6.1,6]},"comps":[{"k":"growth","n":"OPEB Growth","short":"Growth","mv":2840,"pct":45.3,"tgt":45,"flow":-95,"r":[4.6,7,25,12.2,30.7,22.2,11.2,null],"b":[4.6,7.2,25.9,12.2,30.4,22.3,11,null]},{"k":"credit","n":"OPEB Credit","short":"Credit","mv":989,"pct":15.8,"tgt":16,"flow":23,"r":[0.4,1.5,5.7,1.6,7,8.1,4.4,null],"b":[1.4,1.2,6.2,2,8,9.3,4.8,null]},{"k":"ra","n":"OPEB Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":756,"pct":12.1,"tgt":13,"flow":-37,"r":[0,1.5,10.1,7,10,8.5,4.3,null],"b":[1.4,2.4,11.1,6.3,12.7,5.7,3,null]},{"k":"rrm","n":"OPEB Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":1678,"pct":26.8,"tgt":26,"flow":44,"r":[0.3,-1.7,3.4,0.5,5.1,3.1,0.3,null],"b":[0.3,-1.7,3.2,0.3,4.9,2.9,-0.1,null]}],"other":null,"netflow":-65,"overlays":null,"hist":{"c":[3,2,2,5,9,8,6,18,31,14,10,4,3,5],"mean":0.8,"saa":0.55,"sd":3.11,"min":-12.2,"max":8.6,"latest":2.2,"latestBin":9},"geo":{"dm":94,"em":6,"dmN":26,"emN":35,"total":61,"page":16,"top":[["United States",79.8,"dm"],["Japan",2.7,"dm"],["Canada",2.3,"dm"],["United Kingdom",2,"dm"],["Taiwan",1.5,"em"],["South Korea",1.3,"em"],["China",1.1,"em"],["France",1,"dm"],["India",0.7,"em"],["Brazil",0.2,"em"]]}}};
+  const BINS = ["≤ -6","-6 to -5","-5 to -4","-4 to -3","-3 to -2","-2 to -1","-1 to 0","0 to 1","1 to 2","2 to 3","3 to 4","4 to 5","5 to 6","≥ 6"];
+  const MKT = [{"g":"Reference portfolio","rows":[{"n":"60:40 Equity:Bond","i":"60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate","v":[-0.3,9.1,15.8,7.4,15.8,13.2,6.4,8.3]}]},{"g":"Global equity","rows":[{"n":"U.S. Large Cap","i":"S&P 500 Total Return","v":[-1,15.2,22.3,10.2,22.3,20.6,13.4,15.5]},{"n":"U.S. Small Cap","i":"Russell 2000 Total Return","v":[3.7,21.5,40.8,22.6,40.8,18.6,7,11.6]},{"n":"Non-U.S. All Cap","i":"MSCI ACWI ex-U.S. IMI Total Return","v":[-1,13.8,26.6,13.1,26.6,18.5,8.4,9.8]},{"n":"Emerging Markets","i":"MSCI Emerging Markets Total Return","v":[-1.4,24.1,43.5,23.8,43.5,23,7.2,10.1]}]},{"g":"Private equity","rows":[{"n":"Private Equity Buyout","i":"Thomson Reuters PE Buyout Index","v":[0.1,20.5,26.1,12.3,26.1,26.7,9.1,14]}]},{"g":"Fixed income","rows":[{"n":"U.S. Corporate High Yield","i":"Bloomberg U.S. Corporate High Yield Total Return","v":[0.3,2.5,5.9,2,5.9,8.8,4.2,5.8]},{"n":"U.S. Long-Term Treasuries","i":"Bloomberg Long Term U.S. Treasury Total Return","v":[1,0.9,2.9,0.4,2.9,-0.5,-5.6,-1.3]},{"n":"DM Leveraged Loans","i":"Credit Suisse Leveraged Loan Total Return","v":[0.1,1.8,4.3,1.4,4.3,7.6,5.9,5.5]}]},{"g":"Real assets & inflation hedges","rows":[{"n":"Natural Resources","i":"S&P Global Natural Resources Total Return","v":[-7.8,-8.5,28.4,9.7,28.4,11.9,9.3,10.4]},{"n":"Global Infrastructure","i":"Dow Jones Brookfield Global Infrastructure Composite","v":[-0.2,-0.2,13.2,11,13.2,13.4,8.4,7]},{"n":"TIPS 0–5 Years","i":"Bloomberg U.S. Treasury TIPS 0–5 Years Total Return","v":[-0.4,0.6,3.6,1.6,3.6,5.1,3.3,3.1]},{"n":"Real Estate (ODCE, net)¹","i":"NCREIF Fund Index – ODCE (Net), latest available quarter","v":[0,1,2.3,1,3.1,-2.8,2.3,3.8]}]}];
+  const MACRO = [{"l":"PCE inflation, May 2026","v":"4.1% y/y","s":"Highest since April 2023 (p. 4)"},{"l":"Federal funds rate, June meeting","v":"3.50–3.75%","s":"Fourth consecutive pause in 2026 (p. 4)"},{"l":"U.S. Dollar Index, YTD to 6/30","v":"+2.9%","s":"EUR −2.8 · JPY −3.6 · GBP −1.6 · CAD −3.3 · MXN +3.0 · CNY +3.0 (p. 6)"},{"l":"Labor force participation","v":"61.8%","s":"Prior-month data used during the government shutdown (p. 6, fn. 2)"},{"l":"Themes to watch","v":"Tariffs · AI · rates","s":"Section 301 tariffs, Strait of Hormuz, earnings concentrated in IT/AI (p. 4)"}];
+  const OPS = [{"e":"Total Fund","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"Total Fund","item":"Adhering to the BOI-approved 2026 Strategic Framework","st":"prog","p":19},{"e":"Total Fund","item":"Planning for the Strategic Framework and Initiatives Refresh","st":"prog","p":19},{"e":"Total Fund","item":"Risk system onboarding","st":"prog","p":19},{"e":"OPEB Master Trust","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"OPEB Master Trust","item":"Risk system onboarding","st":"prog","p":19},{"e":"Investments Division","item":"Principal Investment Officer — 1 position","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 4 positions","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst II — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst Fellowship — 2 positions","st":"prog","p":19},{"e":"Manager update","item":"Invesco Real Estate Asia Fund (core private real estate, $111.2 mm): lead PM Ian Schilling retires Q3 2026 after 15 years; successor Phinex Wong, 8 years on the Fund team","st":"info","p":20},{"e":"Consultant search","item":"Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q2 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)","st":"quiet","p":24}];
+  const STATUS = {"prog":["In progress","prog"],"dev":["In development","dev"],"info":["For attention","info"],"quiet":["Quiet period","quiet"]};
+  /* ==== END SHARED DATA ==== */
   const NOTES = [
     '<h4>Slide 1 · Executive read</h4><p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
     '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are combined into one sliver with no policy target. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',

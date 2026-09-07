@@ -453,6 +453,25 @@ a:hover {
   margin-top: 0;
 }
 
+/* CIO Monthly tab: vintage notice and the in-table histogram bars */
+.vintage-note {
+  margin: 4px 0 18px;
+}
+
+.hist-cell {
+  min-width: 140px;
+}
+
+.hist-cell .fill {
+  height: 10px;
+  background: var(--accent-400);
+  border: 1px solid var(--accent-700);
+}
+
+.hist-cell .fill.hi {
+  background: var(--accent-800);
+}
+
 .grid-panels {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
