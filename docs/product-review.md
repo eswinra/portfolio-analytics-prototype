@@ -64,7 +64,7 @@ axe on `/` and `/import`); zero console errors; single origin, no external reque
 | H1 | High | The three ACFR deep links (`ACFR_EQ/FI/FEES`) anchored `#page=` on the printed page number; the FY2025 file's front matter puts printed page *n* at PDF page *n*+2, so every link opened the wrong table (“p. 114” opened the rates-of-return schedule) | **Fixed**: `acfrPage(printed)` in `app/src/fixtures/sources.ts`; verified against the reference PDF's page footers |
 | H2 | High | The Overview KPI tiles — the two-minute read — carried no classification, source, or valuation date | **Fixed**: `reported_public` badge + source line under the tile row (the funded ratio's June 30, 2024 valuation named); source lines added to the Overview changes panel, the Policy Monitoring compliance table, and the IPS tables |
 | H3 | High | Every published figure is an untested literal with derived prose beside it (“6.4% of the fund”, “within their IPS ranges”, “exceeded the assumed rate at every horizon”) | **Fixed**: `published.test.ts` (41 tests) checks statement identities, tile/flow agreement, mix/IPS sums, fee arithmetic, and each sentence; the assumed-rate sentence is computed against the decade-high rate from ACFR pp. 112–113 (7.25%/7.00% Pension, 6.00%/6.25% OPEB) |
-| H4 | High | The new test surfaced two transcription discrepancies: the OPEB cumulative-NII series steps −$41.0M in FY2023 against $248M of NII (the FY2024–FY2025 steps tie); the OPEB Real Assets ½-step sub-rows sum to 15.5% vs the category's 16.5% | **Disclosed, not corrected**: “verification open” notes on the Performance (OPEB) and Allocation (OPEB) views; open items O1–O2 below; the test pins each discrepancy explicitly so a silent change fails |
+| H4 | High | The new test surfaced two transcription discrepancies: the OPEB cumulative-NII series steps −$41.0M in FY2023 against $248M of NII (the FY2024–FY2025 steps tie); the OPEB Real Assets ½-step sub-rows sum to 15.5% vs the category's 16.5% | **Disclosed 2026-09-06, resolved 2026-09-07** against the source documents (see “Open items — resolved”): the cumulative-NII values were a transcription error (FY2021/FY2022 swapped by a text-order read of the PAFR chart) and are corrected from the printed bar positions; the ½-step sub-rows are printed that way in the OPEB IPS itself and stay as printed with an on-screen note |
 | H5 | High | Contribution reconciliation (arithmetic sum vs chain-linked return, 10 bps tolerance) was computed in the model but never displayed and did not gate publication | **Fixed**: panel on the Reconciliation view (fixture: 4.11% vs 4.17%, residual 5.2 bps, PASS); a FAIL is a publication blocker |
 | H6 | High | A proxy's “daily” return divided the last two *present* closes, so a missing close produced a multi-day move labelled daily (`model.ts`); `dailyReadThroughSeries` did the same | **Fixed**: `lastDailyReturn()` requires the immediately preceding observation (null otherwise → excluded from the read-through, coverage falls); the series builder skips gaps; unit tests added |
 | M1 | Medium | The Exceptions caption said no `reported_public` row feeds a calculation; the 16 IPS `policy_target` rows set the bands the allocation checks test against | **Fixed**: the caption states what the bands do and what reported_public never enters (returns, contribution, reconciliation) |
@@ -89,12 +89,26 @@ axe on `/` and `/import`); zero console errors; single origin, no external reque
 - R9: Bar heights are not clamped for negative values; all published growth/cumulative values are
   positive.
 
-### Open verification items
+### Open items — resolved 2026-09-07
 
-- O1: OPEB cumulative net investment income, FY2016–FY2023 steps, against the 2025 PAFR (p. 7) —
-  the series stays on screen with a disclosure until re-checked.
-- O2: OPEB IPS ½-step sub-targets under Real Assets and Inflation Hedges (Real Estate 6.5 ·
-  Natural Resources 2 · Infrastructure 2 · TIPS 5 → 15.5 vs 16.5) against the OPEB IPS.
+Both public documents were located on lacera.gov and downloaded to `outputs/data/public_docs/`
+(ignored): `pafr_2025.pdf` (2025 PAFR, 8 pages, 8.6 MB) and `IPS-OPEB.pdf` (OPEB Master Trust
+IPS restated June 12, 2024, 83 pages, 1.3 MB); `invest_policy_stmt.pdf` (Pension IPS, same
+restatement) was fetched for the row-by-row re-check.
+
+- O1 **resolved — transcription error corrected.** PAFR p. 7 prints the OPEB cumulative-NII chart
+  with 685.6 over the 2021 tick and 397.1 over the 2022 tick (label x-centres 485.9 and 505.8
+  against axis ticks at 485.2 and 505.1); the fixture had the two swapped because a text-order
+  read of the labels lists them the other way round. With the printed order the series ties every
+  year: +452.2 (FY2021, +28.4%), −288.5 (FY2022, −11.2%), +247.5 vs $248M (FY2023), +368.4 vs
+  $368M, +472.6 vs $472M. The Pension chart (p. 5) was checked the same way and matches.
+- O2 **resolved — source-document inconsistency, reproduced as printed.** OPEB IPS Table 1
+  (printed p. 21, PDF p. 24) prints Real Estate 6.5 · Natural Resources 2 · Infrastructure 2 ·
+  TIPS 5 under a 16.5 category ½-step. The values stay as printed and the Allocation view says so;
+  the test records it as a verified source gap. Pension IPS Table 1 (printed p. 20) matches the
+  app row by row.
+- Citations now carry verified links: PAFR page anchors equal printed pages; `IPS_T1` → Pension
+  IPS p. 20; new `IPS_OPEB_T1` → OPEB IPS p. 21 (OPEB views cite the OPEB document).
 
 ### Re-verification
 
@@ -102,3 +116,7 @@ Prettier ✓ · ESLint ✓ · `tsc` ✓ · Vitest 172/172 (15 files, +46 tests) 
 Playwright 53/53 (desktop + 375/360/320; axe on all ten routes) ✓ · zero console/page errors ✓ ·
 after-renders reviewed (Overview, Performance/OPEB, Allocation/OPEB, Reconciliation, Exceptions,
 Import, mobile Overview/Performance/Holdings, print Overview).
+
+Re-verified 2026-09-07 after the corrections: Prettier ✓ · ESLint ✓ · `tsc` ✓ · Vitest 172/172 ✓ ·
+production build ✓ · Playwright 53/53 ✓ · rendered citation links checked in a browser (PAFR
+pp. 4–7, Pension IPS p. 20, OPEB IPS p. 21) ✓ · zero page errors ✓.

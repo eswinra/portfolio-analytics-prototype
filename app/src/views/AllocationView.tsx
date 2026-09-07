@@ -177,7 +177,7 @@ export function AllocationView() {
           ) : null}
         </div>
         <p className="panel-note">{d.allocViewNote}</p>
-        <SourceLine sources={P ? ['IPS_T1', 'PAFR_PENSION'] : ['IPS_T1', 'PAFR_OPEB']} />
+        <SourceLine sources={P ? ['IPS_T1', 'PAFR_PENSION'] : ['IPS_OPEB_T1', 'PAFR_OPEB']} />
       </Panel>
 
       <Panel
@@ -233,9 +233,9 @@ export function AllocationView() {
           governing policy version (long-term vs ½-step) before any compliance statement.
           {P
             ? ''
-            : ' As transcribed, the ½-step sub-targets under Real Assets and Inflation Hedges sum to 15.5% against the category’s 16.5% — verify the sub-class figures against the OPEB IPS before relying on them.'}
+            : ' As printed in the OPEB IPS Table 1, the ½-step sub-targets under Real Assets and Inflation Hedges sum to 15.5% against the category’s 16.5%; the figures are reproduced as printed, not adjusted.'}
         </p>
-        <SourceLine sources={['IPS_T1']} />
+        <SourceLine sources={P ? ['IPS_T1'] : ['IPS_OPEB_T1']} />
       </Panel>
     </>
   );

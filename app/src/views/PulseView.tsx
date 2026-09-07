@@ -82,7 +82,7 @@ export function PulseView() {
             ))}
           </div>
           <p className="panel-note">{d.allocFoot}</p>
-          <SourceLine sources={P ? ['PAFR_PENSION', 'IPS_T1'] : ['PAFR_OPEB', 'IPS_T1']} />
+          <SourceLine sources={P ? ['PAFR_PENSION', 'IPS_T1'] : ['PAFR_OPEB', 'IPS_OPEB_T1']} />
         </Panel>
       </div>
 

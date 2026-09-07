@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-07 — Revision 10.1: open items resolved against the source documents
+
+- Located and downloaded the two public documents the audit was missing
+  (`outputs/data/public_docs/`, ignored): the 2025 PAFR (`pafr_2025.pdf`,
+  lacera.gov annual reports) and the OPEB Master Trust IPS restated June 12,
+  2024 (`IPS-OPEB.pdf`). The Pension IPS of the same date
+  (`invest_policy_stmt.pdf`) was re-checked row by row against the app's table.
+- O1 resolved — transcription error corrected: the PAFR p. 7 chart prints
+  685.6 over FY2021 and 397.1 over FY2022 (label x-coordinates match the axis
+  ticks); a text-order read had swapped them. With the fix every step of the
+  OPEB cumulative-NII series ties (+452 in the +28.4% year, −288 in the −11.2%
+  year, +247.5 vs $248M, +368.4, +472.6); the on-screen disclosure is removed
+  and the test now requires the FY2023 step to tie for both entities.
+- O2 resolved — source-document inconsistency, reproduced as printed: OPEB IPS
+  Table 1 (printed p. 21) prints 6.5 + 2 + 2 + 5 = 15.5 under a 16.5 ½-step
+  category; the Allocation view says so and the test lists it as a verified
+  source gap.
+- Citations now link to the PAFR (page anchors equal printed pages) and to both
+  IPS documents: `IPS_T1` → Pension IPS p. 20; new `IPS_OPEB_T1` → OPEB IPS
+  p. 21, so OPEB views cite the OPEB document rather than a shared label.
+- Verification: Prettier · ESLint · tsc · Vitest 172/172 · production build ·
+  Playwright 53/53 · rendered citation links checked in a browser · zero errors.
+
 ## 2026-09-06 — Revision 10: live-site audit and improvements
 
 - Audit of the deployed prototype (eswinra.github.io/portfolio-analytics-prototype)

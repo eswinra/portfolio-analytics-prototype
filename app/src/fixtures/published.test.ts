@@ -78,14 +78,9 @@ describe.each(ENTITIES)('%s — statement of changes identities', (_name, d) => 
     const nii = row(d, 'Net investment income');
     within(d.cum[9]! - d.cum[8]!, nii.fy2025 / scale, tol);
     within(d.cum[8]! - d.cum[7]!, nii.fy2024 / scale, tol);
-    if (d.label === 'OPEB Trust') {
-      // open verification item (2026-09-06 audit): the transcribed FY2023 step is −41.0 against
-      // NII of 248; the series carries an on-screen disclosure until re-checked against the PAFR
-      expect(d.cum[7]! - d.cum[6]!).toBeCloseTo(-41.0, 6);
-      expect(d.cumNote).toContain('Verification open');
-    } else {
-      within(d.cum[7]! - d.cum[6]!, nii.fy2023 / scale, tol);
-    }
+    // the 2026-09-06 audit found the OPEB FY2021/FY2022 values swapped (a text-order read of the
+    // PAFR chart); corrected from the printed bar positions on 2026-09-07, so all three tie
+    within(d.cum[7]! - d.cum[6]!, nii.fy2023 / scale, tol);
     expect(num(d.cumEnd)).toBe(d.cum[9]);
   });
 
@@ -161,11 +156,12 @@ describe.each(ENTITIES)('%s — allocation tables agree with each other', (_name
     );
   });
 
-  it('sub-class rows sum to their category (transcription gaps listed explicitly)', () => {
-    // a known gap is disclosed on the Allocation view rather than corrected by guesswork
+  it('sub-class rows sum to their category (source-document gaps listed explicitly)', () => {
+    // a gap that exists in the source itself is reproduced as printed and disclosed on the
+    // Allocation view, never adjusted to make the arithmetic work
     const KNOWN_GAPS: Record<string, string> = {
       'OPEB Trust|real assets and inflation hedges|half':
-        'sub-class ½-steps sum to 15.5 vs 16.5 as transcribed — verify against the OPEB IPS',
+        'OPEB IPS Table 1 (restated June 12, 2024, printed p. 21) prints sub-class ½-steps of 6.5 + 2 + 2 + 5 = 15.5 under a 16.5 category — verified against the source on 2026-09-07',
     };
     let parent: (typeof d.pol)[number] | null = null;
     let subs: (typeof d.pol)[number][] = [];

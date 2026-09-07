@@ -239,11 +239,13 @@ export const OPEB: PublishedEntity = {
     ['Net position, beginning of year', 3978, 3092, 2394, 400],
     ['Net position, end of year', 5036, 3978, 3092, 600],
   ]),
-  cum: [-8.1, 86.4, 165.2, 227.3, 233.4, 397.1, 685.6, 644.6, 1013.0, 1485.6],
+  // FY2021 = 685.6 and FY2022 = 397.1 as printed on the PAFR p. 7 bar chart (read by bar
+  // position on 2026-09-07; a text-order read had swapped the two)
+  cum: [-8.1, 86.4, 165.2, 227.3, 233.4, 685.6, 397.1, 644.6, 1013.0, 1485.6],
   cumUnit: '$ millions',
   cumEnd: '$1,485.6M',
   cumNote:
-    'Cumulative net investment income since FY2016. Contributions presented in the changes table include both prefunding and pay-as-you-go adjustments. Verification open: as transcribed, the FY2022–FY2023 steps of this series do not agree with the statement’s net investment income (the FY2023 step is −$41.0M against $248M of NII); re-check against the 2025 PAFR before quoting anything earlier than FY2024.',
+    'Cumulative net investment income since FY2016, as printed on the PAFR chart (FY2022 reflects the −11.2% year). Contributions presented in the changes table include both prefunding and pay-as-you-go adjustments.',
   mix: [
     { label: 'Growth', pct: 45, color: 'var(--accent-700)', note: '½-step target · range ±10' },
     {
