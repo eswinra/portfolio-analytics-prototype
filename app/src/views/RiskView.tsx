@@ -60,45 +60,49 @@ export function RiskView() {
             aria-label="Policy range compliance"
             tabIndex={0}
           >
-            <table className="table cardable">
+            <table className="table cardable" role="table">
               <caption>Actual weights against IPS policy ranges</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Functional category</th>
-                  <th scope="col" className="num">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">
+                    Functional category
+                  </th>
+                  <th scope="col" role="columnheader" className="num">
                     Actual
                   </th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader" className="num">
                     Target
                   </th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader" className="num">
                     IPS range
                   </th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader" className="num">
                     To nearer bound
                   </th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader" className="num">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {compRows.map((c) => (
-                  <tr key={c.cat}>
-                    <td data-label="Category">{c.cat}</td>
-                    <td className="num" data-label="Actual" style={{ fontWeight: 500 }}>
+                  <tr role="row" key={c.cat}>
+                    <td role="cell" data-label="Category">
+                      {c.cat}
+                    </td>
+                    <td role="cell" className="num" data-label="Actual" style={{ fontWeight: 500 }}>
                       {c.act}
                     </td>
-                    <td className="num" data-label="Target">
+                    <td role="cell" className="num" data-label="Target">
                       {c.t}
                     </td>
-                    <td className="num" data-label="IPS range">
+                    <td role="cell" className="num" data-label="IPS range">
                       {c.band}
                     </td>
-                    <td className="num" data-label="To nearer bound">
+                    <td role="cell" className="num" data-label="To nearer bound">
                       {c.dist}
                     </td>
-                    <td className="num" data-label="Status">
+                    <td role="cell" className="num" data-label="Status">
                       <Tag variant={c.variant}>{c.tag}</Tag>
                     </td>
                   </tr>

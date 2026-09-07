@@ -6,6 +6,8 @@ import { defineConfig, devices } from '@playwright/test';
  *  desktop; interaction and axe tests run on the desktop project only. */
 export default defineConfig({
   testDir: './e2e',
+  // visual baselines are platform-specific local QA: see playwright.visual.config.ts
+  testIgnore: /visual\.spec\.ts/,
   timeout: 30_000,
   fullyParallel: true,
   reporter: [['list']],

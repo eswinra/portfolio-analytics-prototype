@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-07 — Revision 12.3: monthly QA discipline and the audit residuals
+
+- Visual regression as local QA: `npm run test:visual` compares full-page
+  renders of the Overview, the CIO Monthly tab and the deck's first two slides
+  against baselines under `outputs/visual-snapshots/` (ignored, platform-
+  specific); `npm run test:visual:update` refreshes them deliberately. Kept in
+  its own Playwright config so the default smoke suite never depends on
+  baselines.
+- Accessibility residuals from the Revision 10 audit closed: the four
+  card-style tables carry explicit ARIA table roles so their semantics survive
+  the phone layout; every scrolling table container is a labelled, keyboard-
+  focusable region (label taken from the table's caption); switching funds after
+  an import shows a dismissible “Import discarded” notice naming the dataset and
+  its row count (entity isolation stays deliberate; the silence is gone).
+- Verification: Prettier · ESLint · tsc · Vitest 380/380 · production build ·
+  Playwright 63/63 (axe on every route with the new roles and regions; discard
+  notice exercised) · visual baselines created and compared (3/3).
+
 ## 2026-09-07 — Revision 12.2: the Workstation feed for the CIO Monthly layer (schema 1.4)
 
 - Data contract 1.4.0: a `cio_monthly` record type carries the monthly report's

@@ -128,7 +128,13 @@ function SectionCard({
         <summary>
           Tie-out items ({items.length}) <span className="hint">— click to expand</span>
         </summary>
-        <div className="table-scroll" style={{ marginTop: 10 }}>
+        <div
+          className="table-scroll"
+          style={{ marginTop: 10 }}
+          role="region"
+          aria-label="tie-out items"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>{section.label} tie-out items</caption>
             <thead>
@@ -359,7 +365,13 @@ export function AcfrView() {
         <summary style={{ cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
           QA controls register ({QA_CONTROLS.length}) — applies across sections
         </summary>
-        <div className="table-scroll" style={{ marginTop: 12 }}>
+        <div
+          className="table-scroll"
+          style={{ marginTop: 12 }}
+          role="region"
+          aria-label="QA controls register"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>QA controls register</caption>
             <thead>

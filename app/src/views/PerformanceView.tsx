@@ -47,7 +47,12 @@ export function PerformanceView() {
           kicker="Time-weighted returns (TWR) — net of investment-management fees"
           title="Periods ended June 30, 2025"
         >
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Annualized returns vs policy benchmark"
+            tabIndex={0}
+          >
             <table className="table">
               <caption>Annualized returns vs policy benchmark</caption>
               <thead>
@@ -192,7 +197,12 @@ export function PerformanceView() {
           kicker="Changes in fiduciary net position"
           title="Fiscal years ended June 30 · $ millions"
         >
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Changes in fiduciary net position, three fiscal years"
+            tabIndex={0}
+          >
             <table className="table">
               <caption>Changes in fiduciary net position, three fiscal years</caption>
               <thead>

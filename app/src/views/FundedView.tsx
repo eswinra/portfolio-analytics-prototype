@@ -85,7 +85,12 @@ export function FundedView() {
           </Panel>
 
           <Panel kicker="Membership" title="As of June 30">
-            <div className="table-scroll">
+            <div
+              className="table-scroll"
+              role="region"
+              aria-label="Membership, three fiscal years"
+              tabIndex={0}
+            >
               <table className="table">
                 <caption>Membership, three fiscal years</caption>
                 <thead>
@@ -131,7 +136,12 @@ export function FundedView() {
   return (
     <div className="grid-panels">
       <Panel kicker="Retiree healthcare benefits — enrollment" title="As of June 30">
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label="Healthcare enrollment, three fiscal years"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>Healthcare enrollment, three fiscal years</caption>
             <thead>

@@ -89,6 +89,18 @@ axe on `/` and `/import`); zero console errors; single origin, no external reque
 - R9: Bar heights are not clamped for negative values; all published growth/cumulative values are
   positive.
 
+### Residuals resolved 2026-09-07 (revision 12.3)
+
+- R3 resolved: the four card-style tables carry explicit ARIA table roles (`table`, `rowgroup`,
+  `row`, `columnheader`, `cell`), so their semantics survive the phone layout's `display: flex`.
+- R4 resolved: every scrolling table container is a labelled, keyboard-focusable region
+  (`role="region"`, `aria-label` taken from the table's caption, `tabIndex=0`).
+- R5 resolved: switching Pension ↔ OPEB after an import now shows a dismissible “Import
+  discarded” notice naming the dataset and its row count.
+- Visual regression added as local QA (`npm run test:visual`, baselines under
+  `outputs/visual-snapshots/`, refreshed deliberately with `npm run test:visual:update`); R6–R9
+  remain as documented.
+
 ### Open items — resolved 2026-09-07
 
 Both public documents were located on lacera.gov and downloaded to `outputs/data/public_docs/`

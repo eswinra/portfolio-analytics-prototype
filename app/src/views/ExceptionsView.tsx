@@ -55,36 +55,46 @@ export function ExceptionsView() {
           title={`Open issues (${exceptions.length})`}
         >
           <div className="table-scroll" role="region" aria-label="Open issues" tabIndex={0}>
-            <table className="table cardable">
+            <table className="table cardable" role="table">
               <caption>
                 Root-cause merged: a degraded series and its control are one issue. Age is computed
                 from dates inside the file — no clock survives an import.
               </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Tier</th>
-                  <th scope="col" className="num">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">
+                    Tier
+                  </th>
+                  <th scope="col" role="columnheader" className="num">
                     Age (at data date)
                   </th>
-                  <th scope="col">Issue</th>
-                  <th scope="col">Impact</th>
-                  <th scope="col">Next action</th>
+                  <th scope="col" role="columnheader">
+                    Issue
+                  </th>
+                  <th scope="col" role="columnheader">
+                    Impact
+                  </th>
+                  <th scope="col" role="columnheader">
+                    Next action
+                  </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {exceptions.map((e) => (
-                  <tr key={e.id}>
-                    <td data-label="Tier">
+                  <tr role="row" key={e.id}>
+                    <td role="cell" data-label="Tier">
                       <Tag variant={TIER_VARIANT[e.tier] ?? 'neutral'}>{e.tier}</Tag>
                     </td>
-                    <td className="num" data-label="Age">
+                    <td role="cell" className="num" data-label="Age">
                       {e.ageDays === null ? '—' : `${e.ageDays} day${e.ageDays === 1 ? '' : 's'}`}
                     </td>
-                    <td data-label="Issue">{e.description}</td>
-                    <td className="issue-impact" data-label="Impact">
+                    <td role="cell" data-label="Issue">
+                      {e.description}
+                    </td>
+                    <td role="cell" className="issue-impact" data-label="Impact">
                       {e.impact}
                     </td>
-                    <td className="issue-impact" data-label="Next action">
+                    <td role="cell" className="issue-impact" data-label="Next action">
                       {e.nextAction}
                     </td>
                   </tr>
@@ -103,7 +113,12 @@ export function ExceptionsView() {
             audit log; the app stores nothing. Bundled fixtures carry synthetic actor labels, never
             real names.
           </p>
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Per-actor row counts and latest as-of date"
+            tabIndex={0}
+          >
             <table className="table">
               <caption>Per-actor row counts and latest as-of date</caption>
               <thead>
@@ -137,7 +152,13 @@ export function ExceptionsView() {
 
       <details className="panel" style={{ marginTop: 22 }}>
         <summary>Show {passing.length} passing controls</summary>
-        <div className="table-scroll" style={{ marginTop: 10 }}>
+        <div
+          className="table-scroll"
+          style={{ marginTop: 10 }}
+          role="region"
+          aria-label="Workbook control results travel with the dataset"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>
               Workbook control results travel with the dataset — the app shows the same state an
@@ -169,7 +190,13 @@ export function ExceptionsView() {
 
       <details className="panel" style={{ marginTop: 22 }}>
         <summary>Data details — provenance, classification, citations</summary>
-        <div className="table-scroll" style={{ marginTop: 10 }}>
+        <div
+          className="table-scroll"
+          style={{ marginTop: 10 }}
+          role="region"
+          aria-label="Active dataset"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>Active dataset</caption>
             <tbody>
@@ -231,7 +258,12 @@ export function ExceptionsView() {
             </ul>
           </>
         ) : null}
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label="Cited public reference values, quoted for context"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>
               Cited public reference values, quoted for context. Together with the IPS policy-band

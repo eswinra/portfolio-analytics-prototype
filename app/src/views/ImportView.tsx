@@ -115,7 +115,13 @@ export function ImportView() {
           {preflight ? (
             <div style={{ marginTop: 16 }}>
               <div className="kicker">Preflight — {preflight.fileName}</div>
-              <div className="table-scroll" style={{ marginTop: 8 }}>
+              <div
+                className="table-scroll"
+                style={{ marginTop: 8 }}
+                role="region"
+                aria-label="Preflight summary"
+                tabIndex={0}
+              >
                 <table className="table">
                   <caption>Preflight summary — nothing has been applied yet</caption>
                   <tbody>
@@ -305,7 +311,12 @@ export function ImportView() {
           Rendered directly from the validator's own constants — this table cannot drift from the
           import rules. Schema 1.0/1.1 files (29 columns, without the last three) remain valid.
         </p>
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label="Contract columns in file order"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>Contract columns in file order</caption>
             <thead>

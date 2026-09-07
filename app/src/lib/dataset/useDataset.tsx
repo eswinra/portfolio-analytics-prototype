@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import opebCsv from '../../../../data/sample/demo_opeb_export_v1.csv?raw';
 import pensionCsv from '../../../../data/sample/demofund_export_v1.csv?raw';
@@ -35,6 +43,10 @@ interface DatasetState {
   applyStaged: () => boolean;
   discardStaged: () => void;
   resetToFixture: () => void;
+  /** set when a fund switch discarded an applied import (entity isolation is deliberate; the
+   *  silence was not) */
+  discardNotice: string | null;
+  dismissNotice: () => void;
 }
 
 const Ctx = createContext<DatasetState | null>(null);
@@ -77,16 +89,27 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
 
   const dataset = imported ?? fixtures[entityTab];
   const source: 'fixture' | 'import' = imported ? 'import' : 'fixture';
+  const [discardNotice, setDiscardNotice] = useState<string | null>(null);
+  const importedRef = useRef<Dataset | null>(null);
+  importedRef.current = imported;
 
   const setEntityTab = useCallback((e: PolicyEntity) => {
     // switching tabs always returns to that tab's bundled fixture — and clears any staged
-    // preflight, so a file gated against one workspace can never apply into another
+    // preflight, so a file gated against one workspace can never apply into another. The
+    // reader is told when that discards an applied import.
+    const cur = importedRef.current;
+    if (cur) {
+      setDiscardNotice(
+        `Switching funds restored the bundled ${e === 'PENSION' ? 'Pension' : 'OPEB'} dataset; the imported dataset (${cur.meta.entityId}, ${cur.meta.recordCount} records) was discarded. Import it again if you need it.`,
+      );
+    }
     setImported(null);
     setImportWarnings([]);
     setPreflight(null);
     setStagedText(null);
     setEntityTabState(e);
   }, []);
+  const dismissNotice = useCallback(() => setDiscardNotice(null), []);
 
   const stageCsvText = useCallback(
     (text: string, fileName: string): PreflightResult => {
@@ -132,6 +155,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     setImportWarnings(res.warnings);
     setPreflight(null);
     setStagedText(null);
+    setDiscardNotice(null);
     return true;
   }, [stagedText, preflight, entityTab]);
 
@@ -159,6 +183,8 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       applyStaged,
       discardStaged,
       resetToFixture,
+      discardNotice,
+      dismissNotice,
     }),
     [
       dataset,
@@ -171,6 +197,8 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       applyStaged,
       discardStaged,
       resetToFixture,
+      discardNotice,
+      dismissNotice,
     ],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -91,7 +91,12 @@ export function PulseView() {
           kicker="Time-weighted returns (TWR) — net of investment-management fees"
           title="Fund vs policy benchmark"
         >
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Fund vs policy benchmark by horizon"
+            tabIndex={0}
+          >
             <table className="table">
               <caption>Fund vs policy benchmark by horizon</caption>
               <thead>

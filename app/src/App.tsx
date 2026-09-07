@@ -98,7 +98,7 @@ function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> })
 function TitleBand() {
   const { pathname } = useLocation();
   const { entity } = useEntity();
-  const { dataset } = useDataset();
+  const { dataset, discardNotice, dismissNotice } = useDataset();
   const d = publishedFor(entity);
   const workstation = WORKSTATION_VIEWS.find(([p]) => p === pathname);
   const view = workstation ?? DASHBOARD_VIEWS.find(([p]) => p === pathname) ?? DASHBOARD_VIEWS[0]!;
@@ -172,6 +172,14 @@ function TitleBand() {
         </div>
       </div>
       <div className="band-strip" />
+      {discardNotice ? (
+        <div className="draft-banner" role="status">
+          <strong>Import discarded:</strong> {discardNotice}{' '}
+          <button type="button" className="linklike" onClick={dismissNotice}>
+            Dismiss
+          </button>
+        </div>
+      ) : null}
       {workstation ? (
         <>
           <div className="workflow-banner" role="note">

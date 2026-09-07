@@ -185,7 +185,7 @@ export function AllocationView() {
         kicker="Approved asset allocation and benchmarks"
         title={`IPS Tables 1 and 2 — ${d.label}`}
       >
-        <div className="table-scroll">
+        <div className="table-scroll" role="region" aria-label="IPS Tables 1 and 2" tabIndex={0}>
           <table className="table">
             <caption>IPS Tables 1 and 2: targets, ranges, ½-step targets, benchmarks</caption>
             <thead>

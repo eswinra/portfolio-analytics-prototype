@@ -18,7 +18,12 @@ export function HoldingsView() {
             kicker="Largest equity holdings — Pension Plan"
             title="June 30, 2025 · fair value in $ thousands"
           >
-            <div className="table-scroll">
+            <div
+              className="table-scroll"
+              role="region"
+              aria-label="Ten largest equity holdings"
+              tabIndex={0}
+            >
               <table className="table">
                 <caption>Ten largest equity holdings</caption>
                 <thead>
@@ -69,7 +74,12 @@ export function HoldingsView() {
           kicker={`Largest fixed income holdings — ${d.label}`}
           title="June 30, 2025 · fair value in $ thousands"
         >
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label="Five largest fixed income holdings"
+            tabIndex={0}
+          >
             <table className="table">
               <caption>Five largest fixed income holdings</caption>
               <thead>
@@ -110,7 +120,12 @@ export function HoldingsView() {
         kicker={`Investment management fees — ${d.label}`}
         title="Fiscal years ended June 30 · $ thousands"
       >
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label="Investment management fees by asset class"
+          tabIndex={0}
+        >
           <table className="table">
             <caption>Investment management fees by asset class</caption>
             <thead>

@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test:visual": "playwright test -c playwright.visual.config.ts",
+    "test:visual:update": "playwright test -c playwright.visual.config.ts --update-snapshots",
     "emit:cio-sample": "vite-node scripts/emit-cio-sample.ts",
     "cio:diff": "vite-node scripts/cio-diff.ts",
     "sync:deck": "vite-node scripts/sync-deck-data.ts",

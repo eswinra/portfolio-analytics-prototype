@@ -58,66 +58,76 @@ export function ReconView() {
             aria-label="Reconciliation pairs"
             tabIndex={0}
           >
-            <table className="table cardable">
+            <table className="table cardable" role="table">
               <caption>
                 Sorted breaks-first. Age is days from the pair's as-of to the dataset reference
                 date, computed from dates inside the file.
               </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Metric</th>
-                  <th scope="col">Category</th>
-                  <th scope="col" className="num">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">
+                    Metric
+                  </th>
+                  <th scope="col" role="columnheader">
+                    Category
+                  </th>
+                  <th scope="col" role="columnheader" className="num">
                     Side A
                   </th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader" className="num">
                     Side B
                   </th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader" className="num">
                     Variance
                   </th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader" className="num">
                     Tolerance
                   </th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Owner</th>
-                  <th scope="col" className="num">
+                  <th scope="col" role="columnheader">
+                    Status
+                  </th>
+                  <th scope="col" role="columnheader">
+                    Owner
+                  </th>
+                  <th scope="col" role="columnheader" className="num">
                     Age
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {recons.map((p) => {
                   const [a, b] = p.sides;
                   return (
-                    <tr key={`${p.metricId}|${p.categoryId}|${p.asOf}`}>
-                      <td data-label="Metric">
+                    <tr role="row" key={`${p.metricId}|${p.categoryId}|${p.asOf}`}>
+                      <td role="cell" data-label="Metric">
                         <code>{p.metricId}</code>
                         <div className="footnote">{p.asOf}</div>
                       </td>
-                      <td data-label="Category">{p.categoryId || '—'}</td>
-                      <td className="num" data-label="Side A">
+                      <td role="cell" data-label="Category">
+                        {p.categoryId || '—'}
+                      </td>
+                      <td role="cell" className="num" data-label="Side A">
                         {a ? fmtMm(a.value) : '—'}
                         <div className="footnote">{a?.source ?? ''}</div>
                       </td>
-                      <td className="num" data-label="Side B">
+                      <td role="cell" className="num" data-label="Side B">
                         {b ? fmtMm(b.value) : '—'}
                         <div className="footnote">{b?.source ?? 'missing side'}</div>
                       </td>
-                      <td className="num" data-label="Variance">
+                      <td role="cell" className="num" data-label="Variance">
                         {p.variance === null ? '—' : `${p.variance.toFixed(2)} ${p.unit}`}
                       </td>
-                      <td className="num" data-label="Tolerance">
+                      <td role="cell" className="num" data-label="Tolerance">
                         {p.toleranceAbs === null ? '—' : `${p.toleranceAbs.toFixed(2)} ${p.unit}`}
                       </td>
-                      <td data-label="Status">
+                      <td role="cell" data-label="Status">
                         <Tag variant={STATUS_VARIANT[p.status]}>{STATUS_LABEL[p.status]}</Tag>
                       </td>
-                      <td data-label="Owner">
+                      <td role="cell" data-label="Owner">
                         <code>{a?.enteredBy || '—'}</code>
                         <div className="footnote">{a?.reviewStatus ?? ''}</div>
                       </td>
-                      <td className="num" data-label="Age">
+                      <td role="cell" className="num" data-label="Age">
                         {p.ageDays === null ? '—' : `${p.ageDays} d`}
                       </td>
                     </tr>

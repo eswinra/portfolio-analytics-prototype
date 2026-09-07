@@ -512,75 +512,79 @@ export function CioMonthlyView() {
         title="Market value, weight vs. 2024 SAA target and IPS range, returns vs. benchmark"
       >
         <div className="table-scroll" role="region" aria-label="Composites" tabIndex={0}>
-          <table className="table cardable">
+          <table className="table cardable" role="table">
             <caption>
               Drift = weight − target; Δ weight = change against the prior report; IPS range and
               distance to the nearer bound compare the month-end weight with the policy in force
               (IPS Table 1, restated June 12, 2024) — all calculated. Return cells show composite /
               policy benchmark.
             </caption>
-            <thead>
-              <tr>
-                <th scope="col">Composite</th>
-                <th scope="col" className="num">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">
+                  Composite
+                </th>
+                <th scope="col" role="columnheader" className="num">
                   Market value ($M)
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   Weight
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   Target
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   Drift
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   Δ weight
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   IPS range
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   To bound
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   1 M
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   FYTD
                 </th>
-                <th scope="col" className="num">
+                <th scope="col" role="columnheader" className="num">
                   1 Y
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {e.comps.map((c) => {
                 const pc = ep?.comps.find((x) => x.k === c.k);
                 const ips = ipsFor(c.n);
                 const dist = ips ? Math.min(c.pct - ips.lo, ips.hi - c.pct) : null;
                 return (
-                  <tr key={c.k}>
-                    <td data-label="Composite">{c.n}</td>
-                    <td className="num" data-label="Market value ($M)">
+                  <tr role="row" key={c.k}>
+                    <td role="cell" data-label="Composite">
+                      {c.n}
+                    </td>
+                    <td role="cell" className="num" data-label="Market value ($M)">
                       {mm(c.mv)}
                     </td>
-                    <td className="num" data-label="Weight" style={{ fontWeight: 500 }}>
+                    <td role="cell" className="num" data-label="Weight" style={{ fontWeight: 500 }}>
                       {c.pct.toFixed(1)}%
                     </td>
-                    <td className="num" data-label="Target">
+                    <td role="cell" className="num" data-label="Target">
                       {c.tgt.toFixed(1)}%
                     </td>
-                    <td className="num" data-label="Drift">
+                    <td role="cell" className="num" data-label="Drift">
                       {signed(c.pct - c.tgt)} pp
                     </td>
-                    <td className="num" data-label="Δ weight">
+                    <td role="cell" className="num" data-label="Δ weight">
                       {pc ? `${signed(c.pct - pc.pct)} pp` : '—'}
                     </td>
-                    <td className="num" data-label="IPS range">
+                    <td role="cell" className="num" data-label="IPS range">
                       {ips ? `${ips.lo}–${ips.hi}%` : '—'}
                     </td>
-                    <td className="num" data-label="To bound">
+                    <td role="cell" className="num" data-label="To bound">
                       {dist === null ? (
                         '—'
                       ) : (
@@ -595,7 +599,7 @@ export function CioMonthlyView() {
                       )}
                     </td>
                     {[oneMonth, fytd, oneYear].map((i) => (
-                      <td className="num" data-label={PERIODS[i]} key={i}>
+                      <td role="cell" className="num" data-label={PERIODS[i]} key={i}>
                         {pct(c.r[i])} / {pct(c.b[i])}
                       </td>
                     ))}
@@ -603,65 +607,69 @@ export function CioMonthlyView() {
                 );
               })}
               {e.other ? (
-                <tr>
-                  <td data-label="Composite">{e.other.n}</td>
-                  <td className="num" data-label="Market value ($M)">
+                <tr role="row">
+                  <td role="cell" data-label="Composite">
+                    {e.other.n}
+                  </td>
+                  <td role="cell" className="num" data-label="Market value ($M)">
                     {mm(e.other.mv)}
                   </td>
-                  <td className="num" data-label="Weight">
+                  <td role="cell" className="num" data-label="Weight">
                     {e.other.pct.toFixed(1)}%
                   </td>
-                  <td className="num" data-label="Target">
+                  <td role="cell" className="num" data-label="Target">
                     —
                   </td>
-                  <td className="num" data-label="Drift">
+                  <td role="cell" className="num" data-label="Drift">
                     no policy weight
                   </td>
-                  <td className="num" data-label="Δ weight">
+                  <td role="cell" className="num" data-label="Δ weight">
                     —
                   </td>
-                  <td className="num" data-label="IPS range">
+                  <td role="cell" className="num" data-label="IPS range">
                     —
                   </td>
-                  <td className="num" data-label="To bound">
+                  <td role="cell" className="num" data-label="To bound">
                     —
                   </td>
-                  <td className="num" data-label="1 M">
+                  <td role="cell" className="num" data-label="1 M">
                     —
                   </td>
-                  <td className="num" data-label="FYTD">
+                  <td role="cell" className="num" data-label="FYTD">
                     —
                   </td>
-                  <td className="num" data-label="1 Y">
+                  <td role="cell" className="num" data-label="1 Y">
                     —
                   </td>
                 </tr>
               ) : null}
-              <tr style={{ fontWeight: 600 }}>
-                <td data-label="Composite">{e.name}</td>
-                <td className="num" data-label="Market value ($M)">
+              <tr role="row" style={{ fontWeight: 600 }}>
+                <td role="cell" data-label="Composite">
+                  {e.name}
+                </td>
+                <td role="cell" className="num" data-label="Market value ($M)">
                   {mm(e.mv)}
                 </td>
-                <td className="num" data-label="Weight">
+                <td role="cell" className="num" data-label="Weight">
                   100.0%
                 </td>
-                <td className="num" data-label="Target">
+                <td role="cell" className="num" data-label="Target">
                   100.0%
                 </td>
-                <td className="num" data-label="Drift">
+                <td role="cell" className="num" data-label="Drift">
                   —
                 </td>
-                <td className="num" data-label="Δ weight">
+                <td role="cell" className="num" data-label="Δ weight">
                   —
                 </td>
-                <td className="num" data-label="IPS range">
+                <td role="cell" className="num" data-label="IPS range">
                   —
                 </td>
-                <td className="num" data-label="To bound">
+                <td role="cell" className="num" data-label="To bound">
                   —
                 </td>
                 {[oneMonth, fytd, oneYear].map((i) => (
-                  <td className="num" data-label={PERIODS[i]} key={i}>
+                  <td role="cell" className="num" data-label={PERIODS[i]} key={i}>
                     {pct(e.total.r[i])} / {pct(e.total.b[i])}
                   </td>
                 ))}
@@ -787,7 +795,13 @@ export function CioMonthlyView() {
             </div>
           </div>
           {e.overlays ? (
-            <div className="table-scroll" style={{ marginTop: 14 }}>
+            <div
+              className="table-scroll"
+              style={{ marginTop: 14 }}
+              role="region"
+              aria-label="Overlay programs"
+              tabIndex={0}
+            >
               <table className="table">
                 <caption>Overlay programs — gains, $ millions</caption>
                 <thead>

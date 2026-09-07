@@ -143,4 +143,16 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     // the feed round-trips the latest public vintage, so the headline tile matches it
     await expect(page.locator('.grid-kpi .stat-value').first()).toHaveText('$93.9B');
   });
+
+  test('switching funds says when it discards an applied import', async ({ page }) => {
+    await ready(page, '/import');
+    await page.locator('input[type="file"]').setInputFiles(CIO_FEED_CSV);
+    await page.getByRole('button', { name: 'Apply this dataset' }).click();
+    await expect(page.getByText(/Import applied/)).toBeVisible();
+    await page.getByRole('button', { name: 'OPEB Trust' }).click();
+    await expect(page.getByText(/Import discarded:/)).toBeVisible();
+    await expect(page.getByText(/DEMOFUND, 121 records/)).toBeVisible();
+    await page.getByRole('button', { name: 'Dismiss' }).click();
+    await expect(page.getByText(/Import discarded:/)).toHaveCount(0);
+  });
 });
