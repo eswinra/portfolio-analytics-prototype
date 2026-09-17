@@ -13,6 +13,24 @@ The tab combines two exploratory dashboards built outside this repository in Sep
 | Economic regime dashboard (ChatGPT) | Six-question indicator board with each series at its own date; calendar-matched year-over-year changes, missing stays missing; staleness by frequency; direction rules over core PCE, unemployment and payrolls (±0.15 pp, +0.15/+0.10 pp); common-date Treasury curve against one month and one year earlier; transmission-channel sentences; 1Y/3Y/5Y history; sources and methodology | ICE BofA spreads replaced (terms forbid republication); the site reads a dated snapshot instead of calling FRED through a server-side key; the regime is paired with a level read rather than standing alone |
 | Sleeve Exposure Monitor (Claude) | Seven factors as the mean of signed component z-scores since 1995; 60-month factor history; stated sensitivity grid; exposure = Σ sensitivity × factor z; drill-down from the fund to category, asset class, factor and series; explicit caveats | Moody's Baa and University of Michigan series replaced (terms); oil and gas as year-over-year changes, not price levels; sleeves and weights from IPS Table 1 for the selected fund instead of scaled sub-weights, which adds Non-Core Real Estate and Diversified Hedge Funds rows; a quadrant is named only outside the ±0.5 σ band |
 
+## Layout and interaction
+
+Four sub-tabs (`?tab=`): **Summary** (the four headline reads, the regime map and the direction
+rules), **Factors & lens** (the portfolio lens with its what-if control, and the seven factors),
+**Indicators** (the board, history and the Treasury curve with transmission channels) and
+**Sources & method**. The page states once, in its "About these figures" line, that figures are
+`calculated` unless marked; reported levels, proxy estimates and stale series are marked where
+they appear. FRED is cited once at the page foot; panel chips cite anything else (IPS Table 1).
+
+- **What if?** On the lens, seven sliders set factor readings (±3 σ in quarter steps); the sleeves
+  re-rank as they move and the scenario is kept in the address (`?s=realrates:-2`). The panel is
+  marked "Scenario — not observed" and "Reset to observed" clears it. Only the latest readings
+  change (`withScenario`); results remain proxy estimates.
+- **History** zooms to a dragged range of months ("Reset zoom" or Escape returns); the values
+  table lists every month in the chosen 1Y/3Y/5Y range.
+- **Charts** read out a point under the pointer or with the arrow keys; the curve's legend keys
+  show or hide each date's curve.
+
 ## Files
 
 | Path | Role | Maintained by |
@@ -23,9 +41,9 @@ The tab combines two exploratory dashboards built outside this repository in Sep
 | `app/src/lib/macro/series.ts` | Month arithmetic, transforms (level, YoY, 3-month annualised, monthly change, bps), z-score parameters, carry-forward, staleness | code |
 | `app/src/lib/macro/factors.ts` | The seven factor definitions and their 60-month history | code |
 | `app/src/lib/macro/regime.ts` | Level read (quadrant, near-norm band) and direction rules | code |
-| `app/src/lib/macro/lens.ts` | Stated sensitivities, IPS Table 1 structure, asset / category / fund exposures | code |
+| `app/src/lib/macro/lens.ts` | Stated sensitivities, IPS Table 1 structure, asset / category / fund exposures, illustrative scenarios (`withScenario`, `parseScenario`) | code |
 | `app/src/lib/macro/board.ts` | Indicator board definitions and readings, Treasury curves on common dates, transmission channels | code |
-| `app/src/lib/macro/macro.test.ts` | 20 tests: transform arithmetic, missing-base handling, z-score window, staleness, rules, quadrant naming, lens reconciliation, calendar alignment of the snapshot, no excluded series, no credential material | code |
+| `app/src/lib/macro/macro.test.ts` | 22 tests: scenario arithmetic and address-bar parsing, transform arithmetic, missing-base handling, z-score window, staleness, rules, quadrant naming, lens reconciliation, calendar alignment of the snapshot, no excluded series, no credential material | code |
 | `app/src/views/MacroView.tsx`, `app/src/components/MacroCharts.tsx` | The tab and its SVG charts (lazy-loaded with the snapshot) | code |
 
 ## Refreshing the snapshot

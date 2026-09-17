@@ -1,5 +1,14 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import {
+  HashRouter,
+  Link,
+  Navigate,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+  useSearchParams,
+} from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Glossary } from './components/Glossary';
@@ -82,6 +91,88 @@ function EntitySync() {
   return null;
 }
 
+/** A link that names a panel (`?p=<id>`, from "Copy link to this panel") scrolls to it once the
+ *  view has rendered. */
+function PanelLinkScroll() {
+  const [params] = useSearchParams();
+  const { pathname } = useLocation();
+  const target = params.get('p');
+  useEffect(() => {
+    if (!target) return;
+    const t = setTimeout(
+      () => document.getElementById(target)?.scrollIntoView({ block: 'start' }),
+      120,
+    );
+    return () => clearTimeout(t);
+  }, [target, pathname]);
+  return null;
+}
+
+/** A headline figure that changes in place — another fund, another report — flashes briefly,
+ *  so the eye catches what moved. Figures that arrive with a new view do not; nothing flashes
+ *  under reduced motion (the CSS animation sits inside a no-preference query). */
+function FlashChanges() {
+  useEffect(() => {
+    const root = document.getElementById('main');
+    if (!root || typeof MutationObserver !== 'function') return;
+    const SEL = '.stat-value, .strip-figures .v';
+    const seen = new WeakMap<Element, string>();
+    const register = (node: Element) => {
+      if (node.matches(SEL)) seen.set(node, node.textContent ?? '');
+      node.querySelectorAll(SEL).forEach((el) => seen.set(el, el.textContent ?? ''));
+    };
+    register(root);
+    const mo = new MutationObserver((records) => {
+      const touched = new Set<Element>();
+      for (const r of records) {
+        const node = r.target.nodeType === 1 ? (r.target as Element) : r.target.parentElement;
+        const el = node?.closest(SEL);
+        if (el) touched.add(el);
+        else
+          r.addedNodes.forEach((n) => {
+            if (n.nodeType === 1) register(n as Element);
+          });
+      }
+      touched.forEach((el) => {
+        const now = el.textContent ?? '';
+        const before = seen.get(el);
+        seen.set(el, now);
+        if (before === undefined || before === now) return;
+        el.classList.remove('flash');
+        void (el as HTMLElement).offsetWidth;
+        el.classList.add('flash');
+      });
+    });
+    mo.observe(root, { subtree: true, childList: true, characterData: true });
+    return () => mo.disconnect();
+  }, []);
+  return null;
+}
+
+/** Collapsed citations and method notes open for printing, so a printout keeps its sources. */
+function PrintExpand() {
+  useEffect(() => {
+    let opened: HTMLDetailsElement[] = [];
+    const before = () => {
+      opened = [...document.querySelectorAll<HTMLDetailsElement>('details:not([open])')].filter(
+        (d) => !d.classList.contains('panel-menu'),
+      );
+      opened.forEach((d) => (d.open = true));
+    };
+    const after = () => {
+      opened.forEach((d) => (d.open = false));
+      opened = [];
+    };
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => {
+      window.removeEventListener('beforeprint', before);
+      window.removeEventListener('afterprint', after);
+    };
+  }, []);
+  return null;
+}
+
 /** On every route change: reset scroll and move focus to the main region. */
 function RouteFocusReset({ mainRef }: { mainRef: React.RefObject<HTMLElement> }) {
   const { pathname } = useLocation();
@@ -112,13 +203,21 @@ function TitleBand() {
   const isCio = pathname === '/cio';
   const isMacro = pathname === '/macro';
   const { vintage } = useCioVintage();
+  // the masthead carries the one date statement; the band names the view
   const bandTitle = isCio
-    ? `CIO Monthly Report — data through ${longDate(vintage.dataThrough)}`
+    ? 'CIO Monthly Report'
     : isMacro
-      ? `Economic context — public data retrieved ${longDate(MACRO_META.retrieved)}`
+      ? 'Economic context'
       : pathname === '/funded' && entity === 'OPEB'
         ? 'Benefits & prefunding'
         : view[2];
+  const [params] = useSearchParams();
+  const presentQuery = (() => {
+    const q = new URLSearchParams(params);
+    q.set('tab', 'present');
+    q.delete('p');
+    return q.toString();
+  })();
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   async function copyBrief() {
@@ -174,9 +273,9 @@ function TitleBand() {
             </span>
           ) : isCio ? (
             <span className="actions">
-              <a className="btn-band" href="deck/">
-                Open as slides
-              </a>
+              <Link className="btn-band" to={`/cio?${presentQuery}`}>
+                Present slides
+              </Link>
             </span>
           ) : null}
         </div>
@@ -259,16 +358,17 @@ function Shell() {
         Skip to content
       </a>
       <RouteFocusReset mainRef={mainRef} />
+      <PanelLinkScroll />
+      <PrintExpand />
+      <FlashChanges />
 
       <div className="notice-bar" role="note">
         <span>
-          {cio
-            ? feed
-              ? 'Prototype — imported workstation feed (schema 1.4 cio_monthly rows), not a published report'
-              : `Prototype — published monthly figures (CIO Monthly Report, ${vintage.reportLabel})`
-            : macro
-              ? 'Prototype — public economic data (FRED snapshot), not portfolio performance'
-              : 'Prototype — published FY2025 figures (PAFR · ACFR · IPS)'}
+          {workstation
+            ? 'Prototype — workstation demo on synthetic contract data'
+            : cio && feed
+              ? 'Prototype — imported workstation feed, not a published report'
+              : 'Prototype — figures quoted from published LACERA documents and public data'}
         </span>
         <span className="right">Not an official LACERA system or performance report</span>
       </div>

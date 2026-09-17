@@ -119,6 +119,8 @@ export interface DeckVintage {
   marketLabel: string;
   histRange: string;
   url: string | null;
+  /** a workstation feed carries one fund: the deck locks to it */
+  single?: boolean;
 }
 
 export { BINS, MACRO, OPS, PERIODS, STATUS };

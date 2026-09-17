@@ -1,3 +1,5 @@
+import { Reveal } from '../components/ChartKit';
+import { AboutFigures, PageMeta } from '../components/page';
 import { Panel, SourceLine, Tag, type TagVariant } from '../components/ui';
 import { CONFIG } from '../config';
 import { publishedFor, type Major } from '../fixtures/published';
@@ -80,13 +82,33 @@ export function AllocationView() {
   const bullets = d.majors.map((m) => bulletGeom(m, CONFIG.nearBoundPp));
 
   return (
-    <>
+    <PageMeta classification="reported_public">
+      <AboutFigures
+        summary={`June 30, 2025 — IPS Tables 1 and 2 (restated June 12, 2024)${P ? ' and the 2025 PAFR actual mix' : ''}`}
+        classification="reported_public"
+        alsoUsed={['calculated']}
+      >
+        <p>
+          Range status and the distance to the nearer bound are calculated from the quoted weights
+          and the IPS ranges. The IPS defines no mechanical trade trigger, so range status is a
+          factual report, not a compliance finding.
+        </p>
+      </AboutFigures>
       <Panel
+        id="alloc-bullets"
         kicker="Strategic asset allocation — functional categories"
         title={`Policy target and range${P ? ' vs actual mix' : 's — OPEB Master Trust'}`}
-        sub="Band = IPS range · solid tick = long-term target · dashed tick = ½-step target (7/1/2024) · each track is scaled around its own band"
+        note={d.allocViewNote}
+        method={
+          <p>
+            Band = IPS range; solid tick = long-term target; dashed tick = ½-step target (7/1/2024).
+            Each track is scaled around its own band, so band widths are not comparable across
+            categories. “Near bound” flags a weight within {CONFIG.nearBoundPp.toFixed(1)} pp of a
+            boundary.
+          </p>
+        }
       >
-        <div>
+        <Reveal>
           {bullets.map((b) => (
             <div className="bullet-row" key={b.name}>
               <div className="bullet-head">
@@ -115,7 +137,7 @@ export function AllocationView() {
               </div>
             </div>
           ))}
-        </div>
+        </Reveal>
         <div className="chart-legend" style={{ marginTop: 14 }}>
           <span className="key">
             <span
@@ -176,14 +198,23 @@ export function AllocationView() {
             </span>
           ) : null}
         </div>
-        <p className="panel-note">{d.allocViewNote}</p>
         <SourceLine sources={P ? ['IPS_T1', 'PAFR_PENSION'] : ['IPS_OPEB_T1', 'PAFR_OPEB']} />
       </Panel>
 
       <Panel
+        id="alloc-ips"
         className="mt"
         kicker="Approved asset allocation and benchmarks"
         title={`IPS Tables 1 and 2 — ${d.label}`}
+        method={
+          <p>
+            Private-market benchmarks are lagged one to three months per IPS Table 2. Confirm the
+            governing policy version (long-term vs ½-step) before any compliance statement.
+            {P
+              ? ''
+              : ' As printed in the OPEB IPS Table 1, the ½-step sub-targets under Real Assets and Inflation Hedges sum to 15.5% against the category’s 16.5%; the figures are reproduced as printed, not adjusted.'}
+          </p>
+        }
       >
         <div className="table-scroll" role="region" aria-label="IPS Tables 1 and 2" tabIndex={0}>
           <table className="table">
@@ -228,15 +259,8 @@ export function AllocationView() {
             </tbody>
           </table>
         </div>
-        <p className="panel-note">
-          Private-market benchmarks are lagged one to three months per IPS Table 2. Confirm the
-          governing policy version (long-term vs ½-step) before any compliance statement.
-          {P
-            ? ''
-            : ' As printed in the OPEB IPS Table 1, the ½-step sub-targets under Real Assets and Inflation Hedges sum to 15.5% against the category’s 16.5%; the figures are reproduced as printed, not adjusted.'}
-        </p>
         <SourceLine sources={P ? ['IPS_T1'] : ['IPS_OPEB_T1']} />
       </Panel>
-    </>
+    </PageMeta>
   );
 }

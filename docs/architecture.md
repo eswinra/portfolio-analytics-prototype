@@ -148,3 +148,32 @@ contract pipeline) modes. Revision 9 hardens that architecture per an external a
   production-dependency audit; Playwright runs locally by design (no browsers in CI).
 - Dev-server `fs.allow` is narrowed to the app and `data/sample`, keeping `reference/`
   outside every served root.
+
+## Revision 16 (2026-09-17) — less noise, motion that shows change, slides fed by the dashboard
+
+Conventions every dashboard view now follows:
+
+- **One page statement** (`components/page.tsx`): `PageMeta` sets the classification that applies
+  unless a figure is marked and the sources that cover the whole page; `AboutFigures` is the one
+  line under the tabs that says what the figures are, with dates and the classification legend
+  behind it; `PageSources` lists page-wide sources once at the foot. `ClassBadge` renders only
+  when a figure's classification differs from the page's, and `SourceLine` renders a "Source"
+  chip that opens the full citation and omits sources the page already lists. Outside `PageMeta`
+  (the workstation) every badge and citation renders where it is used, as before.
+- **Panels** (`components/ui.tsx`): a title with at most one muted line under it; `note` is the
+  one visible takeaway; `method` holds the calculation and caveats behind "How this is
+  calculated"; citation chips, slide links and the method toggle share one footer row; a ⋯ menu
+  (`components/PanelMenu.tsx`) copies the table as CSV or a link to the panel (`?p=`).
+- **Sub-tabs** (`components/SubTabs.tsx`) split the long views, kept in the address (`?tab=`);
+  a jump to a panel on another sub-tab opens that tab first.
+- **Motion** (`lib/motion.ts`, `components/ChartKit.tsx`, CSS under
+  `prefers-reduced-motion: no-preference`): charts draw in the first time they scroll into view,
+  bars and lines move to new values when the fund, report or range changes, headline figures
+  that change flash once, and disclosures open smoothly. Nothing counts up — a displayed number is
+  always a reported or calculated value. Under reduced motion everything renders settled, and the
+  Playwright configs run with reduced motion so tests and baselines read the settled page.
+- **Interaction**: pointer and arrow-key tooltips (one tab stop per chart), legend keys that hide
+  a series, linked highlighting between a table and its chart, the CIO report slider, the
+  Economy what-if sliders and a zoomable history chart. Every value a tooltip shows is also in a
+  table or in text on the page.
+- **Slides inside the dashboard**: see `docs/cio-monthly.md`, "The dashboard feeds the slides".

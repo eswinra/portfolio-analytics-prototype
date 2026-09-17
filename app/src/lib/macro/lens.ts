@@ -222,3 +222,38 @@ export function dominantFactor(row: LensRow): Contribution | null {
     ? ok.reduce((a, b) => (Math.abs(b.contrib!) > Math.abs(a.contrib!) ? b : a))
     : null;
 }
+
+/** An illustrative scenario: the same model with some factor readings replaced by values the
+ *  reader sets. Only the latest readings change — the history stays observed — and nothing about
+ *  the result is observed data; exposures computed from it remain proxy estimates. */
+export function withScenario(
+  model: FactorModel,
+  overrides: Partial<Record<FactorKey, number>>,
+): FactorModel {
+  const factors = { ...model.factors };
+  for (const key of FACTOR_KEYS) {
+    const z = overrides[key];
+    if (z !== undefined && Number.isFinite(z)) factors[key] = { ...factors[key], z };
+  }
+  return { ...model, factors };
+}
+
+/** Scenario overrides in the address bar: `realrates:1.5,credit:-0.5`. Unknown factors,
+ *  non-numbers and values outside ±3 σ are ignored. */
+export function parseScenario(raw: string): Partial<Record<FactorKey, number>> {
+  const out: Partial<Record<FactorKey, number>> = {};
+  for (const part of raw.split(',')) {
+    const [k, v] = part.split(':');
+    const z = Number(v);
+    if (FACTOR_KEYS.includes(k as FactorKey) && v !== undefined && v !== '' && Number.isFinite(z)) {
+      if (Math.abs(z) <= 3) out[k as FactorKey] = z;
+    }
+  }
+  return out;
+}
+
+export function formatScenario(overrides: Partial<Record<FactorKey, number>>): string {
+  return FACTOR_KEYS.filter((k) => overrides[k] !== undefined)
+    .map((k) => `${k}:${Number(overrides[k]!.toFixed(2))}`)
+    .join(',');
+}

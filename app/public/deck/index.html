@@ -363,6 +363,8 @@
   }
 
   /* ---------- print: one slide per landscape page, every build shown complete ---------- */
+  .empty-note { position: absolute; left: 40px; right: 40px; top: 40%; text-align: center; font-size: 18px; color: var(--muted); }
+  body.embedded .stage { box-shadow: 0 6px 24px rgba(0,0,0,.22); }
   @media print {
     @page { size: 13.333in 7.5in; margin: 0; }
     html, body { height: auto; overflow: visible; background: #fff; }
@@ -757,15 +759,31 @@
   const ease = t => 1 - Math.pow(1 - t, 3);
 
   /* ==== SHARED DATA — generated from src/fixtures/cioMonthly.ts (latest vintage) by `npm run sync:deck`; edit the fixtures, not this block ==== */
-  const PERIODS = ["1 M","3 M","FYTD","YTD","1 Y","3 Y","5 Y","10 Y"];
-  const ENT = {"pension":{"name":"LACERA Pension Fund","short":"Pension Fund","aum":93.9,"mv":93916,"cash":1309,"god":1.43,"pages":"pp. 8–9","total":{"r":[0.1,5.3,12.2,5.9,12.2,10.3,7.4,9.1],"b":[-1.4,5.3,14.8,5.6,14.8,11.9,7,8.6],"h":[0.6,1.7,7,3.4,7,7,7,7]},"comps":[{"k":"growth","n":"Growth","short":"Growth","mv":45687,"pct":48.6,"tgt":48,"r":[-0.1,9.5,17.5,8.1,17.5,13.9,9.8,null],"b":[-2.9,8.1,23.3,7.8,23.3,18.1,10.4,null],"flow":41},{"k":"credit","n":"Credit","short":"Credit","mv":11749,"pct":12.5,"tgt":13,"r":[0.9,3.5,6.7,5.6,6.7,12.8,8.2,null],"b":[0.6,2.2,6.8,2.5,6.8,9.2,5,null],"flow":-79},{"k":"ra","n":"Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":13501,"pct":14.4,"tgt":15,"r":[-1.1,-0.4,7.9,3.5,7.9,4.4,5.4,null],"b":[-1,6,11.8,7.4,11.8,5.3,5.5,null],"flow":-4},{"k":"rrm","n":"Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":22354,"pct":23.8,"tgt":24,"r":[0.5,0.8,5.5,1.9,5.5,4.7,1.3,null],"b":[0.4,1,4.5,1.4,4.5,4.3,0.9,null],"flow":0}],"other":{"n":"Overlays & Hedges + Other Asset","mv":624,"pct":0.7,"flow":-18},"netflow":-60,"overlays":[{"n":"Currency hedge","may":17.6,"si":1563.7},{"n":"Cash / rebalance overlay","may":-6.4,"si":804.3}],"hist":{"c":[1,0,1,3,6,10,11,24,37,17,6,3,0,1],"mean":0.75,"saa":0.6,"sd":1.94,"min":-6.9,"max":6.6,"latest":0.1,"latestBin":7},"geo":{"dm":94,"em":6,"dmN":26,"emN":53,"total":79,"page":11,"top":[["United States",75.7,"dm"],["United Kingdom",4.1,"dm"],["Canada",2.5,"dm"],["Japan",1.9,"dm"],["China",1.7,"em"],["Germany",1.6,"dm"],["Taiwan",1.1,"em"],["South Korea",1,"em"],["Brazil",0.4,"em"],["India",0.4,"em"]]}},"opeb":{"name":"OPEB Master Trust","short":"OPEB Master Trust","aum":6.4,"mv":6447,"cash":145,"god":1.37,"pages":"pp. 13–14","total":{"r":[0.2,7.6,14.4,7.2,14.4,12.2,6.5,9.5],"b":[-0.6,6.4,14,6.1,14,11.6,6,8.5],"h":[0.5,1.5,6.2,3.1,6.2,6.2,6.1,6]},"comps":[{"k":"growth","n":"OPEB Growth","short":"Growth","mv":2910,"pct":45.2,"tgt":45,"r":[-0.2,14.4,24.7,12,24.7,19.8,10.9,null],"b":[-1.3,12.9,24.2,10.7,24.2,19.5,10.4,null],"flow":77},{"k":"credit","n":"OPEB Credit","short":"Credit","mv":1016,"pct":15.8,"tgt":16,"r":[0.2,1.9,5.9,1.8,5.9,7.4,4.3,null],"b":[0.6,2.2,6.8,2.5,6.8,8.9,4.9,null],"flow":24},{"k":"ra","n":"OPEB Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":845,"pct":13.1,"tgt":13,"r":[1.7,5.9,12,8.9,12,8,4.3,null],"b":[-1.7,1,9.3,4.6,9.3,4.7,2.3,null],"flow":-30},{"k":"rrm","n":"OPEB Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":1670,"pct":25.9,"tgt":26,"r":[0.4,0.7,3.8,0.9,3.8,3.3,0.3,null],"b":[0.4,0.7,3.7,0.7,3.7,3.1,-0.2,null],"flow":41}],"other":{"n":"Not itemized (report total less listed composites)","mv":6,"pct":0,"flow":0},"netflow":112,"overlays":null,"hist":{"c":[3,2,2,5,9,8,5,18,31,15,10,4,3,5],"mean":0.81,"saa":0.55,"sd":3.11,"min":-12.2,"max":8.6,"latest":0.2,"latestBin":7},"geo":{"dm":94,"em":6,"dmN":26,"emN":35,"total":61,"page":16,"top":[["United States",79.6,"dm"],["Japan",2.7,"dm"],["Canada",2.3,"dm"],["United Kingdom",2,"dm"],["Taiwan",1.6,"em"],["South Korea",1.3,"em"],["France",1,"dm"],["China",1,"em"],["India",0.7,"em"],["Brazil",0.2,"em"]]}}};
-  const BINS = ["≤ -6","-6 to -5","-5 to -4","-4 to -3","-3 to -2","-2 to -1","-1 to 0","0 to 1","1 to 2","2 to 3","3 to 4","4 to 5","5 to 6","≥ 6"];
-  const MKT = [{"g":"Reference portfolio","rows":[{"n":"60:40 Equity:Bond","i":"60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate","v":[-0.7,2.2,-0.7,6.6,14.3,12.1,6.1,7.9]}]},{"g":"Global equity","rows":[{"n":"U.S. Large Cap","i":"S&P 500 Total Return","v":[-0.1,4.2,-0.1,10.1,19.6,19.3,12.9,15.1]},{"n":"U.S. Small Cap","i":"Russell 2000 Total Return","v":[-3,5,-3,18.9,34.2,15.1,7.1,10.6]},{"n":"Non-U.S. All Cap","i":"MSCI ACWI ex-U.S. IMI Total Return","v":[0.2,4,0.2,13.3,27.1,16.9,8.8,9.3]},{"n":"Emerging Markets","i":"MSCI Emerging Markets Total Return","v":[-3.1,4.8,-3.1,20,36.4,19.3,8,9.2]}]},{"g":"Private equity","rows":[{"n":"Private Equity Buyout","i":"Thomson Reuters PE Buyout Index","v":[-0.5,6.5,-0.5,11.8,22.3,24.3,8.6,13.4]}]},{"g":"Fixed income","rows":[{"n":"U.S. Corporate High Yield","i":"Bloomberg U.S. Corporate High Yield Total Return","v":[-0.2,0.5,-0.2,1.7,5.2,8.3,4,5.5]},{"n":"U.S. Long-Term Treasuries","i":"Bloomberg Long Term U.S. Treasury Total Return","v":[-4,-2.5,-4,-3.6,-0.3,-1.1,-7,-2]},{"n":"DM Leveraged Loans","i":"Credit Suisse Leveraged Loan Total Return","v":[0.8,1.4,0.8,2.2,4.3,7.4,6.1,5.4]}]},{"g":"Real assets & inflation hedges","rows":[{"n":"Natural Resources","i":"S&P Global Natural Resources Total Return","v":[7.5,-1.8,7.5,17.9,37,11.8,11,10.7]},{"n":"Global Infrastructure","i":"Dow Jones Brookfield Global Infrastructure Composite","v":[1.1,-2,1.1,12.2,15.8,13.3,8.5,7]},{"n":"TIPS 0–5 Years","i":"Bloomberg U.S. Treasury TIPS 0–5 Years Total Return","v":[0.2,-0.1,0.2,1.8,3.5,5,3.1,3.1]},{"n":"Real Estate (ODCE, net)¹","i":"NCREIF Fund Index – ODCE (Net), latest available quarter","v":[0,1.3,0,2.3,3.6,-1.4,1.9,3.7]}]}];
-  const MACRO = [{"l":"PCE inflation, June 2026","v":"3.7% y/y","s":"Core 3.3%; easing driven largely by a temporary drop in energy prices after the mid-June ceasefire, since reversed (p. 4)"},{"l":"Federal funds rate, July meeting","v":"3.50–3.75%","s":"Fifth consecutive pause; three dissents in favor of an increase (p. 4)"},{"l":"U.S. Dollar Index, YTD to 7/31","v":"+1.6%","s":"GBP +0.1 · EUR −1.9 · JPY −0.4 · CAD −2.1 · MXN +3.8 · CNY +3.5 (p. 6)"},{"l":"Unemployment and participation","v":"4.2% · 61.5%","s":"Unemployment rate and labor force participation, latest print (p. 6)"},{"l":"Themes to watch","v":"Tariffs · AI · rates","s":"Tariffs of 10–12.5% now cover over 99% of U.S. imports; Strait of Hormuz disruption; Q2 earnings beat with AI capex in focus (p. 4)"}];
-  const OPS = [{"e":"Total Fund","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"Total Fund","item":"Adhering to the BOI-approved 2026 Strategic Framework","st":"prog","p":19},{"e":"Total Fund","item":"Planning for the Strategic Framework and Initiatives Refresh","st":"prog","p":19},{"e":"Total Fund","item":"Risk system onboarding","st":"prog","p":19},{"e":"OPEB Master Trust","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"OPEB Master Trust","item":"Risk system onboarding","st":"prog","p":19},{"e":"Investments Division","item":"Principal Investment Officer — 1 position","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 5 positions","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst II — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst Fellowship — 2 positions","st":"done","p":19},{"e":"Manager update","item":"Acadian Asset Management (global equities separate account, $1,023 mm): Alexandre Voitenok appointed co-Chief Investment Officer effective January 1, 2027, after serving as Deputy CIO since 2024","st":"info","p":20},{"e":"Consultant search","item":"Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q3 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)","st":"quiet","p":24}];
-  const STATUS = {"prog":["In progress","prog"],"dev":["In development","dev"],"info":["For attention","info"],"quiet":["Quiet period","quiet"],"done":["Completed","done"]};
-  const VINTAGE = {"reportLabel":"August 12, 2026","throughLabel":"June 30, 2026","month":"June","monthYear":"June 2026","marketLabel":"July 31, 2026","histRange":"July 2016 – June 2026","url":"https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-Aug-2026.pdf"};
+  let PERIODS = ["1 M","3 M","FYTD","YTD","1 Y","3 Y","5 Y","10 Y"];
+  let ENT = {"pension":{"name":"LACERA Pension Fund","short":"Pension Fund","aum":93.9,"mv":93916,"cash":1309,"god":1.43,"pages":"pp. 8–9","total":{"r":[0.1,5.3,12.2,5.9,12.2,10.3,7.4,9.1],"b":[-1.4,5.3,14.8,5.6,14.8,11.9,7,8.6],"h":[0.6,1.7,7,3.4,7,7,7,7]},"comps":[{"k":"growth","n":"Growth","short":"Growth","mv":45687,"pct":48.6,"tgt":48,"r":[-0.1,9.5,17.5,8.1,17.5,13.9,9.8,null],"b":[-2.9,8.1,23.3,7.8,23.3,18.1,10.4,null],"flow":41},{"k":"credit","n":"Credit","short":"Credit","mv":11749,"pct":12.5,"tgt":13,"r":[0.9,3.5,6.7,5.6,6.7,12.8,8.2,null],"b":[0.6,2.2,6.8,2.5,6.8,9.2,5,null],"flow":-79},{"k":"ra","n":"Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":13501,"pct":14.4,"tgt":15,"r":[-1.1,-0.4,7.9,3.5,7.9,4.4,5.4,null],"b":[-1,6,11.8,7.4,11.8,5.3,5.5,null],"flow":-4},{"k":"rrm","n":"Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":22354,"pct":23.8,"tgt":24,"r":[0.5,0.8,5.5,1.9,5.5,4.7,1.3,null],"b":[0.4,1,4.5,1.4,4.5,4.3,0.9,null],"flow":0}],"other":{"n":"Overlays & Hedges + Other Asset","mv":624,"pct":0.7,"flow":-18},"netflow":-60,"overlays":[{"n":"Currency hedge","may":17.6,"si":1563.7},{"n":"Cash / rebalance overlay","may":-6.4,"si":804.3}],"hist":{"c":[1,0,1,3,6,10,11,24,37,17,6,3,0,1],"mean":0.75,"saa":0.6,"sd":1.94,"min":-6.9,"max":6.6,"latest":0.1,"latestBin":7},"geo":{"dm":94,"em":6,"dmN":26,"emN":53,"total":79,"page":11,"top":[["United States",75.7,"dm"],["United Kingdom",4.1,"dm"],["Canada",2.5,"dm"],["Japan",1.9,"dm"],["China",1.7,"em"],["Germany",1.6,"dm"],["Taiwan",1.1,"em"],["South Korea",1,"em"],["Brazil",0.4,"em"],["India",0.4,"em"]]}},"opeb":{"name":"OPEB Master Trust","short":"OPEB Master Trust","aum":6.4,"mv":6447,"cash":145,"god":1.37,"pages":"pp. 13–14","total":{"r":[0.2,7.6,14.4,7.2,14.4,12.2,6.5,9.5],"b":[-0.6,6.4,14,6.1,14,11.6,6,8.5],"h":[0.5,1.5,6.2,3.1,6.2,6.2,6.1,6]},"comps":[{"k":"growth","n":"OPEB Growth","short":"Growth","mv":2910,"pct":45.2,"tgt":45,"r":[-0.2,14.4,24.7,12,24.7,19.8,10.9,null],"b":[-1.3,12.9,24.2,10.7,24.2,19.5,10.4,null],"flow":77},{"k":"credit","n":"OPEB Credit","short":"Credit","mv":1016,"pct":15.8,"tgt":16,"r":[0.2,1.9,5.9,1.8,5.9,7.4,4.3,null],"b":[0.6,2.2,6.8,2.5,6.8,8.9,4.9,null],"flow":24},{"k":"ra","n":"OPEB Real Assets & Inflation Hedges","short":"Real Assets & IH","mv":845,"pct":13.1,"tgt":13,"r":[1.7,5.9,12,8.9,12,8,4.3,null],"b":[-1.7,1,9.3,4.6,9.3,4.7,2.3,null],"flow":-30},{"k":"rrm","n":"OPEB Risk Reduction & Mitigation","short":"Risk Reduction & Mit.","mv":1670,"pct":25.9,"tgt":26,"r":[0.4,0.7,3.8,0.9,3.8,3.3,0.3,null],"b":[0.4,0.7,3.7,0.7,3.7,3.1,-0.2,null],"flow":41}],"other":{"n":"Not itemized (report total less listed composites)","mv":6,"pct":0,"flow":0},"netflow":112,"overlays":null,"hist":{"c":[3,2,2,5,9,8,5,18,31,15,10,4,3,5],"mean":0.81,"saa":0.55,"sd":3.11,"min":-12.2,"max":8.6,"latest":0.2,"latestBin":7},"geo":{"dm":94,"em":6,"dmN":26,"emN":35,"total":61,"page":16,"top":[["United States",79.6,"dm"],["Japan",2.7,"dm"],["Canada",2.3,"dm"],["United Kingdom",2,"dm"],["Taiwan",1.6,"em"],["South Korea",1.3,"em"],["France",1,"dm"],["China",1,"em"],["India",0.7,"em"],["Brazil",0.2,"em"]]}}};
+  let BINS = ["≤ -6","-6 to -5","-5 to -4","-4 to -3","-3 to -2","-2 to -1","-1 to 0","0 to 1","1 to 2","2 to 3","3 to 4","4 to 5","5 to 6","≥ 6"];
+  let MKT = [{"g":"Reference portfolio","rows":[{"n":"60:40 Equity:Bond","i":"60% MSCI ACWI IMI / 40% Bloomberg U.S. Aggregate","v":[-0.7,2.2,-0.7,6.6,14.3,12.1,6.1,7.9]}]},{"g":"Global equity","rows":[{"n":"U.S. Large Cap","i":"S&P 500 Total Return","v":[-0.1,4.2,-0.1,10.1,19.6,19.3,12.9,15.1]},{"n":"U.S. Small Cap","i":"Russell 2000 Total Return","v":[-3,5,-3,18.9,34.2,15.1,7.1,10.6]},{"n":"Non-U.S. All Cap","i":"MSCI ACWI ex-U.S. IMI Total Return","v":[0.2,4,0.2,13.3,27.1,16.9,8.8,9.3]},{"n":"Emerging Markets","i":"MSCI Emerging Markets Total Return","v":[-3.1,4.8,-3.1,20,36.4,19.3,8,9.2]}]},{"g":"Private equity","rows":[{"n":"Private Equity Buyout","i":"Thomson Reuters PE Buyout Index","v":[-0.5,6.5,-0.5,11.8,22.3,24.3,8.6,13.4]}]},{"g":"Fixed income","rows":[{"n":"U.S. Corporate High Yield","i":"Bloomberg U.S. Corporate High Yield Total Return","v":[-0.2,0.5,-0.2,1.7,5.2,8.3,4,5.5]},{"n":"U.S. Long-Term Treasuries","i":"Bloomberg Long Term U.S. Treasury Total Return","v":[-4,-2.5,-4,-3.6,-0.3,-1.1,-7,-2]},{"n":"DM Leveraged Loans","i":"Credit Suisse Leveraged Loan Total Return","v":[0.8,1.4,0.8,2.2,4.3,7.4,6.1,5.4]}]},{"g":"Real assets & inflation hedges","rows":[{"n":"Natural Resources","i":"S&P Global Natural Resources Total Return","v":[7.5,-1.8,7.5,17.9,37,11.8,11,10.7]},{"n":"Global Infrastructure","i":"Dow Jones Brookfield Global Infrastructure Composite","v":[1.1,-2,1.1,12.2,15.8,13.3,8.5,7]},{"n":"TIPS 0–5 Years","i":"Bloomberg U.S. Treasury TIPS 0–5 Years Total Return","v":[0.2,-0.1,0.2,1.8,3.5,5,3.1,3.1]},{"n":"Real Estate (ODCE, net)¹","i":"NCREIF Fund Index – ODCE (Net), latest available quarter","v":[0,1.3,0,2.3,3.6,-1.4,1.9,3.7]}]}];
+  let MACRO = [{"l":"PCE inflation, June 2026","v":"3.7% y/y","s":"Core 3.3%; easing driven largely by a temporary drop in energy prices after the mid-June ceasefire, since reversed (p. 4)"},{"l":"Federal funds rate, July meeting","v":"3.50–3.75%","s":"Fifth consecutive pause; three dissents in favor of an increase (p. 4)"},{"l":"U.S. Dollar Index, YTD to 7/31","v":"+1.6%","s":"GBP +0.1 · EUR −1.9 · JPY −0.4 · CAD −2.1 · MXN +3.8 · CNY +3.5 (p. 6)"},{"l":"Unemployment and participation","v":"4.2% · 61.5%","s":"Unemployment rate and labor force participation, latest print (p. 6)"},{"l":"Themes to watch","v":"Tariffs · AI · rates","s":"Tariffs of 10–12.5% now cover over 99% of U.S. imports; Strait of Hormuz disruption; Q2 earnings beat with AI capex in focus (p. 4)"}];
+  let OPS = [{"e":"Total Fund","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"Total Fund","item":"Adhering to the BOI-approved 2026 Strategic Framework","st":"prog","p":19},{"e":"Total Fund","item":"Planning for the Strategic Framework and Initiatives Refresh","st":"prog","p":19},{"e":"Total Fund","item":"Risk system onboarding","st":"prog","p":19},{"e":"OPEB Master Trust","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"OPEB Master Trust","item":"Risk system onboarding","st":"prog","p":19},{"e":"Investments Division","item":"Principal Investment Officer — 1 position","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 5 positions","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst II — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst Fellowship — 2 positions","st":"done","p":19},{"e":"Manager update","item":"Acadian Asset Management (global equities separate account, $1,023 mm): Alexandre Voitenok appointed co-Chief Investment Officer effective January 1, 2027, after serving as Deputy CIO since 2024","st":"info","p":20},{"e":"Consultant search","item":"Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q3 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)","st":"quiet","p":24}];
+  let STATUS = {"prog":["In progress","prog"],"dev":["In development","dev"],"info":["For attention","info"],"quiet":["Quiet period","quiet"],"done":["Completed","done"]};
+  let VINTAGE = {"reportLabel":"August 12, 2026","throughLabel":"June 30, 2026","month":"June","monthYear":"June 2026","marketLabel":"July 31, 2026","histRange":"July 2016 – June 2026","url":"https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-Aug-2026.pdf"};
   /* ==== END SHARED DATA ==== */
+  /* ---- dashboard feed: presented inside the dashboard (?embed=1), the deck takes the report on screen
+     from the parent window; a presenter window takes whatever its opener shows. Text is stripped of
+     < > " because slide prose is written as HTML. Anything unreadable leaves the built-in data. ---- */
+  const QS = new URLSearchParams(location.search);
+  const EMBEDDED = QS.has('embed') && window.parent !== window;
+  (function takeFeed() {
+    const ok = f => f && Array.isArray(f.PERIODS) && f.ENT && f.ENT.pension && f.ENT.opeb && Array.isArray(f.BINS) && f.VINTAGE && typeof f.VINTAGE.month === 'string';
+    const strip = x => typeof x === 'string' ? x.replace(/[<>"]/g, '') : Array.isArray(x) ? x.map(strip) : x && typeof x === 'object' ? Object.fromEntries(Object.entries(x).map(([k, v]) => [k, strip(v)])) : x;
+    let f = null;
+    try { if (EMBEDDED && ok(window.parent.__laceraDeckFeed)) f = window.parent.__laceraDeckFeed; } catch (e) { f = null; }
+    if (!f) { try { if (window.opener && window.opener !== window && ok(window.opener.__laceraDeckData)) f = window.opener.__laceraDeckData; } catch (e) { f = null; } }
+    if (!f) return;
+    f = strip(f);
+    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE;
+  })();
+  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE };
   const NOTES = [
     '<h4>Slide 1 · Executive read</h4><p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
     '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are combined into one sliver with no policy target. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
@@ -792,7 +810,11 @@
   const isPresenter = new URLSearchParams(location.search).has('presenter');
   const bc = ('BroadcastChannel' in window && location.protocol !== 'file:') ? new BroadcastChannel('cio-decision-deck') : null;
   const send = cmd => { if (bc) bc.postMessage({ type: 'cmd', cmd }); };
-  function sync() { if (bc && !isPresenter) bc.postMessage({ type: 'state', cur, frag, entity }); if (pvHook) pvHook(); }
+  function sync() {
+    if (bc && !isPresenter) bc.postMessage({ type: 'state', cur, frag, entity });
+    if (EMBEDDED) window.parent.postMessage({ type: 'lacera-deck-state', slide: cur + 1, entity }, location.origin);
+    if (pvHook) pvHook();
+  }
   const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc']], ['Context', ['hist', 'market', 'geo']], ['Attention', ['ops']]];
 
   function fit() {
@@ -865,7 +887,7 @@
   $('#print-btn').addEventListener('click', () => window.print());
   function toggleNotes() { const nEl = $('#notes'); nEl.hidden = !nEl.hidden; $('#notes-btn').setAttribute('aria-pressed', String(!nEl.hidden)); fit(); }
   function setEntity(v) {
-    if (v === entity) return;
+    if (v === entity || VINTAGE.single) return;
     entity = v;
     $$('#entity-seg .seg-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
     $$('.ent-chip').forEach(c => c.textContent = E().short);
@@ -952,7 +974,7 @@
       const mktRows = MKT.flatMap(g => g.rows).filter(r => r.v[2] != null);
       const mktLead = mktRows.length ? mktRows.reduce((a, b) => b.v[2] > a.v[2] ? b : a) : null;
       const marketLead = mktLead ? mktLead.n + ' led the fiscal year (' + sgn(mktLead.v[2]) + '%); ' : '';
-      const macroLine = MACRO.slice(0, 2).map(m => m.l.replace(/,.*$/, '') + ' ' + m.v).join(', ') + '.';
+      const macroLine = MACRO.length >= 2 ? MACRO.slice(0, 2).map(m => m.l.replace(/,.*$/, '') + ' ' + m.v).join(', ') + '.' : '';
       $('#s1-finding').textContent = VINTAGE.month + ': ' + pct(t.r[0]) + ' net, ' + sgn(ex[0]) + ' pts vs. benchmark · FYTD ' + pct(t.r[2]) + ': ' + sgn(ex[2]) + ' pts vs. benchmark, ' + sgn(t.r[2] - t.h[2]) + ' pts vs. actuarial hurdle';
       const H = [
         ['On track vs. policy and hurdle?', 'The ' + e.short + ' returned <b>' + pct(t.r[0]) + '</b> net in ' + VINTAGE.month + ' against a <b>' + pct(t.b[0]) + '</b> policy benchmark (' + sgn(ex[0]) + ' pts). ' + (led.length ? 'Ahead over ' + led.join(', ') : 'Ahead over no period') + (trail.length ? '; behind over ' + trail.join(', ') : '') + '. ' + hurdleText, 'Slide 3 · p. ' + (entity === 'pension' ? '9' : '14')],
@@ -1290,7 +1312,7 @@
     let prevStats = null;
     bins.forEach(b => bindTip($('.hit', b.el), () => { const d = E().hist, c = d.c[b.i]; const cumul = d.c.slice(0, b.i + 1).reduce((a, x) => a + x, 0); return '<b>' + BINS[b.i] + ' %</b><table><tr><td class="dim">Months</td><td>' + c + ' of 120</td></tr><tr><td class="dim">Share</td><td>' + (c / 120 * 100).toFixed(1) + '%</td></tr><tr><td class="dim">Months at or below this bin</td><td>' + cumul + ' (' + (cumul / 120 * 100).toFixed(0) + '%)</td></tr></table>'; }));
     function render() {
-      const e = E(), d = e.hist, max = Math.max(...d.c), ppu = (H - TOP) / max;
+      const e = E(), d = e.hist, max = Math.max(...d.c) || 1, ppu = (H - TOP) / max;
       bins.forEach(b => { const c = d.c[b.i], h = c * ppu; b.col.style.height = h + 'px'; b.col.classList.toggle('latest', b.i === d.latestBin); b.v.textContent = c; b.v.style.bottom = (h + 4) + 'px'; });
       tag.style.left = (d.latestBin * BW + BW / 2) + 'px'; tag.style.bottom = (d.c[d.latestBin] * ppu + 22) + 'px'; tag.innerHTML = VINTAGE.monthYear + ': ' + sgn(d.latest) + '%<i></i>';
       const below2 = d.c.slice(0, 5).reduce((a, b) => a + b, 0), above2 = d.c.slice(9).reduce((a, b) => a + b, 0), mid = d.c[7] + d.c[8];
@@ -1298,7 +1320,7 @@
       $('#hist-finding').textContent = mid + ' of 120 months between 0% and +2%; ' + below2 + ' below −2%, ' + above2 + ' above +2% (σ ' + d.sd.toFixed(2) + '); ' + VINTAGE.monthYear + ' sits above ' + Math.round(below / 120 * 100) + '% of months';
       const items = [['Mean monthly return', d.mean, v => v.toFixed(2) + '%'], ['2024 SAA expected return', d.saa, v => v.toFixed(2) + '%'], ['Standard deviation', d.sd, v => v.toFixed(2) + '%'], ['Worst month', d.min, v => v.toFixed(1) + '%'], ['Best month', d.max, v => v.toFixed(1) + '%'],
         ['sec', 'Calculated from bin counts'], ['Months below −2%', below2, v => Math.round(v) + ' of 120'], ['Months above +2%', above2, v => Math.round(v) + ' of 120'], ['Months at or below ' + VINTAGE.month + '\'s bin', 120 - d.c.slice(d.latestBin + 1).reduce((a, b) => a + b, 0), v => Math.round(v) + ' of 120']];
-      stats.innerHTML = '<h3>' + e.name + '</h3><div class="sub">Monthly returns (net), 06/2016 – 05/2026</div><table>' + items.map((it, i) => it[0] === 'sec' ? '<tr class="sec"><td colspan="2">' + it[1] + '</td></tr>' : '<tr><td>' + it[0] + '</td><td><span data-k="' + i + '"></span></td></tr>').join('') + '</table>';
+      stats.innerHTML = '<h3>' + e.name + '</h3><div class="sub">Monthly returns (net), ' + VINTAGE.histRange + '</div><table>' + items.map((it, i) => it[0] === 'sec' ? '<tr class="sec"><td colspan="2">' + it[1] + '</td></tr>' : '<tr><td>' + it[0] + '</td><td><span data-k="' + i + '"></span></td></tr>').join('') + '</table>';
       items.forEach((it, i) => { if (it[0] !== 'sec') countUp($('[data-k="' + i + '"]', stats), it[1], it[2], prevStats ? prevStats[i] : 0); });
       prevStats = items.map(it => it[0] === 'sec' ? 0 : it[1]);
       $('#hist-table').innerHTML = tableHTML(['Monthly return bin (%)', 'Pension Fund months', 'Pension share', 'OPEB months', 'OPEB share'],
@@ -1313,6 +1335,16 @@
   /* ============ slide 6 · market ============ */
   (function marketSlide() {
     const host = $('#mkt'), rows = [], heads = [];
+    const macroChips = MACRO.length ? MACRO.map(m => '<div class="mchip"><small>' + m.l + '</small><b>' + m.v + '</b>' + m.s + '</div>').join('')
+      : '<div class="mchip"><small>Macro strip</small><b>—</b>Editorial pages are carried for the latest public report only; see pp. 4–6 of this report.</div>';
+    if (!MKT.length) {
+      host.innerHTML = '<div class="empty-note">The market table is not available for ' + (VINTAGE.single ? 'this dataset' : 'the ' + VINTAGE.reportLabel + ' report') + ' — the printed page is in the PDF.</div>';
+      $('#mkt-finding').textContent = 'Market table not available for ' + (VINTAGE.single ? 'this dataset' : 'this report');
+      $('#mkt-table').innerHTML = '';
+      $('#macro').innerHTML = macroChips;
+      fragHooks[idx('market')] = f => { $('#macro').classList.toggle('on', f >= 1); $('#mkt-hint').textContent = f >= 1 ? '' : 'PRESS → FOR THE MACRO STRIP'; };
+      return;
+    }
     const zero = document.createElement('div'); zero.className = 'zero'; host.appendChild(zero);
     MKT.forEach(g => {
       const h = document.createElement('div'); h.className = 'ghead'; h.textContent = g.g; host.appendChild(h); heads.push({ el: h, g: g.g });
@@ -1350,7 +1382,7 @@
       $('#mkt-finding').textContent = PERIODS[p] + ': ' + best.r.n.replace('¹', '') + ' led at ' + f1(best.r.v[p]) + '%; ' + worst.r.n.replace('¹', '') + ' lagged at ' + f1(worst.r.v[p]) + '%';
     }
     layout();
-    $('#macro').innerHTML = MACRO.map(m => '<div class="mchip"><small>' + m.l + '</small><b>' + m.v + '</b>' + m.s + '</div>').join('');
+    $('#macro').innerHTML = macroChips;
     fragHooks[idx('market')] = f => { $('#macro').classList.toggle('on', f >= 1); $('#mkt-hint').textContent = f >= 1 ? '' : 'PRESS → FOR THE MACRO STRIP (pp. 4–6)'; };
     const trows = []; MKT.forEach(g => { trows.push({ grp: g.g }); g.rows.forEach(r => trows.push([r.n + ' <span style="color:var(--muted);font-weight:400">' + r.i + '</span>', ...r.v])); });
     $('#mkt-table').innerHTML = tableHTML(['Index', ...PERIODS], trows);
@@ -1364,6 +1396,14 @@
     function applyFilter() { $$('.grow', host).forEach(el => el.classList.toggle('dim', filter !== 'all' && el.dataset.g !== filter)); }
     function render(animate) {
       const e = E(), g = e.geo;
+      if (!g.top.length) {
+        split.innerHTML = ''; $('#geo-split-lab').innerHTML = ''; chips.innerHTML = '';
+        host.innerHTML = '<div class="empty-note">Geographic exposure is not part of this dataset.</div>';
+        $('#geo-title').textContent = e.short + ' — geographic exposure by AUM';
+        $('#geo-finding').textContent = 'Geographic exposure not available for this dataset';
+        $('#geo-note').textContent = ''; $('#geo-table').innerHTML = '';
+        return;
+      }
       split.innerHTML = '<div class="dm" style="width:' + g.dm + '%">' + g.dm + '% developed</div><div class="em" style="width:' + g.em + '%;--d:.5s"></div>';
       $('#geo-split-lab').innerHTML = '<span><i class="sw" style="background:var(--blue);vertical-align:-2px"></i> Developed ' + g.dm + '%</span><span><i class="sw" style="background:var(--cyan);vertical-align:-2px"></i> Emerging &amp; frontier ' + g.em + '%</span>';
       const C = [[g.total, 'markets held, by MSCI classification', 'wide'], [g.dmN, 'developed markets', ''], [g.emN, 'emerging & frontier markets', '']];
@@ -1397,6 +1437,11 @@
   /* ============ slide 9 · operations ============ */
   (function opsSlide() {
     const t = $('#ops-t');
+    if (!OPS.length) {
+      t.innerHTML = '<tbody><tr><td>Items for attention are editorial pages carried for the latest public report only. For this report, see pp. 19–20 and 24 of the PDF.</td></tr></tbody>';
+      $('section[data-id="ops"] .finding').textContent = 'Not carried for ' + (VINTAGE.single ? 'this dataset' : 'the ' + VINTAGE.reportLabel + ' report');
+      return;
+    }
     t.innerHTML = '<thead><tr><th style="width:150px">Area</th><th>Item</th><th style="width:130px">Status</th><th style="width:50px">Page</th></tr></thead><tbody>' +
       OPS.map((o, i) => '<tr data-e="' + o.e + '" style="--d:' + (i * 0.05) + 's"><td><b>' + o.e + '</b></td><td>' + o.item + '</td><td><span class="st ' + STATUS[o.st][1] + '">' + STATUS[o.st][0] + '</span></td><td style="color:var(--muted)">p. ' + o.p + '</td></tr>').join('') + '</tbody>';
     const groups = ['For attention', 'Total Fund', 'OPEB Master Trust', 'Investments Division', 'All'];
@@ -1430,6 +1475,18 @@
   }
 
   /* ============ start ============ */
+  if (EMBEDDED) {
+    document.body.classList.add('embedded');
+    const dl = $('#dash-link'); if (dl) dl.hidden = true;
+    if (QS.get('entity') === 'opeb') setEntity('opeb');
+    window.addEventListener('message', ev => {
+      if (ev.origin !== location.origin || ev.source !== window.parent) return;
+      const m = ev.data || {};
+      if (m.type === 'lacera-deck-entity' && (m.entity === 'pension' || m.entity === 'opeb')) setEntity(m.entity);
+      if (m.type === 'lacera-deck-go' && Number.isInteger(m.slide)) go(m.slide - 1);
+    });
+  }
+  if (VINTAGE.single) { const seg = $('#entity-seg'); if (seg) seg.closest('.entity').hidden = true; }
   $$('.ent-chip').forEach(c => c.textContent = E().short);
   fit();
   const start = Math.max(0, Math.min(slides.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));

@@ -5,7 +5,15 @@ import { MACRO_META } from '../../fixtures/macroSnapshot.meta';
 import { OPEB, PENSION } from '../../fixtures/published';
 import { PANELS, reading, transmission, treasuryCurves } from './board';
 import { computeFactors, FACTOR_KEYS, FACTORS, type FactorModel } from './factors';
-import { buildLens, dominantFactor, policyStructure, SENSITIVITIES } from './lens';
+import {
+  buildLens,
+  dominantFactor,
+  formatScenario,
+  parseScenario,
+  policyStructure,
+  SENSITIVITIES,
+  withScenario,
+} from './lens';
 import { directionRead, levelRead, magnitude, placement, quadrantOf } from './regime';
 import {
   carriedAt,
@@ -274,5 +282,27 @@ describe('factors, lens and board on the committed snapshot', () => {
     expect(lr).not.toBeNull();
     expect(lr!.trail.length).toBeLessThanOrEqual(12);
     expect(transmission(MACRO_SNAPSHOT)).toHaveLength(4);
+  });
+
+  it('recomputes exposures under an illustrative scenario without touching the history', () => {
+    const scenario = withScenario(model, { realrates: 2, credit: -1 });
+    expect(scenario.factors.realrates.z).toBe(2);
+    expect(scenario.factors.realrates.hist).toBe(model.factors.realrates.hist);
+    expect(model.factors.realrates.z).not.toBe(2);
+    const row = buildLens(scenario, PENSION.pol).find((r) => r.name === 'Global Equity')!;
+    const expected = FACTOR_KEYS.reduce(
+      (s, k, i) => s + SENSITIVITIES['Global Equity']!.sens[i]! * scenario.factors[k].z!,
+      0,
+    );
+    expect(row.exposure).toBeCloseTo(expected, 2);
+  });
+
+  it('reads and writes scenarios in the address bar, ignoring anything invalid', () => {
+    expect(parseScenario('realrates:1.5,credit:-0.25,bogus:1,growth:9,inflation:x')).toEqual({
+      realrates: 1.5,
+      credit: -0.25,
+    });
+    expect(formatScenario({ credit: -0.25, realrates: 1.5 })).toBe('realrates:1.5,credit:-0.25');
+    expect(parseScenario('')).toEqual({});
   });
 });

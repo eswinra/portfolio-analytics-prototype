@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 
 import { CONFIG } from '../config';
-import { CopyCsvButton } from './CopyCsvButton';
+import { PanelMenu } from './PanelMenu';
+import { usePageMeta } from './pageMeta';
 import { SOURCES, type SourceId, type SourceRecord } from '../fixtures/sources';
 import { CATEGORY_LABELS } from '../lib/contract/schema';
 
@@ -26,9 +27,11 @@ export function Kicker({ children }: { children: ReactNode }) {
   return <div className="kicker">{children}</div>;
 }
 
-/** Per-panel source citation from the source registry, gated by CONFIG.showSources.
- *  Registry entries with a stable public URL render as links; the rest render as
- *  document + page text (no fabricated links). */
+/** Per-panel source citation from the source registry, gated by CONFIG.showSources. It renders
+ *  as a small "Source" chip that opens the full citation, so a page is not lined with repeated
+ *  fine print. Sources the page lists once at its foot (`PageMeta`) are left out here, and a
+ *  panel whose only source is page-wide shows no chip. Registry entries with a stable public URL
+ *  render as links; the rest render as document + page text (no fabricated links). */
 export function SourceLine({
   sources,
   records,
@@ -39,28 +42,53 @@ export function SourceLine({
   records?: SourceRecord[];
   children?: ReactNode;
 }) {
+  const { defaultSourceIds } = usePageMeta();
   if (!CONFIG.showSources) return null;
-  const list: SourceRecord[] = [...(sources ?? []).map((id) => SOURCES[id]), ...(records ?? [])];
+  const list: SourceRecord[] = [
+    ...(sources ?? []).map((id) => SOURCES[id]),
+    ...(records ?? []),
+  ].filter((s) => !defaultSourceIds.includes(s.id));
+  if (list.length === 0 && children === undefined) return null;
+  const name = list.length
+    ? `Source: ${list.map((s) => s.label).join('; ')}`
+    : 'Source for this panel';
   return (
-    <div className="source-line">
-      Source:{' '}
-      {list.length > 0
-        ? list.map((s, i) => (
-            <span key={s.id}>
-              {i > 0 ? ' · ' : ''}
-              {s.url ? (
-                <a href={s.url} target="_blank" rel="noreferrer">
-                  {s.label}
-                </a>
-              ) : (
-                <span title={`${s.doc} — ${s.pageTable} (as of ${s.asOf})`}>{s.label}</span>
-              )}
-            </span>
-          ))
-        : children}
-    </div>
+    <details className="src-chip">
+      <summary aria-label={name} title={list.map((s) => s.label).join(' · ')}>
+        Source{list.length > 1 ? ` (${list.length})` : ''}
+      </summary>
+      <div className="src-pop">
+        {list.length > 0
+          ? list.map((s) => (
+              <div key={s.id} className="src-item">
+                {s.url ? (
+                  <a href={s.url} target="_blank" rel="noreferrer">
+                    {s.label}
+                  </a>
+                ) : (
+                  <strong>{s.label}</strong>
+                )}
+                <span>
+                  {s.doc} — {s.pageTable} · as of {s.asOf}
+                </span>
+              </div>
+            ))
+          : children}
+      </div>
+    </details>
   );
 }
+
+/** Components that belong in a panel's footer row (citation chips, slide links) rather than in
+ *  its body; `Panel` gathers them into one line with the method toggle. */
+export const PANEL_FOOT = Symbol('panelFoot');
+type FootMarked = { [PANEL_FOOT]?: true };
+const isFoot = (node: ReactNode) =>
+  isValidElement(node) &&
+  typeof node.type === 'function' &&
+  (node.type as unknown as FootMarked)[PANEL_FOOT] === true;
+
+(SourceLine as unknown as FootMarked)[PANEL_FOOT] = true;
 
 export function Panel({
   id,
@@ -68,32 +96,69 @@ export function Panel({
   title,
   sub,
   note,
+  method,
   tight,
   className,
   children,
 }: {
-  /** anchor for in-page jump links (hash routing rules out fragment links) */
+  /** anchor for in-page jump links and "copy link to this panel" */
   id?: string;
   kicker?: ReactNode;
   title?: ReactNode;
   sub?: ReactNode;
+  /** one visible takeaway sentence under the content */
   note?: ReactNode;
+  /** how the figures are calculated and their caveats — collapsed until asked for */
+  method?: ReactNode;
   tight?: boolean;
   className?: string;
   children: ReactNode;
 }) {
+  // header: a titled panel shows the title and at most one muted line (label · subtitle);
+  // an untitled tile keeps its label on top
+  const meta = [kicker, sub].filter((m) => m !== undefined && m !== null && m !== '');
+  const all = Children.toArray(children);
+  const foot = all.filter(isFoot);
+  const body = all.filter((c) => !isFoot(c));
   return (
     <section
       id={id}
       className={`panel${tight ? ' panel-tight' : ''}${className ? ` ${className}` : ''}`}
     >
-      {kicker !== undefined ? <Kicker>{kicker}</Kicker> : null}
-      {title !== undefined ? <h2 className={sub !== undefined ? 'snug' : ''}>{title}</h2> : null}
-      {sub !== undefined ? <div className="panel-sub">{sub}</div> : null}
-      {children}
+      {title === undefined ? (
+        kicker !== undefined ? (
+          <Kicker>{kicker}</Kicker>
+        ) : null
+      ) : (
+        <div className="panel-head">
+          {sub === undefined && kicker !== undefined ? <Kicker>{kicker}</Kicker> : null}
+          <h2>{title}</h2>
+          {sub !== undefined ? (
+            <div className="panel-meta">
+              {meta.map((m, i) => (
+                <Fragment key={i}>
+                  {i > 0 ? ' · ' : ''}
+                  {m}
+                </Fragment>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )}
+      {body}
       {note !== undefined ? <p className="panel-note">{note}</p> : null}
-      {/* self-hiding: renders only when this panel actually holds a table */}
-      <CopyCsvButton />
+      {foot.length > 0 || method !== undefined ? (
+        <div className="panel-foot">
+          {foot}
+          {method !== undefined ? (
+            <details className="method">
+              <summary>How this is calculated</summary>
+              <div className="method-body">{method}</div>
+            </details>
+          ) : null}
+        </div>
+      ) : null}
+      {tight ? null : <PanelMenu panelId={id} />}
     </section>
   );
 }
@@ -185,7 +250,11 @@ export const CLASS_DEFINITIONS: Record<string, string> = {
   missing: 'Not present in the data for the stated period.',
 };
 
-export function ClassBadge({ c }: { c: string }) {
+/** Classification badge. Inside a page that states a default classification, a figure with that
+ *  classification is covered by the page statement and shows no badge; anything else is marked. */
+export function ClassBadge({ c, always }: { c: string; always?: boolean }) {
+  const { defaultClass } = usePageMeta();
+  if (!always && defaultClass === c) return null;
   const def = CLASS_DEFINITIONS[c];
   const label = c.replace('_', ' ');
   return <Tag variant="neutral">{def ? <abbr title={def}>{label}</abbr> : label}</Tag>;

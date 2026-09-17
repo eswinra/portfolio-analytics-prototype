@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import { AboutFigures, PageMeta } from '../components/page';
 import { excessTag, Panel, SourceLine, Tag } from '../components/ui';
 import { CONFIG } from '../config';
 import { HORIZONS, PENSION, publishedFor } from '../fixtures/published';
@@ -48,11 +49,31 @@ export function RiskView() {
       : '0 breaches';
 
   return (
-    <>
+    <PageMeta classification="reported_public">
+      <AboutFigures
+        summary="June 30, 2025 — 2025 PAFR and IPS Table 1"
+        classification="reported_public"
+        alsoUsed={['calculated']}
+      >
+        <p>
+          Range status, the distance to the nearer bound and excess returns are calculated from the
+          quoted figures. Every other figure is quoted from a published LACERA document; the
+          custodian remains the book of record.
+        </p>
+      </AboutFigures>
       {P ? (
         <Panel
+          id="risk-ranges"
           kicker={`Policy range compliance — ${compSummary}`}
           title="Actual mix vs IPS ranges, June 30, 2025"
+          method={
+            <p>
+              “Near bound” flags a weight within {nb.toFixed(1)} pp of a policy boundary — an early
+              warning, not a breach. Range status is a factual report; the IPS defines no mechanical
+              trade trigger. Overlays &amp; Hedges and Other Assets (2% combined) carry no policy
+              weight and are not range-monitored.
+            </p>
+          }
         >
           <div
             className="table-scroll"
@@ -110,12 +131,6 @@ export function RiskView() {
               </tbody>
             </table>
           </div>
-          <p className="panel-note">
-            “Near bound” flags a weight within {nb.toFixed(1)} pp of a policy boundary — an early
-            warning, not a breach. Range status is a factual report; the IPS defines no mechanical
-            trade trigger. Overlays &amp; Hedges and Other Assets (2% combined) carry no policy
-            weight and are not range-monitored.
-          </p>
           <SourceLine sources={['PAFR_PENSION', 'IPS_T1']} />
         </Panel>
       ) : (
@@ -129,7 +144,12 @@ export function RiskView() {
       )}
 
       <div className="grid-panels mt">
-        <Panel kicker="Benchmark tracking" title="Excess vs policy benchmark by horizon">
+        <Panel
+          id="risk-tracking"
+          kicker="Benchmark tracking"
+          title="Excess vs policy benchmark by horizon"
+          note={d.trackNote}
+        >
           <div
             style={{
               display: 'grid',
@@ -155,12 +175,10 @@ export function RiskView() {
               );
             })}
           </div>
-          <p className="panel-note">
-            {d.trackNote} Excess figures are calculated from quoted TWR results.
-          </p>
+          <SourceLine sources={P ? ['PAFR_PENSION'] : ['PAFR_OPEB']} />
         </Panel>
 
-        <Panel kicker="Reading this data" title="Governance and provenance notes">
+        <Panel id="risk-notes" kicker="Reading this data" title="Governance and provenance notes">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {GOV_NOTES.map((note, i) => (
               <div className="gov-note" key={i}>
@@ -176,6 +194,6 @@ export function RiskView() {
           </p>
         </Panel>
       </div>
-    </>
+    </PageMeta>
   );
 }

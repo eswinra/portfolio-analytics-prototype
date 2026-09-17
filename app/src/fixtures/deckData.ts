@@ -31,7 +31,8 @@ export const DECK_DATA: CioDeckData = {
 
 const NAMES = ['PERIODS', 'ENT', 'BINS', 'MKT', 'MACRO', 'OPS', 'STATUS', 'VINTAGE'] as const;
 
-/** The lines between the markers (no trailing newline). */
+/** The lines between the markers (no trailing newline). Declared with `let` so the deck, when
+ *  presented inside the dashboard, can take the report on screen instead (lib/deckFeed.ts). */
 export function deckDataBlock(): string {
-  return NAMES.map((name) => `  const ${name} = ${JSON.stringify(DECK_DATA[name])};`).join('\n');
+  return NAMES.map((name) => `  let ${name} = ${JSON.stringify(DECK_DATA[name])};`).join('\n');
 }

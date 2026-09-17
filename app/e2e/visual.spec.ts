@@ -18,7 +18,7 @@ test.describe('visual baselines', () => {
 
   test('cio monthly — latest report', async ({ page }) => {
     await page.goto('/#/cio');
-    await expect(page.getByText(/Monthly vintage/)).toBeVisible();
+    await expect(page.locator('.about-figures')).toBeVisible();
     await expect(page).toHaveScreenshot('cio-latest.png', {
       fullPage: true,
       maxDiffPixelRatio: 0.005,
@@ -27,7 +27,7 @@ test.describe('visual baselines', () => {
 
   test('economic context', async ({ page }) => {
     await page.goto('/#/macro');
-    await expect(page.getByText(/Market context, kept apart/)).toBeVisible();
+    await expect(page.locator('#mac-read')).toBeVisible();
     await expect(page).toHaveScreenshot('macro.png', { fullPage: true, maxDiffPixelRatio: 0.005 });
   });
 

@@ -1,3 +1,4 @@
+import { AboutFigures, PageMeta } from '../components/page';
 import { n, Panel, SourceLine } from '../components/ui';
 import { PENSION_EQUITY, publishedFor } from '../fixtures/published';
 import { useEntity } from '../lib/entity';
@@ -11,12 +12,24 @@ export function HoldingsView() {
   const P = entity === 'PENSION';
 
   return (
-    <>
+    <PageMeta classification="reported_public">
+      <AboutFigures
+        summary="June 30, 2025 — 2025 ACFR investment section"
+        classification="reported_public"
+        alsoUsed={['calculated']}
+      >
+        <p>
+          Holdings reflect assets held in custody; a complete list is available on request from
+          LACERA. Totals, shares and year-over-year changes are calculated from the quoted figures.
+        </p>
+      </AboutFigures>
       <div className="grid-panels">
         {P ? (
           <Panel
+            id="hold-equity"
             kicker="Largest equity holdings — Pension Plan"
             title="June 30, 2025 · fair value in $ thousands"
+            note="The ten largest positions total $5.5 billion — about 6.4% of the $86.2 billion fund (calculated)."
           >
             <div
               className="table-scroll"
@@ -52,12 +65,6 @@ export function HoldingsView() {
                 </tbody>
               </table>
             </div>
-            <p className="panel-note">
-              The ten largest positions total $5.5 billion — about 6.4% of the $86.2 billion fund.
-              Reflects the global equity exposure of assets held in custody; a complete list of
-              holdings is available on request from LACERA. The total and share are calculated from
-              the quoted holdings and net position.
-            </p>
             <SourceLine sources={['ACFR_EQ']} />
           </Panel>
         ) : (
@@ -71,8 +78,10 @@ export function HoldingsView() {
         )}
 
         <Panel
+          id="hold-fi"
           kicker={`Largest fixed income holdings — ${d.label}`}
           title="June 30, 2025 · fair value in $ thousands"
+          note="Top five of the ten published."
         >
           <div
             className="table-scroll"
@@ -108,17 +117,22 @@ export function HoldingsView() {
               </tbody>
             </table>
           </div>
-          <p className="panel-note">
-            Top five of the ten published. Reflects fixed income exposure of assets held in custody.
-          </p>
           <SourceLine sources={['ACFR_FI']} />
         </Panel>
       </div>
 
       <Panel
+        id="hold-fees"
         className="mt"
         kicker={`Investment management fees — ${d.label}`}
         title="Fiscal years ended June 30 · $ thousands"
+        note={`${d.feeNote} Calculated from quoted figures — not an official expense ratio.`}
+        method={
+          <p>
+            Differences from expenses reported in the Statement of Changes in Fiduciary Net Position
+            are due to incentive fees, carry allocations, and operating expenses.
+          </p>
+        }
       >
         <div
           className="table-scroll"
@@ -162,15 +176,8 @@ export function HoldingsView() {
             </tbody>
           </table>
         </div>
-        <div style={{ fontSize: 12.5, marginTop: 12, fontWeight: 600, color: 'var(--accent-800)' }}>
-          {d.feeNote} Calculated from quoted figures — not an official expense ratio.
-        </div>
-        <p className="panel-note" style={{ marginTop: 8 }}>
-          Differences from expenses reported in the Statement of Changes in Fiduciary Net Position
-          are due to incentive fees, carry allocations, and operating expenses.
-        </p>
         <SourceLine sources={['ACFR_FEES']} />
       </Panel>
-    </>
+    </PageMeta>
   );
 }

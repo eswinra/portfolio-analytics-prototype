@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-09-17 — Revision 16: less noise, motion and interaction, and the CIO slides fed by the dashboard
+
+- **Noise cut, audit trail kept.** Each page now states once what its figures are: an "About
+  these figures" line (vintage, source and the classification that applies unless marked, with the
+  detail and the legend behind it), a page-foot source list, and badges only where a figure's
+  classification differs. Citations became "Source" chips that open the full reference; method
+  notes and caveats moved behind "How this is calculated"; the table copy link became a ⋯ panel
+  menu (copy table as CSV, copy a link to the panel). Panel headings are a title and at most one
+  muted line; table rules are lighter. The notice bar and band title no longer repeat dates —
+  the header carries the one date statement.
+- **Long views split into sub-tabs** kept in the address (`?tab=`). CIO Monthly: Summary ·
+  Performance · Positioning · Markets & items · Present slides. Economy: Summary · Factors & lens
+  · Indicators · Sources & method. Measured at 1440 px, CIO Monthly went from 7.8 screens, 16
+  panels and 1,171 words of small print on one page to a 1.8-screen Summary (6 panels, 203);
+  Economy from 7.3 screens and 1,227 to a 1.8-screen Summary (196).
+- **Motion that shows change** (off under reduced motion): charts draw in the first time they
+  scroll into view; bars, lines and exposure bars move to new values when the fund, report,
+  range or scenario changes; changed headline figures flash once; disclosures open smoothly.
+  Nothing counts up from zero.
+- **Interaction:** pointer and arrow-key tooltips on the Overview, Performance, CIO trend and
+  Economy charts (one tab stop each); legend keys that hide a series; the Performance table and
+  chart highlight each other, as do the Overview allocation strip and legend; a report slider
+  across the 16 CIO reports (the trend charts mark the report on screen and open a report on
+  click); what-if sliders on the Economy lens that re-rank the sleeves and are marked "Scenario —
+  not observed" (`?s=`); drag-to-zoom on the Economy history chart; panel links (`?p=`).
+- **The dashboard feeds the CIO slides.** The Present slides sub-tab shows the deck exactly as it
+  presents standalone, in a frame, with the dashboard's data for the report on screen — any of the
+  16 reports or an imported schema 1.4 workstation feed (locked to its one fund). The fund
+  toggle and the slide number stay in step both ways, and "▶ Slide n" chips on panels open the
+  matching slide. Editorial slides say when their pages exist only for the latest report; the
+  market slide says when a report's table was not extracted. Imported text is stripped of markup
+  characters before it reaches the slides. The standalone `/deck/` still shows the latest public
+  report. New: `lib/deckFeed.ts` (5 tests), `components/DeckFrame.tsx`; the deck gained embed mode,
+  guards for older reports and feeds, and a histogram window taken from the report.
+- Verification: Prettier · ESLint · tsc · Vitest 419/419 · production build · Playwright 119/119
+  runnable (axe WCAG 2 AA on every tab and sub-tab, the presented deck excluded as its own page;
+  no page overflow at 320, 360 and 375 px; new tests for the embedded slides, slide links, panel
+  menu and links, page statements, keyboard chart reading and the scenario) · renders reviewed
+  at 1440 and 375 px.
+
 ## 2026-09-16 — Revision 15: Economic Context tab (public macro data beside the fund)
 
 - **New Dashboard tab, "Economy" (`#/macro`)**, combining the two exploratory economic

@@ -12,6 +12,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     trace: 'retain-on-failure',
+    // charts draw in and move on change; tests and baselines read the settled page
+    reducedMotion: 'reduce',
   },
   projects: [
     {
