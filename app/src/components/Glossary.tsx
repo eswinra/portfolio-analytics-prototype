@@ -53,6 +53,18 @@ const TERMS: [term: string, definition: string][] = [
     'Lagged benchmark',
     'Private-market benchmarks are reported one to three months behind (IPS Table 2), so a same-period comparison mixes vintages by design.',
   ],
+  [
+    'Z-score (σ)',
+    'How far a reading sits from its own long-run average, in standard deviations. On the Economic Context tab the average and spread run from 1995 (or the series’ first month) to the latest complete month, so history is drawn with today’s yardstick.',
+  ],
+  [
+    'Macro factor',
+    'The average of several related series’ z-scores — for example Growth combines industrial production, retail sales, payrolls, jobless claims, capacity use, financial conditions and housing starts — signed so a higher value means more of the factor.',
+  ],
+  [
+    'Stated sensitivity and the portfolio lens',
+    'An analyst assumption of how an asset class tends to respond when a factor rises (+1 benefits, −1 suffers). The lens multiplies each by the factor’s z-score and weights the sleeves by IPS policy targets: a proxy estimate, not holdings, returns or a forecast.',
+  ],
 ];
 
 export function Glossary() {

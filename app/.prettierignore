@@ -1,0 +1,2 @@
+# generated data: one JSON line by design (tools/fetch_macro_snapshot.py)
+src/fixtures/macroSnapshot.data.ts

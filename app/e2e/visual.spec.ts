@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 /** Visual regression (local QA, run on demand with `npm run test:visual`): full-page renders of
  *  the surfaces a monthly update changes — the fiscal-year Overview, the CIO Monthly tab, the
- *  deck's first two slides — compared against baselines kept under outputs/visual-snapshots
+ *  Economic Context tab, the deck's first two slides — compared against baselines kept under outputs/visual-snapshots
  *  (ignored by git, platform-specific). Refresh baselines deliberately with
  *  `npm run test:visual:update` after reviewing the diff. Not part of the default suite. */
 
@@ -23,6 +23,12 @@ test.describe('visual baselines', () => {
       fullPage: true,
       maxDiffPixelRatio: 0.005,
     });
+  });
+
+  test('economic context', async ({ page }) => {
+    await page.goto('/#/macro');
+    await expect(page.getByText(/Market context, kept apart/)).toBeVisible();
+    await expect(page).toHaveScreenshot('macro.png', { fullPage: true, maxDiffPixelRatio: 0.005 });
   });
 
   test('deck — executive read and fund at a glance', async ({ page }) => {

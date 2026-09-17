@@ -55,6 +55,8 @@ Regenerating the dataset end-to-end (requires desktop Excel for the QA step):
 | Workbook spec / methodology / QA evidence | `docs/expanded-workbook-spec.md`, `docs/workbook-methodology.md`, `docs/workbook-qa.md` |
 | Data contract, dictionary, import rules | `docs/data-contract.md`, `docs/data-dictionary.md`, `docs/import-validation-rules.md` |
 | Web architecture | `docs/architecture.md` |
+| CIO Monthly layer | `docs/cio-monthly.md` |
+| Economic Context tab (FRED snapshot, factors, portfolio lens) | `docs/economic-context.md` |
 | Decisions / changes | `DECISIONS.md`, `CHANGELOG.md` |
 
 ## Deployment

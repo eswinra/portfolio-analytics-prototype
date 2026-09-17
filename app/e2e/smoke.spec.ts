@@ -20,6 +20,7 @@ const ROUTES = [
   '/exceptions',
   '/acfr',
   '/cio',
+  '/macro',
 ];
 
 const hash = (route: string) => `/#${route}`;
@@ -236,5 +237,71 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     await expect(page.getByText(/DEMOFUND, 121 records/)).toBeVisible();
     await page.getByRole('button', { name: 'Dismiss' }).click();
     await expect(page.getByText(/Import discarded:/)).toHaveCount(0);
+  });
+});
+
+test.describe('Economic Context (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('dates, market-context separation and the two-minute read', async ({ page }) => {
+    await ready(page, '/macro');
+    await expect(page.locator('#view-title')).toContainText('public data retrieved');
+    await expect(page.locator('.notice-bar')).toContainText('not portfolio performance');
+    await expect(page.locator('.asof')).toContainText('monthly factors through');
+    await expect(
+      page.getByText(/Market context, kept apart from portfolio performance/),
+    ).toBeVisible();
+    const read = page.locator('#mac-read');
+    await expect(read.locator('.stat-value')).toHaveCount(4);
+    await expect(read).toContainText('Where the economy sits');
+    await expect(read).toContainText('Which way it is moving');
+    await expect(page.locator('.kpi-provenance').first()).toContainText('proxy estimate');
+  });
+
+  test('the portfolio lens follows the fund and shows its arithmetic', async ({ page }) => {
+    await ready(page, '/macro');
+    const lens = page.locator('#mac-lens');
+    await expect(lens).toContainText('Diversified Hedge Funds');
+    await lens.getByRole('button', { name: 'Natural Resources' }).click();
+    await expect(page).toHaveURL(/lens=asset-Natural/);
+    await expect(lens.locator('.lens-detail h3')).toContainText('Natural Resources');
+    await expect(lens.locator('.lens-detail')).toContainText('Sensitivities from the');
+    // OPEB policy has no hedge-fund sleeve and cites the OPEB IPS
+    await page.getByRole('button', { name: 'OPEB Trust' }).click();
+    await expect(lens).not.toContainText('Diversified Hedge Funds');
+    await expect(lens.locator('.source-line')).toContainText('OPEB');
+  });
+
+  test('a factor opens to its components, and the state is in the URL', async ({ page }) => {
+    await ready(page, '/macro');
+    const factors = page.locator('#mac-factors');
+    const credit = factors.getByRole('button', { name: /Credit conditions/ });
+    await credit.click();
+    await expect(credit).toHaveAttribute('aria-expanded', 'true');
+    await expect(factors.getByRole('link', { name: 'NFCI credit' })).toBeVisible();
+    await expect(page).toHaveURL(/f=credit/);
+    const history = page.locator('#mac-history');
+    await history.getByRole('combobox', { name: 'History series' }).selectOption('DGS10');
+    await history.getByRole('button', { name: '1Y' }).click();
+    const url = page.url();
+    expect(url).toContain('hs=DGS10');
+    expect(url).toContain('hr=1');
+    await page.goto('/');
+    await page.goto(url);
+    await expect(page.locator('#mac-history h2')).toContainText('10-year Treasury');
+    await expect(
+      page.locator('#mac-factors').getByRole('button', { name: /Credit conditions/ }),
+    ).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('restricted series are disclosed and never shown', async ({ page }) => {
+    await ready(page, '/macro');
+    const sources = page.locator('#mac-sources');
+    await expect(sources).toContainText('BAMLH0A0HYM2');
+    await expect(sources).toContainText('reproduction in any form is prohibited');
+    await sources.getByText(/series, with original sources/).click();
+    await expect(sources.getByRole('link', { name: 'UNRATE' })).toBeVisible();
+    await expect(sources.getByRole('link', { name: 'BAMLH0A0HYM2' })).toHaveCount(0);
+    await expect(page.locator('#mac-board')).not.toContainText('High Yield');
   });
 });

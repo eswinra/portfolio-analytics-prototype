@@ -4,6 +4,7 @@ import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Glossary } from './components/Glossary';
 import { cioFor, longDate } from './fixtures/cioMonthly';
+import { MACRO_META } from './fixtures/macroSnapshot.meta';
 import { boardBrief, publishedFor } from './fixtures/published';
 import { useCioVintage } from './lib/cioVintage';
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
@@ -30,6 +31,8 @@ const ReconView = lazy(() => import('./views/ReconView').then((m) => ({ default:
 const CioMonthlyView = lazy(() =>
   import('./views/CioMonthlyView').then((m) => ({ default: m.CioMonthlyView })),
 );
+// public macro data: the dated FRED snapshot loads only with this tab
+const MacroView = lazy(() => import('./views/MacroView').then((m) => ({ default: m.MacroView })));
 
 function ViewLoading() {
   return (
@@ -52,6 +55,7 @@ const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/risk', 'Policy Monitoring', 'Policy monitoring'],
   ['/holdings', 'Holdings & Fees', 'Holdings & fees'],
   ['/cio', 'CIO Monthly', 'CIO Monthly Report'],
+  ['/macro', 'Economy', 'Economic context'],
 ];
 
 /** Workstation mode — where the work is populated: the synthetic contract-data pipeline
@@ -106,12 +110,15 @@ function TitleBand() {
   const isOverview = !workstation && view[0] === '/';
   const isAcfr = pathname === '/acfr';
   const isCio = pathname === '/cio';
+  const isMacro = pathname === '/macro';
   const { vintage } = useCioVintage();
   const bandTitle = isCio
     ? `CIO Monthly Report — data through ${longDate(vintage.dataThrough)}`
-    : pathname === '/funded' && entity === 'OPEB'
-      ? 'Benefits & prefunding'
-      : view[2];
+    : isMacro
+      ? `Economic context — public data retrieved ${longDate(MACRO_META.retrieved)}`
+      : pathname === '/funded' && entity === 'OPEB'
+        ? 'Benefits & prefunding'
+        : view[2];
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   async function copyBrief() {
@@ -152,7 +159,9 @@ function TitleBand() {
                 : `Workstation · synthetic ${dataset.meta.entityId} data`
               : isCio
                 ? cioFor(entity, vintage).name
-                : d.label}
+                : isMacro
+                  ? `Market context · lens on the ${d.label} policy targets`
+                  : d.label}
           </span>
           {isOverview ? (
             <span className="actions">
@@ -234,6 +243,7 @@ function Shell() {
   const { pathname } = useLocation();
   const workstation = isWorkstationPath(pathname);
   const cio = pathname === '/cio';
+  const macro = pathname === '/macro';
   const { vintage, feed } = useCioVintage();
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
   const mainRef = useRef<HTMLElement>(null);
@@ -256,7 +266,9 @@ function Shell() {
             ? feed
               ? 'Prototype — imported workstation feed (schema 1.4 cio_monthly rows), not a published report'
               : `Prototype — published monthly figures (CIO Monthly Report, ${vintage.reportLabel})`
-            : 'Prototype — published FY2025 figures (PAFR · ACFR · IPS)'}
+            : macro
+              ? 'Prototype — public economic data (FRED snapshot), not portfolio performance'
+              : 'Prototype — published FY2025 figures (PAFR · ACFR · IPS)'}
         </span>
         <span className="right">Not an official LACERA system or performance report</span>
       </div>
@@ -304,6 +316,11 @@ function Shell() {
                   ? 'workstation feed (imported dataset)'
                   : `CIO Monthly Report, ${vintage.reportLabel}`}
               </>
+            ) : macro ? (
+              <>
+                Retrieved <strong>{longDate(MACRO_META.retrieved)}</strong> · monthly factors
+                through {longDate(MACRO_META.monthlyThrough)}
+              </>
             ) : (
               <>
                 As of <strong>June 30, 2025</strong> · fiscal year end
@@ -346,6 +363,7 @@ function Shell() {
               <Route path="/risk" element={<RiskView />} />
               <Route path="/holdings" element={<HoldingsView />} />
               <Route path="/cio" element={<CioMonthlyView />} />
+              <Route path="/macro" element={<MacroView />} />
               <Route path="/acfr" element={<AcfrView />} />
               {/* team workflow demo — synthetic contract data */}
               <Route path="/import" element={<ImportView />} />
@@ -382,7 +400,9 @@ function Shell() {
           <div className="meta">
             Sources: 2025 Popular Annual Financial Report · 2025 Annual Comprehensive Financial
             Report · Investment Policy Statement (restated June 12, 2024) · OPEB Investment Policy
-            Statement · Chief Investment Officer Monthly Reports (April 2025 – August 2026)
+            Statement · Chief Investment Officer Monthly Reports (April 2025 – August 2026) ·
+            Economic Context: Federal Reserve Economic Data (FRED), Federal Reserve Bank of St.
+            Louis, with each series’ original source named on the tab
           </div>
           <div className="meta">
             Workstation (synthetic contract data):{' '}
@@ -400,9 +420,10 @@ function Shell() {
           </div>
           <Glossary />
           <div className="meta">
-            Exploratory prototype for the Portfolio Analytics team. All figures are quoted from
-            published LACERA documents as of the dates shown; this is not an official LACERA system,
-            performance report, or statement of endorsement.
+            Exploratory prototype for the Portfolio Analytics team. Fund figures are quoted from
+            published LACERA documents as of the dates shown; economic data are public series from
+            FRED. This is not an official LACERA system, performance report, or statement of
+            endorsement.
           </div>
         </div>
       </footer>

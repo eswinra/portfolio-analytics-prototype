@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-09-16 — Revision 15: Economic Context tab (public macro data beside the fund)
+
+- **New Dashboard tab, "Economy" (`#/macro`)**, combining the two exploratory economic
+  dashboards (ChatGPT regime dashboard, Claude Sleeve Exposure Monitor) into one page that
+  answers where the U.S. economy sits against its long-run norms, which way it is moving, and
+  which policy sleeves today's readings lean against. Method, sources and limits:
+  `docs/economic-context.md`.
+- **Two-minute read:** level read (growth and inflation z-scores; a quadrant is named only
+  outside ±0.5 σ, so the current reading says "on the border between Overheating and
+  Stagflation" instead of "Stagflation"), direction read (core PCE, unemployment and payroll
+  rules), total-fund lens figure, and the largest three-month factor move.
+- **Regime map** with the 12-month path; **direction rules table** with inputs and thresholds.
+- **Portfolio lens** (proxy estimate) on the selected fund's IPS Table 1 long-term targets:
+  fund, category and asset-class exposure = Σ stated sensitivity × factor z, largest driver per
+  row, selectable factor arithmetic, the full sensitivity grid, and stated limitations. Pension
+  and OPEB structures both reconcile (tested).
+- **Seven factors** with 3- and 12-month changes, five-year lines, and a component drill-down
+  (series, measure, latest value and month, signed z, sample).
+- **Indicator board:** six questions, each series at its own latest date with its change basis,
+  classification and five-year line. **History** (any factor or indicator, 1Y/3Y/5Y, values
+  table), **Treasury curve** on common dates against one month and one year earlier,
+  **transmission channels**, and **sources and terms** listing all 38 series used and the 7 left
+  out with the reason.
+- **Data:** a dated FRED snapshot (retrieved September 16, 2026) written by the new
+  `tools/fetch_macro_snapshot.py`. The site calls no API and holds no key. ICE BofA spreads,
+  Moody's Baa, IMF copper and University of Michigan sentiment are excluded on their
+  redistribution terms; the tool re-checks every series' notes and aborts on restriction
+  language. All derived figures are computed in `app/src/lib/macro/` (20 unit tests).
+- The snapshot loads only with the tab (lazy chunk, 73 KB gzipped); the header reads its dates
+  from a small generated meta file. Nav gaps tightened from 28 to 20 px so eight views and the
+  mode switch share one row at conference-room widths. Glossary gains z-score, macro factor and
+  stated sensitivity. The FRED key file is git-ignored (Revision 14).
+- Verification: Prettier · ESLint · tsc · Vitest 412/412 · production build · Playwright
+  79/79 runnable (axe WCAG 2 AA on every route including `/macro`; no page overflow at 320, 360
+  and 375 px; four Economic Context interaction tests) · renders reviewed at 1440 and 375 px.
+
 ## 2026-09-16 — Revision 14: the site and deck take the CIO Monthly Report's visual identity
 
 - Every colour now comes from the LACERA Chief Investment Officer Monthly Report,
