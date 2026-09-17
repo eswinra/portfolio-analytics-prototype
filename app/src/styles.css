@@ -1,45 +1,64 @@
-/* LACERA Portfolio Analytics — design tokens and components per the design handoff
-   (design_handoff_lacera_portfolio_analytics). Single blue ramp on white; Mulish
-   (self-hosted via @fontsource — the built site makes zero network requests);
-   square-cornered 1px-bordered panels, no shadows, no radius. */
+/* LACERA Portfolio Analytics — components per the design handoff
+   (design_handoff_lacera_portfolio_analytics), themed to the LACERA CIO Monthly Report:
+   navy title bars, pale blue-grey section bands, cyan data bars against dark-blue benchmarks,
+   the report's category colours, Arial, and a charcoal footer. Square-cornered 1px-bordered
+   panels, no shadows, no radius; system fonts, so the built site makes zero network requests. */
 
 :root {
+  /* Theme: the LACERA Chief Investment Officer Monthly Report. Every colour below was extracted
+     programmatically from the August 2026 report's drawing fills and text runs (title bar,
+     section bands, allocation pie, histogram bars, footer), not eyeballed. */
   --bg: #ffffff;
-  --surface: #f5f8fc;
-  --ink: #1f2a37;
-  --divider: #d4dee9;
+  --surface: #f2f2f2; /* report table band */
+  --ink: #1a1a1a;
+  --divider: #d9d9d9; /* report rule grey */
 
-  --accent-100: #eef4fb;
-  --accent-200: #d8e5f5;
-  --accent-300: #b0cbec;
-  --accent-400: #7fa6da;
-  --accent-500: #4c7bc1;
-  --accent-600: #2f5ca8;
-  --accent-700: #234b90;
-  --accent-800: #173a75;
-  --accent-900: #0e2a5c;
+  --accent-100: #eef6fa;
+  --accent-200: #dbecf4; /* report section-header band */
+  --accent-300: #afcdeb;
+  --accent-400: #9abadd; /* Risk Reduction & Mitigation */
+  --accent-500: #0070c0; /* Credit · report blue text */
+  --accent-600: #376092; /* Growth */
+  --accent-700: #254061; /* policy benchmark line */
+  --accent-800: #0d3059;
+  --accent-900: #10233d; /* report title bar */
   --accent: var(--accent-700);
 
-  --neutral-100: #f7f9fb;
-  --neutral-200: #edf1f5;
-  --neutral-300: #dce3ea;
-  --neutral-400: #c2ccd8;
-  --neutral-500: #9aa7b6;
-  --neutral-600: #74828f;
-  --neutral-700: #55616e;
-  --neutral-800: #3a4552;
-  --neutral-900: #232c37;
+  --cyan: #20cde4; /* fund series and callout figures */
+  --cyan-bar: #05c3de; /* data bars */
+  --table-head: #0076a6; /* report table header band */
+  --rule-orange: #e1a852; /* cover rule */
+  --footer: #242424; /* report footer bar */
 
-  --font: 'Mulish', 'Segoe UI', system-ui, sans-serif;
+  /* functional categories, as coloured in the report's asset-allocation pie */
+  --cat-growth: #376092;
+  --cat-credit: #0070c0;
+  --cat-raih: #00b0f0;
+  --cat-rrm: #9abadd;
+  --cat-other: #7f7f7f;
+
+  --neutral-100: #f7f7f7;
+  --neutral-200: #f2f2f2;
+  --neutral-300: #d9d9d9;
+  --neutral-400: #bfbfbf;
+  --neutral-500: #a6a6a6; /* report reference-portfolio grey */
+  --neutral-600: #7f7f7f;
+  --neutral-700: #595959;
+  --neutral-800: #404040;
+  --neutral-900: #242424;
+
+  /* the report sets text in Arial and its charts in Segoe UI; both are system fonts, so the
+     site still makes zero network requests */
+  --font: Arial, 'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif;
 
   /* muted text tiers (opacity over --ink) */
-  --muted-62: rgb(31 42 55 / 62%);
-  --muted-65: rgb(31 42 55 / 65%);
-  --muted-68: rgb(31 42 55 / 68%);
-  --muted-72: rgb(31 42 55 / 72%);
-  --muted-78: rgb(31 42 55 / 78%);
-  --muted-84: rgb(31 42 55 / 84%);
-  --muted-86: rgb(31 42 55 / 86%);
+  --muted-62: rgb(26 26 26 / 62%);
+  --muted-65: rgb(26 26 26 / 65%);
+  --muted-68: rgb(26 26 26 / 68%);
+  --muted-72: rgb(26 26 26 / 72%);
+  --muted-78: rgb(26 26 26 / 78%);
+  --muted-84: rgb(26 26 26 / 84%);
+  --muted-86: rgb(26 26 26 / 86%);
 }
 
 *,
@@ -71,12 +90,12 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 2px solid #234b90;
+  outline: 2px solid var(--accent-700);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: rgb(76 123 193 / 30%);
+  background: rgb(0 112 192 / 25%);
 }
 
 #root {
@@ -253,8 +272,8 @@ a:hover {
     background:
       linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0%)) left / 32px 100% no-repeat,
       linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0%)) right / 32px 100% no-repeat,
-      linear-gradient(to right, rgb(31 42 55 / 16%), rgb(31 42 55 / 0%)) left / 12px 100% no-repeat,
-      linear-gradient(to left, rgb(31 42 55 / 16%), rgb(31 42 55 / 0%)) right / 12px 100% no-repeat;
+      linear-gradient(to right, rgb(26 26 26 / 16%), rgb(26 26 26 / 0%)) left / 12px 100% no-repeat,
+      linear-gradient(to left, rgb(26 26 26 / 16%), rgb(26 26 26 / 0%)) right / 12px 100% no-repeat;
     background-attachment: local, local, scroll, scroll;
   }
 
@@ -290,7 +309,7 @@ a:hover {
 }
 
 .band {
-  background: var(--accent-800);
+  background: var(--accent-900);
 }
 
 .band-inner {
@@ -340,7 +359,7 @@ a:hover {
 }
 
 .site-footer {
-  background: var(--accent-900);
+  background: var(--footer);
   color: #fff;
   margin-top: 20px;
 }
@@ -881,7 +900,7 @@ a:hover {
 }
 
 .spark-bar {
-  fill: var(--accent-500);
+  fill: var(--cyan-bar);
 }
 
 .spark-bar.neg {
@@ -986,8 +1005,8 @@ a:hover {
   background:
     linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0%)) left / 40px 100% no-repeat,
     linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0%)) right / 40px 100% no-repeat,
-    linear-gradient(to right, rgb(31 42 55 / 18%), rgb(31 42 55 / 0%)) left / 14px 100% no-repeat,
-    linear-gradient(to left, rgb(31 42 55 / 18%), rgb(31 42 55 / 0%)) right / 14px 100% no-repeat;
+    linear-gradient(to right, rgb(31 42 55 / 18%), rgb(26 26 26 / 0%)) left / 14px 100% no-repeat,
+    linear-gradient(to left, rgb(31 42 55 / 18%), rgb(26 26 26 / 0%)) right / 14px 100% no-repeat;
   background-attachment: local, local, scroll, scroll;
 }
 
@@ -1129,7 +1148,7 @@ a:hover {
 }
 
 .bar-col .bar {
-  background: var(--accent-300);
+  background: var(--cyan-bar);
   border: 1px solid var(--accent-700);
   border-bottom: none;
 }

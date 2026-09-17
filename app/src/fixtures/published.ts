@@ -111,21 +111,21 @@ export const PENSION: PublishedEntity = {
   cumNote:
     'Cumulative net investment income since FY2016. Investment income and contributions exceeding expenses have added $38.4 billion to net position over ten years.',
   mix: [
-    { label: 'Growth', pct: 48, color: 'var(--accent-700)', note: 'target 48% · range 40–56%' },
+    { label: 'Growth', pct: 48, color: 'var(--cat-growth)', note: 'target 48% · range 40–56%' },
     {
       label: 'Risk Reduction & Mitigation',
       pct: 24,
-      color: 'var(--accent-500)',
+      color: 'var(--cat-rrm)',
       note: 'target 24% · range 16–32%',
     },
     {
       label: 'Real Assets & Inflation Hedges',
       pct: 14,
-      color: 'var(--accent-400)',
+      color: 'var(--cat-raih)',
       note: 'target 15% · range 11–19%',
     },
-    { label: 'Credit', pct: 12, color: 'var(--accent-300)', note: 'target 13% · range 9–17%' },
-    { label: 'Overlays & Hedges', pct: 1, color: 'var(--neutral-400)', note: 'no policy weight' },
+    { label: 'Credit', pct: 12, color: 'var(--cat-credit)', note: 'target 13% · range 9–17%' },
+    { label: 'Overlays & Hedges', pct: 1, color: 'var(--cat-other)', note: 'no policy weight' },
     { label: 'Other Assets', pct: 1, color: 'var(--neutral-300)', note: 'no policy weight' },
   ],
   allocKicker: 'Actual mix — June 30, 2025',
@@ -247,18 +247,18 @@ export const OPEB: PublishedEntity = {
   cumNote:
     'Cumulative net investment income since FY2016, as printed on the PAFR chart (FY2022 reflects the −11.2% year). Contributions presented in the changes table include both prefunding and pay-as-you-go adjustments.',
   mix: [
-    { label: 'Growth', pct: 45, color: 'var(--accent-700)', note: '½-step target · range ±10' },
+    { label: 'Growth', pct: 45, color: 'var(--cat-growth)', note: '½-step target · range ±10' },
     {
       label: 'Risk Reduction & Mitigation',
       pct: 21.5,
-      color: 'var(--accent-500)',
+      color: 'var(--cat-rrm)',
       note: '½-step target · range ±9',
     },
-    { label: 'Credit', pct: 17, color: 'var(--accent-300)', note: '½-step target · range ±5' },
+    { label: 'Credit', pct: 17, color: 'var(--cat-credit)', note: '½-step target · range ±5' },
     {
       label: 'Real Assets & Inflation Hedges',
       pct: 16.5,
-      color: 'var(--accent-400)',
+      color: 'var(--cat-raih)',
       note: '½-step target · range ±4',
     },
   ],

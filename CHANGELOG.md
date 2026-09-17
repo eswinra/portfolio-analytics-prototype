@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-16 — Revision 14: the site and deck take the CIO Monthly Report's visual identity
+
+- Every colour now comes from the LACERA Chief Investment Officer Monthly Report,
+  extracted programmatically from the August 2026 report's drawing fills and text
+  runs rather than matched by eye: the title-bar navy `#10233D` for the view band,
+  the pale blue-grey section band `#DBECF4`, cyan data bars `#05C3DE` for the fund
+  against dark-blue `#254061` for the policy benchmark, the report's charcoal footer
+  `#242424`, and the allocation pie's category colours (Growth `#376092`, Credit
+  `#0070C0`, Real Assets & Inflation Hedges `#00B0F0`, Risk Reduction & Mitigation
+  `#9ABADD`, overlays and other `#7F7F7F`) for every allocation display.
+- Type follows the report: Arial for text, Segoe UI as the fallback its charts use.
+  Both are system fonts, so the self-hosted Mulish package is removed and the site
+  still makes zero network requests.
+- The slide deck's house palette is aligned to the same extracted values (it had
+  approximated them).
+- Verification: Prettier · ESLint · tsc · Vitest 392/392 · production build ·
+  Playwright 70/70 with axe WCAG 2 AA on every route, so the new palette passes
+  contrast · renders reviewed against pages 1, 8 and 9 of the report.
+
 ## 2026-09-07 — Revision 13: user-experience pass (items 1–8 of the improvement list)
 
 - **Overview leads with the monthly vintage.** A "latest monthly report" strip

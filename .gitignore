@@ -52,3 +52,8 @@ venv/
 .DS_Store
 Thumbs.db
 *.tsbuildinfo
+
+# Credentials must never be committed: the FRED key used by the local macro tools
+fred_key.txt
+**/fred_key.txt
+.env.local

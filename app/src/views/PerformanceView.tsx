@@ -138,8 +138,8 @@ export function PerformanceView() {
                   <div
                     style={{
                       height: `${((d.ret.f[i]! / rMax) * 100).toFixed(1)}%`,
-                      background: 'var(--accent-600)',
-                      border: '1px solid var(--accent-800)',
+                      background: 'var(--cyan-bar)',
+                      border: '1px solid var(--accent-700)',
                       borderBottom: 'none',
                     }}
                   />
@@ -154,8 +154,8 @@ export function PerformanceView() {
                   <div
                     style={{
                       height: `${((d.ret.b[i]! / rMax) * 100).toFixed(1)}%`,
-                      background: 'var(--accent-200)',
-                      border: '1px solid var(--accent-500)',
+                      background: 'var(--accent-700)',
+                      border: '1px solid var(--accent-800)',
                       borderBottom: 'none',
                     }}
                   />
@@ -177,14 +177,14 @@ export function PerformanceView() {
             <span className="key">
               <span
                 className="sw"
-                style={{ background: 'var(--accent-600)', border: '1px solid var(--accent-800)' }}
+                style={{ background: 'var(--cyan-bar)', border: '1px solid var(--accent-700)' }}
               />
               Fund
             </span>
             <span className="key">
               <span
                 className="sw"
-                style={{ background: 'var(--accent-200)', border: '1px solid var(--accent-500)' }}
+                style={{ background: 'var(--accent-700)', border: '1px solid var(--accent-800)' }}
               />
               Policy benchmark
             </span>
