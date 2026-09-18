@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-17 — Revision 16.2: the slides size to the screen
+
+- The slide frame on CIO Monthly was as tall as the window but only as wide as the page column,
+  so on a wide monitor the 16:9 slide shrank to the width, floated in an empty band and ran off
+  the bottom. The frame's height now follows its own width (the slide plus the deck's measured
+  title bar, act strip and control bar), and on wide screens the frame extends past the page
+  column up to the width at which the whole deck still fits the window height.
+- Measured fits (frame, slide): 2000×1040 → 1455 px wide, slide 1431×805; 1440×900 → 1206,
+  1164×655; 1205×1000 → 1155, 1131×636; 1024×768 → 929, 884×497; no page overflow at any width.
+- Verification: Vitest 419/419 · build · Playwright 119/119 runnable.
+
 ## 2026-09-17 — Revision 16.1: the slides are the CIO Monthly tab's first view
 
 - Opening CIO Monthly now shows the report's slides inside the dashboard — no click out to
