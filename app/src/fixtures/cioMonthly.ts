@@ -1,4 +1,15 @@
-import { BINS, EDITORIAL_FOR, MACRO, OPS, PERIODS, STATUS } from './cioMonthly.data';
+import { macroAsOf, macroLines, type MacroLine } from '../lib/cioMacro';
+import { CIO_MACRO } from './cioMacro.data';
+import {
+  BINS,
+  EDITORIAL_FOR,
+  MACRO_NOTES,
+  MACRO_PRINTED,
+  MACRO_TYPED,
+  OPS,
+  PERIODS,
+  STATUS,
+} from './cioMonthly.data';
 import { CIO_VINTAGES } from './cioVintages.data';
 import type { EntityId } from './published';
 
@@ -6,7 +17,8 @@ import type { EntityId } from './published';
  * CIO Monthly vintages — the monthly report layer, kept apart from the fiscal-year figures in
  * `published.ts`. `cioVintages.data.ts` is generated from the public PDFs by
  * tools/extract_cio_report.py (one entry per report, oldest first); `cioMonthly.data.ts` holds
- * the editorial content (macro strip, items for attention) for the latest report only. One
+ * the editorial content (macro commentary, items for attention) for the latest report only, and
+ * `cioMacro.data.ts` the macro strip's FRED figures for every report (tools/fetch_cio_macro.py). One
  * fixture feeds two surfaces: the CIO Monthly dashboard tab (any vintage) and the slide deck at
  * /deck/ (latest vintage; its embedded data block is generated from here and a unit test fails
  * if the two ever differ). Period returns under one year are cumulative, three years and longer
@@ -104,7 +116,7 @@ export interface CioDeckData {
   ENT: { pension: CioEntity; opeb: CioEntity };
   BINS: string[];
   MKT: CioMarketGroup[];
-  MACRO: { l: string; v: string; s: string }[];
+  MACRO: MacroLine[];
   OPS: { e: string; item: string; st: OpsStatus; p: number }[];
   STATUS: Record<OpsStatus, [label: string, cls: string]>;
   VINTAGE: DeckVintage;
@@ -119,15 +131,33 @@ export interface DeckVintage {
   marketLabel: string;
   histRange: string;
   url: string | null;
+  /** the date the macro strip's FRED figures are read as of; absent when the strip has none */
+  macroLabel?: string;
   /** a workstation feed carries one fund: the deck locks to it */
   single?: boolean;
 }
 
-export { BINS, MACRO, OPS, PERIODS, STATUS };
-export { CIO_VINTAGES };
+export { BINS, MACRO_PRINTED, OPS, PERIODS, STATUS };
+export { CIO_MACRO, CIO_VINTAGES };
 
 if (CIO_VINTAGES.length === 0) throw new Error('cioVintages.data.ts holds no vintages');
 export const CIO_LATEST: CioVintage = CIO_VINTAGES[CIO_VINTAGES.length - 1]!;
+
+/** The macro strip for a public report: the FRED-backed lines as known on the report's as-of
+ *  date (any report), then — for the latest report, whose editorial pages are typed in — the
+ *  report's commentary beside them and the lines FRED cannot reproduce. */
+export function macroFor(v: CioVintage): MacroLine[] {
+  const fred = CIO_MACRO[v.reportDate];
+  const latest = v === CIO_LATEST;
+  return [
+    ...(fred ? macroLines(fred, latest ? MACRO_NOTES : {}) : []),
+    ...(latest ? MACRO_TYPED : []),
+  ];
+}
+
+/** The latest report's strip — what the standalone deck carries. */
+export const MACRO: MacroLine[] = macroFor(CIO_LATEST);
+export { macroAsOf };
 
 const MONTHS = [
   'January',
@@ -175,6 +205,7 @@ export function deckVintage(v: CioVintage): DeckVintage {
     marketLabel: v.marketAsOf ? longDate(v.marketAsOf) : longDate(v.dataThrough),
     histRange: histRange(v.dataThrough),
     url: v.url,
+    ...(CIO_MACRO[v.reportDate] ? { macroLabel: longDate(CIO_MACRO[v.reportDate]!.asOf) } : {}),
   };
 }
 

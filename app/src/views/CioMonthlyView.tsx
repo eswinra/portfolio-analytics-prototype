@@ -20,11 +20,12 @@ import {
 import {
   BINS,
   CIO_LATEST,
+  CIO_MACRO,
   CIO_VINTAGE,
   CIO_VINTAGES,
   cioFor,
   longDate,
-  MACRO,
+  macroFor,
   monthYear,
   OPS,
   PERIOD_INDEX,
@@ -107,6 +108,20 @@ function cioSource(v: CioVintage, pages: string, firstPage: number | null): Sour
     pageTable: pages,
     asOf: longDate(v.dataThrough),
     ...(url ? { url } : {}),
+  };
+}
+
+/** Source record for the macro strip's FRED figures, read as of the report's as-of date. */
+function fredMacroSource(v: CioVintage): SourceRecord | null {
+  const m = CIO_MACRO[v.reportDate];
+  if (!m) return null;
+  return {
+    id: `FRED_CIO_${m.asOf}`,
+    label: `FRED, as known on ${longDate(m.asOf)}`,
+    doc: 'Federal Reserve Economic Data, real-time archive (ALFRED): PCEPI, PCEPILFE (BEA); UNRATE, CIVPART (BLS); DFEDTARL, DFEDTARU (Federal Reserve)',
+    pageTable: 'observations as FRED showed them on the date given',
+    asOf: longDate(m.asOf),
+    url: 'https://alfred.stlouisfed.org/',
   };
 }
 
@@ -299,14 +314,16 @@ export function CioMonthlyView() {
 
   const histMax = Math.max(...e.hist.c);
   const monthLabel = longDate(vintage.dataThrough);
-  // the four standing questions, answered from this report's figures; the macro line is
-  // editorial content and exists for the latest public report only
+  // the four standing questions, answered from this report's figures; the macro line comes
+  // from FRED as known on the report's date, so every public report has one (a feed has none)
+  const macro = feed ? [] : macroFor(vintage);
+  const fredSrc = feed ? null : fredMacroSource(vintage);
   const narrative = cioNarrative(
     e,
     vintage,
-    isLatest && MACRO[0] && MACRO[1]
+    macro[0] && macro[1]
       ? {
-          macroLine: `${MACRO[0].l.replace(/,.*$/, '')} ${MACRO[0].v}, ${MACRO[1].l.replace(/,.*$/, '')} ${MACRO[1].v}.`,
+          macroLine: `${macro[0].l.replace(/,.*$/, '')} ${macro[0].v}, ${macro[1].l.replace(/,.*$/, '')} ${macro[1].v}.`,
         }
       : {},
   );
@@ -1438,11 +1455,32 @@ export function CioMonthlyView() {
               <DeckLink n={SLIDE.market} />
             </Panel>
 
-            {isLatest ? (
-              <div className="grid-panels mt">
-                <Panel id="cio-macro" kicker="Key macro indicators and themes" title="Macro strip">
+            <div className="grid-panels mt">
+              {macro.length ? (
+                <Panel
+                  id="cio-macro"
+                  kicker="Key macro indicators"
+                  title="Macro strip"
+                  sub={
+                    fredSrc
+                      ? `FRED figures as known on ${fredSrc.asOf}, the date the report's macro page reads as of`
+                      : undefined
+                  }
+                  method={
+                    <p>
+                      PCE inflation, the federal funds target range and the unemployment and
+                      participation rates are read from FRED as FRED showed them at the month end
+                      before the report's month (its real-time archive, ALFRED), so later revisions
+                      do not change them and every report has them. PCE inflation is the
+                      year-over-year change of the price index (calculated); the other figures are
+                      as published. For the latest report the report's own commentary sits beside
+                      them, and the dollar index and themes are typed from the report, which a unit
+                      test checks against FRED's figures.
+                    </p>
+                  }
+                >
                   <div>
-                    {MACRO.map((m) => (
+                    {macro.map((m) => (
                       <div className="flow-row" key={m.l}>
                         <span>
                           {m.l}
@@ -1452,9 +1490,17 @@ export function CioMonthlyView() {
                       </div>
                     ))}
                   </div>
-                  <SourceLine records={[cioSource(vintage, 'pp. 4–6', 4)]} />
+                  <SourceLine
+                    records={[
+                      ...(fredSrc ? [fredSrc] : []),
+                      ...(isLatest ? [cioSource(vintage, 'pp. 4–6', 4)] : []),
+                    ]}
+                  />
+                  <DeckLink n={SLIDE.market} />
                 </Panel>
+              ) : null}
 
+              {isLatest ? (
                 <Panel
                   id="cio-ops"
                   kicker="Portfolio, structural and operational items"
@@ -1505,22 +1551,17 @@ export function CioMonthlyView() {
                   <SourceLine records={[cioSource(vintage, 'pp. 19–20, 24', 19)]} />
                   <DeckLink n={SLIDE.ops} />
                 </Panel>
-              </div>
-            ) : (
-              <Panel
-                id="cio-ops"
-                className="mt"
-                kicker="Editorial pages"
-                title="Macro strip and items for attention"
-              >
-                <p className="muted-note">
-                  {feed
-                    ? 'The macro strip and the items for attention are editorial pages of the public report and are not part of the feed.'
-                    : "The macro strip and the items for attention are maintained for the latest report only. For this month, read the report's pages 4–6 and 19–20 in the PDF."}
-                </p>
-                {feed ? null : <SourceLine records={[cioSource(vintage, 'pp. 4–6, 19–20', 4)]} />}
-              </Panel>
-            )}
+              ) : (
+                <Panel id="cio-ops" kicker="Editorial pages" title="Items for attention">
+                  <p className="muted-note">
+                    {feed
+                      ? 'The macro strip and the items for attention come from the public report and are not part of the feed.'
+                      : "The items for attention are maintained for the latest report only. For this month, read the report's pages 19–20 in the PDF."}
+                  </p>
+                  {feed ? null : <SourceLine records={[cioSource(vintage, 'pp. 19–20', 19)]} />}
+                </Panel>
+              )}
+            </div>
           </>
         ) : null}
 

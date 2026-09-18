@@ -1,11 +1,13 @@
+import type { MacroLine, MacroNotes } from '../lib/cioMacro';
 import type { OpsStatus } from './cioMonthly';
 
 /**
  * Editorial content of the CIO Monthly Report — the parts a reader writes rather than a table
- * prints (notable items, key macro indicators, initiatives, personnel, manager and consultant
- * updates). Hand-maintained for the LATEST report only; the numeric vintages live in
- * `cioVintages.data.ts` (generated). `EDITORIAL_FOR` names the report this content belongs to,
- * and a unit test fails when a newer vintage is extracted without refreshing it.
+ * prints (notable items, macro commentary and themes, initiatives, personnel, manager and
+ * consultant updates). Hand-maintained for the LATEST report only; the numeric vintages live in
+ * `cioVintages.data.ts` and the FRED-backed macro figures in `cioMacro.data.ts` (both
+ * generated). `EDITORIAL_FOR` names the report this content belongs to, and a unit test fails
+ * when a newer vintage is extracted without refreshing it.
  */
 
 export const EDITORIAL_FOR = '2026-08-12';
@@ -29,27 +31,35 @@ export const BINS = [
   '≥ 6',
 ];
 
-/** August 12, 2026 report, pp. 4 and 6 (Bloomberg, St. Louis Federal Reserve). */
-export const MACRO: { l: string; v: string; s: string }[] = [
-  {
-    l: 'PCE inflation, June 2026',
-    v: '3.7% y/y',
-    s: 'Core 3.3%; easing driven largely by a temporary drop in energy prices after the mid-June ceasefire, since reversed (p. 4)',
-  },
-  {
-    l: 'Federal funds rate, July meeting',
-    v: '3.50–3.75%',
-    s: 'Fifth consecutive pause; three dissents in favor of an increase (p. 4)',
-  },
+/** What the August 12, 2026 report printed for the indicators FRED also carries (pp. 4, 6). The
+ *  slides show FRED's figures as known on the report's as-of date (cioMacro.data.ts); a unit test
+ *  checks them against these, so a typing slip or a report that used another measure is caught.
+ *  Months are the observation months the report names ('2026-06' = June 2026). */
+export const MACRO_PRINTED = {
+  pceMonth: '2026-06',
+  pce: 3.7,
+  corePce: 3.3,
+  fedLow: 3.5,
+  fedHigh: 3.75,
+  laborMonth: '2026-06',
+  unemployment: 4.2,
+  participation: 61.5,
+};
+
+/** The report's commentary beside the FRED figures, with its page. */
+export const MACRO_NOTES: MacroNotes = {
+  pce: 'Easing driven largely by a temporary drop in energy prices after the mid-June ceasefire, since reversed (p. 4)',
+  fed: 'Fifth consecutive pause; three dissents in favor of an increase (p. 4)',
+};
+
+/** Lines typed from the report because FRED cannot reproduce them: the U.S. Dollar Index the
+ *  report prints is not a FRED series (FRED's broad dollar index is a different measure, so it
+ *  would not match), and the themes are the CIO's commentary. */
+export const MACRO_TYPED: MacroLine[] = [
   {
     l: 'U.S. Dollar Index, YTD to 7/31',
     v: '+1.6%',
     s: 'GBP +0.1 · EUR −1.9 · JPY −0.4 · CAD −2.1 · MXN +3.8 · CNY +3.5 (p. 6)',
-  },
-  {
-    l: 'Unemployment and participation',
-    v: '4.2% · 61.5%',
-    s: 'Unemployment rate and labor force participation, latest print (p. 6)',
   },
   {
     l: 'Themes to watch',

@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-09-18 — Revision 17: the macro strip comes from FRED, for every report
+
+- The CIO slides' macro strip (slide 7, and the Macro strip panel on the dashboard's CIO Monthly
+  tab) now takes PCE inflation, the federal funds target range and the unemployment and
+  participation rates from FRED, for **all 16 reports** instead of the latest only. Each report
+  is read from FRED's real-time archive as of the month end before the report's month, so the
+  figures are what was published then, not today's revised values. For the August 12, 2026
+  report FRED as of July 31 gives exactly the printed figures (PCE 3.7%, core 3.3%, 4.2%, 61.5%,
+  3.50–3.75%); a unit test checks this every run.
+- New tool `tools/fetch_cio_macro.py` (reads the key like the Economic Context fetch and never
+  prints or writes it; checks each series' FRED terms) writes `app/src/fixtures/cioMacro.data.ts`;
+  `app/src/lib/cioMacro.ts` computes the lines (year-over-year PCE, the date the target range
+  took effect) with unit tests.
+- Still typed from the report, latest report only: the U.S. Dollar Index line (not a FRED series),
+  the themes, and the report's commentary beside the FRED figures.
+- Slide 7: the source line names FRED and its as-of date, the speaker notes explain the method,
+  and the index chart tightens its rows when the strip appears (and when printing) — the strip
+  used to overlap the source note.
+- New unit test: the deck's script must parse. The deploy job runs the unit tests but not the
+  browser tests, which were the only check that would have caught a broken slide script.
+- Verification: lint · format check · Vitest 429/429 · build · Playwright 119/119 runnable ·
+  slide 7 measured clear of the source line in every state (standalone, print, three older
+  reports embedded) with no page errors.
+
 ## 2026-09-18 — Revision 16.3: the last typed-in statements on the slides now come from the data
 
 - Slide 9's headline was typed into the page and said "nine positions open"; it counted the

@@ -15,14 +15,17 @@ June 30, and monthly periods are not fiscal-year horizons.
 |---|---|---|
 | `tools/extract_cio_report.py` | Reads a report PDF by word coordinates (never by text order), validates it against the identities the report prints, writes JSON, and emits the TypeScript vintage file | code |
 | `app/src/fixtures/cioVintages.data.ts` | One entry per accepted report, oldest first: fund figures for both entities, the market table (2026 layouts), pages read, public URL | **generated** — do not edit |
-| `app/src/fixtures/cioMonthly.data.ts` | Editorial content for the **latest** report only: macro strip, items for attention, period and bin labels, status labels; `EDITORIAL_FOR` names the report it belongs to | analyst, monthly |
+| `tools/fetch_cio_macro.py` | Reads the macro strip's FRED series for every report as FRED showed them on the report's as-of date (real-time archive), checks each series' terms, writes raw values | code |
+| `app/src/fixtures/cioMacro.data.ts` | FRED values per report: PCE and core PCE index levels a year apart, unemployment and participation rates, the federal funds target range and the day it took effect | **generated** — do not edit |
+| `app/src/lib/cioMacro.ts` | `macroAsOf()` (the as-of rule), `yoy()`, `macroLines()`: the strip's three FRED lines | code |
+| `app/src/fixtures/cioMonthly.data.ts` | Editorial content for the **latest** report only: the report's macro commentary, the dollar and themes lines, the macro figures as printed (checked against FRED), items for attention, period and bin labels, status labels; `EDITORIAL_FOR` names the report it belongs to | analyst, monthly |
 | `app/src/fixtures/cioMonthly.ts` | Types, `CIO_VINTAGES`, `CIO_LATEST`, label helpers, `cioFor()` | code |
 | `app/src/fixtures/deckData.ts` | Builds the standalone deck's data block from the latest vintage (`VINTAGE` labels included), declared with `let` so an embedded deck can take the dashboard's data instead | code |
 | `app/src/lib/deckFeed.ts` | `deckDataFor(vintage)`: the data the dashboard hands the embedded deck for the report on screen — any vintage or an imported feed — with markup characters stripped | code |
 | `app/src/components/DeckFrame.tsx` | The Present sub-tab: the deck page in a frame, loaded with the report on screen; fund and slide stay in step both ways | code |
 | `app/scripts/sync-deck-data.ts` | Regenerates the block between the markers in `app/public/deck/index.html` (`npm run sync:deck`) | code |
 | `app/scripts/cio-diff.ts` | Prints what changed between two vintages (`npm run cio:diff`, optionally two data-through dates) | code |
-| `app/src/fixtures/cioMonthly.test.ts` | Identities for every vintage; editorial-for-latest guard; deck block equals the generated block; no hardcoded month or report date in the deck prose | code |
+| `app/src/fixtures/cioMonthly.test.ts` | Identities for every vintage; editorial-for-latest guard; FRED figures for every report, read as of the right date, reproducing the latest report's printed ones; deck block equals the generated block; the deck's script parses; no hardcoded month or report date in the deck prose | code |
 
 ## Monthly update
 
@@ -37,11 +40,16 @@ June 30, and monthly periods are not fiscal-year horizons.
 
    A report is **rejected**, with the reason, when any identity fails or a page is not
    machine-readable; it is never patched by hand.
-3. Refresh `cioMonthly.data.ts` from the new report's editorial pages (4–6, 19–20, 24) and set
-   `EDITORIAL_FOR` to its meeting date. The test suite fails until this is done.
-4. `cd app && npm run cio:diff` — read the changes as the checklist for the month; a target
+3. `python tools/fetch_cio_macro.py` — reads the macro strip's FRED figures for every report,
+   the new one included (the key comes from `FRED_API_KEY` or the ignored
+   `regime-dashboard/fred_key.txt` and is never printed or written).
+4. Refresh `cioMonthly.data.ts` from the new report's editorial pages (4–6, 19–20, 24): the macro
+   commentary, the dollar and themes lines, `MACRO_PRINTED` (the macro figures as printed) and
+   the items for attention; set `EDITORIAL_FOR` to its meeting date. The test suite fails until
+   this is done, and fails if FRED's figures do not reproduce the printed ones.
+5. `cd app && npm run cio:diff` — read the changes as the checklist for the month; a target
    change is flagged because drift is not comparable across policy versions.
-5. `npm run sync:deck`, then `npm test`, `npm run build`, `npx playwright test`.
+6. `npm run sync:deck`, then `npm test`, `npm run build`, `npx playwright test`.
 
 ## What the extractor reads
 
@@ -58,9 +66,38 @@ Columns are assigned by nearest header anchor, so a period the report does not p
 the April 2025 report) stays `null` instead of shifting the row. January 2026 is excluded: its
 performance table is an image in the PDF.
 
+## Macro strip from FRED
+
+The report's macro pages (pp. 4 and 6, "Sources: Bloomberg, St. Louis Federal Reserve") print PCE
+inflation, the federal funds target range and the unemployment and participation rates. Those are
+FRED series (PCEPI, PCEPILFE, DFEDTARL/DFEDTARU, UNRATE, CIVPART), so the strip reads them from
+FRED for **every** report rather than typing them in for the latest:
+
+- **As known then, not as revised since.** Each report is read from FRED's real-time archive
+  (ALFRED) as of the **month end before the report's month** — July 31, 2026 for the August 12,
+  2026 report. Checked against that report: as of July 31 FRED gives exactly the printed PCE
+  3.7% (core 3.3%), unemployment 4.2%, participation 61.5% and range 3.50–3.75%; as of the
+  meeting date it gives July's labor figures (4.1% / 61.4%), which the report did not print.
+  Reading today's values would show revised figures the meeting never saw.
+- **What that means for older reports.** The strip shows what was published by that date. For the
+  November and December 2025 reports that is August 2025 PCE: the fall 2025 federal shutdown
+  held back the later releases, and the strip shows the gap as it stood rather than filling it.
+- **What stays typed.** The U.S. Dollar Index the report prints is not a FRED series (FRED's broad
+  dollar index is a different measure), and the themes are the CIO's commentary, so those two
+  lines and the report's commentary beside the FRED figures are typed for the latest report
+  only. The printed values of the FRED-backed figures are typed as `MACRO_PRINTED`, and a unit
+  test fails if FRED does not reproduce them.
+- **Separate from the Economic Context tab.** That tab is a FRED snapshot of the latest data; the
+  strip is FRED as of each report's date. They answer different questions and are not combined.
+
+On the slides, the strip appears with → on slide 7 and the index chart tightens its rows to make
+room; printing uses the same layout.
+
 ## Classification
 
-Every figure is `reported_public` from the page cited beside it. Excess returns, drift, changes
+Every figure is `reported_public` from the page cited beside it; the macro strip's FRED figures
+are `reported_public` from FRED as of the date shown, except PCE inflation, which is `calculated`
+(year-over-year from the price index). Excess returns, drift, changes
 against the prior report and the gap attribution are `calculated`; the attribution is a
 `proxy_estimate` (composite excess × month-end weight) and its residual is always shown.
 
@@ -82,9 +119,11 @@ default view — the dashboard loads `public/deck/index.html` in a frame and han
 screen:
 
 - **Any report.** Move the report slider or pick a month; the slides reload with that report's
-  figures (`deckDataFor`). Editorial pages — the macro strip and items for attention — exist for
-  the latest public report only, so for any other report those slides say so rather than show
-  another month's text; the market slide says when the report's table was not extracted.
+  figures (`deckDataFor`), including the macro strip's FRED figures as of that report's date.
+  Editorial pages — the report's commentary and the items for attention — exist for the latest
+  public report only, so for any other report those are left out or the slide says so rather
+  than show another month's text; the market slide says when the report's table was not
+  extracted.
 - **An imported workstation feed.** Apply a schema 1.4 import and choose "Workstation dataset":
   the slides present the imported figures, locked to the feed's one fund. Text from the file is
   stripped of `<`, `>` and `"` before it reaches the slides (in `deckFeed.ts` and again in the

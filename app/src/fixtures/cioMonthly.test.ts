@@ -2,14 +2,18 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
+import { yoy } from '../lib/cioMacro';
 import {
   BINS,
   CIO_LATEST,
+  CIO_MACRO,
   CIO_VINTAGE,
   CIO_VINTAGES,
   histRange,
   longDate,
   MACRO,
+  MACRO_PRINTED,
+  macroAsOf,
   OPS,
   PERIODS,
   STATUS,
@@ -141,14 +145,58 @@ describe('market table, macro strip, and items for attention', () => {
     }
     expect(CIO_LATEST.MKT, 'latest vintage must carry the market table').not.toBeNull();
   });
-  it('every macro line names its report page', () => {
-    for (const m of MACRO) expect(m.s).toMatch(/\(p\. \d+/);
+  it('every macro line names its source: FRED or a report page', () => {
+    for (const m of MACRO) expect(m.s).toMatch(/\(FRED · |\(p\. \d+/);
   });
   it('every item has a known status and a report page', () => {
     for (const o of OPS) {
       expect(Object.keys(STATUS)).toContain(o.st);
       expect(o.p).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('macro strip: FRED as known on each report’s date', () => {
+  it('covers every report, read as of the month end before it (run tools/fetch_cio_macro.py if not)', () => {
+    for (const v of CIO_VINTAGES) {
+      const m = CIO_MACRO[v.reportDate];
+      expect(m, `${v.reportDate}: no FRED figures`).toBeDefined();
+      expect(m!.asOf).toBe(macroAsOf(v.reportDate));
+      // nothing observed after the date it was read as of; index levels exactly a year apart
+      for (const o of [m!.pce, m!.corePce, m!.unemployment, m!.participation]) {
+        expect(o.date <= m!.asOf, `${v.reportDate} ${o.date}`).toBe(true);
+      }
+      for (const x of [m!.pce, m!.corePce]) {
+        expect(x.yearAgo.date).toBe(`${Number(x.date.slice(0, 4)) - 1}${x.date.slice(4)}`);
+      }
+      within(m!.fed.high - m!.fed.low, 0.25, 0);
+      if (m!.fed.since) expect(m!.fed.since <= m!.asOf).toBe(true);
+    }
+  });
+
+  it('reproduces what the latest report printed (a typing slip or another measure fails here)', () => {
+    const m = CIO_MACRO[CIO_LATEST.reportDate]!;
+    const one = (x: number) => Math.round(x * 10) / 10;
+    expect(m.pce.date.slice(0, 7)).toBe(MACRO_PRINTED.pceMonth);
+    expect(one(yoy(m.pce))).toBe(MACRO_PRINTED.pce);
+    expect(one(yoy(m.corePce))).toBe(MACRO_PRINTED.corePce);
+    expect([m.fed.low, m.fed.high]).toEqual([MACRO_PRINTED.fedLow, MACRO_PRINTED.fedHigh]);
+    expect(m.unemployment.date.slice(0, 7)).toBe(MACRO_PRINTED.laborMonth);
+    expect(m.participation.date.slice(0, 7)).toBe(MACRO_PRINTED.laborMonth);
+    expect(m.unemployment.v).toBe(MACRO_PRINTED.unemployment);
+    expect(m.participation.v).toBe(MACRO_PRINTED.participation);
+  });
+
+  it('the latest strip is FRED’s three lines with the report’s commentary, then its typed lines', () => {
+    expect(MACRO.map((m) => m.l)).toEqual([
+      'PCE inflation, June 2026',
+      'Federal funds target range',
+      'Unemployment and participation, June 2026',
+      'U.S. Dollar Index, YTD to 7/31',
+      'Themes to watch',
+    ]);
+    expect(MACRO[0]!.v).toBe('3.7% y/y');
+    expect(MACRO[1]!.s).toMatch(/^In effect since Dec 11, 2025 \(FRED · Federal Reserve\)\. Fifth/);
   });
 });
 
@@ -162,6 +210,13 @@ describe('slide deck at /deck/ reads the same data', () => {
     expect(begin).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(begin);
     expect(lines.slice(begin + 1, end).join('\n')).toBe(deckDataBlock());
+  });
+
+  it('its script parses (the deploy job runs these tests, not the browser tests)', () => {
+    // slide prose sits in single-quoted strings, so an unescaped apostrophe breaks every slide
+    const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]!);
+    expect(scripts.length).toBeGreaterThan(0);
+    for (const code of scripts) expect(() => new Function(code)).not.toThrow();
   });
 
   it('no month or report date is hardcoded in the deck prose', () => {
