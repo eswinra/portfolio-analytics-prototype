@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-18 — Revision 18: add a CIO report from GitHub, no PC needed
+
+- New workflow "CIO report" (`.github/workflows/cio-report.yml`). From the repository's Actions
+  tab, anyone with write access pastes a report's lacera.gov PDF link; GitHub downloads the PDF
+  (not stored in the repository), reads and checks it with the same extractor, pulls the macro
+  strip's FRED figures as of the report's date, rebuilds the slides' data and proposes the update
+  as a pull request listing what to type in and what changed. On that pull request a check job
+  formats the typed file, regenerates the slides' data, commits it back and runs lint, format,
+  tests and build; merging publishes.
+- The extractor gained `--url` and `--append-ts`: one new report is added to the generated file
+  and every existing report is kept byte for byte (checked by a round trip that removes the August
+  2026 report and adds it back: identical file). A report already on the site, or older than the
+  latest, is refused with the reason.
+- The two tests a new report trips until its written parts are typed now say what to fix
+  (`EDITORIAL_FOR`, the `MACRO_PRINTED` value that differs from FRED).
+- The how-it-works page and `docs/cio-monthly.md` describe the GitHub route; the local route stays.
+- Setup for the owner: repository secret `FRED_API_KEY`; optionally allow Actions to open pull
+  requests (otherwise the run gives a one-click link); add teammates as collaborators.
+- Verification: workflow YAML parsed and every shell step syntax-checked; the link check rejects
+  other hosts, look-alike domains, http and appended text; both jobs run end to end locally against
+  a scratch repository (real lacera.gov download, real FRED call, branch pushed, summary written,
+  check job green); lint · format · Vitest 429/429 · build · Playwright 127/127 runnable.
+
 ## 2026-09-18 — Revision 17.1: a shareable "How this report works" page
 
 - New page `/how-it-works/` (`app/public/how-it-works/index.html`): where the CIO Monthly slides'

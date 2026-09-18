@@ -11,6 +11,10 @@ cleanly is left out with the reason, never patched by hand.
 Usage:
   python tools/extract_cio_report.py <pdf> [<pdf> ...] --out outputs/data/cio_vintages.json
   python tools/extract_cio_report.py --emit-ts app/src/fixtures/cioVintages.data.ts <json>
+  python tools/extract_cio_report.py <one pdf> --url <its lacera.gov URL> \\
+      --append-ts app/src/fixtures/cioVintages.data.ts
+The last form adds one new report to the generated file and leaves every existing report as it
+is; it is what the GitHub "CIO report" workflow runs (.github/workflows/cio-report.yml).
 
 Editorial content (notable items, key initiatives, personnel) is not extracted; it stays a
 hand-maintained part of the fixture for the latest report only.
@@ -513,13 +517,38 @@ def emit_ts(vintages: list[dict], out: Path):
     )
 
 
+def append_ts(v: dict, ts: Path) -> None:
+    """Add one accepted report to the end of the generated vintages file. Every report already
+    there is kept exactly as it is, so the new one must be newer than the latest; Prettier formats
+    the result afterwards (the file is formatted like the rest of the source)."""
+    text = ts.read_text(encoding="utf-8")
+    through = re.findall(r"dataThrough: '(\d{4}-\d{2}-\d{2})'", text)
+    if not through:
+        raise SystemExit(f"{ts.name}: no reports found to add to")
+    if v["dataThrough"] in through:
+        raise SystemExit(f"not added: the report with data through {v['dataThrough']} is already on the site")
+    if v["dataThrough"] < max(through):
+        raise SystemExit(f"not added: older than the latest report on the site (data through {max(through)}); "
+                         "add older reports locally with --out and --emit-ts")
+    end = text.rstrip().rfind("];")
+    if end < 0:
+        raise SystemExit(f"{ts.name}: end of the report list not found")
+    head = text[:end].rstrip()
+    body = json.dumps(v, ensure_ascii=False, indent=2)
+    ts.write_text(head + ("" if head.endswith(",") else ",") + "\n" + body + ",\n];\n", encoding="utf-8")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("pdfs", nargs="*")
     ap.add_argument("--out", type=Path)
     ap.add_argument("--emit-ts", type=Path)
     ap.add_argument("--from-json", type=Path)
+    ap.add_argument("--url", help="public URL of the one PDF given (instead of URL_PATHS)")
+    ap.add_argument("--append-ts", type=Path, help="add the one PDF's report to this generated file")
     a = ap.parse_args()
+    if (a.url or a.append_ts) and len(a.pdfs) != 1:
+        raise SystemExit("--url and --append-ts take exactly one PDF")
     if a.emit_ts:
         vint = json.loads(a.from_json.read_text(encoding="utf-8"))
         if isinstance(vint, dict):
@@ -530,7 +559,7 @@ def main():
     ok, rejected = [], []
     for p in a.pdfs:
         pdf = Path(p)
-        url = (URL_BASE + URL_PATHS[pdf.name] + pdf.name) if pdf.name in URL_PATHS else None
+        url = a.url or ((URL_BASE + URL_PATHS[pdf.name] + pdf.name) if pdf.name in URL_PATHS else None)
         try:
             v = extract(pdf, url)
             ok.append(v)
@@ -546,6 +575,11 @@ def main():
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps({"vintages": ok, "rejected": rejected}, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"wrote {a.out}: {len(ok)} accepted, {len(rejected)} rejected")
+    if a.append_ts:
+        if rejected:
+            raise SystemExit(f"not added: {rejected[0][0]}: {rejected[0][1]}")
+        append_ts(ok[0], a.append_ts)
+        print(f"added the report of {ok[0]['reportLabel']} (data through {ok[0]['dataThrough']}) to {a.append_ts}")
 
 
 if __name__ == "__main__":

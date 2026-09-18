@@ -74,7 +74,10 @@ describe('vintage series', () => {
     }
   });
   it('editorial content belongs to the latest report', () => {
-    expect(CIO_VINTAGE.editorialFor).toBe(CIO_LATEST.reportDate);
+    expect(
+      CIO_VINTAGE.editorialFor,
+      `a new report was added: type its written parts into app/src/fixtures/cioMonthly.data.ts and set EDITORIAL_FOR to '${CIO_LATEST.reportDate}'`,
+    ).toBe(CIO_LATEST.reportDate);
   });
   it('formats the labels the shell and the deck print', () => {
     expect(longDate('2026-06-30')).toBe('June 30, 2026');
@@ -177,14 +180,20 @@ describe('macro strip: FRED as known on each report’s date', () => {
   it('reproduces what the latest report printed (a typing slip or another measure fails here)', () => {
     const m = CIO_MACRO[CIO_LATEST.reportDate]!;
     const one = (x: number) => Math.round(x * 10) / 10;
-    expect(m.pce.date.slice(0, 7)).toBe(MACRO_PRINTED.pceMonth);
-    expect(one(yoy(m.pce))).toBe(MACRO_PRINTED.pce);
-    expect(one(yoy(m.corePce))).toBe(MACRO_PRINTED.corePce);
-    expect([m.fed.low, m.fed.high]).toEqual([MACRO_PRINTED.fedLow, MACRO_PRINTED.fedHigh]);
-    expect(m.unemployment.date.slice(0, 7)).toBe(MACRO_PRINTED.laborMonth);
-    expect(m.participation.date.slice(0, 7)).toBe(MACRO_PRINTED.laborMonth);
-    expect(m.unemployment.v).toBe(MACRO_PRINTED.unemployment);
-    expect(m.participation.v).toBe(MACRO_PRINTED.participation);
+    // FRED as of the report's date against MACRO_PRINTED in cioMonthly.data.ts (pp. 4, 6)
+    const says = (what: string) =>
+      `MACRO_PRINTED.${what} in cioMonthly.data.ts differs from FRED: check the figure as printed in the report`;
+    expect(m.pce.date.slice(0, 7), says('pceMonth')).toBe(MACRO_PRINTED.pceMonth);
+    expect(one(yoy(m.pce)), says('pce')).toBe(MACRO_PRINTED.pce);
+    expect(one(yoy(m.corePce)), says('corePce')).toBe(MACRO_PRINTED.corePce);
+    expect([m.fed.low, m.fed.high], says('fedLow / fedHigh')).toEqual([
+      MACRO_PRINTED.fedLow,
+      MACRO_PRINTED.fedHigh,
+    ]);
+    expect(m.unemployment.date.slice(0, 7), says('laborMonth')).toBe(MACRO_PRINTED.laborMonth);
+    expect(m.participation.date.slice(0, 7), says('laborMonth')).toBe(MACRO_PRINTED.laborMonth);
+    expect(m.unemployment.v, says('unemployment')).toBe(MACRO_PRINTED.unemployment);
+    expect(m.participation.v, says('participation')).toBe(MACRO_PRINTED.participation);
   });
 
   it('the latest strip is FRED’s three lines with the report’s commentary, then its typed lines', () => {

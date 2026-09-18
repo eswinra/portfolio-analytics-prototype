@@ -185,34 +185,27 @@
     </ul>
 
     <h2>How a new month gets onto the slides</h2>
+    <p>It's all done on GitHub, in a browser. You need a GitHub account with access to the
+      project.</p>
     <ol class="steps">
-      <li><div><p>Download the new report from lacera.gov.</p></div></li>
+      <li><div><p>Copy the new report's PDF link from lacera.gov.</p></div></li>
       <li>
         <div>
-        <p>Run the report reader. It pulls the numbers out and checks the report against itself.
-          If a check fails, the report is rejected, never patched by hand.</p>
-        <p class="file"><code>tools/extract_cio_report.py</code></p>
-      </div>
+          <p>On GitHub, open
+            <a href="https://github.com/eswinra/portfolio-analytics-prototype/actions/workflows/cio-report.yml">Actions → CIO report</a>,
+            choose <b>Run workflow</b> and paste the link.</p>
+          <p class="file">GitHub downloads the PDF, reads it and checks its totals (a report that
+            fails a check is rejected, never patched by hand), pulls the FRED figures as of the
+            report's date, and proposes the update.</p>
+        </div>
       </li>
       <li>
         <div>
-        <p>Pull the economic figures from FRED as they stood at the end of the month before the
-          report.</p>
-        <p class="file"><code>tools/fetch_cio_macro.py</code></p>
-      </div>
+          <p>Open the proposed update and type in the written parts: dollar index, themes, items
+            for attention. Its instructions link straight to the file.</p>
+        </div>
       </li>
-      <li>
-        <div>
-        <p>Type in the written parts.</p>
-        <p class="file"><code>app/src/fixtures/cioMonthly.data.ts</code></p>
-      </div>
-      </li>
-      <li>
-        <div>
-        <p>Run <code>npm run sync:deck</code> and the tests, then push. GitHub runs the checks again
-          and publishes the site within minutes.</p>
-      </div>
-      </li>
+      <li><div><p>When its checks turn green, merge it. The site publishes within minutes.</p></div></li>
     </ol>
 
     <h2>How the slides work</h2>
@@ -231,6 +224,7 @@
     <ul class="code">
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype">eswinra/portfolio-analytics-prototype</a><span>The whole project</span></li>
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/app/public/deck/index.html">app/public/deck/index.html</a><span>The slides, with the data block near the top of the script</span></li>
+      <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/.github/workflows/cio-report.yml">.github/workflows/cio-report.yml</a><span>The "CIO report" steps GitHub runs to add a report</span></li>
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/tools/extract_cio_report.py">tools/extract_cio_report.py</a><span>Reads and checks the report PDFs</span></li>
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/tools/fetch_cio_macro.py">tools/fetch_cio_macro.py</a><span>Reads the economic figures from FRED</span></li>
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/app/src/fixtures/cioMonthly.data.ts">app/src/fixtures/cioMonthly.data.ts</a><span>The typed-in parts</span></li>

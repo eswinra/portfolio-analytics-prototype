@@ -1,0 +1,223 @@
+# Adds a new CIO Monthly Report to the dashboard from GitHub, so no one needs the maintainer's PC.
+#
+# Run it from the repository's Actions tab: "CIO report" -> "Run workflow", and paste the report's
+# lacera.gov link. GitHub downloads the public PDF (it is not stored in the repository), reads and
+# checks it with the same extractor used locally (a report that fails a check is rejected, never
+# patched), pulls the macro strip's FRED figures as of the report's date, rebuilds the slides'
+# data and proposes the update as a pull request. A person then types the report's written parts
+# into app/src/fixtures/cioMonthly.data.ts on that pull request; the "check" job tidies the file,
+# rebuilds the slides' data and runs the tests. Merging publishes the site (pages.yml).
+#
+# Needs one repository secret, FRED_API_KEY (Settings -> Secrets and variables -> Actions).
+# User input reaches the shell only through environment variables, never inline.
+name: CIO report
+
+on:
+  workflow_dispatch:
+    inputs:
+      pdf_url:
+        description: "Link to the report PDF on lacera.gov (…/financials/cio_report/….pdf)"
+        required: true
+        type: string
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  add:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the link
+        env:
+          PDF_URL: ${{ inputs.pdf_url }}
+        run: |
+          set -euo pipefail
+          re='^https://www\.lacera\.gov/sites/default/files/assets/documents/financials/cio_report/([0-9]{4}/)?[A-Za-z0-9._-]+\.pdf$'
+          if [[ ! "$PDF_URL" =~ $re ]]; then
+            echo "::error::Paste the report's PDF link from lacera.gov, like https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-Aug-2026.pdf"
+            exit 1
+          fi
+          echo "PDF_NAME=$(basename "$PDF_URL")" >> "$GITHUB_ENV"
+
+      - name: Download the report (not stored in the repository)
+        env:
+          PDF_URL: ${{ inputs.pdf_url }}
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --max-time 120 -o "$RUNNER_TEMP/$PDF_NAME" "$PDF_URL"
+          if [ "$(head -c 5 "$RUNNER_TEMP/$PDF_NAME")" != "%PDF-" ]; then
+            echo "::error::The link did not return a PDF."
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the PDF reader
+        run: pip install pymupdf==1.27.2.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Read and check the report
+        env:
+          PDF_URL: ${{ inputs.pdf_url }}
+        run: |
+          set -euo pipefail
+          python tools/extract_cio_report.py "$RUNNER_TEMP/$PDF_NAME" --url "$PDF_URL" \
+            --append-ts app/src/fixtures/cioVintages.data.ts
+          (cd app && npx prettier --write src/fixtures/cioVintages.data.ts)
+
+      - name: Economic figures from FRED
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$FRED_API_KEY" ]; then
+            echo "::error::Add the repository secret FRED_API_KEY (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+          python tools/fetch_cio_macro.py
+
+      - name: Rebuild the slides' data and list what changed
+        working-directory: app
+        run: |
+          set -euo pipefail
+          npm run sync:deck
+          npm run --silent cio:diff > "$RUNNER_TEMP/changes.txt"
+
+      - name: Propose the update
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PDF_URL: ${{ inputs.pdf_url }}
+        run: |
+          set -euo pipefail
+          file=app/src/fixtures/cioVintages.data.ts
+          through=$(grep -oE "dataThrough: '[0-9-]+'" "$file" | tail -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}")
+          label=$(grep -oE "reportLabel: '[^']+'" "$file" | tail -1 | cut -d"'" -f2)
+          branch="cio-report/$through"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "::error::A proposed update for this report already exists (branch $branch). Finish or close it first."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add "$file" app/src/fixtures/cioMacro.data.ts app/public/deck/index.html
+          git commit -m "data: CIO Monthly Report of $label (data through $through)"
+          git push origin "$branch"
+
+          edit="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/edit/$branch/app/src/fixtures/cioMonthly.data.ts"
+          {
+            echo "Adds the CIO Monthly Report of **$label** (data through $through), read from $PDF_URL"
+            echo
+            echo 'The figures were read from the PDF and checked against the report'"'"'s own totals, and the macro strip'"'"'s FRED figures were read as of the report'"'"'s date. **The checks stay red until the written parts are typed in:**'
+            echo
+            echo "1. Open [the typed-in file]($edit) (it opens in GitHub's editor on this update)."
+            echo '2. From the new report, update:'
+            echo '   - `EDITORIAL_FOR`: the report'"'"'s meeting date, YYYY-MM-DD'
+            echo '   - `MACRO_PRINTED`: PCE, core PCE, the federal funds range, unemployment and participation as printed (pp. 4, 6), and the months they refer to'
+            echo '   - `MACRO_NOTES`: the report'"'"'s comments beside inflation and the Fed (p. 4)'
+            echo '   - `MACRO_TYPED`: the U.S. Dollar Index line (p. 6) and the themes to watch (p. 4)'
+            echo '   - `OPS`: the items for attention (pp. 19-20, 24)'
+            echo '3. Commit to this branch. The check tidies the file, rebuilds the slides'"'"' data and runs the tests.'
+            echo '4. When the checks are green, merge. The site publishes within minutes.'
+            echo
+            echo 'What changed from the previous report:'
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/changes.txt"
+            echo '```'
+          } > "$RUNNER_TEMP/body.md"
+
+          if gh pr create --base main --head "$branch" --title "CIO Monthly Report of $label" \
+              --body-file "$RUNNER_TEMP/body.md" > "$RUNNER_TEMP/pr.txt" 2>&1; then
+            link=$(tail -1 "$RUNNER_TEMP/pr.txt")
+            opened="Opened the proposed update"
+          else
+            # Actions may not be allowed to open pull requests in this repository; one click does it
+            link="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...$branch?expand=1"
+            opened="Open the proposed update (one click: Create pull request, then paste the steps below)"
+          fi
+          {
+            echo "### $opened"
+            echo
+            echo "$link"
+            echo
+            cat "$RUNNER_TEMP/body.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Say why it stopped
+        if: failure()
+        run: |
+          {
+            echo '### The report was not added'
+            echo
+            echo 'Open the step marked with a red cross above: the last lines say why (for example a check the report failed, a link that is not a lacera.gov PDF, or a report already on the site). Nothing was changed.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  check:
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'cio-report/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Tidy the typed file and rebuild the slides' data
+        working-directory: app
+        run: |
+          set -euo pipefail
+          npx prettier --write src/fixtures/cioMonthly.data.ts
+          npm run sync:deck
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/fixtures/cioMonthly.data.ts public/deck/index.html
+            git commit -m "chore: tidy the typed parts and rebuild the slides' data"
+            git push
+          fi
+
+      - name: Lint
+        working-directory: app
+        run: npm run lint
+
+      - name: Format check
+        working-directory: app
+        run: npm run format:check
+
+      - name: Test
+        working-directory: app
+        run: npm test
+
+      - name: Build
+        working-directory: app
+        run: npm run build

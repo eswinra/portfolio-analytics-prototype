@@ -13,7 +13,8 @@ June 30, and monthly periods are not fiscal-year horizons.
 
 | Path | Role | Maintained by |
 |---|---|---|
-| `tools/extract_cio_report.py` | Reads a report PDF by word coordinates (never by text order), validates it against the identities the report prints, writes JSON, and emits the TypeScript vintage file | code |
+| `tools/extract_cio_report.py` | Reads a report PDF by word coordinates (never by text order), validates it against the identities the report prints, writes JSON, and emits the TypeScript vintage file — or, with `--append-ts`, adds one new report to it | code |
+| `.github/workflows/cio-report.yml` | "CIO report": adds a new report from its lacera.gov link on GitHub and proposes it as a pull request (`add`); on that pull request, tidies the typed file, regenerates the deck block and runs the checks (`check`) | code |
 | `app/src/fixtures/cioVintages.data.ts` | One entry per accepted report, oldest first: fund figures for both entities, the market table (2026 layouts), pages read, public URL | **generated** — do not edit |
 | `tools/fetch_cio_macro.py` | Reads the macro strip's FRED series for every report as FRED showed them on the report's as-of date (real-time archive), checks each series' terms, writes raw values | code |
 | `app/src/fixtures/cioMacro.data.ts` | FRED values per report: PCE and core PCE index levels a year apart, unemployment and participation rates, the federal funds target range and the day it took effect | **generated** — do not edit |
@@ -29,6 +30,34 @@ June 30, and monthly periods are not fiscal-year horizons.
 | `app/src/fixtures/cioMonthly.test.ts` | Identities for every vintage; editorial-for-latest guard; FRED figures for every report, read as of the right date, reproducing the latest report's printed ones; deck block equals the generated block; the deck's script parses; no hardcoded month or report date in the deck prose | code |
 
 ## Monthly update
+
+### From GitHub (no PC needed)
+
+`.github/workflows/cio-report.yml` runs the steps below on GitHub, so anyone with write access to
+the repository can add a report from a browser:
+
+1. Actions → **CIO report** → **Run workflow**, and paste the report's PDF link from lacera.gov.
+   The link must be a lacera.gov `…/financials/cio_report/…pdf` address; anything else is refused.
+2. GitHub downloads the PDF to the runner (it is not committed: the reports stay on lacera.gov),
+   runs the extractor with `--url … --append-ts app/src/fixtures/cioVintages.data.ts` (the new
+   report is added last and every existing one is left byte for byte; a report that fails a check,
+   is already on the site or is older than the latest is refused), runs `fetch_cio_macro.py`,
+   `npm run sync:deck` and `npm run cio:diff`, pushes a branch `cio-report/<data-through>` and opens
+   a pull request with the steps and the changes. If Actions may not open pull requests in the
+   repository, the run's summary gives the one-click link instead.
+3. On the pull request, type the report's written parts into `app/src/fixtures/cioMonthly.data.ts`
+   (the list is in the pull request). Each commit runs the **check** job: it formats that file,
+   regenerates the deck's data block, commits both back if they changed, then runs lint, the
+   format check, the tests and the build. The tests stay red until `EDITORIAL_FOR` names the new
+   report and FRED reproduces `MACRO_PRINTED`, and their messages say which value to fix.
+4. Merge when green; `pages.yml` tests again and publishes.
+
+One-time setup, done by the repository owner: add the repository secret `FRED_API_KEY`
+(Settings → Secrets and variables → Actions); optionally allow Actions to open pull requests
+(Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests");
+add teammates as collaborators with write access.
+
+### Locally
 
 1. Download the new report from lacera.gov to `outputs/data/public_docs/cio/` (ignored) and add its
    URL path to `URL_PATHS` in the extractor.
