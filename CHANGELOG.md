@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-18 — Revision 17.1: a shareable "How this report works" page
+
+- New page `/how-it-works/` (`app/public/how-it-works/index.html`): where the CIO Monthly slides'
+  numbers come from (report PDF, FRED, typed in), the five steps that bring a new month onto the
+  slides, how the slides work, and links to the code on GitHub. Plain static page, no scripts,
+  light and dark themes, opens without the dashboard so it can be shared with the team.
+- The CIO Monthly tab's header has a "How this report works ↗" link to it, beside "Present full
+  screen".
+- Verification: lint · format check · Vitest 429/429 · build · Playwright 127/127 runnable (new:
+  the tab links to the page; the page opens on its own, every code link points to the public
+  repository, no horizontal overflow at 320–1280 px, axe WCAG 2 AA clean).
+
 ## 2026-09-18 — Revision 17: the macro strip comes from FRED, for every report
 
 - The CIO slides' macro strip (slide 7, and the Macro strip panel on the dashboard's CIO Monthly

@@ -337,6 +337,14 @@ a:hover {
 
 .band .actions {
   margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+a.btn-band {
+  display: inline-block;
+  text-decoration: none;
 }
 
 .btn-band {

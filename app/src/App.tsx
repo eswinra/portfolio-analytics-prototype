@@ -284,6 +284,9 @@ function TitleBand() {
             </span>
           ) : isCio ? (
             <span className="actions">
+              <a className="btn-band" href="how-it-works/" target="_blank" rel="noreferrer">
+                How this report works ↗
+              </a>
               <button type="button" className="btn-band" onClick={presentFullScreen}>
                 Present full screen
               </button>

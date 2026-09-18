@@ -58,6 +58,38 @@ test.describe('routes render without horizontal overflow', () => {
   }
 });
 
+test.describe('how the CIO slides work (shareable page)', () => {
+  test('the CIO Monthly tab links to it', async ({ page }) => {
+    await ready(page, '/cio');
+    const link = page.getByRole('link', { name: /How this report works/ });
+    await expect(link).toHaveAttribute('href', 'how-it-works/');
+    await expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  test('it opens on its own, points to the code, and fits the screen', async ({ page }) => {
+    await page.goto('/how-it-works/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'How the CIO Monthly slides work',
+    );
+    await expect(page.getByRole('link', { name: 'Open the slides' })).toHaveAttribute(
+      'href',
+      '../#/cio',
+    );
+    // every code link goes to the public repository
+    const code = page.locator('.code a');
+    expect(await code.count()).toBeGreaterThan(5);
+    for (const href of await code.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) {
+      expect(href).toMatch(/^https:\/\/github\.com\/eswinra\/portfolio-analytics-prototype/);
+    }
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(1);
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
+  });
+});
+
 test.describe('accessibility (axe, desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
   for (const route of ROUTES) {

@@ -23,6 +23,7 @@ June 30, and monthly periods are not fiscal-year horizons.
 | `app/src/fixtures/deckData.ts` | Builds the standalone deck's data block from the latest vintage (`VINTAGE` labels included), declared with `let` so an embedded deck can take the dashboard's data instead | code |
 | `app/src/lib/deckFeed.ts` | `deckDataFor(vintage)`: the data the dashboard hands the embedded deck for the report on screen — any vintage or an imported feed — with markup characters stripped | code |
 | `app/src/components/DeckFrame.tsx` | The Present sub-tab: the deck page in a frame, loaded with the report on screen; fund and slide stay in step both ways | code |
+| `app/public/how-it-works/index.html` | The shareable plain-language page "How the CIO Monthly slides work" (`/how-it-works/`), linked from the CIO Monthly tab's header; sources, the monthly steps and links to the code on GitHub | analyst, when the process changes |
 | `app/scripts/sync-deck-data.ts` | Regenerates the block between the markers in `app/public/deck/index.html` (`npm run sync:deck`) | code |
 | `app/scripts/cio-diff.ts` | Prints what changed between two vintages (`npm run cio:diff`, optionally two data-through dates) | code |
 | `app/src/fixtures/cioMonthly.test.ts` | Identities for every vintage; editorial-for-latest guard; FRED figures for every report, read as of the right date, reproducing the latest report's printed ones; deck block equals the generated block; the deck's script parses; no hardcoded month or report date in the deck prose | code |
