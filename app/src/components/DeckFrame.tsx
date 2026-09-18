@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { longDate, type CioVintage } from '../fixtures/cioMonthly';
 import type { CioFeed } from '../lib/dataset/cioFeed';
@@ -15,14 +16,28 @@ const SLIDES = 9;
 
 type FeedWindow = Window & { [DECK_FEED_KEY]?: unknown };
 
+/** Keys the page passes to the slides when nothing on the page is using them. */
+const PAGE_KEYS: Record<string, 'next' | 'prev'> = {
+  ArrowRight: 'next',
+  PageDown: 'next',
+  ArrowLeft: 'prev',
+  PageUp: 'prev',
+};
+const INTERACTIVE =
+  'input, select, textarea, button, a, summary, [role="tab"], [role="slider"], [contenteditable], [tabindex]:not([tabindex="-1"])';
+
 export function DeckFrame({
   vintage,
   isLatest,
   feed,
+  intent = false,
 }: {
   vintage: CioVintage;
   isLatest: boolean;
   feed: CioFeed | null;
+  /** the reader asked for the slides (chose the tab or a slide link): scroll them into place and
+   *  give them the keyboard; opening CIO Monthly itself leaves the page where it is */
+  intent?: boolean;
 }) {
   const { entity, setEntity } = useEntity();
   const [slideRaw, setSlide] = useUrlParam('slide', '1');
@@ -30,6 +45,8 @@ export function DeckFrame({
   const frame = useRef<HTMLIFrameElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const scrolled = useRef(false);
+  const [params] = useSearchParams();
+  const linked = useRef(params.has('slide'));
   const data = useMemo(() => deckDataFor(vintage, { feed: Boolean(feed) }), [vintage, feed]);
   const frameKey = `${vintage.dataThrough}|${feed ? feed.entityId : 'public'}`;
 
@@ -70,6 +87,23 @@ export function DeckFrame({
       window.location.origin,
     );
   }, [slide]);
+
+  // page → slides: ← → on the page step the slides without clicking into them first
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      const step = PAGE_KEYS[ev.key];
+      if (!step || ev.defaultPrevented || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+      const target = ev.target as HTMLElement | null;
+      if (target?.closest?.(INTERACTIVE)) return;
+      ev.preventDefault();
+      frame.current?.contentWindow?.postMessage(
+        { type: 'lacera-deck-key', step },
+        window.location.origin,
+      );
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // slides → dashboard: E in the deck switches the dashboard's fund; the slide goes in the URL
   useEffect(() => {
@@ -120,18 +154,18 @@ export function DeckFrame({
           title={`CIO Monthly Report slides — ${label}`}
           allow="fullscreen"
           onLoad={() => {
-            // bring the whole slide on screen the first time the tab opens, ready for the keys
-            if (!scrolled.current) {
+            // when the reader asked for the slides, bring the whole slide on screen, ready for keys
+            if (!scrolled.current && (intent || linked.current)) {
               wrap.current?.scrollIntoView({ block: 'start' });
-              scrolled.current = true;
+              frame.current?.contentWindow?.focus();
             }
-            frame.current?.contentWindow?.focus();
+            scrolled.current = true;
           }}
         />
       </div>
       <p className="footnote">
-        Click the slides, then use ← → to step through; E switches fund; N opens the speaker notes;
-        P opens presenter view in a second window.
+        ← → step through the slides; E switches fund, N opens the speaker notes and P opens
+        presenter view once the slides have been clicked. Full screen presents them alone.
       </p>
     </section>
   );

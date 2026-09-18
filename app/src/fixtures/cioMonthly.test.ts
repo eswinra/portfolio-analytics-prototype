@@ -170,6 +170,6 @@ describe('slide deck at /deck/ reads the same data', () => {
   });
 
   it('links back to the dashboard tab', () => {
-    expect(html).toContain('href="../#/cio"');
+    expect(html).toContain('href="../#/cio?tab=summary"');
   });
 });

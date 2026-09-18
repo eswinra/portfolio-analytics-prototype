@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { DeckFrame } from '../components/DeckFrame';
@@ -42,13 +42,14 @@ import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 import { useUrlFlag, useUrlParam } from '../lib/urlState';
 
-/** Sub-tabs: a one-screen summary first, detail one click away, and the slides last. */
+/** Sub-tabs: the report's slides first — opening the tab shows the deck inside the dashboard —
+ *  then a one-screen summary and the detail, one click each. */
 const TABS: [key: string, label: string][] = [
+  ['slides', 'Slides'],
   ['summary', 'Summary'],
   ['performance', 'Performance'],
   ['positioning', 'Positioning'],
   ['markets', 'Markets & items'],
-  ['present', 'Present slides'],
 ];
 
 /** Which sub-tab holds each panel, so a jump or a panel link opens the right tab. */
@@ -112,12 +113,12 @@ function cioSource(v: CioVintage, pages: string, firstPage: number | null): Sour
 /** Slide index in the deck (its URL hash is the slide number). */
 const SLIDE = { summary: 2, perf: 3, wf: 4, alloc: 5, hist: 6, market: 7, geo: 8, ops: 9 } as const;
 
-/** Opens the Present tab at the slide that carries this panel's figures, for the report on
+/** Opens the Slides tab at the slide that carries this panel's figures, for the report on
  *  screen — the slides are built from the same data as the panel. */
 function DeckLink({ n }: { n: number }) {
   const [params] = useSearchParams();
   const q = new URLSearchParams(params);
-  q.set('tab', 'present');
+  q.delete('tab'); // the slides are the tab's default view
   q.set('slide', String(n));
   q.delete('p');
   return (
@@ -243,8 +244,15 @@ export function CioMonthlyView() {
   const setAttrPeriod = (i: number) => setAttrRaw(String(i));
   const [trendView, setTrendView] = useUrlParam('trend', 'chart');
   const [compare, setCompare] = useUrlFlag('compare');
-  const [tabRaw, setTab] = useUrlParam('tab', 'summary');
-  const tab = TABS.some(([k]) => k === tabRaw) ? tabRaw : 'summary';
+  const [tabRaw, setTab] = useUrlParam('tab', 'slides');
+  const tab =
+    tabRaw === 'present' ? 'slides' : TABS.some(([k]) => k === tabRaw) ? tabRaw : 'slides';
+  // choosing the Slides tab is a request to present: the deck scrolls into place and takes the keys
+  const [presentIntent, setPresentIntent] = useState(false);
+  const chooseTab = (k: string) => {
+    if (k === 'slides') setPresentIntent(true);
+    setTab(k);
+  };
   // the other fund, for side-by-side comparison; the header toggle still sets the primary one
   const otherEntity: EntityId = P ? 'OPEB' : 'PENSION';
   const o = cioFor(otherEntity, vintage);
@@ -307,7 +315,7 @@ export function CioMonthlyView() {
   const vIndex = CIO_VINTAGES.indexOf(vintage);
   return (
     <PageMeta classification="reported_public" sources={[src.main]}>
-      <SubTabs tabs={TABS} value={tab} onChange={setTab} label="CIO Monthly sections" />
+      <SubTabs tabs={TABS} value={tab} onChange={chooseTab} label="CIO Monthly sections" />
       <div className="vintage-bar">
         <div className="vintage-slider">
           <label htmlFor="report-slider">
@@ -1516,7 +1524,9 @@ export function CioMonthlyView() {
           </>
         ) : null}
 
-        {tab === 'present' ? <DeckFrame vintage={vintage} isLatest={isLatest} feed={feed} /> : null}
+        {tab === 'slides' ? (
+          <DeckFrame vintage={vintage} isLatest={isLatest} feed={feed} intent={presentIntent} />
+        ) : null}
       </div>
       <PageSources sources={[src.main]} />
     </PageMeta>

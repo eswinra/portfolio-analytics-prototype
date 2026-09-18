@@ -735,7 +735,7 @@
     <span class="counter" id="counter">1 / 8</span>
     <button id="next" aria-label="Next">▶</button>
     <span id="slide-title" style="color:var(--chrome-ink);font-weight:700"></span>
-    <a id="dash-link" href="../#/cio" style="color:var(--chrome-ink);font-weight:700;margin-left:10px">Dashboard ↗</a>
+    <a id="dash-link" href="../#/cio?tab=summary" style="color:var(--chrome-ink);font-weight:700;margin-left:10px">Dashboard ↗</a>
     <span class="spacer"></span>
     <span><kbd>→</kbd><kbd>←</kbd> navigate · <kbd>E</kbd> entity · <kbd>T</kbd> chart/table · <kbd>?</kbd> help</span>
     <button id="help-btn" aria-label="Keyboard help">?</button>
@@ -1484,6 +1484,7 @@
       const m = ev.data || {};
       if (m.type === 'lacera-deck-entity' && (m.entity === 'pension' || m.entity === 'opeb')) setEntity(m.entity);
       if (m.type === 'lacera-deck-go' && Number.isInteger(m.slide)) go(m.slide - 1);
+      if (m.type === 'lacera-deck-key') { if (m.step === 'next') next(); else if (m.step === 'prev') prev(); }
     });
   }
   if (VINTAGE.single) { const seg = $('#entity-seg'); if (seg) seg.closest('.entity').hidden = true; }

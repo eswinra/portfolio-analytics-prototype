@@ -2,8 +2,9 @@
 
 The CIO Monthly tab (`#/cio`) and the slide deck present the figures of LACERA's public Chief
 Investment Officer Monthly Report. Both read one fixture; nothing is typed twice. The deck is
-presented two ways: inside the dashboard on the tab's **Present slides** sub-tab, fed live by the
-dashboard, and as the standalone page at `/deck/` (latest public report).
+presented two ways: inside the dashboard, fed live by the dashboard — the deck is the tab's first
+view, so opening CIO Monthly shows the slides and the page's ← → keys step through them — and as
+the standalone page at `/deck/` (latest public report).
 This layer is a separate reporting vintage from the fiscal-year tabs (2025 PAFR/ACFR, IPS) and
 is never combined with them: market value at a month end is not fiduciary net position at
 June 30, and monthly periods are not fiscal-year horizons.
@@ -76,8 +77,8 @@ table are not part of the feed; the tab says so instead of filling them in.
 
 ## The dashboard feeds the slides
 
-The slides are no longer a separate artefact to update. On the **Present slides** sub-tab the
-dashboard loads `public/deck/index.html` in a frame and hands it the data for whatever is on
+The slides are no longer a separate artefact to update. On the **Slides** sub-tab — the tab's
+default view — the dashboard loads `public/deck/index.html` in a frame and hands it the data for whatever is on
 screen:
 
 - **Any report.** Move the report slider or pick a month; the slides reload with that report's
@@ -89,8 +90,9 @@ screen:
   stripped of `<`, `>` and `"` before it reaches the slides (in `deckFeed.ts` and again in the
   deck), because slide prose is written as HTML.
 - **In step.** The header's fund toggle switches the slides, E in the slides switches the
-  dashboard, and the slide number is kept in the address (`?tab=present&slide=3`). Each panel with
-  a matching slide carries a "▶ Slide n" link that opens the Present tab at that slide.
+  dashboard, and the slide number is kept in the address (`?slide=3`). ← → on the page step the
+  slides without clicking into them, and the band's "Present full screen" shows them alone. Each
+  panel with a matching slide carries a "▶ Slide n" link that opens the slides at that slide.
 - **Mechanics.** The deck reads `window.parent.__laceraDeckFeed` once, when its script starts,
   only when loaded with `?embed=1` from the same origin; anything unreadable leaves its built-in
   data. A presenter window (P) reads the same data from its opener. Messages between the two
@@ -101,9 +103,9 @@ report from its generated block, and the unit test fails if that block drifts fr
 
 ## Reading the tab
 
-The tab has five sub-tabs (`?tab=`): **Summary** (headline figures, two-minute read, what
-changed), **Performance** (by period, attribution, trend across reports), **Positioning**
-(composites, flows, distribution, geography), **Markets & items** and **Present slides**. The
+The tab has five sub-tabs (`?tab=`): **Slides** (the default), **Summary** (headline figures,
+two-minute read, what changed), **Performance** (by period, attribution, trend across reports),
+**Positioning** (composites, flows, distribution, geography) and **Markets & items**. The
 report slider above them moves across the sixteen extracted reports; figures that change flash
 briefly and bars move to their new values.
 

@@ -20,10 +20,10 @@ const ROUTES = [
   '/exceptions',
   '/acfr',
   '/cio',
+  '/cio?tab=summary',
   '/cio?tab=performance',
   '/cio?tab=positioning',
   '/cio?tab=markets',
-  '/cio?tab=present',
   '/macro',
   '/macro?tab=factors',
   '/macro?tab=indicators',
@@ -110,7 +110,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await page.goto('/deck/');
     await expect(page.locator('#s1-title')).toContainText('Executive read');
-    await expect(page.locator('#dash-link')).toHaveAttribute('href', '../#/cio');
+    await expect(page.locator('#dash-link')).toHaveAttribute('href', '../#/cio?tab=summary');
     await expect(page.locator('#dash-link')).toBeVisible();
     expect(pageErrors).toEqual([]);
   });
@@ -120,11 +120,17 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
   }) => {
     const pageErrors: string[] = [];
     page.on('pageerror', (e) => pageErrors.push(String(e)));
+    // opening the tab shows the slides: they live inside the dashboard, no click out
     await ready(page, '/cio');
-    await page.getByRole('link', { name: 'Present slides' }).click();
-    await expect(page).toHaveURL(/tab=present/);
+    await expect(page.getByRole('tab', { name: 'Slides' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     const deck = page.frameLocator('.deck-frame-wrap iframe');
     await expect(deck.locator('#s1-title')).toContainText('Executive read');
+    // the page's arrow keys step the slides without clicking into them
+    for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
+    await expect(deck.locator('#counter')).toHaveText('2 / 9');
     await expect(deck.locator('.v-report').first()).toHaveText('August 12, 2026');
     // inside the dashboard the deck does not link back to it
     await expect(deck.locator('#dash-link')).toBeHidden();
@@ -147,8 +153,11 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
       .locator('#cio-perf')
       .getByRole('link', { name: /Slide 3/ })
       .click();
-    await expect(page).toHaveURL(/tab=present/);
     await expect(page).toHaveURL(/slide=3/);
+    await expect(page.getByRole('tab', { name: 'Slides' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     const deck = page.frameLocator('.deck-frame-wrap iframe');
     await expect(deck.locator('#counter')).toHaveText('3 / 9');
   });
@@ -185,17 +194,17 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     await expect(page.getByText(/Workstation feed \(schema 1\.4\)/)).toBeVisible();
     await expect(page.locator('.asof')).toContainText('workstation feed');
     await expect(page.locator('.about-figures summary')).toContainText('June 30, 2026');
-    // the feed round-trips the latest public vintage, so the headline tile matches it
-    await expect(page.locator('.grid-kpi .stat-value').first()).toHaveText('$93.9B');
-    // and the slides present the imported figures, locked to the feed's one fund
-    await page.getByRole('tab', { name: 'Present slides' }).click();
+    // the slides present the imported figures, locked to the feed's one fund
     const deck = page.frameLocator('.deck-frame-wrap iframe');
     await expect(deck.locator('.v-report').first()).toContainText('Workstation dataset');
     await expect(deck.locator('#entity-seg')).toBeHidden();
+    // the feed round-trips the latest public vintage, so the headline tile matches it
+    await page.getByRole('tab', { name: 'Summary' }).click();
+    await expect(page.locator('.grid-kpi .stat-value').first()).toHaveText('$93.9B');
   });
 
   test('the two-minute read answers the standing questions from the data', async ({ page }) => {
-    await ready(page, '/cio');
+    await ready(page, '/cio?tab=summary');
     const read = page.locator('#cio-read');
     await expect(read.getByText('On track against policy and the hurdle?')).toBeVisible();
     // the answer quotes the reported month return and its benchmark

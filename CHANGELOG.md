@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-09-17 — Revision 16.1: the slides are the CIO Monthly tab's first view
+
+- Opening CIO Monthly now shows the report's slides inside the dashboard — no click out to
+  `/deck/`. "Slides" is the tab's first and default sub-tab; Summary, Performance, Positioning and
+  Markets & items follow, one click each. The report slider and selector above the slides choose
+  which report they present.
+- The page's ← → (and Page Up / Page Down) keys step the slides without clicking into them,
+  unless a control on the page has the keyboard. Choosing the Slides sub-tab or a "▶ Slide n" link
+  brings the whole slide on screen and gives it the keyboard; opening the tab itself leaves the
+  page where it is.
+- The band button on CIO Monthly is now "Present full screen": from any sub-tab it opens the
+  slides and presents them alone. The standalone deck's "Dashboard" link opens the Summary.
+- Verification: Vitest 419/419 · production build · Playwright 119/119 runnable (the deck test
+  now opens the tab and steps the slides with the page's arrow keys) · renders reviewed at 1205 px.
+
 ## 2026-09-17 — Revision 16: less noise, motion and interaction, and the CIO slides fed by the dashboard
 
 - **Noise cut, audit trail kept.** Each page now states once what its figures are: an "About

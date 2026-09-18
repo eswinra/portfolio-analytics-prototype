@@ -17,7 +17,7 @@ test.describe('visual baselines', () => {
   });
 
   test('cio monthly — latest report', async ({ page }) => {
-    await page.goto('/#/cio');
+    await page.goto('/#/cio?tab=summary');
     await expect(page.locator('.about-figures')).toBeVisible();
     await expect(page).toHaveScreenshot('cio-latest.png', {
       fullPage: true,

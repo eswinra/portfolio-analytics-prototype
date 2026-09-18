@@ -1,12 +1,12 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import {
   HashRouter,
-  Link,
   Navigate,
   NavLink,
   Route,
   Routes,
   useLocation,
+  useNavigate,
   useSearchParams,
 } from 'react-router-dom';
 
@@ -212,12 +212,23 @@ function TitleBand() {
         ? 'Benefits & prefunding'
         : view[2];
   const [params] = useSearchParams();
-  const presentQuery = (() => {
+  const navigate = useNavigate();
+  // opens the Slides tab (the default) if needed and presents the slides full screen
+  function presentFullScreen() {
     const q = new URLSearchParams(params);
-    q.set('tab', 'present');
+    q.delete('tab');
     q.delete('p');
-    return q.toString();
-  })();
+    if (params.get('tab') && params.get('tab') !== 'slides') navigate(`/cio?${q.toString()}`);
+    let tries = 0;
+    const go = () => {
+      const frame = document.querySelector<HTMLIFrameElement>('.deck-frame-wrap iframe');
+      if (frame) {
+        void frame.requestFullscreen?.().catch(() => undefined);
+        frame.contentWindow?.focus();
+      } else if (tries++ < 20) setTimeout(go, 50);
+    };
+    go();
+  }
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   async function copyBrief() {
@@ -273,9 +284,9 @@ function TitleBand() {
             </span>
           ) : isCio ? (
             <span className="actions">
-              <Link className="btn-band" to={`/cio?${presentQuery}`}>
-                Present slides
-              </Link>
+              <button type="button" className="btn-band" onClick={presentFullScreen}>
+                Present full screen
+              </button>
             </span>
           ) : null}
         </div>
