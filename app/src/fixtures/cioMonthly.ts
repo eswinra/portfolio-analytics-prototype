@@ -109,6 +109,8 @@ export interface CioVintage {
   ENT: { pension: CioEntity; opeb: CioEntity };
   /** market table; null for reports whose table is not machine-readable */
   MKT: CioMarketGroup[] | null;
+  /** 'file': built from a CIO template file in this browser (lib/cioPackage.ts), not published */
+  origin?: 'file';
 }
 
 export interface CioDeckData {
@@ -133,6 +135,8 @@ export interface DeckVintage {
   url: string | null;
   /** the date the macro strip's FRED figures are read as of; absent when the strip has none */
   macroLabel?: string;
+  /** a template file read in this browser: its name; the deck says the figures are unpublished */
+  local?: string;
   /** a workstation feed carries one fund: the deck locks to it */
   single?: boolean;
 }
@@ -147,6 +151,8 @@ export const CIO_LATEST: CioVintage = CIO_VINTAGES[CIO_VINTAGES.length - 1]!;
  *  date (any report), then — for the latest report, whose editorial pages are typed in — the
  *  report's commentary beside them and the lines FRED cannot reproduce. */
 export function macroFor(v: CioVintage): MacroLine[] {
+  // a template file carries its own strip (lib/cioPackage.ts); FRED is for published reports
+  if (v.origin === 'file') return [];
   const fred = CIO_MACRO[v.reportDate];
   const latest = v === CIO_LATEST;
   return [
@@ -205,7 +211,11 @@ export function deckVintage(v: CioVintage): DeckVintage {
     marketLabel: v.marketAsOf ? longDate(v.marketAsOf) : longDate(v.dataThrough),
     histRange: histRange(v.dataThrough),
     url: v.url,
-    ...(CIO_MACRO[v.reportDate] ? { macroLabel: longDate(CIO_MACRO[v.reportDate]!.asOf) } : {}),
+    ...(v.origin === 'file'
+      ? { local: v.file }
+      : CIO_MACRO[v.reportDate]
+        ? { macroLabel: longDate(CIO_MACRO[v.reportDate]!.asOf) }
+        : {}),
   };
 }
 

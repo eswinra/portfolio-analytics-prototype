@@ -57,3 +57,6 @@ Thumbs.db
 fred_key.txt
 **/fred_key.txt
 .env.local
+
+# the CIO Monthly input templates published on the site: blank, and an example of public figures
+!/app/public/templates/*.xlsx

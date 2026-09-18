@@ -15,6 +15,7 @@ import { Glossary } from './components/Glossary';
 import { cioFor, longDate } from './fixtures/cioMonthly';
 import { MACRO_META } from './fixtures/macroSnapshot.meta';
 import { boardBrief, publishedFor } from './fixtures/published';
+import { CioFileProvider } from './lib/cioFile';
 import { useCioVintage } from './lib/cioVintage';
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { EntityProvider, useEntity } from './lib/entity';
@@ -357,7 +358,7 @@ function Shell() {
   const workstation = isWorkstationPath(pathname);
   const cio = pathname === '/cio';
   const macro = pathname === '/macro';
-  const { vintage, feed } = useCioVintage();
+  const { vintage, feed, pkg } = useCioVintage();
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
   const mainRef = useRef<HTMLElement>(null);
 
@@ -382,7 +383,9 @@ function Shell() {
             ? 'Prototype — workstation demo on synthetic contract data'
             : cio && feed
               ? 'Prototype — imported workstation feed, not a published report'
-              : 'Prototype — figures quoted from published LACERA documents and public data'}
+              : cio && pkg
+                ? 'Prototype — template file open in this browser, not a published report'
+                : 'Prototype — figures quoted from published LACERA documents and public data'}
         </span>
         <span className="right">Not an official LACERA system or performance report</span>
       </div>
@@ -428,7 +431,9 @@ function Shell() {
                 Data through <strong>{longDate(vintage.dataThrough)}</strong> ·{' '}
                 {feed
                   ? 'workstation feed (imported dataset)'
-                  : `CIO Monthly Report, ${vintage.reportLabel}`}
+                  : pkg
+                    ? `template file for ${vintage.reportLabel} (not published)`
+                    : `CIO Monthly Report, ${vintage.reportLabel}`}
               </>
             ) : macro ? (
               <>
@@ -552,8 +557,10 @@ export default function App() {
     <HashRouter>
       <EntityProvider>
         <DatasetProvider>
-          <EntitySync />
-          <Shell />
+          <CioFileProvider>
+            <EntitySync />
+            <Shell />
+          </CioFileProvider>
         </DatasetProvider>
       </EntityProvider>
     </HashRouter>

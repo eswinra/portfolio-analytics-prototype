@@ -147,6 +147,7 @@
   .code a { font-family: var(--mono); font-size: 15px; overflow-wrap: anywhere; }
   .code span { font-size: 15px; color: var(--muted); }
 
+  .note-line { margin-top: 14px; padding: 10px 14px; font-size: 15px; background: var(--surface); border-left: 3px solid var(--navy); }
   footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); }
 </style>
 </head>
@@ -208,6 +209,20 @@
       <li><div><p>When its checks turn green, merge it. The site publishes within minutes.</p></div></li>
     </ol>
 
+    <h2>Before the report is published</h2>
+    <p>The team can build the slides from its own figures, without the PDF:</p>
+    <ol class="steps">
+      <li><div><p>Fill in the <a href="../templates/CIO_Monthly_Template.xlsx">CIO template</a>
+        (Excel). The <a href="../templates/CIO_Monthly_Template_Example.xlsx">filled example</a>
+        shows the latest published report in it. Its Checks tab should say OK throughout.</p></div></li>
+      <li><div><p>Save its Export tab as <b>CSV UTF-8</b>.</p></div></li>
+      <li><div><p>On the CIO Monthly tab, choose <b>Open a template file</b> and pick the CSV.</p></div></li>
+    </ol>
+    <p class="note-line">The file is read in your browser only. It is never uploaded or published,
+      and closing the page clears it. Until LACERA publishes the report its figures are
+      confidential: keep the files on the team's systems, and don't use the GitHub form or AI
+      tools for them.</p>
+
     <h2>How the slides work</h2>
     <ul class="plain">
       <li>The slides are one web page, <code>app/public/deck/index.html</code>. No server, no
@@ -229,6 +244,8 @@
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/tools/fetch_cio_macro.py">tools/fetch_cio_macro.py</a><span>Reads the economic figures from FRED</span></li>
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/app/src/fixtures/cioMonthly.data.ts">app/src/fixtures/cioMonthly.data.ts</a><span>The typed-in parts</span></li>
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/app/src/fixtures/cioMonthly.test.ts">app/src/fixtures/cioMonthly.test.ts</a><span>The checks run before every publish</span></li>
+      <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/app/src/lib/cioPackage.ts">app/src/lib/cioPackage.ts</a><span>Reads and checks a template file, in the browser</span></li>
+      <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/docs/cio-template.md">docs/cio-template.md</a><span>The template file's format</span></li>
       <li><a href="https://github.com/eswinra/portfolio-analytics-prototype/blob/main/docs/cio-monthly.md">docs/cio-monthly.md</a><span>Technical notes</span></li>
     </ul>
   </main>

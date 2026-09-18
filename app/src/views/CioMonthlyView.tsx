@@ -37,8 +37,10 @@ import {
 } from '../fixtures/cioMonthly';
 import { publishedFor, type EntityId } from '../fixtures/published';
 import type { SourceRecord } from '../fixtures/sources';
+import { useCioFile } from '../lib/cioFile';
 import { cioChanges, cioNarrative } from '../lib/cioNarrative';
-import { FEED_KEY, useCioVintage } from '../lib/cioVintage';
+import { readCioPackage } from '../lib/cioPackage';
+import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
 import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 import { useUrlFlag, useUrlParam } from '../lib/urlState';
@@ -95,6 +97,15 @@ const STATUS_VARIANT: Record<OpsStatus, TagVariant> = {
 
 /** Source record for one report's pages, built per vintage (the registry holds fixed documents). */
 function cioSource(v: CioVintage, pages: string, firstPage: number | null): SourceRecord {
+  if (v.origin === 'file') {
+    return {
+      id: `CIO_FILE_${v.file}`,
+      label: `template file ${v.file} (not published)`,
+      doc: 'CIO Monthly template file, read in this browser',
+      pageTable: 'as entered in the template',
+      asOf: longDate(v.dataThrough),
+    };
+  }
   const url = v.url && firstPage ? `${v.url}#page=${firstPage}` : null;
   const isFeed = v.url === null && v.pages.flows === 0;
   return {
@@ -236,7 +247,35 @@ function entityPages(v: CioVintage, key: 'pension' | 'opeb') {
 export function CioMonthlyView() {
   const { entity } = useEntity();
   const { dataset } = useDataset();
-  const { vintage, prior, isLatest, feed, feedAvailable, select } = useCioVintage();
+  const { vintage, prior, isLatest, feed, feedAvailable, pkg, fileAvailable, fileGone, select } =
+    useCioVintage();
+  const cioFile = useCioFile();
+  const [fileErrors, setFileErrors] = useState<{ name: string; errors: string[] } | null>(null);
+  // a template file is read here, in the browser; nothing is uploaded or stored
+  const openFile = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const f = ev.target.files?.[0];
+    ev.target.value = '';
+    if (!f) return;
+    if (f.size > 2_000_000) {
+      setFileErrors({
+        name: f.name,
+        errors: ['The file is far larger than a template export; save the Export tab as CSV.'],
+      });
+      return;
+    }
+    const res = readCioPackage(await f.text(), f.name);
+    if (!res.ok) {
+      setFileErrors({ name: f.name, errors: res.errors });
+      return;
+    }
+    setFileErrors(null);
+    cioFile.open(res.pkg);
+    select(FILE_KEY);
+  };
+  const closeFile = () => {
+    cioFile.close();
+    select(CIO_LATEST.dataThrough);
+  };
   const P = entity === 'PENSION';
   const key = P ? 'pension' : 'opeb';
   const e = cioFor(entity, vintage);
@@ -316,8 +355,9 @@ export function CioMonthlyView() {
   const monthLabel = longDate(vintage.dataThrough);
   // the four standing questions, answered from this report's figures; the macro line comes
   // from FRED as known on the report's date, so every public report has one (a feed has none)
-  const macro = feed ? [] : macroFor(vintage);
-  const fredSrc = feed ? null : fredMacroSource(vintage);
+  const macro = pkg ? pkg.macro : feed ? [] : macroFor(vintage);
+  const fredSrc = feed || pkg ? null : fredMacroSource(vintage);
+  const ops = pkg ? pkg.ops : OPS;
   const narrative = cioNarrative(
     e,
     vintage,
@@ -331,12 +371,16 @@ export function CioMonthlyView() {
 
   const vIndex = CIO_VINTAGES.indexOf(vintage);
   return (
-    <PageMeta classification="reported_public" sources={[src.main]}>
+    <PageMeta classification={pkg ? 'calculated' : 'reported_public'} sources={[src.main]}>
       <SubTabs tabs={TABS} value={tab} onChange={chooseTab} label="CIO Monthly sections" />
       <div className="vintage-bar">
         <div className="vintage-slider">
           <label htmlFor="report-slider">
-            {feed ? 'Workstation dataset' : `${monthYear(vintage.dataThrough)} data`}
+            {feed
+              ? 'Workstation dataset'
+              : pkg
+                ? 'Template file'
+                : `${monthYear(vintage.dataThrough)} data`}
           </label>
           <input
             id="report-slider"
@@ -345,12 +389,14 @@ export function CioMonthlyView() {
             max={CIO_VINTAGES.length - 1}
             step={1}
             value={vIndex < 0 ? CIO_VINTAGES.length - 1 : vIndex}
-            disabled={Boolean(feed)}
+            disabled={Boolean(feed || pkg)}
             aria-label="Report month"
             aria-valuetext={
               feed
                 ? 'Workstation dataset'
-                : `${vintage.reportLabel} report, data through ${monthLabel}`
+                : pkg
+                  ? `Template file ${pkg.fileName}`
+                  : `${vintage.reportLabel} report, data through ${monthLabel}`
             }
             onChange={(ev) => select(CIO_VINTAGES[Number(ev.target.value)]!.dataThrough)}
           />
@@ -362,9 +408,15 @@ export function CioMonthlyView() {
         <select
           aria-label="Report"
           className="vs-select"
-          value={feed ? FEED_KEY : vintage.dataThrough}
+          value={pkg ? FILE_KEY : feed ? FEED_KEY : vintage.dataThrough}
           onChange={(ev) => select(ev.target.value)}
         >
+          {fileAvailable ? (
+            <option value={FILE_KEY}>
+              Template file {fileAvailable.fileName} — data through{' '}
+              {longDate(fileAvailable.vintage.dataThrough)} (not published)
+            </option>
+          ) : null}
           {feedAvailable ? (
             <option value={FEED_KEY}>
               Workstation dataset ({feedAvailable.entityId}) — data through{' '}
@@ -377,6 +429,20 @@ export function CioMonthlyView() {
             </option>
           ))}
         </select>
+        <label className="btn-outline vs-file">
+          Open a template file…
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            className="visually-hidden"
+            aria-describedby="vs-file-help"
+            onChange={(ev) => void openFile(ev)}
+          />
+        </label>
+        <span id="vs-file-help" className="vs-file-help">
+          Builds the slides from the <a href="templates/CIO_Monthly_Template.xlsx">CIO template</a>
+          &apos;s CSV export, read in this browser only
+        </span>
         {feed || (tab !== 'performance' && tab !== 'positioning') ? null : (
           <label className="vintage-compare">
             <input
@@ -388,6 +454,39 @@ export function CioMonthlyView() {
           </label>
         )}
       </div>
+      {fileErrors ? (
+        <div className="file-errors" role="alert">
+          <p>
+            <strong>{fileErrors.name} was not opened</strong> — nothing from it is shown. Fix these
+            in the workbook (its Checks tab helps), export the CSV again and open it:
+          </p>
+          <ul>
+            {fileErrors.errors.slice(0, 12).map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+          {fileErrors.errors.length > 12 ? <p>…and {fileErrors.errors.length - 12} more.</p> : null}
+          <button type="button" className="btn-outline" onClick={() => setFileErrors(null)}>
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+      {pkg ? (
+        <div className="publish-banner blocked file-banner" role="status">
+          <span>
+            <strong>Template file {pkg.fileName}</strong> — read in this browser only: nothing was
+            uploaded, and it is not published. Closing or reloading this page clears it.
+          </span>
+          <button type="button" className="btn-outline" onClick={closeFile}>
+            Close file
+          </button>
+        </div>
+      ) : fileGone ? (
+        <p className="muted-note" role="status">
+          The template file was cleared when the page reloaded (files are never stored). Showing the
+          latest published report; open the file again to see it.
+        </p>
+      ) : null}
       {feed ? (
         <div
           className={`publish-banner ${dataset.publishEligible ? 'ok' : 'blocked'}`}
@@ -406,9 +505,11 @@ export function CioMonthlyView() {
         summary={
           feed
             ? `Imported workstation dataset (${feed.entityId}), data through ${monthLabel} — not a published report`
-            : `${CIO_VINTAGE.title}, ${vintage.reportLabel}; fund data through ${monthLabel}${prior ? ` · changes against the ${prior.reportLabel} report` : ''}`
+            : pkg
+              ? `Template file ${pkg.fileName} for the ${vintage.reportLabel} report, data through ${monthLabel} — not published${prior ? ` · changes against the ${prior.reportLabel} report` : ''}`
+              : `${CIO_VINTAGE.title}, ${vintage.reportLabel}; fund data through ${monthLabel}${prior ? ` · changes against the ${prior.reportLabel} report` : ''}`
         }
-        classification="reported_public"
+        classification={pkg ? 'calculated' : 'reported_public'}
         alsoUsed={['calculated', 'proxy_estimate']}
       >
         <p>
@@ -417,9 +518,11 @@ export function CioMonthlyView() {
           monthly periods are not fiscal-year horizons; the two vintages are never combined.
         </p>
         <p>
-          Figures are as printed in the report ({e.pages}). Differences and changes against the
-          prior report are calculated from the printed one-decimal values, so ±0.1 pp rounding is
-          possible.
+          {pkg
+            ? 'Figures are as entered in the template file, not yet published. '
+            : `Figures are as printed in the report (${e.pages}). `}
+          Differences and changes against the prior report are calculated from the printed
+          one-decimal values, so ±0.1 pp rounding is possible.
           {prior
             ? ` The prior report is ${prior.reportLabel} (data through ${longDate(prior.dataThrough)}).`
             : ' This is the earliest report in the series, so there is no prior report to compare.'}
@@ -1467,16 +1570,23 @@ export function CioMonthlyView() {
                       : undefined
                   }
                   method={
-                    <p>
-                      PCE inflation, the federal funds target range and the unemployment and
-                      participation rates are read from FRED as FRED showed them at the month end
-                      before the report's month (its real-time archive, ALFRED), so later revisions
-                      do not change them and every report has them. PCE inflation is the
-                      year-over-year change of the price index (calculated); the other figures are
-                      as published. For the latest report the report's own commentary sits beside
-                      them, and the dollar index and themes are typed from the report, which a unit
-                      test checks against FRED's figures.
-                    </p>
+                    pkg ? (
+                      <p>
+                        As entered in the template file: the team&apos;s figures and commentary.
+                        Published reports read these indicators from FRED instead.
+                      </p>
+                    ) : (
+                      <p>
+                        PCE inflation, the federal funds target range and the unemployment and
+                        participation rates are read from FRED as FRED showed them at the month end
+                        before the report's month (its real-time archive, ALFRED), so later
+                        revisions do not change them and every report has them. PCE inflation is the
+                        year-over-year change of the price index (calculated); the other figures are
+                        as published. For the latest report the report's own commentary sits beside
+                        them, and the dollar index and themes are typed from the report, which a
+                        unit test checks against FRED's figures.
+                      </p>
+                    )
                   }
                 >
                   <div>
@@ -1493,14 +1603,14 @@ export function CioMonthlyView() {
                   <SourceLine
                     records={[
                       ...(fredSrc ? [fredSrc] : []),
-                      ...(isLatest ? [cioSource(vintage, 'pp. 4–6', 4)] : []),
+                      ...(isLatest || pkg ? [cioSource(vintage, 'pp. 4–6', 4)] : []),
                     ]}
                   />
                   <DeckLink n={SLIDE.market} />
                 </Panel>
               ) : null}
 
-              {isLatest ? (
+              {isLatest || pkg ? (
                 <Panel
                   id="cio-ops"
                   kicker="Portfolio, structural and operational items"
@@ -1535,7 +1645,7 @@ export function CioMonthlyView() {
                         </tr>
                       </thead>
                       <tbody>
-                        {OPS.map((o) => (
+                        {ops.map((o) => (
                           <tr key={`${o.e}|${o.item}`}>
                             <td>{o.e}</td>
                             <td>{o.item}</td>
@@ -1566,7 +1676,14 @@ export function CioMonthlyView() {
         ) : null}
 
         {tab === 'slides' ? (
-          <DeckFrame vintage={vintage} isLatest={isLatest} feed={feed} intent={presentIntent} />
+          <DeckFrame
+            vintage={vintage}
+            isLatest={isLatest}
+            feed={feed}
+            pkg={pkg}
+            loaded={cioFile.loaded}
+            intent={presentIntent}
+          />
         ) : null}
       </div>
       <PageSources sources={[src.main]} />

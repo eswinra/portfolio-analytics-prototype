@@ -31,6 +31,13 @@ const COMPOSITES: [CompositeKey, string, string, string][] = [
 type StatKey = 'MEAN' | 'SAA' | 'SD' | 'MIN' | 'MAX' | 'LATEST';
 const EDGES = [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
 
+/** The report's histogram bin (0 … 13) for a monthly return in percent: ≤ -6, -6 to -5, …, ≥ 6. */
+export function histBinOf(pct: number): number {
+  if (pct <= -6) return 0;
+  if (pct >= 6) return 13;
+  return EDGES.findIndex((e, i) => i < EDGES.length - 1 && pct >= e && pct < EDGES[i + 1]!) + 1;
+}
+
 const r1 = (v: number) => Math.round(v * 10) / 10;
 const r2 = (v: number) => Math.round(v * 100) / 100;
 
@@ -92,14 +99,7 @@ export function buildCioFeed(records: readonly ContractRecord[]): CioFeed | null
   };
   const latest = num('hist_stat', 'LATEST');
   const latestPct = latest === null ? (series('return', 'TOTAL')[0] ?? 0) : r1(latest * 100);
-  const latestBin =
-    latestPct <= -6
-      ? 0
-      : latestPct >= 6
-        ? 13
-        : EDGES.findIndex(
-            (e, i) => i < EDGES.length - 1 && latestPct >= e && latestPct < EDGES[i + 1]!,
-          ) + 1;
+  const latestBin = histBinOf(latestPct);
 
   const cash = num('cash', 'TOTAL');
   const entity: CioEntity = {

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { longDate, type CioVintage } from '../fixtures/cioMonthly';
+import type { CioPackage } from '../lib/cioPackage';
 import type { CioFeed } from '../lib/dataset/cioFeed';
 import { DECK_FEED_KEY, deckDataFor } from '../lib/deckFeed';
 import { useEntity } from '../lib/entity';
@@ -30,11 +31,17 @@ export function DeckFrame({
   vintage,
   isLatest,
   feed,
+  pkg = null,
+  loaded = 0,
   intent = false,
 }: {
   vintage: CioVintage;
   isLatest: boolean;
   feed: CioFeed | null;
+  /** a template file open on this page (read in the browser, not published) */
+  pkg?: CioPackage | null;
+  /** how many files have been opened: a new file reloads the slides */
+  loaded?: number;
   /** the reader asked for the slides (chose the tab or a slide link): scroll them into place and
    *  give them the keyboard; opening CIO Monthly itself leaves the page where it is */
   intent?: boolean;
@@ -47,8 +54,11 @@ export function DeckFrame({
   const scrolled = useRef(false);
   const [params] = useSearchParams();
   const linked = useRef(params.has('slide'));
-  const data = useMemo(() => deckDataFor(vintage, { feed: Boolean(feed) }), [vintage, feed]);
-  const frameKey = `${vintage.dataThrough}|${feed ? feed.entityId : 'public'}`;
+  const data = useMemo(
+    () => deckDataFor(vintage, { feed: Boolean(feed), pkg }),
+    [vintage, feed, pkg],
+  );
+  const frameKey = `${vintage.dataThrough}|${feed ? feed.entityId : pkg ? `file ${loaded}` : 'public'}`;
 
   // the deck reads its data from this window when its script starts, so it is set first
   useLayoutEffect(() => {
@@ -124,14 +134,16 @@ export function DeckFrame({
 
   const label = feed
     ? `the workstation dataset (${feed.entityId}), data through ${longDate(feed.asOf)}`
-    : `the ${vintage.reportLabel} report, data through ${longDate(vintage.dataThrough)}`;
+    : pkg
+      ? `the template file ${pkg.fileName} (not published), data through ${longDate(vintage.dataThrough)}`
+      : `the ${vintage.reportLabel} report, data through ${longDate(vintage.dataThrough)}`;
 
   return (
     <section className="deck-present" aria-label="CIO Monthly Report slides">
       <div className="deck-toolbar">
         <span>
           Slides for <strong>{label}</strong> — built from the figures on the other tabs.
-          {isLatest ? '' : ' Editorial pages exist for the latest report only.'}
+          {isLatest || pkg ? '' : ' Editorial pages exist for the latest report only.'}
         </span>
         <span className="deck-actions">
           <button

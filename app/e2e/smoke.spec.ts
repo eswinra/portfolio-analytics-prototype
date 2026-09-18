@@ -37,6 +37,10 @@ const PENSION_CSV = fileURLToPath(
 const CIO_FEED_CSV = fileURLToPath(
   new URL('../../data/sample/cio_monthly_feed_demofund.csv', import.meta.url),
 );
+// the example workbook's Export tab, saved by desktop Excel as "CSV UTF-8"
+const CIO_TEMPLATE_CSV = fileURLToPath(
+  new URL('../../data/sample/cio_template_example_aug2026.csv', import.meta.url),
+);
 
 async function ready(page: Page, route: string) {
   await page.goto(hash(route));
@@ -56,6 +60,75 @@ test.describe('routes render without horizontal overflow', () => {
       expect(pageErrors).toEqual([]);
     });
   }
+});
+
+test.describe('CIO template file (read in the browser, never uploaded)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+  const fileInput = (page: Page) => page.locator('.vs-file input[type="file"]');
+
+  test('builds the tab and the slides from the Excel export, sending nothing', async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (e) => pageErrors.push(String(e)));
+    const sent: string[] = [];
+    page.on('request', (r) => {
+      if (r.method() !== 'GET') sent.push(`${r.method()} ${r.url()}`);
+    });
+    await ready(page, '/cio?tab=summary');
+    await fileInput(page).setInputFiles(CIO_TEMPLATE_CSV);
+    await expect(
+      page
+        .getByRole('status')
+        .filter({ hasText: 'Template file cio_template_example_aug2026.csv' }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/v=file/);
+    await expect(page.getByLabel('Report', { exact: true })).toHaveValue('file');
+    await expect(page.locator('.masthead')).toContainText(
+      'template file for August 12, 2026 (not published)',
+    );
+    const axeOpen = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(axeOpen.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
+    // the items for attention are the file's
+    await page.getByRole('tab', { name: 'Markets & items' }).click();
+    await expect(page.locator('#cio-ops')).toContainText('Risk system onboarding');
+    // the slides say where their figures come from
+    await page.getByRole('tab', { name: 'Slides' }).click();
+    const deck = page.frameLocator('.deck-frame-wrap iframe');
+    await expect(deck.locator('#deck-origin')).toContainText(
+      'template file (cio_template_example_aug2026.csv), not published',
+    );
+    await expect(deck.locator('.slide .src').first()).toContainText('Source: template file');
+    expect(sent).toEqual([]);
+    expect(pageErrors).toEqual([]);
+    // closing it returns to the latest published report
+    await page.getByRole('button', { name: 'Close file' }).click();
+    await expect(page).not.toHaveURL(/v=file/);
+  });
+
+  test('refuses a broken file, says why, and shows nothing from it', async ({ page }) => {
+    await ready(page, '/cio?tab=summary');
+    await fileInput(page).setInputFiles({
+      name: 'wrong.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('Report,,\nReport date,,2026-09-09\n'),
+    });
+    await expect(page.getByRole('alert')).toContainText('wrong.csv was not opened');
+    await expect(page.getByRole('alert')).toContainText('Export tab');
+    await expect(page).not.toHaveURL(/v=file/);
+    const axeAlert = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .exclude('.deck-frame-wrap iframe')
+      .analyze();
+    expect(axeAlert.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
+  });
+
+  test('a reload clears the file, and the page says so', async ({ page }) => {
+    await ready(page, '/cio?tab=summary');
+    await fileInput(page).setInputFiles(CIO_TEMPLATE_CSV);
+    await expect(page).toHaveURL(/v=file/);
+    await page.reload();
+    await expect(page.getByText(/template file was cleared when the page reloaded/)).toBeVisible();
+    await expect(page.getByLabel('Report', { exact: true })).not.toHaveValue('file');
+  });
 });
 
 test.describe('how the CIO slides work (shareable page)', () => {
@@ -85,6 +158,11 @@ test.describe('how the CIO slides work (shareable page)', () => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(1);
+    // the template downloads it offers are on the site
+    for (const name of ['CIO_Monthly_Template.xlsx', 'CIO_Monthly_Template_Example.xlsx']) {
+      const res = await page.request.get(`/templates/${name}`);
+      expect(res.status(), name).toBe(200);
+    }
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
   });

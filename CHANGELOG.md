@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-09-18 — Revision 19: build the CIO slides from a template, before the report is published
+
+- New Excel template (`app/public/templates/CIO_Monthly_Template.xlsx`, and a filled example of the
+  latest public report): input tabs for both funds, the market table, the macro strip and the
+  items for attention; a Checks tab with the report's own identities; an Export tab that writes a
+  CSV in the new `cio-template-1` format (`docs/cio-template.md`). Built by
+  `tools/make_cio_template.py`, checked in desktop Excel by `tools/qa_cio_template.py`.
+- CIO Monthly tab: **Open a template file** reads that CSV in the browser and shows it as its own
+  report — tab, panels and slides — labelled "template file …, not published", with changes
+  against the latest earlier published report. Nothing is uploaded or stored: the file lives in
+  memory, the address only says `v=file`, and a reload clears it (the tab says so). A file with any
+  problem shows nothing and lists every problem (`app/src/lib/cioPackage.ts`).
+- On the slides, the header, every source line and the speaker notes say the figures come from the
+  template file and are not published; they are classified `calculated`.
+- Round trip: the example workbook, recalculated and saved by Excel as CSV UTF-8, rebuilds the
+  published August 12, 2026 report exactly (both funds, market table, macro strip, items). The
+  one difference found on the way — top countries order — is fixed by listing them by share, as
+  the report does.
+- The how-it-works page links the template and the example; its code list names the reader and
+  the format.
+- Verification: lint · format · Vitest 439/439 (10 new: the round trip and every refusal) · build
+  · Playwright 130/130 runnable (new: open the Excel export and see tab and slides built from it
+  with no network request, a broken file refused with reasons, a reload clearing the file, axe on
+  both states, both template downloads on the site) · Excel QA: 20 checks OK on the example.
+
 ## 2026-09-18 — Revision 18: add a CIO report from GitHub, no PC needed
 
 - New workflow "CIO report" (`.github/workflows/cio-report.yml`). From the repository's Actions

@@ -496,6 +496,38 @@ a.btn-band {
   outline-offset: 2px;
 }
 
+/* opening a CIO template file: a button-styled label over a visually hidden file input */
+.vintage-bar .vs-file:focus-within {
+  outline: 2px solid var(--accent-700);
+  outline-offset: 2px;
+}
+
+.vs-file-help {
+  font-size: 12px;
+  color: var(--muted-72);
+}
+
+.file-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 16px;
+}
+
+.file-errors {
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  font-size: 13px;
+  background: #fdf3f2;
+  border-left: 4px solid #b3261e;
+}
+
+.file-errors ul {
+  margin: 6px 0 10px;
+  padding-left: 20px;
+}
+
 /* Overview: the monthly strip above the fiscal-year block */
 .monthly-strip {
   border-left: 3px solid var(--accent-600);

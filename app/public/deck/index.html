@@ -390,7 +390,7 @@
 
 <div class="app">
   <div class="topbar">
-    <div><span class="tag">PROTOTYPE SAMPLE</span><b>CIO Monthly — decision deck</b> · public figures from the report presented <span class="v-report"></span> · not an official LACERA publication</div>
+    <div><span class="tag">PROTOTYPE SAMPLE</span><b>CIO Monthly — decision deck</b> · <span id="deck-origin">public figures from the report presented <span class="v-report"></span></span> · not an official LACERA publication</div>
     <div class="entity">Entity
       <div class="seg" id="entity-seg">
         <button class="seg-btn" data-v="pension" aria-pressed="true">Pension Fund</button>
@@ -807,6 +807,16 @@
   // vintage labels come with the generated data block: no month or report date is hardcoded in the prose
   const VFILL = { 'v-report': VINTAGE.reportLabel, 'v-through': VINTAGE.throughLabel, 'v-month': VINTAGE.month, 'v-monthyear': VINTAGE.monthYear, 'v-market': VINTAGE.marketLabel, 'v-histrange': VINTAGE.histRange };
   Object.keys(VFILL).forEach(k => $$('.' + k).forEach(el => { el.textContent = VFILL[k]; }));
+  // a template file opened in the dashboard: the figures are the team's, not the published report's
+  if (VINTAGE.local) {
+    $('#deck-origin').textContent = 'figures from a template file (' + VINTAGE.local + '), not published';
+    $$('.slide .src').forEach(el => {
+      el.textContent = 'Source: template file ' + VINTAGE.local + ', read in this browser and not published. Differences and sums are calculated from its figures.';
+      const cls = document.createElement('span'); cls.className = 'cls'; cls.textContent = 'calculated';
+      el.appendChild(document.createElement('br')); el.appendChild(cls);
+    });
+    NOTES.forEach((n, i) => { NOTES[i] = '<p><b>Template file.</b> These notes describe the published report; the figures on this slide come from ' + VINTAGE.local + ', which is not published.</p>' + n; });
+  }
   const isPresenter = new URLSearchParams(location.search).has('presenter');
   const bc = ('BroadcastChannel' in window && location.protocol !== 'file:') ? new BroadcastChannel('cio-decision-deck') : null;
   const send = cmd => { if (bc) bc.postMessage({ type: 'cmd', cmd }); };
@@ -1339,7 +1349,8 @@
     const macroChips = MACRO.length ? MACRO.map(m => '<div class="mchip"><small>' + m.l + '</small><b>' + m.v + '</b>' + m.s + '</div>').join('')
       : '<div class="mchip"><small>Macro strip</small><b>—</b>' + (VINTAGE.single ? 'Not part of the imported dataset.' : 'Not available for this report; see pp. 4–6 of the PDF.') + '</div>';
     // PCE, the federal funds range and the labor figures are FRED's, as known on the report's as-of date
-    $('#macro-src').textContent = VINTAGE.macroLabel ? '; FRED figures as known on ' + VINTAGE.macroLabel : '';
+    const macroSrc = $('#macro-src'); // absent when a template file has rewritten the source line
+    if (macroSrc) macroSrc.textContent = VINTAGE.macroLabel ? '; FRED figures as known on ' + VINTAGE.macroLabel : '';
     if (!MKT.length) {
       host.style.height = '318px'; // no chart to draw: leave the strip its room
       host.innerHTML = '<div class="empty-note">The market table is not available for ' + (VINTAGE.single ? 'this dataset' : 'the ' + VINTAGE.reportLabel + ' report') + ' — the printed page is in the PDF.</div>';

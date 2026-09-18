@@ -8,10 +8,14 @@ import {
   vintageFromFeed,
   type CioVintage,
 } from '../fixtures/cioMonthly';
+import { useCioFile } from './cioFile';
+import type { CioPackage } from './cioPackage';
 import type { CioFeed } from './dataset/cioFeed';
 import { useDataset } from './dataset/useDataset';
 
 export const FEED_KEY = 'workstation';
+/** `v=file`: the CIO template file open on this page (lib/cioFile.tsx), when there is one */
+export const FILE_KEY = 'file';
 
 /** The CIO Monthly vintage on screen lives in the URL (`#/cio?v=<data-through>`), so a month
  *  can be linked to and the masthead, notice bar and title band can show the same date as the
@@ -26,19 +30,29 @@ export function useCioVintage(): {
   feed: CioFeed | null;
   /** an applied import carries a feed (the option is offered) */
   feedAvailable: CioFeed | null;
+  /** the template file when it is the report on screen */
+  pkg: CioPackage | null;
+  /** a template file is open on this page (the option is offered) */
+  fileAvailable: CioPackage | null;
+  /** the address asks for a template file that is no longer open (cleared by a reload) */
+  fileGone: boolean;
   select: (key: string) => void;
 } {
   const [params, setParams] = useSearchParams();
   const { dataset, source } = useDataset();
+  const { pkg: fileAvailable } = useCioFile();
   const feedAvailable = source === 'import' ? dataset.cioFeed : null;
   const key = params.get('v');
-  const feed = key === FEED_KEY && feedAvailable ? feedAvailable : null;
+  const pkg = key === FILE_KEY && fileAvailable ? fileAvailable : null;
+  const feed = !pkg && key === FEED_KEY && feedAvailable ? feedAvailable : null;
   const vintage = useMemo(
     () =>
-      feed
-        ? vintageFromFeed(feed)
-        : (CIO_VINTAGES.find((v) => v.dataThrough === key) ?? CIO_LATEST),
-    [feed, key],
+      pkg
+        ? pkg.vintage
+        : feed
+          ? vintageFromFeed(feed)
+          : (CIO_VINTAGES.find((v) => v.dataThrough === key) ?? CIO_LATEST),
+    [pkg, feed, key],
   );
   const select = useCallback(
     (next: string) => {
@@ -52,9 +66,12 @@ export function useCioVintage(): {
   return {
     vintage,
     prior: priorVintage(vintage),
-    isLatest: !feed && vintage === CIO_LATEST,
+    isLatest: !feed && !pkg && vintage === CIO_LATEST,
     feed,
     feedAvailable,
+    pkg,
+    fileAvailable,
+    fileGone: key === FILE_KEY && !fileAvailable,
     select,
   };
 }

@@ -29,6 +29,12 @@ June 30, and monthly periods are not fiscal-year horizons.
 | `app/scripts/cio-diff.ts` | Prints what changed between two vintages (`npm run cio:diff`, optionally two data-through dates) | code |
 | `app/src/fixtures/cioMonthly.test.ts` | Identities for every vintage; editorial-for-latest guard; FRED figures for every report, read as of the right date, reproducing the latest report's printed ones; deck block equals the generated block; the deck's script parses; no hardcoded month or report date in the deck prose | code |
 
+## Before the report is published
+
+The slides can also be built from the team's own figures, before the PDF exists: fill the CIO
+Monthly Excel template, save its Export tab as CSV and open it with **Open a template file** on
+the tab. The file is read in the browser only and never published. See `docs/cio-template.md`.
+
 ## Monthly update
 
 ### From GitHub (no PC needed)

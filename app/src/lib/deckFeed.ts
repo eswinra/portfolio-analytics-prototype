@@ -10,6 +10,7 @@ import {
   type CioVintage,
   type DeckVintage,
 } from '../fixtures/cioMonthly';
+import type { CioPackage } from './cioPackage';
 
 /** The dashboard feeds the CIO Monthly slides. When the deck is presented inside the dashboard
  *  it takes this object for the report on screen — any extracted vintage, or an imported
@@ -32,15 +33,20 @@ export function sanitizeDeckData<T>(x: T): T {
   return x;
 }
 
-export function deckDataFor(v: CioVintage, opts: { feed?: boolean } = {}): CioDeckData {
+export function deckDataFor(
+  v: CioVintage,
+  opts: { feed?: boolean; pkg?: CioPackage | null } = {},
+): CioDeckData {
   const latest = !opts.feed && v === CIO_LATEST;
+  // a template file carries its own macro strip and items for attention, typed by the team
+  const pkg = opts.pkg ?? null;
   return sanitizeDeckData({
     PERIODS,
     ENT: v.ENT,
     BINS,
     MKT: v.MKT ?? [],
-    MACRO: opts.feed ? [] : macroFor(v),
-    OPS: latest ? OPS : [],
+    MACRO: pkg ? pkg.macro : opts.feed ? [] : macroFor(v),
+    OPS: pkg ? pkg.ops : latest ? OPS : [],
     STATUS,
     VINTAGE: opts.feed ? feedVintage(v) : deckVintage(v),
   });
