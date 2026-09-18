@@ -706,7 +706,7 @@
         <div class="hd">
           <div>
             <h2>Portfolio, structural and operational items</h2>
-            <p class="finding">Six initiatives in progress, nine positions open, one manager personnel change, one consultant search in quiet period</p>
+            <p class="finding" id="ops-finding">&nbsp;</p>
           </div>
           <div class="asof"><b><span class="v-report"></span> report</b>Status as reported<br>pp. 18–20, 24</div>
         </div>
@@ -786,7 +786,7 @@
   window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE };
   const NOTES = [
     '<h4>Slide 1 · Executive read</h4><p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
-    '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges ($476 mm) and Other Asset ($73 mm, an operational holding) are combined into one sliver with no policy target. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
+    '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges and Other Asset (an operational holding) are combined into one sliver with no policy target; the slide shows their combined value. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
     '<h4>Slide 3 · Performance vs. policy</h4><p><b>Source:</b> p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; excess in pts <code>calculated</code>. "Returns" view builds fund → benchmark → hurdle on click; "Excess vs. benchmark" draws the signed gap directly, which is the decision quantity. Hurdle ticks apply at the total-fund level only. Composites have no 10-year figure in the report. Periods under one year are cumulative, three years and longer annualized; net of fees.</p>',
     '<h4>Slide 4 · Where the gap came from</h4><p><b>Classification:</b> <code>proxy_estimate</code>. Contribution = (composite return − its policy benchmark) × month-end weight. This is not the report\'s attribution and not a Brinson decomposition: beginning-of-period weights, the allocation effect, overlays, cash and compounding are all folded into the residual, which is shown as its own bar so the reader can see how much the proxy explains. Use it to decide where to look, not to quantify manager value-add. The slide names the composites that explain most of the 1 M, FYTD and 1 Y gaps.</p>',
     '<h4>Slide 5 · Allocation and flows</h4><p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); monthly rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
@@ -1284,7 +1284,8 @@
       }
       const maxGap = e.comps.reduce((a, b) => Math.abs(b.pct - b.tgt) > Math.abs(a.pct - a.tgt) ? b : a);
       const away = e.comps.filter(c => dir(c) === 'away from target').map(c => c.short);
-      $('#al-finding').textContent = 'Within 1 pt of every target (largest: ' + maxGap.short + ' ' + sgn(maxGap.pct - maxGap.tgt) + ' pts); ' + VINTAGE.month + ' flows net ' + money(e.netflow) + 'M' + (away.length ? '; ' + away.join(', ') + ' moved away from target' : '; all flows toward target');
+      const gap = maxGap.pct - maxGap.tgt;
+      $('#al-finding').textContent = (Math.abs(gap) <= 1 ? 'Within 1 pt of every target (largest: ' : 'Largest gap to target: ') + maxGap.short + ' ' + sgn(gap) + ' pts' + (Math.abs(gap) <= 1 ? ')' : '') + '; ' + VINTAGE.month + ' flows net ' + money(e.netflow) + 'M' + (away.length ? '; ' + away.join(', ') + ' moved away from target' : '; all flows toward target');
       $('#al-table').innerHTML = tableHTML(['Category', 'Market value $mm', 'Actual %', 'Target %', 'Difference pts', VINTAGE.month + ' flow $M', 'Direction'],
         e.comps.map(c => [c.n, c.mv.toLocaleString('en-US'), c.pct, c.tgt, +(c.pct - c.tgt).toFixed(1), money(c.flow), dir(c)]).concat(e.other ? [[e.other.n, e.other.mv.toLocaleString('en-US'), e.other.pct, '—', '—', money(e.other.flow), '—']] : [], [['Net rebalancing activity', '', '', '', '', money(e.netflow), '']]));
     }
@@ -1439,11 +1440,26 @@
     const t = $('#ops-t');
     if (!OPS.length) {
       t.innerHTML = '<tbody><tr><td>Items for attention are editorial pages carried for the latest public report only. For this report, see pp. 19–20 and 24 of the PDF.</td></tr></tbody>';
-      $('section[data-id="ops"] .finding').textContent = 'Not carried for ' + (VINTAGE.single ? 'this dataset' : 'the ' + VINTAGE.reportLabel + ' report');
+      $('#ops-finding').textContent = 'Not carried for ' + (VINTAGE.single ? 'this dataset' : 'the ' + VINTAGE.reportLabel + ' report');
       return;
     }
     t.innerHTML = '<thead><tr><th style="width:150px">Area</th><th>Item</th><th style="width:130px">Status</th><th style="width:50px">Page</th></tr></thead><tbody>' +
       OPS.map((o, i) => '<tr data-e="' + o.e + '" style="--d:' + (i * 0.05) + 's"><td><b>' + o.e + '</b></td><td>' + o.item + '</td><td><span class="st ' + STATUS[o.st][1] + '">' + STATUS[o.st][0] + '</span></td><td style="color:var(--muted)">p. ' + o.p + '</td></tr>').join('') + '</tbody>';
+    // the headline counts the rows below, so it moves with the data (completed searches are not open)
+    const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+    const say = (n, one, many) => (WORDS[n] || String(n)) + ' ' + (n === 1 ? one : many);
+    const inits = OPS.filter(o => (o.e === 'Total Fund' || o.e === 'OPEB Master Trust') && o.st === 'prog').length;
+    const seats = OPS.filter(o => o.e === 'Investments Division' && o.st !== 'done')
+      .reduce((a, o) => a + Number((/— (\d+) positions?/.exec(o.item) || [0, 1])[1]), 0);
+    const mgr = OPS.filter(o => o.e === 'Manager update').length;
+    const quiet = OPS.filter(o => o.e === 'Consultant search' && o.st === 'quiet').length;
+    const line = [
+      inits && say(inits, 'initiative', 'initiatives') + ' in progress',
+      seats && say(seats, 'position', 'positions') + ' open',
+      mgr && say(mgr, 'manager update', 'manager updates'),
+      quiet && say(quiet, 'consultant search', 'consultant searches') + ' in quiet period',
+    ].filter(Boolean).join(', ');
+    $('#ops-finding').textContent = line ? line[0].toUpperCase() + line.slice(1) : say(OPS.length, 'item', 'items') + ' as reported';
     const groups = ['For attention', 'Total Fund', 'OPEB Master Trust', 'Investments Division', 'All'];
     const match = (g, e) => g === 'All' || e === g || (g === 'For attention' && (e === 'Manager update' || e === 'Consultant search'));
     const apply = g => $$('tbody tr', t).forEach(tr => tr.classList.toggle('hid', !match(g, tr.dataset.e)));

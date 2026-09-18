@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-09-18 — Revision 16.3: the last typed-in statements on the slides now come from the data
+
+- Slide 9's headline was typed into the page and said "nine positions open"; it counted the
+  Finance Analyst Fellowship (2 positions), which the report marks completed. The headline is now
+  counted from the items in the table — initiatives in progress, positions in searches not yet
+  completed, manager updates, searches in quiet period — and reads "Six initiatives in progress,
+  seven positions open, one manager update, one consultant search in quiet period".
+- Slide 5's headline began "Within 1 pt of every target" whatever the figures were; it now says so
+  only when the largest gap is within 1 pt, and otherwise names the largest gap.
+- Slide 2's speaker notes carried a typed-in split of the Overlays & Hedges / Other Asset sliver
+  ($476 mm / $73 mm) that no longer matched the data (combined $624 mm); the note now points to the
+  combined value the slide shows from the data.
+- Verification: lint · format check · Vitest 419/419 · build · Playwright 119/119 runnable · the
+  built deck rendered for both funds with no page errors.
+
 ## 2026-09-17 — Revision 16.2: the slides size to the screen
 
 - The slide frame on CIO Monthly was as tall as the window but only as wide as the page column,
