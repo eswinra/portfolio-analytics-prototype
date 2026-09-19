@@ -449,6 +449,42 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
   });
 });
 
+test.describe('the deck prints as a publishable document (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('a cover, then every slide followed by the figures behind it', async ({ page }) => {
+    await page.goto('/deck/');
+    await page.locator('.slide').first().waitFor();
+    await page.emulateMedia({ media: 'print' });
+    const doc = await page.evaluate(() => {
+      (window as unknown as { __buildPrintout: () => void }).__buildPrintout();
+      const order = [...document.querySelectorAll('.slide, .pp')].map((el) =>
+        el.classList.contains('pp-cover')
+          ? 'cover'
+          : el.classList.contains('pp-data')
+            ? 'figures'
+            : 'slide',
+      );
+      const pages = [...document.querySelectorAll('.pp-data')].map((el) => el.textContent ?? '');
+      return { order, cover: document.querySelector('.pp-cover')?.textContent ?? '', pages };
+    });
+    // cover, then slide/figures in pairs for all nine slides
+    expect(doc.order).toEqual(['cover', ...Array(9).fill(['slide', 'figures']).flat()]);
+    expect(doc.cover).toContain('not an official LACERA publication');
+    expect(doc.cover).toContain('data through June 30, 2026');
+    // each figures page carries the numbers behind its slide, with source and data labels
+    expect(doc.pages[1]).toContain('Indicative contribution');
+    expect(doc.pages[1]).toContain('$45,687');
+    expect(doc.pages[1]).toContain('Data labels: reported_public · calculated');
+    expect(doc.pages[4]).toContain('Net flow');
+    expect(doc.pages[6]).toContain('U.S. Large Cap');
+    expect(doc.pages[8]).toContain('Risk system onboarding');
+    // and they are landscape slide-sized pages, like the slides
+    const size = await page.locator('.pp-data').first().boundingBox();
+    expect([Math.round(size!.width), Math.round(size!.height)]).toEqual([1280, 720]);
+  });
+});
+
 test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 

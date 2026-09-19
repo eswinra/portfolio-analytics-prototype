@@ -191,6 +191,35 @@ screen:
   drawn complete, so one press moves to the next slide. Each slide's footer carries "not an
   official LACERA publication", the one disclosure that stays on screen and in print.
 
+## The PDF for publication
+
+Printing the deck produces the document that can be posted: a cover, then every slide followed by
+a page of the figures behind it — the table, the report pages it came from, and how each figure is
+labelled. Nothing is redrawn for print: the slide pages are the slides, with every build shown.
+
+| How | What |
+|---|---|
+| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 19 landscape pages |
+| `npm run deck:pdf` (from `app/`) | Both funds, into `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf`; `-- --fund opeb` for one, `-- --out <dir>` elsewhere |
+
+The figures pages are built from the same data the slides are drawn from (`printout()` in the
+deck), so they cannot drift from the picture:
+
+| Slide | Its figures page |
+|---|---|
+| 1 Executive read · 2 Fund at a glance | Fund lines, the composites with weights, targets and returns — and, for slide 2, the indicative contribution and the month's flows the drill-down shows |
+| 3 Performance vs. policy · 4 Where the gap came from | Every composite over all eight periods: return, benchmark, calculated excess, the hurdle for the fund, and the indicative contribution to excess |
+| 5 Allocation and flows | Market value, weight, target, drift and flow by composite, the net flow, and the overlay programs |
+| 6 Return distribution | The 14 bins with their month counts, and the printed statistics |
+| 7 Market context | The market table over all periods, and the macro strip with its detail |
+| 8 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
+| 9 Items for attention | Every item as printed, with its status and report page |
+
+The cover states what the deck is and what it is not, and every page keeps the footer disclosure.
+A figure the report did not supply says "not supplied" on the page, as on the slide. The generated
+files are not committed (`outputs/` is ignored) — the report they come from is published, and the
+PDF is regenerated from it.
+
 The standalone `/deck/` is unchanged for people who open it directly: it shows the latest public
 report from its generated block, and the unit test fails if that block drifts from the fixture.
 

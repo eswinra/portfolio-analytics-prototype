@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-09-19 — Revision 25: the deck prints as a document that can be posted
+
+Printing the deck now produces the publication file: **a cover, then every slide followed by a page
+of the figures behind it** — 19 landscape pages per fund.
+
+- **Auditable by construction.** Each figures page is built from the same data the slide is drawn
+  from: the table, the report pages it came from, and how each figure is labelled
+  (`reported_public`, `calculated`, `proxy_estimate`). A reader can check any number on a slide
+  against the page that follows it. A figure the report did not supply says "not supplied" there
+  too.
+- **What each page carries.** Fund lines and composites (slides 1–2, with the drill-down's
+  indicative contribution and the month's flows); every composite over all eight periods with
+  benchmark, calculated excess, hurdle and contribution (3–4); market value, weight, target, drift,
+  flows and overlays (5); the 14 bins and the printed statistics (6); the market table and the
+  macro strip (7); geographic shares and the ten countries (8); every item for attention with its
+  status and page (9).
+- **The cover** states what the deck is and is not; every page keeps the footer disclosure.
+- **Two ways to make it.** In the deck, **Print / PDF** → "Save as PDF" for the fund on screen.
+  Or `npm run deck:pdf` (from `app/`), which drives the deck itself in headless Chromium and writes
+  both funds to `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf` (`-- --fund`, `-- --out`).
+  Nothing is redrawn for print: the slide pages are the slides, with every build shown.
+- Verification: lint · format · Vitest 476/476 · build · Playwright 150/150 runnable (1 new: cover,
+  slide/figures pairs for all nine slides, page size, labels). Both PDFs generated and read back:
+  19 pages, 211 KB each.
+
 ## 2026-09-19 — Revision 24: slide 2 opens to what drove the month
 
 A composite chosen on slide 2 now expands to the drivers behind its return. The report prints no

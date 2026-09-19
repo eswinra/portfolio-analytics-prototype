@@ -418,7 +418,30 @@
     .leg span.off { opacity: 1; }
     .chart-wrap[data-view="table"] .chartv { visibility: visible; }
     .chart-wrap[data-view="table"] .tablev { display: none; }
+    /* the pages that make the deck auditable on paper */
+    .pp { display: block !important; position: relative; width: 1280px; height: 720px; overflow: hidden; background: #fff; page-break-after: always; break-after: page; }
+    .pp:last-child { page-break-after: auto; break-after: auto; }
   }
+  /* cover and figures pages: printed only, built from the same data as the slides */
+  .pp { display: none; }
+  .pp .pp-in { position: absolute; inset: 44px 56px 56px; color: var(--ink); }
+  .pp h2 { margin: 0 0 2px; font-size: 26px; color: var(--navy); }
+  .pp h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .pp .pp-kv { font-size: 13px; color: var(--cat); margin: 0 0 4px; }
+  .pp table { border-collapse: collapse; width: 100%; font-size: 11.5px; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
+  .pp th, .pp td { padding: 3px 6px; text-align: right; border-bottom: 1px solid #D4DEE9; }
+  .pp th { font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .pp td:first-child, .pp th:first-child { text-align: left; }
+  .pp tr.pp-grp td { background: var(--band); font-weight: 700; text-align: left; color: var(--navy); }
+  .pp .pp-meta { font-size: 10.5px; line-height: 1.45; color: var(--cat); }
+  .pp .pp-meta h4 { margin: 8px 0 2px; font-size: 10.5px; color: var(--navy); }
+  .pp .pp-meta p { margin: 0 0 4px; }
+  .pp .pp-meta code { font-family: Consolas, "Courier New", monospace; font-size: 10px; }
+  .pp .ft { position: absolute; left: 0; right: 0; bottom: 0; }
+  .pp-cover .pp-rule { height: 6px; background: var(--rule); margin: 0 0 22px; width: 220px; }
+  .pp-cover .pp-big { font-size: 40px; line-height: 1.15; color: var(--navy); font-weight: 700; margin: 0 0 10px; }
+  .pp-cover .pp-sub { font-size: 16px; color: var(--cat); margin: 0 0 26px; }
+  .pp-cover .pp-note { font-size: 12.5px; color: var(--cat); line-height: 1.55; max-width: 92ch; margin: 0 0 14px; }
 </style>
 </head>
 <body>
@@ -1613,6 +1636,126 @@
     const apply = g => $$('tbody tr', t).forEach(tr => tr.classList.toggle('hid', !match(g, tr.dataset.e)));
     pillRow('ops-filter', groups.map(g => g + ' (' + OPS.filter(o => match(g, o.e)).length + ')'), 0, i => apply(groups[i]));
     apply(groups[0]);
+  })();
+
+  /* ============ printed document: cover, then each slide with its figures page ============
+     Built from the data the slides are drawn from, so a reader can check any number on the slide
+     it follows: the table, the report pages it came from, and how each figure is classified. */
+  (function printout() {
+    const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const foot = () => '<div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg"></span></div>';
+    const page = (cls, inner) => {
+      const d = document.createElement('div');
+      d.className = 'pp ' + cls;
+      d.innerHTML = '<div class="pp-in">' + inner + '</div>' + foot();
+      return d;
+    };
+    const tbl = (head, rows) => '<table><thead><tr>' + head.map(h => '<th>' + esc(h) + '</th>').join('') +
+      '</tr></thead><tbody>' + rows.map(r => r.grp
+        ? '<tr class="pp-grp"><td colspan="' + head.length + '">' + esc(r.grp) + '</td></tr>'
+        : '<tr>' + r.map((c, i) => '<td>' + (c == null ? '—' : i === 0 ? esc(c) : esc(c)) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table>';
+
+    /** The figures behind one slide, for the fund on screen. */
+    function figures(i, e) {
+      const id = slides[i].dataset.id, P8 = PERIODS;
+      if (id === 'exec' || id === 'summary') {
+        const rows = [['Total market value', '$' + e.aum.toFixed(1) + 'B'],
+          ['Cash equivalents', e.cash == null ? 'not supplied' : money(e.cash) + ' mm'],
+          ['Growth of a dollar (5 Y, net)', e.god == null ? 'not supplied' : '$' + e.god.toFixed(2)]];
+        // slide 2 can open the drivers, so its page carries the same arithmetic
+        const drv = id === 'summary';
+        const head = ['Composite, ' + VINTAGE.monthYear, 'Market value ($ mm)', 'Weight', '2024 SAA target', VINTAGE.month + ' net return']
+          .concat(drv ? ['Indicative contribution (pts)', VINTAGE.month + ' flow ($ mm)'] : []);
+        const alloc = e.comps.map(c => [c.n, money(c.mv), pct(c.pct), pct(c.tgt), pct(c.r[0])]
+          .concat(drv ? [sgn(c.pct * c.r[0] / 100, 2), c.flow == null ? 'not supplied' : money(c.flow)] : []));
+        if (e.other) alloc.push([e.other.n, money(e.other.mv), pct(e.other.pct), 'no target', '—']
+          .concat(drv ? ['—', e.other.flow == null ? 'not supplied' : money(e.other.flow)] : []));
+        alloc.push([e.short + ' total', money(e.mv), '100.0%', '100.0%', pct(e.total.r[0])]
+          .concat(drv ? [sgn(e.comps.reduce((a, c) => a + c.pct * c.r[0] / 100, 0), 2) + ' summed', e.netflow == null ? 'not supplied' : money(e.netflow)] : []));
+        return tbl(['Fund', 'Value'], rows) + tbl(head, alloc) +
+          tbl(['Return, net', ...P8], [[e.short, ...e.total.r.map(pct)], ['Policy benchmark', ...e.total.b.map(pct)],
+            ['Actuarial hurdle', ...(e.total.h || []).map(pct)],
+            ['Excess vs. benchmark (pts)', ...e.total.r.map((v, j) => v == null || e.total.b[j] == null ? null : sgn(v - e.total.b[j]))]]);
+      }
+      if (id === 'perf' || id === 'wf') {
+        const rows = [];
+        [['Total Fund', e.total]].concat(e.comps.map(c => [c.n, c])).forEach(([n, c]) => {
+          rows.push({ grp: n });  // rendered as a band row
+          rows.push(['Net return', ...c.r.map(pct)]);
+          rows.push(['Policy benchmark', ...c.b.map(pct)]);
+          rows.push(['Excess (pts, calculated)', ...c.r.map((v, j) => v == null || c.b[j] == null ? null : sgn(v - c.b[j]))]);
+          if (c.h) rows.push(['Actuarial hurdle', ...c.h.map(pct)]);
+        });
+        return tbl(['', ...P8], rows) +
+          tbl(['Indicative contribution to excess (pts)', ...P8], e.comps.map(c => [c.short,
+            ...c.r.map((v, j) => v == null || c.b[j] == null ? null : sgn((v - c.b[j]) * c.pct / 100, 2))]));
+      }
+      if (id === 'alloc') {
+        return tbl(['Composite', 'Market value ($ mm)', 'Weight', '2024 SAA target', 'Drift (pts)', VINTAGE.month + ' flow ($ mm)'],
+          e.comps.map(c => [c.n, money(c.mv), pct(c.pct), pct(c.tgt), sgn(c.pct - c.tgt), c.flow == null ? 'not supplied' : money(c.flow)])
+            .concat(e.other ? [[e.other.n, money(e.other.mv), pct(e.other.pct), 'no target', '—', e.other.flow == null ? 'not supplied' : money(e.other.flow)]] : [])
+            .concat([['Net flow', '', '', '', '', e.netflow == null ? 'not supplied' : money(e.netflow)]])) +
+          (e.overlays ? tbl(['Overlay program', VINTAGE.month + ' gain ($ mm)', 'Since inception ($ mm)'], e.overlays.map(o => [o.n, money(o.may), money(o.si)])) : '');
+      }
+      if (id === 'hist') {
+        if (!e.hist) return '<p class="pp-kv">The return distribution was not supplied for this report.</p>';
+        return tbl(['Bin (%)', 'Months'], BINS.map((b, j) => [b, String(e.hist.c[j])])) +
+          tbl(['Statistic', 'Value'], [['Mean', pct(e.hist.mean)], ['2024 SAA expected return', pct(e.hist.saa)],
+            ['Standard deviation', pct(e.hist.sd)], ['Minimum', pct(e.hist.min)], ['Maximum', pct(e.hist.max)],
+            [VINTAGE.monthYear, pct(e.hist.latest)]]);
+      }
+      if (id === 'market') {
+        if (!MKT.length) return '<p class="pp-kv">The market table was not machine-readable in this report.</p>';
+        const rows = [];
+        MKT.forEach(g => { rows.push({ grp: g.g }); g.rows.forEach(r => rows.push([r.n + ' — ' + r.i, ...r.v.map(pct)])); });
+        return tbl(['Index', ...P8], rows) +
+          (MACRO.length ? tbl(['Macro indicator', 'Value', 'Detail'], MACRO.map(m => [m.l, m.v, m.s])) : '');
+      }
+      if (id === 'geo') {
+        return tbl(['Group', 'Share of AUM', 'Markets'], [['Developed', pct(e.geo.dm), String(e.geo.dmN)],
+          ['Emerging', pct(e.geo.em), String(e.geo.emN)], ['Total markets', '', String(e.geo.total)]]) +
+          tbl(['Country', 'Group', 'Share of AUM'], e.geo.top.map(t => [t[0], t[2] === 'dm' ? 'Developed' : 'Emerging', pct(t[1])]));
+      }
+      if (id === 'ops') {
+        return tbl(['Area', 'Item as printed', 'Status', 'Report page'],
+          OPS.map(o => [o.e, o.item, (STATUS[o.st] || [o.st])[0], o.p == null ? '—' : String(o.p)]));
+      }
+      return '';
+    }
+
+    function build() {
+      $$('.pp').forEach(el => el.remove());
+      const e = E(), stage = $('.stage');
+      const cover = page('pp-cover',
+        '<div class="pp-rule"></div><p class="pp-big">Chief Investment Officer<br>Monthly Report — decision deck</p>' +
+        '<p class="pp-sub">' + esc(e.name) + ' · data through ' + esc(VINTAGE.throughLabel) + ' · report presented ' + esc(VINTAGE.reportLabel) + '</p>' +
+        '<p class="pp-note">Every figure is taken from the published report named above' + (VINTAGE.url ? ' (' + esc(VINTAGE.url) + ')' : '') +
+        '. Differences, sums and shares are calculated from those figures and labelled where they appear. ' +
+        'Each slide is followed by a page of the figures behind it, with the report pages they come from, so any number on a slide can be checked against the report.</p>' +
+        '<p class="pp-note"><b>This deck is not an official LACERA publication.</b> It presents public figures from the report above; it is not a performance report, an audit product, or a statement of endorsement.</p>');
+      stage.insertBefore(cover, slides[0]);
+      slides.forEach((sl, i) => {
+        const fig = figures(i, e);
+        const notes = NOTES[i] || '';
+        // the source sentence, with the classification chip lifted out of the middle of it
+        const srcEl = $('.src', sl);
+        let src = '';
+        if (srcEl) {
+          const c = srcEl.cloneNode(true), chip = c.querySelector('.cls');
+          const labels = chip ? chip.textContent : '';
+          if (chip) chip.remove();
+          src = c.textContent.replace(/\s+/g, ' ').trim() + (labels ? ' Data labels: ' + labels + '.' : '');
+        }
+        const p = page('pp-data',
+          '<h3>Slide ' + (i + 1) + ' · figures behind the slide</h3><h2>' + esc(sl.dataset.title) + ' — ' + esc(e.short) + '</h2>' +
+          fig + '<div class="pp-meta">' + (src ? '<p>' + esc(src) + '</p>' : '') + notes + '</div>');
+        sl.after(p);
+      });
+    }
+    window.addEventListener('beforeprint', build);
+    // the PDF tool renders with the print stylesheet without firing beforeprint in every browser
+    window.__buildPrintout = build;
   })();
 
   /* ============ presenter view (second window, synced over BroadcastChannel) ============ */
