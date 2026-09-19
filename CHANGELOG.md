@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-18 — Revision 22: CIO Monthly › Explore — the published reports as one history
+
+Three ideas from the ChatGPT "V3" package, rebuilt on the project's rules and the 16 published CIO
+reports. The V3 code itself was not used.
+
+- **Month by month** (cross-filter + timeline): every one-month return the reports printed, with
+  categories as rows and data months as columns. Choosing a category follows it in the next panel.
+  Choosing a month opens that report, and the report slider above is the timeline, so every panel
+  marks the report on screen. No report carries November 2025, so that column says "no report" and
+  is never filled in.
+- **Chosen category**: monthly return against benchmark, and weight against target inside the IPS
+  Table 1 range (market value for the Total Fund, labelled as not a return), with a figures table.
+- **Correlations**: the categories' one-month returns pair by pair, each with its month count and an
+  approximate 95% range (Fisher z). A range that includes zero is hatched and described as
+  indistinguishable from no relation. Missing months are left out, never counted as zero. The chosen
+  pair is shown as a scatter of its months. The panel warns that appraisal smoothing understates
+  correlations with private holdings. For the Pension Fund at 16 months, every pair's range
+  includes zero.
+- **Scenario**: dollars per category to reach targets the reader enters, from the report's
+  month-end market values. The other line (cash and overlays) is a source of funds, so buys equal
+  sells. Nothing is calculated until the targets add to 100%. A target outside the IPS range is
+  flagged. The panel is labelled hypothetical, not a recommendation or a trade plan.
+- Pure, tested calculations in `lib/cioHistory.ts` (history with gaps, correlation and range,
+  rebalance, targets in the address). Panels are in `components/explore/`, composed by
+  `views/CioExplore.tsx`. Selections live in the address (`cat`, `pair`, `targets`).
+- Verification: lint · format · Vitest 476/476 (15 new) · build · Playwright 147/147 runnable (7 new:
+  the interactions and the shared link, the OPEB ranges, no sideways scroll at 320–375 px, axe).
+
 ## 2026-09-18 — Revision 21: open Excel workbooks directly, read in the browser
 
 The CIO Monthly tab and the Import page now open an Excel workbook as well as a CSV. Before, a

@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { DeckFrame } from '../components/DeckFrame';
+import { CioExplore } from './CioExplore';
 import { GlossaryLink } from '../components/Glossary';
 import { AboutFigures, PageMeta, PageSources } from '../components/page';
 import { scrollToPanel, SubTabs } from '../components/SubTabs';
@@ -60,6 +61,7 @@ const TABS: [key: string, label: string][] = [
   ['performance', 'Performance'],
   ['positioning', 'Positioning'],
   ['markets', 'Markets & items'],
+  ['explore', 'Explore'],
 ];
 
 /** Which sub-tab holds each panel, so a jump or a panel link opens the right tab. */
@@ -76,6 +78,10 @@ const TAB_OF: Record<string, string> = {
   'cio-market': 'markets',
   'cio-macro': 'markets',
   'cio-ops': 'markets',
+  'cio-x-grid': 'explore',
+  'cio-x-cat': 'explore',
+  'cio-x-corr': 'explore',
+  'cio-x-scenario': 'explore',
 };
 
 /** CIO Monthly — the monthly vintage rendered as dashboard panels from the same fixture that
@@ -1740,6 +1746,16 @@ export function CioMonthlyView() {
               )}
             </div>
           </>
+        ) : null}
+
+        {tab === 'explore' ? (
+          <CioExplore
+            entity={entity}
+            vintage={vintage}
+            e={e}
+            source={pkg ? 'template file' : feed ? 'workstation dataset' : 'published'}
+            onSelectReport={select}
+          />
         ) : null}
 
         {tab === 'slides' ? (

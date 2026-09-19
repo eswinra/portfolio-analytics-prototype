@@ -3205,3 +3205,425 @@ details.panel > summary {
 .panel-note {
   font-size: 13px;
 }
+
+/* ---- CIO Monthly › Explore (views/CioExplore.tsx, components/explore/) -------------------- */
+
+.x-note {
+  margin: 0 0 12px;
+}
+
+.x-lede {
+  margin: 4px 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* month-by-month grid: the number is always printed; shade only helps find the big months */
+.x-grid {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.x-grid th,
+.x-grid td {
+  padding: 5px 6px;
+  white-space: nowrap;
+}
+
+.x-grid tbody th {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--ink);
+  border-bottom: 1px solid rgb(26 26 26 / 5.5%);
+}
+
+.x-grid .x-total td,
+.x-grid .x-total th {
+  font-weight: 700;
+  border-bottom: 1px solid var(--divider);
+}
+
+.x-cat,
+.x-month {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font: inherit;
+  color: var(--accent-700);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgb(37 64 97 / 35%);
+  text-underline-offset: 3px;
+}
+
+.x-cat[aria-pressed='true'],
+.x-month[aria-pressed='true'] {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.x-cat[aria-pressed='true']::before {
+  content: '▸ ';
+}
+
+.x-cat:focus-visible,
+.x-month:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
+.x-grid .x-row-sel th,
+.x-grid .x-row-sel td {
+  box-shadow:
+    inset 0 2px 0 var(--accent-700),
+    inset 0 -2px 0 var(--accent-700);
+}
+
+.x-grid .x-col-sel {
+  outline: 2px solid var(--accent-700);
+  outline-offset: -2px;
+}
+
+.x-grid th.x-col-sel {
+  background: var(--accent-100);
+}
+
+.x-gap {
+  background: repeating-linear-gradient(135deg, transparent 0 4px, rgb(26 26 26 / 7%) 4px 5px);
+  color: var(--muted-65);
+}
+
+.x-gap-note {
+  display: block;
+  font-size: 9.5px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.x-pos-1 {
+  background: var(--accent-100);
+}
+
+.x-pos-2 {
+  background: var(--accent-300);
+}
+
+.x-pos-3 {
+  background: var(--accent-600);
+  color: #fff;
+}
+
+.x-neg-1 {
+  background: var(--neutral-200);
+}
+
+.x-neg-2 {
+  background: var(--neutral-400);
+}
+
+.x-neg-3 {
+  background: var(--neutral-700);
+  color: #fff;
+}
+
+/* charts */
+.x-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 6px;
+}
+
+.x-axis {
+  font-size: 11px;
+  fill: var(--muted-72);
+}
+
+.x-axis-title {
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.x-grid-line {
+  stroke: rgb(26 26 26 / 8%);
+  stroke-width: 1;
+}
+
+.x-zero {
+  stroke: var(--neutral-600);
+  stroke-width: 1;
+}
+
+.x-sel-band {
+  fill: var(--accent-100);
+}
+
+.x-gapline {
+  stroke: var(--neutral-500);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.x-hit {
+  cursor: pointer;
+}
+
+.x-bar.pos {
+  fill: var(--accent-600);
+}
+
+.x-bar.neg {
+  fill: var(--neutral-500);
+}
+
+.x-bar.sel {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.x-bench {
+  stroke: var(--rule-orange);
+  stroke-width: 2.5;
+}
+
+.x-range {
+  fill: var(--accent-200);
+  opacity: 0.7;
+}
+
+.x-target {
+  fill: none;
+  stroke: var(--accent-900);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+}
+
+.x-line {
+  fill: none;
+  stroke: var(--table-head);
+  stroke-width: 2;
+}
+
+.x-dot {
+  fill: var(--table-head);
+}
+
+.x-dot.sel {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.x-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  font-size: 12px;
+  color: var(--muted-72);
+  margin: 2px 0 8px;
+}
+
+.x-key {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.x-key:first-child {
+  margin-left: 0;
+}
+
+.x-key.bar {
+  background: var(--accent-600);
+}
+
+.x-key.bench {
+  height: 3px;
+  background: var(--rule-orange);
+}
+
+.x-key.gap {
+  width: 2px;
+  height: 12px;
+  border-left: 2px dashed var(--neutral-500);
+}
+
+.x-key.line {
+  height: 3px;
+  background: var(--table-head);
+}
+
+.x-key.target {
+  height: 0;
+  border-top: 2px dashed var(--accent-900);
+}
+
+.x-key.range {
+  background: var(--accent-200);
+}
+
+.x-figures {
+  margin-top: 8px;
+}
+
+.x-figures summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--accent-700);
+}
+
+/* correlations */
+.x-corr-table {
+  max-width: 460px;
+}
+
+.x-corr-table tbody th {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.x-corr-cell {
+  padding: 3px !important;
+}
+
+.x-corr-cell button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+
+.x-corr-cell button[aria-pressed='true'] {
+  border: 2px solid var(--ink);
+}
+
+.x-corr-cell button:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 1px;
+}
+
+.x-corr-r {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.x-corr-n {
+  display: block;
+  font-size: 11px;
+}
+
+.x-corr-weak {
+  background: repeating-linear-gradient(135deg, transparent 0 5px, rgb(26 26 26 / 6%) 5px 6px);
+  color: var(--muted-72);
+}
+
+.x-corr-none {
+  color: var(--muted-65);
+}
+
+.x-scatter {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+}
+
+.x-frame {
+  fill: none;
+  stroke: var(--divider);
+}
+
+.x-pt {
+  fill: var(--accent-600);
+  fill-opacity: 0.8;
+}
+
+.x-pt.sel {
+  fill: var(--cyan);
+  fill-opacity: 1;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+/* scenario */
+.x-targets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+  border: 1px solid var(--divider);
+  padding: 12px 14px;
+  margin: 0 0 14px;
+}
+
+.x-targets legend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.x-target-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+}
+
+.x-target-name {
+  font-weight: 600;
+}
+
+.x-target-field input {
+  width: 96px;
+  padding: 5px 6px;
+  font: inherit;
+  font-size: 15px;
+  border: 1px solid var(--neutral-500);
+}
+
+.x-target-field input:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 1px;
+}
+
+.x-target-hint {
+  font-size: 11.5px;
+  color: var(--muted-72);
+}
+
+.x-target-sum {
+  font-size: 13px;
+  min-width: 150px;
+}
+
+.x-problems {
+  border-left: 3px solid var(--rule-orange);
+  background: var(--neutral-100);
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.x-problems ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+/* the Explore charts scale with their width: on a phone, larger axis text stays readable */
+@media (max-width: 640px) {
+  .x-chart .x-axis {
+    font-size: 19px;
+  }
+}

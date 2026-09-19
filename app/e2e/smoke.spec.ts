@@ -27,6 +27,7 @@ const ROUTES = [
   '/cio?tab=performance',
   '/cio?tab=positioning',
   '/cio?tab=markets',
+  '/cio?tab=explore',
   '/macro',
   '/macro?tab=factors',
   '/macro?tab=indicators',
@@ -279,6 +280,63 @@ test.describe('demonstrated controls (desktop project)', () => {
   test('workstation surfaces the demonstrated publication gate', async ({ page }) => {
     await ready(page, '/recon');
     await expect(page.getByText(/Publication gate \(demonstrated\)/)).toBeVisible();
+  });
+});
+
+test.describe('CIO Monthly › Explore (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('a category, a month, a pair and a scenario, all kept in the address', async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (e) => pageErrors.push(String(e)));
+    await ready(page, '/cio?tab=explore');
+    const grid = page.locator('#cio-x-grid');
+    // a month no report carries is shown as such, never filled
+    await expect(grid.locator('thead th')).toHaveCount(18);
+    await expect(grid.locator('thead')).toContainText('no report');
+
+    await grid.getByRole('button', { name: 'Growth', exact: true }).click();
+    await expect(page).toHaveURL(/cat=growth/);
+    await expect(page.locator('#cio-x-cat h2')).toHaveText('Growth: return and weight');
+
+    await grid
+      .getByRole('button', { name: 'Open the report with data through March 2026' })
+      .click();
+    await expect(page).toHaveURL(/v=2026-03-31/);
+    await expect(page.locator('#cio-x-cat .x-lede')).toContainText(
+      'In March 2026 it was 47.0% of the fund against a 48.0% target (policy range 40–56%).',
+    );
+
+    const corr = page.locator('#cio-x-corr');
+    await corr.getByRole('button', { name: /^Growth and Real Assets/ }).click();
+    await expect(page).toHaveURL(/pair=growth-ra/);
+    await expect(corr.locator('.x-lede')).toContainText('correlation 0.33 over 16 months');
+    await expect(corr.locator('.x-lede')).toContainText('cannot tell a relation from none');
+
+    const scen = page.locator('#cio-x-scenario');
+    await scen.getByLabel('Growth').fill('50');
+    await expect(scen).toContainText('No amounts yet');
+    await expect(scen).toContainText('The targets add to 102.0%; they must add to 100%.');
+    await scen.getByLabel('Risk Reduction & Mit.').fill('22');
+    await expect(scen.locator('.x-lede')).toHaveText(
+      '$2,787M bought and $2,787M sold — 3.1% of the fund changing hands.',
+    );
+    await expect(page).toHaveURL(/targets=growth%3A50/);
+
+    // the link reproduces the screen
+    await page.reload();
+    await expect(page.locator('#cio-x-cat h2')).toHaveText('Growth: return and weight');
+    await expect(scen.getByLabel('Growth')).toHaveValue('50');
+    await expect(scen.locator('.x-lede')).toContainText('$2,787M bought');
+    await scen.getByRole('button', { name: /Reset to the report/ }).click();
+    await expect(page).not.toHaveURL(/targets=/);
+    expect(pageErrors).toEqual([]);
+  });
+
+  test('the OPEB Trust uses its own policy ranges', async ({ page }) => {
+    await ready(page, '/cio?tab=explore');
+    await page.getByRole('button', { name: 'OPEB Trust' }).click();
+    await expect(page.locator('#cio-x-scenario')).toContainText('range 35–55%');
   });
 });
 

@@ -178,9 +178,10 @@ report from its generated block, and the unit test fails if that block drifts fr
 
 ## Reading the tab
 
-The tab has five sub-tabs (`?tab=`): **Slides** (the default), **Summary** (headline figures,
+The tab has six sub-tabs (`?tab=`): **Slides** (the default), **Summary** (headline figures,
 two-minute read, what changed), **Performance** (by period, attribution, trend across reports),
-**Positioning** (composites, flows, distribution, geography) and **Markets & items**. The
+**Positioning** (composites, flows, distribution, geography), **Markets & items** and **Explore**
+(below). The
 report slider above them moves across the sixteen extracted reports; figures that change flash
 briefly and bars move to their new values.
 
@@ -211,8 +212,43 @@ The deck carries an equivalent narrative implementation in its own file, because
 self-contained. Both read the same fixture; if the wording changes in one, change it in the other
 (`app/public/deck/index.html`, the executive slide).
 
+### Explore
+
+**Explore** treats the sixteen published reports as one monthly history
+(`app/src/lib/cioHistory.ts`, pure and unit-tested; panels in `app/src/components/explore/`,
+composed by `app/src/views/CioExplore.tsx`). The report slider is its timeline: every panel marks
+the report on screen, and choosing a month in the grid opens that report.
+
+| Panel | Question | What it shows |
+|---|---|---|
+| Month by month | Which categories moved the fund? | Every one-month return the reports printed, categories × data months; a category chosen here is followed in the next panel |
+| Chosen category | How did it do, and where did it sit? | Monthly return against benchmark; weight against target inside the IPS Table 1 range (market value for the Total Fund); figures table |
+| Correlations | Have the categories moved together? | Pairwise correlation of one-month returns with the months behind it and an approximate 95% range; the chosen pair as a scatter |
+| Scenario | What would it take to move to different targets? | Dollars per category from the report's month-end market values to targets the reader enters |
+
+Rules it keeps:
+
+- **As first reported.** Each month is that report's own one-month figure; later restatements are
+  not applied (the reports print only their own month).
+- **Gaps stay gaps.** No report carries November 2025 data. That column is marked "no report",
+  lines break across it, and correlations use only months where both categories have a figure.
+- **Thin evidence is said to be thin.** A correlation is shown from 12 months, with its count and
+  an approximate 95% range (Fisher z, which assumes independent months); a range that includes
+  zero is hatched and said to be indistinguishable from none. Appraisal-based private holdings
+  smooth monthly returns, so correlations with them read low and the true range is wider — the
+  panel says so. For the Pension Fund, with 16 months, every pair’s range includes zero (September 2026).
+- **The scenario is arithmetic.** Proposed target × the lines' total − the category's market
+  value; the other line (cash, overlays) is a source of funds, so buys equal sells. Nothing is
+  shown until the targets add to 100% (±0.05); a target outside the IPS range is flagged as
+  needing a policy change. It is labelled hypothetical, not a recommendation or a trade plan.
+- The Total Fund is left out of the correlations (it contains each category). Everything derived
+  is `calculated`; the inputs are the reports' printed figures (`reported_public`). With a
+  template file or workstation dataset on screen, the history panels still use the published
+  reports (and say so); the scenario uses the figures on screen.
+
 State that changes what a panel shows lives in the URL — `?e=` fund, `?v=` report, `tab`,
-`perf`, `attr`, `trend`, `compare`, `slide` — so a pasted link reproduces the screen. Each panel's
+`perf`, `attr`, `trend`, `compare`, `slide`, and on Explore `cat`, `pair`, `targets` — so a
+pasted link reproduces the screen. Each panel's
 ⋯ menu copies its table as CSV or a link that opens that panel (`?p=`), and the footer glossary
 defines the terms.
 
