@@ -76,6 +76,22 @@ A row with neither a value nor text is an empty slot and is skipped.
 Both funds are required. The format name changes if the columns or sections change, and the
 dashboard refuses a file of another format.
 
+### What is refused, besides missing required figures
+
+- **Flows** are all or nothing per fund: every category (and the other line, when there is one)
+  or none. Left empty, flows show as "not supplied" — never as a $0M net.
+- **Ranges**: weights and policy targets between 0% and 100%, policy targets adding to 100%
+  (±0.3); category market values and cash not negative; the total market value positive;
+  geography shares between 0% and 100%; market counts whole numbers.
+- **The distribution**: bin counts are whole numbers of months, 0 or more, adding to 120; the
+  standard deviation is not negative; the mean and the latest month lie between the lowest and
+  highest months; the latest month equals the Total Fund 1M return (±0.05) — it is the same
+  month — and its bin has at least one month.
+- **Dates**: real calendar dates; the report date comes after the date the data runs through
+  (a month-only report date, after that month); the market table's date is on or after it.
+
+Every rule holds for all 16 published reports, for both funds.
+
 ## Classification
 
 A template file's figures are shown as `calculated` — entered by the team, not quoted from a

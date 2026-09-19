@@ -101,8 +101,10 @@ describe.each(CASES)('%s — figures agree with each other', (_name, _v, _entity
     within(e.comps.reduce((s, c) => s + c.pct, 0) + otherPct, 100, 0.25);
   });
 
-  it('monthly flows net to the printed total', () => {
-    within(e.comps.reduce((s, c) => s + c.flow, 0) + otherFlow, e.netflow, 1);
+  it('monthly flows net to the printed total (every published report prints its flows)', () => {
+    expect(e.netflow).not.toBeNull();
+    for (const c of e.comps) expect(c.flow).not.toBeNull();
+    within(e.comps.reduce((s, c) => s + c.flow!, 0) + otherFlow, e.netflow!, 1);
   });
 
   it('every return series has one slot per period', () => {
@@ -119,12 +121,14 @@ describe.each(CASES)('%s — figures agree with each other', (_name, _v, _entity
   });
 
   it('the return histogram sums to 120 months and places the latest month in its bin', () => {
-    expect(e.hist.c).toHaveLength(BINS.length);
-    expect(e.hist.c.reduce((s, n) => s + n, 0)).toBe(120);
-    expect(inBin(BINS[e.hist.latestBin]!, e.hist.latest)).toBe(true);
-    within(e.hist.latest, e.total.r[0]!, 0.051);
-    expect(e.hist.min).toBeLessThanOrEqual(e.hist.mean);
-    expect(e.hist.mean).toBeLessThanOrEqual(e.hist.max);
+    const h = e.hist!;
+    expect(h).not.toBeNull();
+    expect(h.c).toHaveLength(BINS.length);
+    expect(h.c.reduce((s, n) => s + n, 0)).toBe(120);
+    expect(inBin(BINS[h.latestBin]!, h.latest)).toBe(true);
+    within(h.latest, e.total.r[0]!, 0.051);
+    expect(h.min).toBeLessThanOrEqual(h.mean);
+    expect(h.mean).toBeLessThanOrEqual(h.max);
   });
 
   it('geography: DM + EM = 100%, market counts add up, five countries per group in order', () => {

@@ -38,8 +38,8 @@ export interface CioComposite {
   pct: number;
   /** 2024 SAA target, % */
   tgt: number;
-  /** rebalancing flow in the report month, $ millions */
-  flow: number;
+  /** rebalancing flow in the report month, $ millions; null when the input did not supply it */
+  flow: number | null;
   /** composite return by period (null = not printed) */
   r: (number | null)[];
   /** composite policy benchmark by period */
@@ -53,17 +53,19 @@ export interface CioEntity {
   aum: number;
   /** $ millions */
   mv: number;
-  /** cash and equivalents, $ millions */
-  cash: number;
+  /** cash and equivalents, $ millions; null when the input did not supply it */
+  cash: number | null;
   /** growth of a dollar as charted in the report (trailing 5 years) */
   god: number | null;
   pages: string;
   total: { r: (number | null)[]; b: (number | null)[]; h: (number | null)[] };
   comps: CioComposite[];
   /** lines the report totals but does not assign to a composite (overlays, other, cash) */
-  other: { n: string; mv: number; pct: number; flow: number } | null;
-  netflow: number;
+  other: { n: string; mv: number; pct: number; flow: number | null } | null;
+  /** net rebalancing, $ millions; null unless every flow was supplied (never a sum of gaps) */
+  netflow: number | null;
   overlays: { n: string; may: number; si: number }[] | null;
+  /** the 120-month return distribution; null when the input did not supply it */
   hist: {
     c: number[];
     mean: number;
@@ -73,7 +75,7 @@ export interface CioEntity {
     max: number;
     latest: number;
     latestBin: number;
-  };
+  } | null;
   geo: {
     dm: number;
     em: number;
@@ -135,8 +137,9 @@ export interface DeckVintage {
   url: string | null;
   /** the date the macro strip's FRED figures are read as of; absent when the strip has none */
   macroLabel?: string;
-  /** a template file read in this browser: its name; the deck says the figures are unpublished */
-  local?: string;
+  /** figures that are not a published report — a template file or an imported workstation
+   *  dataset: what it is, its name, and its classification; the deck says so on every slide */
+  local?: { kind: string; name: string; cls: string };
   /** a workstation feed carries one fund: the deck locks to it */
   single?: boolean;
 }
@@ -212,7 +215,7 @@ export function deckVintage(v: CioVintage): DeckVintage {
     histRange: histRange(v.dataThrough),
     url: v.url,
     ...(v.origin === 'file'
-      ? { local: v.file }
+      ? { local: { kind: 'template file', name: v.file, cls: 'calculated' } }
       : CIO_MACRO[v.reportDate]
         ? { macroLabel: longDate(CIO_MACRO[v.reportDate]!.asOf) }
         : {}),

@@ -192,6 +192,21 @@ links to the panel holding its evidence. **What changed** lists the moves an ana
 against the prior report (half a point of weight, a tenth of a point of return, an excess that
 changed sign, any policy-target change) with direction chips.
 
+Four rules keep those sentences honest (audit, September 18, 2026):
+
+- **Periods.** A new fiscal year restarts FYTD on July 1, so the July report's FYTD is not compared
+  with June's completed year: the change list and the FYTD tile say "new fiscal year" instead of a
+  change, and FYTD excess sign flips are not counted across the turn (calendar YTD likewise across
+  January). `cioChanges` requires both reports' data-through dates, so no caller can skip this.
+- **Market period.** The market table is as of a month after the fund figures; its lead is named
+  with its own dates ("from July 1 to July 31, 2026"), never folded into the fund month.
+- **Histogram.** The bins do not rank months within a bin, so the latest month is placed in its
+  range with the months below and beside it (a bracket), not at a percentile.
+- **Missing is missing.** A figure the input did not supply — cash, flows, the distribution —
+  is `null` and shown as "not supplied"; a net is computed only from a complete set of flows.
+  An imported feed is labelled with its own rows' classification (the most cautious one when they
+  are mixed) and its dataset ID, on the page and on every slide.
+
 The deck carries an equivalent narrative implementation in its own file, because it must stay
 self-contained. Both read the same fixture; if the wording changes in one, change it in the other
 (`app/public/deck/index.html`, the executive slide).

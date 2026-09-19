@@ -1,4 +1,6 @@
 import {
+  BINS,
+  longDate,
   monthName,
   monthYear,
   PERIOD_INDEX,
@@ -36,6 +38,26 @@ const list = (items: string[]) =>
   items.length <= 1
     ? (items[0] ?? '')
     : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
+/** LACERA's fiscal year runs July to June; the fiscal year a date falls in (FY2026 = July 2025 –
+ *  June 2026). FYTD figures of two reports compare only within one fiscal year. */
+export function fiscalYearOf(iso: string): number {
+  const y = Number(iso.slice(0, 4));
+  return Number(iso.slice(5, 7)) >= 7 ? y + 1 : y;
+}
+
+/** Where the latest month sits in the report's grouped distribution. The bins do not rank months
+ *  within a bin, so this is a bracket — months in lower ranges, months sharing the range — not a
+ *  percentile. */
+export function histPlace(h: NonNullable<CioEntity['hist']>) {
+  return {
+    months: h.c.reduce((s, n) => s + n, 0),
+    lower: h.c.slice(0, h.latestBin).reduce((s, n) => s + n, 0),
+    same: h.c[h.latestBin] ?? 0,
+    range: `${BINS[h.latestBin] ?? ''}%`,
+    tail: h.c.slice(0, 5).reduce((s, n) => s + n, 0),
+  };
+}
 
 const excessAt = (e: CioEntity, i: number): number | null => {
   const f = e.total.r[i];
@@ -131,24 +153,33 @@ export function cioNarrative(
     a:
       `${Math.abs(widest.d) <= 1 ? 'Every category is within 1 pp of its 2024 SAA target' : 'Not every category is within 1 pp of its 2024 SAA target'} ` +
       `(widest: ${widest.c.short} ${signed(widest.d)} pp, ${pct(widest.c.pct)} against a ${pct(widest.c.tgt)} target). ` +
-      `${month} flows netted ${moneyMm(e.netflow)}` +
+      (e.netflow === null
+        ? `${month} flows were not supplied`
+        : `${month} flows netted ${moneyMm(e.netflow)}`) +
       (overlayMonth === null ? '.' : `; overlay programs added ${moneyMm(overlayMonth)}.`),
     jumpTo: 'cio-comps',
   });
 
   // 4 — risk and market context
-  const below = e.hist.c.slice(0, e.hist.latestBin).reduce((s, n) => s + n, 0);
-  const months = e.hist.c.reduce((s, n) => s + n, 0) || 120;
-  const tail = e.hist.c.slice(0, 5).reduce((s, n) => s + n, 0);
   const mktRows = (v.MKT ?? []).flatMap((g) => g.rows).filter((r) => r.v[fytd] !== null);
-  const lead = mktRows.length ? mktRows.reduce((a, b) => (b.v[fytd]! > a.v[fytd]! ? b : a)) : null;
+  const lead =
+    mktRows.length && v.marketAsOf
+      ? mktRows.reduce((a, b) => (b.v[fytd]! > a.v[fytd]! ? b : a))
+      : null;
+  const place = e.hist ? histPlace(e.hist) : null;
   points.push({
     id: 'risk',
     q: 'What is the risk and market context?',
     a:
-      `${monthYear(v.dataThrough)}'s ${signed(e.hist.latest)}% sits above ${Math.round((below / months) * 100)}% ` +
-      `of the last ${months} months; ${tail} of them fell below −2%.` +
-      (lead ? ` ${lead.n} led the fiscal year (${signed(lead.v[fytd]!)}%).` : '') +
+      (place && e.hist
+        ? `${monthYear(v.dataThrough)}'s ${signed(e.hist.latest)}% falls in the ${place.range} range: ` +
+          `${place.lower} of the last ${place.months} months were lower and ${place.same} shared the ` +
+          `range; ${place.tail} fell below −2%.`
+        : 'The return distribution was not supplied.') +
+      // the market table has its own as-of date, a month after the fund figures
+      (lead && v.marketAsOf
+        ? ` In the market table, ${lead.n} led fiscal-year-to-date returns (${signed(lead.v[fytd]!)}% from July 1 to ${longDate(v.marketAsOf)}).`
+        : '') +
       (opts.macroLine ? ` ${opts.macroLine}` : ''),
     jumpTo: 'cio-hist',
   });
@@ -163,14 +194,27 @@ export interface ChangeItem {
   delta: number;
   unit: string;
   detail: string;
+  /** a period reset (a new fiscal year): context, not a change to rank */
+  reset?: boolean;
 }
 
 /** What moved since the prior report — the short list an analyst would act on, not every
  *  difference. Thresholds: half a point of weight, a tenth of a point of return, a sign change
- *  in excess, any change in a policy target, and the fund's market value. */
-export function cioChanges(cur: CioEntity, prev: CioEntity): ChangeItem[] {
+ *  in excess, any change in a policy target, and the fund's market value. With the two reports'
+ *  data-through dates, a fiscal-year (or calendar-year) rollover is a reset, not a change: the
+ *  FYTD (or YTD) figures cover different periods and are not compared. */
+export function cioChanges(
+  cur: CioEntity,
+  prev: CioEntity,
+  // required: without the two dates a fiscal-year rollover would read as a change
+  dates: { through: string; priorThrough: string },
+): ChangeItem[] {
   const out: ChangeItem[] = [];
   const { oneMonth, fytd, oneYear } = PERIOD_INDEX;
+  const ytd = PERIODS.indexOf('YTD');
+  const fyReset = fiscalYearOf(dates.through) !== fiscalYearOf(dates.priorThrough);
+  const yearReset = dates.through.slice(0, 4) !== dates.priorThrough.slice(0, 4);
+  const skip = (i: number) => (fyReset && i === fytd) || (yearReset && i === ytd);
 
   const mvDelta = (cur.mv - prev.mv) / 1000;
   if (Math.abs(mvDelta) >= 0.05) {
@@ -189,7 +233,7 @@ export function cioChanges(cur: CioEntity, prev: CioEntity): ChangeItem[] {
   ] as const) {
     const a = cur.total.r[i];
     const b = prev.total.r[i];
-    if (a === null || a === undefined || b === null || b === undefined) continue;
+    if (a === null || a === undefined || b === null || b === undefined || skip(i)) continue;
     if (Math.abs(a - b) >= 0.1) {
       out.push({
         id: `ret-${i}`,
@@ -204,7 +248,7 @@ export function cioChanges(cur: CioEntity, prev: CioEntity): ChangeItem[] {
   PERIODS.forEach((p, i) => {
     const a = excessAt(cur, i);
     const b = excessAt(prev, i);
-    if (a === null || b === null) return;
+    if (a === null || b === null || skip(i)) return;
     if ((a > 0 && b < 0) || (a < 0 && b > 0)) {
       out.push({
         id: `flip-${i}`,
@@ -241,14 +285,33 @@ export function cioChanges(cur: CioEntity, prev: CioEntity): ChangeItem[] {
 
   const m1 = cur.total.r[oneMonth];
   if (m1 !== null && m1 !== undefined && Math.abs(m1) >= 2) {
+    const place = cur.hist ? histPlace(cur.hist) : null;
     out.push({
       id: 'month',
       label: `Monthly return of ${pct(m1)}`,
       delta: m1,
       unit: 'pp',
-      detail: `sits above ${Math.round((cur.hist.c.slice(0, cur.hist.latestBin).reduce((s, n) => s + n, 0) / 120) * 100)}% of the last 120 months`,
+      detail: place
+        ? `in the ${place.range} range: ${place.lower} of the last ${place.months} months were lower, ${place.same} shared the range`
+        : 'the return distribution was not supplied',
     });
   }
 
-  return out.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  const ranked = out.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  const fa = cur.total.r[fytd];
+  const fb = prev.total.r[fytd];
+  if (fyReset && fa !== null && fa !== undefined && fb !== null && fb !== undefined) {
+    const priorFull = dates.priorThrough.slice(5, 7) === '06';
+    ranked.unshift({
+      id: 'fy-reset',
+      label: 'New fiscal year: FYTD restarted July 1',
+      delta: 0,
+      unit: 'pp',
+      detail:
+        `${pct(fa)} is FY${fiscalYearOf(dates.through)} to date; the prior report's ${pct(fb)} was ` +
+        `FY${fiscalYearOf(dates.priorThrough)}${priorFull ? ' in full' : ' to date'} — not comparable`,
+      reset: true,
+    });
+  }
+  return ranked;
 }

@@ -54,6 +54,20 @@
   .act:hover { color: var(--chrome-ink); }
   .act.done { border-top-color: var(--accent); opacity: .55; }
   .act.now { border-top-color: var(--accent); color: var(--chrome-ink); opacity: 1; }
+  .narrow-note { display: none; }
+  @media (max-width: 760px) {
+    .topbar { flex-wrap: wrap; gap: 6px 12px; padding: 6px 10px; }
+    .topbar .entity > span:last-child { display: none; }
+    .acts { padding: 4px 10px 0; gap: 4px; }
+    .act { min-width: 0; font-size: 10px; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .act small { display: none !important; }
+    .viewport { overflow: hidden; }
+    .bar { flex-wrap: wrap; gap: 6px 10px; padding: 6px 10px; }
+    .bar .spacer, .bar > span:not(.counter):not(#slide-title), #pres-btn, #print-btn { display: none; }
+    .narrow-note { display: block; padding: 7px 12px; font-size: 12.5px; background: var(--chrome); color: var(--chrome-ink); border-bottom: 1px solid var(--chrome-line); }
+    .narrow-note a { color: var(--accent); font-weight: 700; }
+    body.embedded .narrow-note { display: none; }
+  }
   .act small { display: block; font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 11px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .help { position: absolute; inset: 0; z-index: 30; background: rgba(16,34,60,.93); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .help .box { width: 600px; padding: 28px 32px; }
@@ -400,6 +414,7 @@
     </div>
   </div>
 
+  <div class="narrow-note">The slides are small on a phone: <a href="../#/cio?tab=summary">read the dashboard summary</a>, or turn the phone sideways.</div>
   <div class="acts" id="acts"></div>
   <div class="viewport">
     <div class="help" id="help" hidden>
@@ -791,7 +806,7 @@
     '<h4>Slide 4 · Where the gap came from</h4><p><b>Classification:</b> <code>proxy_estimate</code>. Contribution = (composite return − its policy benchmark) × month-end weight. This is not the report\'s attribution and not a Brinson decomposition: beginning-of-period weights, the allocation effect, overlays, cash and compounding are all folded into the residual, which is shown as its own bar so the reader can see how much the proxy explains. Use it to decide where to look, not to quantify manager value-add. The slide names the composites that explain most of the 1 M, FYTD and 1 Y gaps.</p>',
     '<h4>Slide 5 · Allocation and flows</h4><p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); monthly rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
     '<h4>Slide 6 · Return distribution</h4><p><b>Source:</b> pp. 9 and 14. <b>Classification:</b> <code>reported_public</code> counts and statistics; shares, tail counts and the latest month\'s bin percentile <code>calculated</code>. Bin edges as printed; the latest month is placed by value. "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labelled in the report. The forecast-volatility pages (10, 15) are image-only in the PDF and are not reproduced.</p>',
-    '<h4>Slide 7 · Market context</h4><p><b>Source:</b> p. 5 table (Bloomberg, State Street), p. 4 notable items, p. 6 key macro indicators. In the macro strip, PCE inflation, the federal funds target range and the unemployment and participation rates are FRED series, read as FRED showed them at the month end before the month of the report (its real-time archive), so later revisions do not change them; for the latest report they equal the printed figures, which a unit test checks. The dollar index and themes are typed from the report (pp. 4, 6) and shown for the latest report only. <b>Classification:</b> <code>reported_public</code>; PCE inflation is <code>calculated</code> (year-over-year from the price index); the finding line is <code>calculated</code> (best/worst row). Kept separate from fund performance by design: index moves explain the environment the benchmarks moved in, not the Fund\'s result against them. FYTD equals 1 Y because the fiscal year ends June 30; NCREIF ODCE (net) is the latest available quarter.</p>',
+    '<h4>Slide 7 · Market context</h4><p><b>Source:</b> p. 5 table (Bloomberg, State Street), p. 4 notable items, p. 6 key macro indicators. In the macro strip, PCE inflation, the federal funds target range and the unemployment and participation rates are FRED series, read as FRED showed them at the month end before the month of the report (its real-time archive), so later revisions do not change them; for the latest report they equal the printed figures, which a unit test checks. The dollar index and themes are typed from the report (pp. 4, 6) and shown for the latest report only. <b>Classification:</b> <code>reported_public</code>; PCE inflation is <code>calculated</code> (year-over-year from the price index); the finding line is <code>calculated</code> (best/worst row). Kept separate from fund performance by design: index moves explain the environment the benchmarks moved in, not the Fund\'s result against them. FYTD runs from July 1, so in a table as of June 30 it equals 1 Y and in one as of July 31 it is July alone; NCREIF ODCE (net) is the latest available quarter.</p>',
     '<h4>Slide 8 · Geographic exposure</h4><p><b>Source:</b> "Geographic Exposure by AUM as of ' + VINTAGE.monthYear + '", p. 11 (Pension Fund) and p. 16 (OPEB Master Trust). <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8 / 11–12):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries are the report\'s top five in each group; the remaining markets are not itemized. One fixed 0–80% scale is used for both groups so the U.S. weight is drawn to size.</p>',
     '<h4>Slide 9 · Items for attention</h4><p><b>Source:</b> p. 19 (initiatives and personnel searches), p. 20 (manager/consultant updates), p. 24 (quiet period). Statuses are reproduced as printed; the report gives no dates or owners. The "for attention" grouping (a named manager personnel change; an external search process) is an editorial grouping to help the reader, not a report category.</p>',
   ];
@@ -809,13 +824,14 @@
   Object.keys(VFILL).forEach(k => $$('.' + k).forEach(el => { el.textContent = VFILL[k]; }));
   // a template file opened in the dashboard: the figures are the team's, not the published report's
   if (VINTAGE.local) {
-    $('#deck-origin').textContent = 'figures from a template file (' + VINTAGE.local + '), not published';
+    const L = VINTAGE.local;
+    $('#deck-origin').textContent = 'figures from a ' + L.kind + ' (' + L.name + '), not published';
     $$('.slide .src').forEach(el => {
-      el.textContent = 'Source: template file ' + VINTAGE.local + ', read in this browser and not published. Differences and sums are calculated from its figures.';
-      const cls = document.createElement('span'); cls.className = 'cls'; cls.textContent = 'calculated';
+      el.textContent = 'Source: ' + L.kind + ' ' + L.name + ', read in this browser and not published. Differences and sums are calculated from its figures.';
+      const cls = document.createElement('span'); cls.className = 'cls'; cls.textContent = L.cls;
       el.appendChild(document.createElement('br')); el.appendChild(cls);
     });
-    NOTES.forEach((n, i) => { NOTES[i] = '<p><b>Template file.</b> These notes describe the published report; the figures on this slide come from ' + VINTAGE.local + ', which is not published.</p>' + n; });
+    NOTES.forEach((n, i) => { NOTES[i] = '<p><b>' + L.kind.charAt(0).toUpperCase() + L.kind.slice(1) + '.</b> These notes describe the published report; the figures on this slide come from ' + L.name + ', which is not published.</p>' + n; });
   }
   const isPresenter = new URLSearchParams(location.search).has('presenter');
   const bc = ('BroadcastChannel' in window && location.protocol !== 'file:') ? new BroadcastChannel('cio-decision-deck') : null;
@@ -952,6 +968,7 @@
   function hideTip() { tip.classList.remove('on'); }
   function bindTip(el, htmlFn) { el.addEventListener('mouseenter', e => showTip(htmlFn(), e)); el.addEventListener('mousemove', moveTip); el.addEventListener('mouseleave', hideTip); }
   function countUp(el, to, fmt, from) {
+    if (to == null) { el.textContent = 'not supplied'; return; }
     from = from == null ? 0 : from;
     if (REDUCED) { el.textContent = fmt(to); return; }
     const t0 = performance.now(), dur = 1000;
@@ -983,18 +1000,19 @@
       const hurdleText = belowHurdle.length ? 'Below the actuarial hurdle over ' + belowHurdle.join(', ') + '; above it over the other periods of one year or longer.' : 'Above the actuarial hurdle over every period of one year or longer.';
       const mktRows = MKT.flatMap(g => g.rows).filter(r => r.v[2] != null);
       const mktLead = mktRows.length ? mktRows.reduce((a, b) => b.v[2] > a.v[2] ? b : a) : null;
-      const marketLead = mktLead ? mktLead.n + ' led the fiscal year (' + sgn(mktLead.v[2]) + '%); ' : '';
+      // (5) the market table has its own as-of date, a month after the fund figures
+      const marketLead = mktLead ? 'In the market table, ' + mktLead.n + ' led fiscal-year-to-date returns (' + sgn(mktLead.v[2]) + '% from July 1 to ' + VINTAGE.marketLabel + '). ' : '';
       const macroLine = MACRO.length >= 2 ? MACRO.slice(0, 2).map(m => m.l.replace(/,.*$/, '') + ' ' + m.v).join(', ') + '.' : '';
       $('#s1-finding').textContent = VINTAGE.month + ': ' + pct(t.r[0]) + ' net, ' + sgn(ex[0]) + ' pts vs. benchmark · FYTD ' + pct(t.r[2]) + ': ' + sgn(ex[2]) + ' pts vs. benchmark, ' + sgn(t.r[2] - t.h[2]) + ' pts vs. actuarial hurdle';
       const H = [
         ['On track vs. policy and hurdle?', 'The ' + e.short + ' returned <b>' + pct(t.r[0]) + '</b> net in ' + VINTAGE.month + ' against a <b>' + pct(t.b[0]) + '</b> policy benchmark (' + sgn(ex[0]) + ' pts). ' + (led.length ? 'Ahead over ' + led.join(', ') : 'Ahead over no period') + (trail.length ? '; behind over ' + trail.join(', ') : '') + '. ' + hurdleText, 'Slide 3 · p. ' + (entity === 'pension' ? '9' : '14')],
         ['Where did the gap come from?', 'Indicatively, ' + VINTAGE.month + (ex[0] < 0 ? '\'s shortfall traces to <b>' : '\'s lead came mainly from <b>') + a1.c.short + '</b> (' + pct(a1.c.r[0]) + ' vs. ' + pct(a1.c.b[0]) + ' benchmark); the fiscal-year and one-year ' + (ex[2] < 0 ? 'gaps trace' : 'results trace') + ' to <b>' + aF.c.short + '</b>' + (aY.c.k === aF.c.k ? '' : ' and <b>' + aY.c.short + '</b>') + '.', 'Slide 4 · proxy estimate, residual shown'],
-        ['Positioned per policy?', (Math.abs(maxGap.d) <= 1 ? 'Every category is within 1 pt of its 2024 SAA target' : 'Not every category is within 1 pt of its 2024 SAA target') + ' (largest gap: <b>' + maxGap.c.short + ' ' + sgn(maxGap.d) + ' pts</b>). ' + VINTAGE.month + ' flows netted ' + money(e.netflow) + 'M' + (ovlMay != null ? '; overlay programs added <b>' + money(ovlMay) + 'M</b>.' : '.'), 'Slides 2, 5 · pp. 9/14, 18'],
-        ['Risk and market context', VINTAGE.month + '\'s ' + sgn(e.hist.latest) + '% sits above ' + Math.round(e.hist.c.slice(0, e.hist.latestBin).reduce((a, b) => a + b, 0) / 120 * 100) + '% of the last 120 months; ' + e.hist.c.slice(0, 5).reduce((a, b) => a + b, 0) + ' months fell below −2%. ' + marketLead + macroLine, 'Slides 6–8 · pp. 4–6, 9/14'],
+        ['Positioned per policy?', (Math.abs(maxGap.d) <= 1 ? 'Every category is within 1 pt of its 2024 SAA target' : 'Not every category is within 1 pt of its 2024 SAA target') + ' (largest gap: <b>' + maxGap.c.short + ' ' + sgn(maxGap.d) + ' pts</b>). ' + (e.netflow == null ? VINTAGE.month + ' flows were not supplied' : VINTAGE.month + ' flows netted ' + money(e.netflow) + 'M') + (ovlMay != null ? '; overlay programs added <b>' + money(ovlMay) + 'M</b>.' : '.'), 'Slides 2, 5 · pp. 9/14, 18'],
+        ['Risk and market context', VINTAGE.month + '\'s ' + (e.hist ? sgn(e.hist.latest) + '% falls in the ' + BINS[e.hist.latestBin] + '% range: ' + e.hist.c.slice(0, e.hist.latestBin).reduce((a, b) => a + b, 0) + ' of the last 120 months were lower and ' + e.hist.c[e.hist.latestBin] + ' shared the range; ' + e.hist.c.slice(0, 5).reduce((a, b) => a + b, 0) + ' fell below −2%. ' : 'return distribution was not supplied. ') + marketLead + macroLine, 'Slides 6–8 · pp. 4–6, 9/14'],
       ];
       heads.innerHTML = H.map((h, i) => '<div class="head" data-q="' + i + '"><i class="' + (i === 0 ? '' : 'q') + '"></i><p><b>' + h[0] + '</b> ' + h[1] + '<small>' + h[2] + '</small></p></div>').join('');
       const T = [
-        { l: 'Total market value', v: e.aum, f: v => '$' + v.toFixed(1) + 'B', d: 'Cash equivalents ' + money(e.cash) + 'M · growth of a dollar (5 Y) ' + (e.god == null ? '—' : '$' + e.god.toFixed(2)), go: 'summary' },
+        { l: 'Total market value', v: e.aum, f: v => '$' + v.toFixed(1) + 'B', d: (e.cash == null ? 'Cash equivalents not supplied' : 'Cash equivalents ' + money(e.cash) + 'M') + ' · growth of a dollar (5 Y) ' + (e.god == null ? '—' : '$' + e.god.toFixed(2)), go: 'summary' },
         { l: VINTAGE.month + ' net return', v: t.r[0], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + pct(t.b[0]) + ' · ' + chip(ex[0]), go: 'perf' },
         { l: 'Fiscal year to date', v: t.r[2], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + chip(ex[2]) + ' · vs. hurdle ' + chip(t.r[2] - t.h[2]), go: 'perf' },
         { l: 'Ten years, annualized', v: t.r[7], f: v => v.toFixed(1) + '%', d: 'vs. benchmark ' + chip(ex[7]) + ' · vs. hurdle ' + chip(t.r[7] - t.h[7]), go: 'perf' },
@@ -1280,11 +1298,12 @@
       const d = e.comps.map(c => ({ n: c.short, sub: pct(c.pct) + ' actual · ' + pct(c.tgt) + ' target', v: c.pct - c.tgt, lab: sgn(c.pct - c.tgt) + ' pts', tip: [['Market value', '$' + c.mv.toLocaleString('en-US') + ' mm'], ['Actual weight', pct(c.pct)], ['2024 SAA target', pct(c.tgt)], ['Difference', sgn(c.pct - c.tgt) + ' pts']] }));
       if (e.other) d.push({ n: 'Overlays + Other', sub: pct(e.other.pct) + ' of fund · no target', v: 0, lab: pct(e.other.pct) + ' (no target)', tip: [['Market value', '$' + e.other.mv.toLocaleString('en-US') + ' mm'], ['Weight', pct(e.other.pct)], ['Target', 'none in report']] });
       hbars(drift, d, { min: 1 });
-      const dir = c => { const gap = c.pct - c.tgt; if (c.flow === 0) return 'no flow'; return (gap > 0 && c.flow > 0) || (gap < 0 && c.flow < 0) ? 'away from target' : 'toward target'; };
+      const dir = c => { const gap = c.pct - c.tgt; if (c.flow == null) return 'not supplied'; if (c.flow === 0) return 'no flow'; return (gap > 0 && c.flow > 0) || (gap < 0 && c.flow < 0) ? 'away from target' : 'toward target'; };
       const f = e.comps.map(c => ({ n: c.short, sub: dir(c), v: c.flow, lab: money(c.flow) + 'M', tip: [[VINTAGE.month + ' flow', money(c.flow) + 'M'], ['Weight vs. target', sgn(c.pct - c.tgt) + ' pts'], ['Direction', dir(c)]] }));
       if (e.other) f.push({ n: 'Overlays & Hedges', sub: '', v: e.other.flow, lab: money(e.other.flow) + 'M', tip: [[VINTAGE.month + ' flow', money(e.other.flow) + 'M']] });
       f.push({ n: 'Net rebalancing', sub: 'as reported', v: e.netflow, lab: money(e.netflow) + 'M', net: true, tip: [['Net rebalancing activity', money(e.netflow) + 'M']] });
-      hbars(flows, f, { min: 50 });
+      if (e.netflow == null) flows.innerHTML = '<div class="empty-note" style="position:static;margin-top:40px;font-size:15px">Flows were not supplied for this report.</div>';
+      else hbars(flows, f, { min: 50 });
       if (e.overlays) {
         const may = e.overlays.reduce((s, o) => s + o.may, 0), si = e.overlays.reduce((s, o) => s + o.si, 0);
         ovl.innerHTML = e.overlays.map(o => '<div class="tile"><div class="l">' + o.n + ' · ' + VINTAGE.month + ' gain / (loss)</div><div class="v">' + money(o.may) + 'M</div><div class="d">Since inception ' + money(o.si) + 'M</div></div>').join('') +
@@ -1295,9 +1314,9 @@
       const maxGap = e.comps.reduce((a, b) => Math.abs(b.pct - b.tgt) > Math.abs(a.pct - a.tgt) ? b : a);
       const away = e.comps.filter(c => dir(c) === 'away from target').map(c => c.short);
       const gap = maxGap.pct - maxGap.tgt;
-      $('#al-finding').textContent = (Math.abs(gap) <= 1 ? 'Within 1 pt of every target (largest: ' : 'Largest gap to target: ') + maxGap.short + ' ' + sgn(gap) + ' pts' + (Math.abs(gap) <= 1 ? ')' : '') + '; ' + VINTAGE.month + ' flows net ' + money(e.netflow) + 'M' + (away.length ? '; ' + away.join(', ') + ' moved away from target' : '; all flows toward target');
+      $('#al-finding').textContent = (Math.abs(gap) <= 1 ? 'Within 1 pt of every target (largest: ' : 'Largest gap to target: ') + maxGap.short + ' ' + sgn(gap) + ' pts' + (Math.abs(gap) <= 1 ? ')' : '') + '; ' + (e.netflow == null ? 'flows not supplied' : VINTAGE.month + ' flows net ' + money(e.netflow) + 'M' + (away.length ? '; ' + away.join(', ') + ' moved away from target' : '; all flows toward target'));
       $('#al-table').innerHTML = tableHTML(['Category', 'Market value $mm', 'Actual %', 'Target %', 'Difference pts', VINTAGE.month + ' flow $M', 'Direction'],
-        e.comps.map(c => [c.n, c.mv.toLocaleString('en-US'), c.pct, c.tgt, +(c.pct - c.tgt).toFixed(1), money(c.flow), dir(c)]).concat(e.other ? [[e.other.n, e.other.mv.toLocaleString('en-US'), e.other.pct, '—', '—', money(e.other.flow), '—']] : [], [['Net rebalancing activity', '', '', '', '', money(e.netflow), '']]));
+        e.comps.map(c => [c.n, c.mv.toLocaleString('en-US'), c.pct, c.tgt, +(c.pct - c.tgt).toFixed(1), (c.flow == null ? '—' : money(c.flow)), dir(c)]).concat(e.other ? [[e.other.n, e.other.mv.toLocaleString('en-US'), e.other.pct, '—', '—', (e.other.flow == null ? '—' : money(e.other.flow)), '—']] : [], [['Net rebalancing activity', '', '', '', '', (e.netflow == null ? 'not supplied' : money(e.netflow)), '']]));
     }
     render();
     entityHooks.push(render);
@@ -1320,22 +1339,34 @@
     });
     host.appendChild(Object.assign(document.createElement('div'), { className: 'hbase' }));
     const tag = document.createElement('div'); tag.className = 'latest-tag'; host.appendChild(tag);
+    const absent = Object.assign(document.createElement('div'), { className: 'empty-note', textContent: 'The return distribution was not supplied for this report.' });
+    host.appendChild(absent);
     let prevStats = null;
-    bins.forEach(b => bindTip($('.hit', b.el), () => { const d = E().hist, c = d.c[b.i]; const cumul = d.c.slice(0, b.i + 1).reduce((a, x) => a + x, 0); return '<b>' + BINS[b.i] + ' %</b><table><tr><td class="dim">Months</td><td>' + c + ' of 120</td></tr><tr><td class="dim">Share</td><td>' + (c / 120 * 100).toFixed(1) + '%</td></tr><tr><td class="dim">Months at or below this bin</td><td>' + cumul + ' (' + (cumul / 120 * 100).toFixed(0) + '%)</td></tr></table>'; }));
+    bins.forEach(b => bindTip($('.hit', b.el), () => { const d = E().hist; if (!d) return 'Not supplied'; const c = d.c[b.i]; const cumul = d.c.slice(0, b.i + 1).reduce((a, x) => a + x, 0); return '<b>' + BINS[b.i] + ' %</b><table><tr><td class="dim">Months</td><td>' + c + ' of 120</td></tr><tr><td class="dim">Share</td><td>' + (c / 120 * 100).toFixed(1) + '%</td></tr><tr><td class="dim">Months at or below this bin</td><td>' + cumul + ' (' + (cumul / 120 * 100).toFixed(0) + '%)</td></tr></table>'; }));
     function render() {
-      const e = E(), d = e.hist, max = Math.max(...d.c) || 1, ppu = (H - TOP) / max;
+      const e = E(), d = e.hist;
+      const hp = ENT.pension.hist, ho = ENT.opeb.hist, share = (h, i) => h ? (h.c[i] / 120 * 100).toFixed(1) + '%' : '—';
+      $('#hist-table').innerHTML = tableHTML(['Monthly return bin (%)', 'Pension Fund months', 'Pension share', 'OPEB months', 'OPEB share'],
+        BINS.map((b, i) => [b, hp ? String(hp.c[i]) : '—', share(hp, i), ho ? String(ho.c[i]) : '—', share(ho, i)]));
+      absent.hidden = !!d; tag.hidden = !d;
+      if (!d) {
+        bins.forEach(b => { b.col.style.height = '0px'; b.v.textContent = ''; });
+        $('#hist-finding').textContent = 'Return distribution not supplied';
+        stats.innerHTML = '<h3>' + e.name + '</h3><div class="sub">The return distribution was not supplied for this report.</div>';
+        prevStats = null;
+        return;
+      }
+      const max = Math.max(...d.c) || 1, ppu = (H - TOP) / max;
       bins.forEach(b => { const c = d.c[b.i], h = c * ppu; b.col.style.height = h + 'px'; b.col.classList.toggle('latest', b.i === d.latestBin); b.v.textContent = c; b.v.style.bottom = (h + 4) + 'px'; });
       tag.style.left = (d.latestBin * BW + BW / 2) + 'px'; tag.style.bottom = (d.c[d.latestBin] * ppu + 22) + 'px'; tag.innerHTML = VINTAGE.monthYear + ': ' + sgn(d.latest) + '%<i></i>';
       const below2 = d.c.slice(0, 5).reduce((a, b) => a + b, 0), above2 = d.c.slice(9).reduce((a, b) => a + b, 0), mid = d.c[7] + d.c[8];
       const below = d.c.slice(0, d.latestBin).reduce((a, b) => a + b, 0);
-      $('#hist-finding').textContent = mid + ' of 120 months between 0% and +2%; ' + below2 + ' below −2%, ' + above2 + ' above +2% (σ ' + d.sd.toFixed(2) + '); ' + VINTAGE.monthYear + ' sits above ' + Math.round(below / 120 * 100) + '% of months';
+      $('#hist-finding').textContent = mid + ' of 120 months between 0% and +2%; ' + below2 + ' below −2%, ' + above2 + ' above +2% (σ ' + d.sd.toFixed(2) + '); ' + VINTAGE.monthYear + ' falls in the ' + BINS[d.latestBin] + '% range (' + below + ' months lower, ' + d.c[d.latestBin] + ' in the same range)';
       const items = [['Mean monthly return', d.mean, v => v.toFixed(2) + '%'], ['2024 SAA expected return', d.saa, v => v.toFixed(2) + '%'], ['Standard deviation', d.sd, v => v.toFixed(2) + '%'], ['Worst month', d.min, v => v.toFixed(1) + '%'], ['Best month', d.max, v => v.toFixed(1) + '%'],
         ['sec', 'Calculated from bin counts'], ['Months below −2%', below2, v => Math.round(v) + ' of 120'], ['Months above +2%', above2, v => Math.round(v) + ' of 120'], ['Months at or below ' + VINTAGE.month + '\'s bin', 120 - d.c.slice(d.latestBin + 1).reduce((a, b) => a + b, 0), v => Math.round(v) + ' of 120']];
       stats.innerHTML = '<h3>' + e.name + '</h3><div class="sub">Monthly returns (net), ' + VINTAGE.histRange + '</div><table>' + items.map((it, i) => it[0] === 'sec' ? '<tr class="sec"><td colspan="2">' + it[1] + '</td></tr>' : '<tr><td>' + it[0] + '</td><td><span data-k="' + i + '"></span></td></tr>').join('') + '</table>';
       items.forEach((it, i) => { if (it[0] !== 'sec') countUp($('[data-k="' + i + '"]', stats), it[1], it[2], prevStats ? prevStats[i] : 0); });
       prevStats = items.map(it => it[0] === 'sec' ? 0 : it[1]);
-      $('#hist-table').innerHTML = tableHTML(['Monthly return bin (%)', 'Pension Fund months', 'Pension share', 'OPEB months', 'OPEB share'],
-        BINS.map((b, i) => [b, String(ENT.pension.hist.c[i]), (ENT.pension.hist.c[i] / 120 * 100).toFixed(1) + '%', String(ENT.opeb.hist.c[i]), (ENT.opeb.hist.c[i] / 120 * 100).toFixed(1) + '%']));
     }
     render();
     enterHooks[idx('hist')] = () => { prevStats = null; render(); };

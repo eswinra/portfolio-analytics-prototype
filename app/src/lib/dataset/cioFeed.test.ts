@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CIO_LATEST } from '../../fixtures/cioMonthly';
 import { parseContractCsv } from '../contract/parse';
-import { buildCioFeed } from './cioFeed';
+import { buildCioFeed, feedClassification } from './cioFeed';
 import { buildDataset } from './model';
 
 /** The feed sample is the latest public vintage re-expressed as schema 1.4 rows: parsing it and
@@ -47,10 +47,10 @@ describe('cio_monthly feed (schema 1.4)', () => {
     });
     expect(e.other?.mv).toBe(p.other?.mv);
     expect(e.netflow).toBe(p.netflow);
-    expect(e.hist.c).toEqual(p.hist.c);
-    expect(e.hist.mean).toBe(p.hist.mean);
-    expect(e.hist.sd).toBe(p.hist.sd);
-    expect(e.hist.latestBin).toBe(p.hist.latestBin);
+    expect(e.hist?.c).toEqual(p.hist?.c);
+    expect(e.hist?.mean).toBe(p.hist?.mean);
+    expect(e.hist?.sd).toBe(p.hist?.sd);
+    expect(e.hist?.latestBin).toBe(p.hist?.latestBin);
     expect(feed!.classifications).toEqual(['reported_public']);
     expect(feed!.has).toEqual({ hist: true, flows: true, cash: true });
   });
@@ -91,5 +91,43 @@ describe('cio_monthly feed (schema 1.4)', () => {
     );
     expect(bad.ok).toBe(false);
     expect(bad.errors.some((e) => e.ruleId === 'V24' && e.column === 'metric_id')).toBe(true);
+  });
+});
+
+/** Audit 2026-09-18: a feed that lacks figures shows them as missing, and keeps its own label. */
+describe('imported feed: absent figures and classification', () => {
+  it('rows the file does not carry stay null, never zero', () => {
+    const lines = csv.split(/\r?\n/);
+    const trimmed = lines
+      .filter((l) => !/,cio_monthly,DEMOFUND,(hist_count|hist_stat|flow|cash),/.test(l))
+      .join('\n');
+    const res = parseContractCsv(trimmed);
+    expect(res.ok).toBe(true);
+    const f = buildCioFeed(res.records)!;
+    expect(f.has).toEqual({ hist: false, flows: false, cash: false });
+    expect(f.entity.cash).toBeNull();
+    expect(f.entity.netflow).toBeNull();
+    expect(f.entity.hist).toBeNull();
+    for (const c of f.entity.comps) expect(c.flow).toBeNull();
+  });
+
+  it('a synthetic feed is labelled synthetic; mixed rows take the most cautious class', () => {
+    expect(feedClassification(['synthetic'])).toEqual({ primary: 'synthetic', also: [] });
+    expect(feedClassification(['reported_public'])).toEqual({
+      primary: 'reported_public',
+      also: [],
+    });
+    expect(feedClassification(['calculated', 'reported_public'])).toEqual({
+      primary: 'calculated',
+      also: ['reported_public'],
+    });
+    expect(feedClassification(['reported_public', 'synthetic', 'proxy_estimate']).primary).toBe(
+      'synthetic',
+    );
+    // a class the page does not know is not trusted as public
+    expect(feedClassification(['unknown']).primary).toBe('synthetic');
+    const res = parseContractCsv(csv.replaceAll(',reported_public,', ',synthetic,'));
+    const f = buildCioFeed(res.records)!;
+    expect(feedClassification(f.classifications).primary).toBe('synthetic');
   });
 });

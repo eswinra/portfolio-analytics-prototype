@@ -1,4 +1,5 @@
 import type { CioComposite, CioEntity, CompositeKey } from '../../fixtures/cioMonthly';
+import type { Classification } from '../../components/pageMeta';
 import { CIO_PERIOD_TOKENS, type ContractRecord } from '../contract/schema';
 
 /**
@@ -39,7 +40,24 @@ export function histBinOf(pct: number): number {
 }
 
 const r1 = (v: number) => Math.round(v * 10) / 10;
+const roundOrNull = (v: number | null) => (v === null ? null : Math.round(v));
 const r2 = (v: number) => Math.round(v * 100) / 100;
+
+/** The label an imported feed carries on the page and the slides: its classifications as the
+ *  rows state them. Mixed rows take the most conservative class and name the others, so an
+ *  import is never promoted to reported_public by the page it is shown on. */
+const CAUTION: Classification[] = ['synthetic', 'proxy_estimate', 'calculated', 'reported_public'];
+export function feedClassification(classes: readonly string[]): {
+  primary: Classification;
+  also: Classification[];
+} {
+  const known = CAUTION.filter((c) => classes.includes(c));
+  // a class the page does not know is treated as the most cautious one
+  const primary = classes.some((c) => !CAUTION.includes(c as Classification))
+    ? 'synthetic'
+    : (known[0] ?? 'synthetic');
+  return { primary, also: known.filter((c) => c !== primary) };
+}
 
 export function buildCioFeed(records: readonly ContractRecord[]): CioFeed | null {
   const rows = records.filter((r) => r.record_type === 'cio_monthly');
@@ -71,7 +89,7 @@ export function buildCioFeed(records: readonly ContractRecord[]): CioFeed | null
     mv: Math.round(num('market_value', cat) ?? 0),
     pct: r1((num('weight', cat) ?? 0) * 100),
     tgt: r1((num('target_weight', cat) ?? 0) * 100),
-    flow: Math.round(num('flow', cat) ?? 0),
+    flow: roundOrNull(num('flow', cat)),
     r: series('return', cat),
     b: series('benchmark_return', cat),
   }));
@@ -83,23 +101,23 @@ export function buildCioFeed(records: readonly ContractRecord[]): CioFeed | null
           n: 'Overlays & Hedges + Other Asset',
           mv: Math.round(otherMv),
           pct: r1((num('weight', 'OTHER') ?? 0) * 100),
-          flow: Math.round(num('flow', 'OTHER') ?? 0),
+          flow: roundOrNull(num('flow', 'OTHER')),
         };
-  const flowsPresent = cur.some((r) => r.metric_id === 'flow');
-  const netflow = flowsPresent ? comps.reduce((s, c) => s + c.flow, 0) + (other?.flow ?? 0) : 0;
+  // net rebalancing only when every line's flow was supplied: a sum over gaps is not a net
+  const flowLines = [...comps.map((c) => c.flow), ...(other ? [other.flow] : [])];
+  const flowsPresent = flowLines.every((f) => f !== null);
+  const netflow = flowsPresent ? flowLines.reduce<number>((s, f) => s + f!, 0) : null;
 
   const counts = Array.from({ length: 14 }, (_, i) => {
     const v = num('hist_count', `BIN_${String(i).padStart(2, '0')}`);
     return v === null ? 0 : Math.round(v);
   });
-  const histPresent = cur.some((r) => r.metric_id === 'hist_count');
-  const stat = (k: StatKey) => {
-    const v = num('hist_stat', k);
-    return v === null ? 0 : r2(v * 100);
-  };
-  const latest = num('hist_stat', 'LATEST');
-  const latestPct = latest === null ? (series('return', 'TOTAL')[0] ?? 0) : r1(latest * 100);
-  const latestBin = histBinOf(latestPct);
+  // the distribution is shown only when its 14 bins and six statistics all arrived
+  const STAT_KEYS: StatKey[] = ['MEAN', 'SAA', 'SD', 'MIN', 'MAX', 'LATEST'];
+  const histPresent =
+    counts.every((_, i) => num('hist_count', `BIN_${String(i).padStart(2, '0')}`) !== null) &&
+    STAT_KEYS.every((k) => num('hist_stat', k) !== null);
+  const stat = (k: StatKey) => r2(num('hist_stat', k)! * 100);
 
   const cash = num('cash', 'TOTAL');
   const entity: CioEntity = {
@@ -107,7 +125,7 @@ export function buildCioFeed(records: readonly ContractRecord[]): CioFeed | null
     short: entityId,
     aum: r1(mv / 1000),
     mv: Math.round(mv),
-    cash: Math.round(cash ?? 0),
+    cash: roundOrNull(cash),
     god: null,
     pages: cur[0]!.page_table || 'feed rows',
     total: {
@@ -119,16 +137,18 @@ export function buildCioFeed(records: readonly ContractRecord[]): CioFeed | null
     other,
     netflow,
     overlays: null,
-    hist: {
-      c: counts,
-      mean: stat('MEAN'),
-      saa: stat('SAA'),
-      sd: stat('SD'),
-      min: stat('MIN'),
-      max: stat('MAX'),
-      latest: latestPct,
-      latestBin,
-    },
+    hist: histPresent
+      ? {
+          c: counts,
+          mean: stat('MEAN'),
+          saa: stat('SAA'),
+          sd: stat('SD'),
+          min: stat('MIN'),
+          max: stat('MAX'),
+          latest: r1(num('hist_stat', 'LATEST')! * 100),
+          latestBin: histBinOf(r1(num('hist_stat', 'LATEST')! * 100)),
+        }
+      : null,
     // geography is not part of the feed; the tab hides the panel when top is empty
     geo: { dm: 0, em: 0, dmN: 0, emN: 0, total: 0, page: 0, top: [] },
   };

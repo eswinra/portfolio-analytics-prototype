@@ -46,8 +46,8 @@ for (const key of ['pension', 'opeb'] as const) {
     row(`${c.short} target (%)`, cx?.tgt ?? null, c.tgt, ' pp');
   }
   row('Net rebalancing flow ($M)', x.netflow, y.netflow);
-  row('Histogram mean (%)', x.hist.mean, y.hist.mean);
-  row('Histogram std dev (%)', x.hist.sd, y.hist.sd);
+  row('Histogram mean (%)', x.hist?.mean ?? null, y.hist?.mean ?? null);
+  row('Histogram std dev (%)', x.hist?.sd ?? null, y.hist?.sd ?? null);
   row('US share of AUM (%)', x.geo.top[0]?.[1] ?? null, y.geo.top[0]?.[1] ?? null, ' pp');
   const targetsChanged = y.comps.some((c) => x.comps.find((k) => k.k === c.k)?.tgt !== c.tgt);
   if (targetsChanged)

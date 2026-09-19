@@ -86,6 +86,8 @@ interface Row {
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_MONTH = /^\d{4}-\d{2}$/;
+const realDay = (iso: string) =>
+  ISO_DAY.test(iso) && new Date(`${iso}T00:00:00Z`).toISOString().slice(0, 10) === iso;
 const isMonthEnd = (iso: string) => {
   const d = new Date(`${iso}T00:00:00Z`);
   const next = new Date(d.getTime() + 86_400_000);
@@ -360,15 +362,20 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
   const reportDate = report.report_date ?? '';
   const through = report.data_through ?? '';
   const marketAsOf = report.market_as_of ?? '';
-  if (!ISO_DAY.test(reportDate) && !ISO_MONTH.test(reportDate)) {
-    errors.push(`The report date must be YYYY-MM-DD (found "${reportDate}").`);
+  if (!realDay(reportDate) && !ISO_MONTH.test(reportDate)) {
+    errors.push(`The report date must be a real date, YYYY-MM-DD (found "${reportDate}").`);
   }
   if (!ISO_DAY.test(through) || !isMonthEnd(through)) {
     errors.push(`"Data through" must be a month-end date, YYYY-MM-DD (found "${through}").`);
-  } else if (reportDate && reportDate.slice(0, 7) < through.slice(0, 7)) {
-    errors.push('The report date is earlier than the date its data runs through.');
+  } else if (
+    reportDate &&
+    (ISO_MONTH.test(reportDate) ? reportDate <= through.slice(0, 7) : reportDate <= through)
+  ) {
+    errors.push(
+      `The report date (${reportDate}) must come after the date its data runs through (${through}).`,
+    );
   }
-  if (marketAsOf && (!ISO_DAY.test(marketAsOf) || marketAsOf < through)) {
+  if (marketAsOf && (!realDay(marketAsOf) || marketAsOf < through)) {
     errors.push(`The market table's as-of date must be YYYY-MM-DD, on or after "data through".`);
   }
   if (market.size && !marketAsOf)
@@ -447,6 +454,86 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
       }
     }
 
+    // flows: all four categories (and the other line, when there is one) or none — a missing flow
+    // is not a zero flow, and a net over some of them is not the net
+    const flowCats = CATEGORIES.filter((c) => a.has(`${c}|flow`));
+    const otherFlow = a.has('OTHER|flow');
+    const flowsSupplied = flowCats.length > 0 || otherFlow;
+    if (flowsSupplied) {
+      const missing: string[] = CATEGORIES.filter((c) => !a.has(`${c}|flow`));
+      if (a.has('OTHER|market_value') && !otherFlow) missing.push('OTHER');
+      if (missing.length) {
+        errors.push(
+          `${name}: flows are given for some lines but not ${missing.join(', ')} — give every flow (0 where there was none) or leave them all empty.`,
+        );
+      }
+    }
+    // values the report's own definitions rule out
+    const inRange = (v: number | undefined, lo: number, hi: number) =>
+      v === undefined || (v >= lo && v <= hi);
+    if (mv !== undefined && mv <= 0)
+      errors.push(`${name}: the total market value must be positive.`);
+    if (cash !== undefined && cash < 0)
+      errors.push(`${name}: cash and equivalents cannot be negative.`);
+    for (const cat of CATEGORIES) {
+      if (!inRange(a.get(`${cat}|weight`), 0, 100))
+        errors.push(`${name}: ${cat} weight must be between 0% and 100%.`);
+      if (!inRange(a.get(`${cat}|target`), 0, 100))
+        errors.push(`${name}: ${cat} policy target must be between 0% and 100%.`);
+      if (!inRange(a.get(`${cat}|market_value`), 0, Infinity))
+        errors.push(`${name}: ${cat} market value cannot be negative.`);
+    }
+    if (CATEGORIES.every((c) => a.has(`${c}|target`))) {
+      const tSum = CATEGORIES.reduce((s, c) => s + a.get(`${c}|target`)!, 0);
+      if (Math.abs(tSum - 100) > 0.3 + 1e-9)
+        errors.push(`${name}: the policy targets add to ${tSum.toFixed(1)}%, not 100%.`);
+    }
+    counts.forEach((c, i) => {
+      if (c !== undefined && (c < 0 || !Number.isInteger(c)))
+        errors.push(
+          `${name}: BIN_${String(i).padStart(2, '0')} must be a whole number of months, 0 or more.`,
+        );
+    });
+    const st = stats[f];
+    if (STAT_KEYS.every((k) => st.has(k))) {
+      const [mean, sd, lo, hi, latest] = [
+        st.get('mean')!,
+        st.get('sd')!,
+        st.get('min')!,
+        st.get('max')!,
+        st.get('latest')!,
+      ];
+      if (sd < 0) errors.push(`${name}: the standard deviation cannot be negative.`);
+      if (!(lo <= mean && mean <= hi))
+        errors.push(
+          `${name}: the mean monthly return must lie between the lowest and highest months.`,
+        );
+      if (!(lo <= latest && latest <= hi))
+        errors.push(`${name}: the latest month must lie between the lowest and highest months.`);
+      const m1 = p.get('TOTAL|return|1M');
+      if (m1 !== undefined && Math.abs(latest - m1) > 0.05 + 1e-9)
+        errors.push(
+          `${name}: the distribution's latest month (${latest}%) is not the Total Fund 1M return (${m1}%) — they are the same month.`,
+        );
+      if (counts.every((c) => c !== undefined) && counts[histBinOf(latest)] === 0)
+        errors.push(`${name}: the latest month's bin has no months counted.`);
+    }
+    for (const [k, label] of [
+      ['DM|share', 'DM share'],
+      ['EM|share', 'EM share'],
+    ] as const) {
+      if (!inRange(g.get(k), 0, 100)) errors.push(`${name}: ${label} must be between 0% and 100%.`);
+    }
+    for (const k of ['DM|markets', 'EM|markets', 'TOTAL|markets']) {
+      const n = g.get(k);
+      if (n !== undefined && (n < 0 || !Number.isInteger(n)))
+        errors.push(`${name}: market counts must be whole numbers.`);
+    }
+    for (const [country, share] of cs) {
+      if (share < 0 || share > 100)
+        errors.push(`${name}: ${country}'s share must be between 0% and 100%.`);
+    }
+
     const series = (cat: string, m: string) =>
       PERIODS.map((period) => p.get(`${cat}|${m}|${period}`) ?? null);
     const latestComps = CIO_LATEST.ENT[f].comps;
@@ -460,7 +547,7 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
         mv: a.get(`${cat}|market_value`) ?? 0,
         pct: a.get(`${cat}|weight`) ?? 0,
         tgt: a.get(`${cat}|target`) ?? 0,
-        flow: a.get(`${cat}|flow`) ?? 0,
+        flow: flowsSupplied ? (a.get(`${cat}|flow`) ?? null) : null,
         r: series(cat, 'return'),
         b: series(cat, 'benchmark'),
       };
@@ -473,7 +560,7 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
             n: otherLabel[f] || CIO_LATEST.ENT[f].other?.n || 'Other',
             mv: otherMv,
             pct: a.get('OTHER|weight') ?? 0,
-            flow: a.get('OTHER|flow') ?? 0,
+            flow: flowsSupplied ? (a.get('OTHER|flow') ?? null) : null,
           };
     const ov = [...overlays[f].entries()].map(([n, o]) => ({ n, may: o.may ?? 0, si: o.si ?? 0 }));
     const latestPct = stats[f].get('latest') ?? p.get('TOTAL|return|1M') ?? 0;
@@ -484,7 +571,7 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
       short: CIO_LATEST.ENT[f].short,
       aum: Math.round((mv ?? 0) / 100) / 10,
       mv: mv ?? 0,
-      cash: cash ?? 0,
+      cash: cash ?? null,
       god: fund[f].growth_of_dollar ?? null,
       pages: 'template file',
       total: {
@@ -494,7 +581,10 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
       },
       comps,
       other,
-      netflow: comps.reduce((s, c) => s + c.flow, 0) + (other?.flow ?? 0),
+      // only a complete set of flows has a net (the partial case is refused above)
+      netflow: flowsSupplied
+        ? comps.reduce((s, c) => s + (c.flow ?? 0), 0) + (other?.flow ?? 0)
+        : null,
       overlays: ov.length ? ov : null,
       hist: {
         c: counts.map((c) => c ?? 0),

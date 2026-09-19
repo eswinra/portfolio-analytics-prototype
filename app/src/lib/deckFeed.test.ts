@@ -42,8 +42,14 @@ describe('dashboard → slides feed', () => {
       sourceName: 'demo.csv',
       pageTable: 'rows',
     });
-    const d = deckDataFor(v, { feed: true });
+    const d = deckDataFor(v, { feed: true, feedName: 'DEMOFUND', feedCls: ['synthetic'] });
     expect(d.VINTAGE.single).toBe(true);
+    // an import carries its own name and classification onto the slides (audit 2026-09-18)
+    expect(d.VINTAGE.local).toEqual({
+      kind: 'workstation dataset',
+      name: 'DEMOFUND',
+      cls: 'synthetic',
+    });
     expect(d.MACRO).toEqual([]);
     expect(d.VINTAGE.macroLabel).toBeUndefined();
     expect(d.ENT.pension.short).toBe('DEMOimg src=x onerror=alert(1)fund');

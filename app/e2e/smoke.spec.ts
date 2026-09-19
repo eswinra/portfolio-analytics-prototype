@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import AxeBuilder from '@axe-core/playwright';
@@ -60,6 +61,29 @@ test.describe('routes render without horizontal overflow', () => {
       expect(pageErrors).toEqual([]);
     });
   }
+});
+
+// audit 2026-09-18, finding 7: the standalone deck's controls stay on a phone's screen
+test.describe('standalone deck on a phone', () => {
+  test('nothing scrolls sideways and the controls stay on screen', async ({ page, viewport }) => {
+    test.skip((viewport?.width ?? 1280) >= 768, 'phone projects only');
+    await page.goto('/deck/');
+    await expect(page.locator('#counter')).toBeVisible();
+    const r = await page.evaluate(() => ({
+      scroll: document.documentElement.scrollWidth,
+      vw: window.innerWidth,
+      off: [...document.querySelectorAll('.topbar *, .acts *, .bar *')].filter((el) => {
+        const b = el.getBoundingClientRect();
+        return b.width > 0 && (b.right > window.innerWidth + 1 || b.left < -1);
+      }).length,
+    }));
+    expect(r.scroll).toBeLessThanOrEqual(r.vw + 1);
+    expect(r.off).toBe(0);
+    for (const id of ['#prev', '#next', '#notes-btn', '#full-btn']) {
+      await expect(page.locator(id)).toBeInViewport();
+    }
+    await expect(page.getByRole('link', { name: 'read the dashboard summary' })).toBeVisible();
+  });
 });
 
 test.describe('CIO template file (read in the browser, never uploaded)', () => {
@@ -311,6 +335,69 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     // the feed round-trips the latest public vintage, so the headline tile matches it
     await page.getByRole('tab', { name: 'Summary' }).click();
     await expect(page.locator('.grid-kpi .stat-value').first()).toHaveText('$93.9B');
+  });
+
+  // audit 2026-09-18, findings 1 and 2
+  test('a feed missing figures says so, and keeps its synthetic label on page and slides', async ({
+    page,
+  }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (e) => pageErrors.push(String(e)));
+    const csv = readFileSync(CIO_FEED_CSV, 'utf8')
+      .split(/\r?\n/)
+      .filter((l) => !/,cio_monthly,DEMOFUND,(hist_count|hist_stat|flow|cash),/.test(l))
+      .join('\n')
+      .replaceAll(',reported_public,', ',synthetic,');
+    await ready(page, '/import');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'demo_missing.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csv),
+    });
+    await page.getByRole('button', { name: 'Apply this dataset' }).click();
+    await expect(page.getByText(/Import applied/)).toBeVisible();
+    await page.goto(hash('/cio?v=workstation&tab=summary'));
+    await expect(page.locator('.about-figures')).toContainText('synthetic');
+    await expect(page.locator('.grid-kpi')).toContainText('cash and equivalents not supplied');
+    const read = page.locator('#cio-read');
+    await expect(read).toContainText('June flows were not supplied');
+    await expect(read).toContainText('The return distribution was not supplied.');
+    await expect(read).not.toContainText('$0M');
+    await page.getByRole('tab', { name: 'Slides' }).click();
+    const deck = page.frameLocator('.deck-frame-wrap iframe');
+    await expect(deck.locator('#deck-origin')).toContainText(
+      'workstation dataset (DEMOFUND), not published',
+    );
+    await expect(deck.locator('.slide .src .cls').first()).toHaveText('synthetic');
+    expect(pageErrors).toEqual([]);
+  });
+
+  test('a template without flows shows them as not supplied on the slides', async ({ page }) => {
+    const csv = readFileSync(CIO_TEMPLATE_CSV, 'utf8')
+      .split(/\r?\n/)
+      .filter((l) => !/^allocation,(pension|opeb),[^,]+,flow,/.test(l))
+      .join('\n');
+    await ready(page, '/cio?tab=summary');
+    await page.locator('.vs-file input[type="file"]').setInputFiles({
+      name: 'no_flows.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csv),
+    });
+    await expect(page).toHaveURL(/v=file/);
+    await expect(page.locator('#cio-read')).toContainText('June flows were not supplied');
+    await page.goto(hash('/cio?v=file&tab=slides&slide=5'));
+    const deck = page.frameLocator('.deck-frame-wrap iframe');
+    await expect(deck.locator('#al-finding')).toContainText('flows not supplied');
+  });
+
+  // audit 2026-09-18, finding 4
+  test('July shows a new fiscal year, not a fall in FYTD', async ({ page }) => {
+    await ready(page, '/cio?v=2025-07-31&tab=summary');
+    await expect(page.locator('.grid-kpi')).toContainText('new fiscal year');
+    await expect(page.locator('.change-list .change-row').first()).toContainText(
+      'New fiscal year: FYTD restarted July 1',
+    );
+    await expect(page.locator('.change-list')).not.toContainText('−8.7 pp');
   });
 
   test('the two-minute read answers the standing questions from the data', async ({ page }) => {

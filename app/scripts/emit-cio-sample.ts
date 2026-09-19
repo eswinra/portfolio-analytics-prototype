@@ -203,7 +203,10 @@ if (e.other) {
   row('weight', 'OTHER', dec(e.other.pct), '%', '1', '', pages, e.other.n);
   row('flow', 'OTHER', e.other.flow, 'USD', '1000000', '', `p. ${v.pages.flows}`, e.other.n);
 }
-e.hist.c.forEach((count, i) =>
+// every published report prints its distribution; the sample re-expresses the latest one
+const hist = e.hist;
+if (!hist) throw new Error('the latest public report carries no return distribution');
+hist.c.forEach((count, i) =>
   row(
     'hist_count',
     `BIN_${String(i).padStart(2, '0')}`,
@@ -215,21 +218,12 @@ e.hist.c.forEach((count, i) =>
     'months in bin, last 120 months',
   ),
 );
-row('hist_stat', 'MEAN', dec(e.hist.mean), '%', '1', '', pages, 'mean monthly return');
-row('hist_stat', 'SAA', dec(e.hist.saa), '%', '1', '', pages, '2024 SAA expected monthly return');
-row(
-  'hist_stat',
-  'SD',
-  dec(e.hist.sd),
-  '%',
-  '1',
-  '',
-  pages,
-  'standard deviation of monthly returns',
-);
-row('hist_stat', 'MIN', dec(e.hist.min), '%', '1', '', pages, 'minimum monthly return');
-row('hist_stat', 'MAX', dec(e.hist.max), '%', '1', '', pages, 'maximum monthly return');
-row('hist_stat', 'LATEST', dec(e.hist.latest), '%', '1', '', pages, 'latest monthly return');
+row('hist_stat', 'MEAN', dec(hist.mean), '%', '1', '', pages, 'mean monthly return');
+row('hist_stat', 'SAA', dec(hist.saa), '%', '1', '', pages, '2024 SAA expected monthly return');
+row('hist_stat', 'SD', dec(hist.sd), '%', '1', '', pages, 'standard deviation of monthly returns');
+row('hist_stat', 'MIN', dec(hist.min), '%', '1', '', pages, 'minimum monthly return');
+row('hist_stat', 'MAX', dec(hist.max), '%', '1', '', pages, 'maximum monthly return');
+row('hist_stat', 'LATEST', dec(hist.latest), '%', '1', '', pages, 'latest monthly return');
 
 const csv = (cell: string) => (/[",\n]/.test(cell) ? `"${cell.replaceAll('"', '""')}"` : cell);
 const out = new URL('../../data/sample/cio_monthly_feed_demofund.csv', import.meta.url);

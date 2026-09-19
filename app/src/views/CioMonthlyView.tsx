@@ -38,9 +38,10 @@ import {
 import { publishedFor, type EntityId } from '../fixtures/published';
 import type { SourceRecord } from '../fixtures/sources';
 import { useCioFile } from '../lib/cioFile';
-import { cioChanges, cioNarrative } from '../lib/cioNarrative';
+import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
 import { readCioPackage } from '../lib/cioPackage';
 import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
+import { feedClassification } from '../lib/dataset/cioFeed';
 import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 import { useUrlFlag, useUrlParam } from '../lib/urlState';
@@ -82,8 +83,10 @@ const signed = (v: number | null | undefined, dp = 1) =>
   v === null || v === undefined
     ? '—'
     : `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(dp)}`;
-const mm = (v: number) => v.toLocaleString('en-US');
-const moneyMm = (v: number) => `${v < 0 ? '−' : ''}$${mm(Math.abs(v))}M`;
+// a figure the input did not supply is said to be missing, never shown as zero
+const mm = (v: number | null) => (v === null ? '—' : v.toLocaleString('en-US'));
+const moneyMm = (v: number | null) =>
+  v === null ? 'not supplied' : `${v < 0 ? '−' : ''}$${mm(Math.abs(v))}M`;
 const diff = (a: number | null | undefined, b: number | null | undefined): number | null =>
   a === null || a === undefined || b === null || b === undefined ? null : a - b;
 
@@ -351,7 +354,18 @@ export function CioMonthlyView() {
     };
   });
 
-  const histMax = Math.max(...e.hist.c);
+  const hist = e.hist;
+  const histMax = hist ? Math.max(...hist.c) : 0;
+  // an imported feed is labelled as its rows are, never as the published report
+  const feedCls = feed ? feedClassification(feed.classifications) : null;
+  const pageCls = pkg ? 'calculated' : feedCls ? feedCls.primary : 'reported_public';
+  const alsoCls = [
+    ...new Set([...(feedCls ? feedCls.also : []), 'calculated', 'proxy_estimate'] as const),
+  ].filter((c) => c !== pageCls);
+  // a new fiscal year restarts FYTD: the two reports' FYTD figures are not compared
+  const fyReset = prior
+    ? fiscalYearOf(vintage.dataThrough) !== fiscalYearOf(prior.dataThrough)
+    : false;
   const monthLabel = longDate(vintage.dataThrough);
   // the four standing questions, answered from this report's figures; the macro line comes
   // from FRED as known on the report's date, so every public report has one (a feed has none)
@@ -367,11 +381,14 @@ export function CioMonthlyView() {
         }
       : {},
   );
-  const changes = ep ? cioChanges(e, ep) : [];
+  const changes =
+    ep && prior
+      ? cioChanges(e, ep, { through: vintage.dataThrough, priorThrough: prior.dataThrough })
+      : [];
 
   const vIndex = CIO_VINTAGES.indexOf(vintage);
   return (
-    <PageMeta classification={pkg ? 'calculated' : 'reported_public'} sources={[src.main]}>
+    <PageMeta classification={pageCls} sources={[src.main]}>
       <SubTabs tabs={TABS} value={tab} onChange={chooseTab} label="CIO Monthly sections" />
       <div className="vintage-bar">
         <div className="vintage-slider">
@@ -509,8 +526,8 @@ export function CioMonthlyView() {
               ? `Template file ${pkg.fileName} for the ${vintage.reportLabel} report, data through ${monthLabel} — not published${prior ? ` · changes against the ${prior.reportLabel} report` : ''}`
               : `${CIO_VINTAGE.title}, ${vintage.reportLabel}; fund data through ${monthLabel}${prior ? ` · changes against the ${prior.reportLabel} report` : ''}`
         }
-        classification={pkg ? 'calculated' : 'reported_public'}
-        alsoUsed={['calculated', 'proxy_estimate']}
+        classification={pageCls}
+        alsoUsed={alsoCls}
       >
         <p>
           <strong>Monthly vintage, kept apart from the fiscal-year tabs.</strong> The fund&apos;s
@@ -520,7 +537,9 @@ export function CioMonthlyView() {
         <p>
           {pkg
             ? 'Figures are as entered in the template file, not yet published. '
-            : `Figures are as printed in the report (${e.pages}). `}
+            : feed
+              ? `Figures are as imported from ${feed.sourceName}, classified ${feed.classifications.join(', ')} by its rows — not a published report. `
+              : `Figures are as printed in the report (${e.pages}). `}
           Differences and changes against the prior report are calculated from the printed
           one-decimal values, so ±0.1 pp rounding is possible.
           {prior
@@ -539,7 +558,10 @@ export function CioMonthlyView() {
               <Panel tight kicker="Total fund market value">
                 <div className="stat-value">${e.aum.toFixed(1)}B</div>
                 <div className="stat-sub">
-                  ${mm(e.mv)}M · cash and equivalents ${mm(e.cash)}M
+                  ${mm(e.mv)}M ·{' '}
+                  {e.cash === null
+                    ? 'cash and equivalents not supplied'
+                    : `cash and equivalents $${mm(e.cash)}M`}
                 </div>
                 <div className="stat-foot">
                   {ep ? (
@@ -580,7 +602,14 @@ export function CioMonthlyView() {
                   Benchmark {pct(e.total.b[fytd])} · actuarial hurdle {pct(e.total.h[fytd])}
                 </div>
                 <div className="stat-foot">
-                  {ep ? (
+                  {ep && fyReset ? (
+                    <span
+                      className="chip-change"
+                      title={`FYTD restarted July 1; the ${prior?.reportLabel} report's ${pct(ep.total.r[fytd])} covered the prior fiscal year`}
+                    >
+                      new fiscal year
+                    </span>
+                  ) : ep ? (
                     <ChangeChip
                       delta={diff(e.total.r[fytd], ep.total.r[fytd])}
                       unit="pp"
@@ -681,7 +710,11 @@ export function CioMonthlyView() {
                     {changes.map((c) => (
                       <div className="change-row" key={c.id}>
                         <span>{c.label}</span>
-                        <ChangeChip delta={c.delta} unit={c.unit} dp={c.unit === '$B' ? 1 : 1} />
+                        {c.reset ? (
+                          <span className="chip-change">reset</span>
+                        ) : (
+                          <ChangeChip delta={c.delta} unit={c.unit} dp={c.unit === '$B' ? 1 : 1} />
+                        )}
                         <span className="detail">{c.detail}</span>
                       </div>
                     ))}
@@ -1402,65 +1435,79 @@ export function CioMonthlyView() {
               <DeckLink n={SLIDE.alloc} />
             </Panel>
 
-            <Panel
-              id="cio-hist"
-              kicker="Monthly return distribution — last 120 months"
-              title="Months by return bin"
-              note={`Mean ${pct(e.hist.mean)} · 2024 SAA expected ${pct(e.hist.saa)} · standard deviation ${pct(e.hist.sd)} · min ${pct(e.hist.min)} · max ${pct(e.hist.max)} · latest month ${pct(e.hist.latest)}`}
-              method={
-                <p>
-                  Counts and bin edges as printed; the latest month is placed by value. The
-                  forecast-volatility pages are image-only in the PDF and are not reproduced.
-                </p>
-              }
-            >
-              <div
-                className="table-scroll"
-                role="region"
-                aria-label="Return distribution"
-                tabIndex={0}
+            {hist ? (
+              <Panel
+                id="cio-hist"
+                kicker="Monthly return distribution — last 120 months"
+                title="Months by return bin"
+                note={`Mean ${pct(hist.mean)} · 2024 SAA expected ${pct(hist.saa)} · standard deviation ${pct(hist.sd)} · min ${pct(hist.min)} · max ${pct(hist.max)} · latest month ${pct(hist.latest)}`}
+                method={
+                  <p>
+                    Counts and bin edges as printed; the latest month is placed by value. The
+                    forecast-volatility pages are image-only in the PDF and are not reproduced.
+                  </p>
+                }
               >
-                <table className="table">
-                  <caption>
-                    Number of months in each monthly-return bin (percent); bar length is relative to
-                    the fullest bin
-                  </caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Bin (%)</th>
-                      <th scope="col" className="num">
-                        Months
-                      </th>
-                      <th scope="col">Relative frequency</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {BINS.map((b, i) => (
-                      <tr key={b}>
-                        <td>
-                          {b}
-                          {i === e.hist.latestBin ? (
-                            <>
-                              {' '}
-                              <Tag variant="accent">latest month</Tag>
-                            </>
-                          ) : null}
-                        </td>
-                        <td className="num">{e.hist.c[i]}</td>
-                        <td className="hist-cell">
-                          <div
-                            className={`fill${i === e.hist.latestBin ? ' hi' : ''}`}
-                            style={{ width: `${((e.hist.c[i]! / histMax) * 100).toFixed(1)}%` }}
-                            aria-hidden="true"
-                          />
-                        </td>
+                <div
+                  className="table-scroll"
+                  role="region"
+                  aria-label="Return distribution"
+                  tabIndex={0}
+                >
+                  <table className="table">
+                    <caption>
+                      Number of months in each monthly-return bin (percent); bar length is relative
+                      to the fullest bin
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Bin (%)</th>
+                        <th scope="col" className="num">
+                          Months
+                        </th>
+                        <th scope="col">Relative frequency</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <DeckLink n={SLIDE.hist} />
-            </Panel>
+                    </thead>
+                    <tbody>
+                      {BINS.map((b, i) => (
+                        <tr key={b}>
+                          <td>
+                            {b}
+                            {i === hist.latestBin ? (
+                              <>
+                                {' '}
+                                <Tag variant="accent">latest month</Tag>
+                              </>
+                            ) : null}
+                          </td>
+                          <td className="num">{hist.c[i]}</td>
+                          <td className="hist-cell">
+                            <div
+                              className={`fill${i === hist.latestBin ? ' hi' : ''}`}
+                              style={{ width: `${((hist.c[i]! / histMax) * 100).toFixed(1)}%` }}
+                              aria-hidden="true"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <DeckLink n={SLIDE.hist} />
+              </Panel>
+            ) : (
+              <Panel
+                id="cio-hist"
+                kicker="Monthly return distribution — last 120 months"
+                title="Months by return bin"
+              >
+                <p className="muted-note">
+                  The return distribution was not supplied
+                  {feed ? ' in the imported dataset' : pkg ? ' in the template file' : ''}, so no
+                  distribution statistics are shown.
+                </p>
+              </Panel>
+            )}
           </div>
         ) : null}
 

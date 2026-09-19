@@ -35,7 +35,13 @@ export function sanitizeDeckData<T>(x: T): T {
 
 export function deckDataFor(
   v: CioVintage,
-  opts: { feed?: boolean; pkg?: CioPackage | null } = {},
+  opts: {
+    feed?: boolean;
+    /** the feed's dataset ID and row classifications, shown on every slide */
+    feedName?: string;
+    feedCls?: readonly string[];
+    pkg?: CioPackage | null;
+  } = {},
 ): CioDeckData {
   const latest = !opts.feed && v === CIO_LATEST;
   // a template file carries its own macro strip and items for attention, typed by the team
@@ -48,13 +54,21 @@ export function deckDataFor(
     MACRO: pkg ? pkg.macro : opts.feed ? [] : macroFor(v),
     OPS: pkg ? pkg.ops : latest ? OPS : [],
     STATUS,
-    VINTAGE: opts.feed ? feedVintage(v) : deckVintage(v),
+    VINTAGE: opts.feed
+      ? feedVintage(v, opts.feedName ?? 'unnamed', opts.feedCls ?? [])
+      : deckVintage(v),
   });
 }
 
-/** A workstation feed's labels: one fund, and no macro strip to date. */
-function feedVintage(v: CioVintage): DeckVintage {
-  const out: DeckVintage = { ...deckVintage(v), single: true };
+/** A workstation feed's labels: one fund, no macro strip, and its own name and classification
+ *  on every slide — an import is never presented as the published report. */
+function feedVintage(v: CioVintage, name: string, cls: readonly string[]): DeckVintage {
+  // named by its dataset ID: the source its rows cite may be a public report it only re-expresses
+  const out: DeckVintage = {
+    ...deckVintage(v),
+    single: true,
+    local: { kind: 'workstation dataset', name, cls: cls.join(' · ') || 'unclassified' },
+  };
   delete out.macroLabel;
   return out;
 }

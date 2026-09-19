@@ -61,7 +61,11 @@ describe('CIO template file', () => {
     expect(fromFile.OPS).toEqual(published.OPS);
     expect(fromFile.MKT).toEqual(published.MKT);
     expect(fromFile.ENT.pension.total).toEqual(published.ENT.pension.total);
-    expect(fromFile.VINTAGE.local).toBe('my export.csv');
+    expect(fromFile.VINTAGE.local).toEqual({
+      kind: 'template file',
+      name: 'my export.csv',
+      cls: 'calculated',
+    });
     expect(fromFile.VINTAGE.macroLabel).toBeUndefined();
     expect(fromFile.VINTAGE.single).toBeUndefined();
   });
@@ -140,10 +144,68 @@ describe('CIO template file', () => {
       /month-end/,
     );
     expect(errorsOf(edit('report,,report_date,', 'report,,report_date,,,,2026-05-12'))).toMatch(
-      /earlier than the date its data runs through/,
+      /must come after the date its data runs through/,
     );
     expect(errorsOf(edit('report,,format,', 'report,,format,,,,cio-template-0'))).toMatch(
       /current template/,
     );
+  });
+});
+
+/** Audit 2026-09-18: missing figures stay missing; values the report's definitions rule out are
+ *  refused, with the whole file. */
+describe('CIO template file: absent and impossible values', () => {
+  const without = (re: RegExp) =>
+    SAMPLE.split(/\r?\n/)
+      .filter((l) => !re.test(l))
+      .join('\r\n');
+
+  it('flows left empty are "not supplied", never a $0M net', () => {
+    const pkg = ok(readCioPackage(without(/^allocation,(pension|opeb),[^,]+,flow,/), 'x.csv'));
+    for (const f of ['pension', 'opeb'] as const) {
+      const e = pkg.vintage.ENT[f];
+      expect(e.netflow).toBeNull();
+      for (const c of e.comps) expect(c.flow).toBeNull();
+      expect(e.other?.flow ?? null).toBeNull();
+    }
+  });
+
+  it('refuses flows given for some lines only', () => {
+    expect(errorsOf(without(/^allocation,pension,RRM,flow,/))).toMatch(
+      /Pension Fund: flows are given for some lines but not RRM/,
+    );
+  });
+
+  it('refuses the audit cases: counts, dispersion, latest month, target, dates', () => {
+    expect(
+      errorsOf(
+        edit('histogram,pension,BIN_00,', 'histogram,pension,BIN_00,count,,-1.5,').replace(
+          /^histogram,pension,BIN_01,.*$/m,
+          'histogram,pension,BIN_01,count,,2.5,',
+        ),
+      ),
+    ).toMatch(/BIN_00 must be a whole number of months, 0 or more/);
+    expect(errorsOf(edit('histogram,pension,STAT,sd,', 'histogram,pension,STAT,sd,,-2,'))).toMatch(
+      /standard deviation cannot be negative/,
+    );
+    expect(
+      errorsOf(edit('histogram,pension,STAT,latest,', 'histogram,pension,STAT,latest,,20,')),
+    ).toMatch(/latest month must lie between|not the Total Fund 1M return/);
+    expect(
+      errorsOf(edit('allocation,pension,GROWTH,target,', 'allocation,pension,GROWTH,target,,480,')),
+    ).toMatch(/GROWTH policy target must be between 0% and 100%/);
+    expect(errorsOf(edit('report,,report_date,', 'report,,report_date,,,,2026-06-01'))).toMatch(
+      /report date \(2026-06-01\) must come after the date its data runs through \(2026-06-30\)/,
+    );
+    expect(errorsOf(edit('report,,report_date,', 'report,,report_date,,,,2026-02-30'))).toMatch(
+      /must be a real date/,
+    );
+  });
+
+  it('refuses a latest month that disagrees with the same month’s fund return', () => {
+    // inside min..max, but not the Total Fund 1M return (0.1%)
+    expect(
+      errorsOf(edit('histogram,pension,STAT,latest,', 'histogram,pension,STAT,latest,,0.8,')),
+    ).toMatch(/latest month \(0\.8%\) is not the Total Fund 1M return \(0\.1%\)/);
   });
 });

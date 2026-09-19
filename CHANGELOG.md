@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-18 — Revision 20: fixes from the September 18 audit (import integrity, CIO reporting)
+
+An independent read-only audit at `7c150c0` reproduced eight problems; all eight reproduced here
+too. This revision fixes the first seven; dependencies follow separately.
+
+- **Missing data is missing, never zero (P1).** Cash, flows and the return distribution are
+  `null` when an import or template file does not supply them, and every panel, sentence and
+  slide says "not supplied". A net flow is computed only from a complete set of flows. A template
+  must give every flow or none. Before: a template without flows read "June flows netted $0M", and
+  a feed without a histogram read "0 of them fell below −2%".
+- **Imports keep their own label (P1).** A Workstation feed is classified as its rows are — the
+  most cautious class when they are mixed — on the page and on every slide, with its dataset ID;
+  before, a synthetic feed was labelled reported_public and cited the published report's pages.
+- **Template checks (P2).** Refused now: fractional or negative bin counts, a negative standard
+  deviation, a latest month outside the lowest–highest range or different from the Total Fund 1M
+  return, weights or targets outside 0–100% or targets not adding to 100%, negative market values
+  or cash, impossible calendar dates, and a report date on or before the data-through date. Every
+  rule holds for all 16 published reports.
+- **Fiscal-year rollover (P2).** July's FYTD is no longer compared with June's completed year:
+  the change list opens with "New fiscal year: FYTD restarted July 1" and the FYTD tile says "new
+  fiscal year"; FYTD (and, across January, YTD) excess flips are not counted across the turn. The
+  change list now requires both reports' dates.
+- **Market period (P2).** The executive read and slide 1 name the market table with its own dates
+  ("from July 1 to July 31, 2026"); slide 7's notes no longer say FYTD equals 1 Y.
+- **Histogram precision (P2).** "Sits above 27% of months" becomes a bracket from the grouped bins:
+  "falls in the 0 to 1% range: 32 of the last 120 months were lower and 24 shared the range".
+- **Deck on a phone (P2).** The standalone deck's chrome wraps inside the screen (at 390 px the
+  page was 1,014 px wide); presenter-only controls hide, and a line points to the readable summary.
+- **Release checks.** The build now type-checks `app/scripts` (two scripts assumed a histogram).
+- Verification: lint · format · Vitest 450/450 (11 new regressions from the audit's cases) ·
+  build · Playwright 136/136 runnable (new: feed missing figures and synthetic, template without
+  flows, the July reset, the deck on three phone widths) · the audit's reproduction script now
+  shows every case handled.
+
 ## 2026-09-18 — Revision 19.1: the how-it-works guide has the template steps
 
 - `/how-it-works/` now walks through building the slides from the CIO template in five steps —

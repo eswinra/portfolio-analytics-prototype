@@ -55,7 +55,13 @@ export function DeckFrame({
   const [params] = useSearchParams();
   const linked = useRef(params.has('slide'));
   const data = useMemo(
-    () => deckDataFor(vintage, { feed: Boolean(feed), pkg }),
+    () =>
+      deckDataFor(vintage, {
+        feed: Boolean(feed),
+        feedName: feed?.entityId ?? '',
+        feedCls: feed?.classifications ?? [],
+        pkg,
+      }),
     [vintage, feed, pkg],
   );
   const frameKey = `${vintage.dataThrough}|${feed ? feed.entityId : pkg ? `file ${loaded}` : 'public'}`;
