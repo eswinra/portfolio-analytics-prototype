@@ -1,13 +1,13 @@
 # CIO Monthly template — building the slides without the published PDF
 
-The CIO Monthly tab can build its panels and slides from a **template file**: a CSV that the Excel
-template's Export tab writes. This lets the team prepare and rehearse a month's slides before the
+The CIO Monthly tab can build its panels and slides from a **template file**: the filled Excel
+template itself, or the CSV its Export tab writes (both are read the same way). This lets the team prepare and rehearse a month's slides before the
 report is published, from their own figures.
 
 **Confidentiality.** Before LACERA publishes a report its figures are confidential. The template
 file is read in the browser only: the dashboard never uploads it, never stores it (not in browser
 storage, not in the address), and forgets it when the page is closed or reloaded. Keep the workbook
-and its CSV on the team's systems. Do not use the GitHub "CIO report" workflow for them (that
+(and any CSV of it) on the team's systems. Do not use the GitHub "CIO report" workflow for them (that
 workflow publishes), and do not send them to AI tools. Using real internal figures, even locally,
 is for the organization to approve.
 
@@ -18,9 +18,10 @@ is for the organization to approve.
 | `app/public/templates/CIO_Monthly_Template.xlsx` | The blank template, downloadable from the site (`/templates/…`) |
 | `app/public/templates/CIO_Monthly_Template_Example.xlsx` | The same template filled with the latest **public** report, as a worked example |
 | `tools/make_cio_template.py` | Builds both workbooks; the example is read from the deck's data block (public figures) |
-| `tools/qa_cio_template.py` | Desktop Excel QA: recalculates, reads the Checks tab, saves the Export tab as CSV UTF-8 |
+| `tools/qa_cio_template.py` | Desktop Excel QA: recalculates and saves the example through Excel (so it opens on the dashboard as downloaded), reads the Checks tab, saves the Export tab as CSV UTF-8 |
 | `data/sample/cio_template_example_aug2026.csv` | The example's Export tab as Excel saved it; the unit tests rebuild the published report from it |
 | `app/src/lib/cioPackage.ts` | Reads and checks a template file; builds the report the tab and slides show |
+| `app/src/lib/workbook.ts` | Turns a workbook's Export tab into the same CSV text, in the browser |
 | `app/src/lib/cioFile.tsx` | Holds the open file in memory for the page (never stored) |
 
 ## Using it
@@ -31,16 +32,35 @@ is for the organization to approve.
 2. Open **Checks**: every line should say OK. They are the report's own identities — category
    weights add to 100% (±0.3), category market values add to the total, the 14 histogram bins add
    to 120 months, DM + EM add to 100%, every return has a benchmark for the same period.
-3. Open **Export**, then File → Save As → **CSV UTF-8 (Comma delimited)**. Excel saves only the
-   active tab.
-4. On the dashboard's CIO Monthly tab choose **Open a template file** and pick the CSV. The tab and
+3. Save the workbook in Excel (`.xlsx`).
+4. On the dashboard's CIO Monthly tab choose **Open a template file** and pick the workbook. The tab and
    the slides show it as "Template file …, not published", with changes against the latest earlier
    published report. The report selector still lists the published reports; **Close file** forgets
    the file.
 
+A CSV works too: open **Export**, then File → Save As → **CSV UTF-8 (Comma delimited)** (Excel
+saves only the active tab), and open the CSV.
+
 A file with any problem shows nothing: the tab lists every problem it found (row numbers for rows
 it could not read, fund and figure for missing or inconsistent ones) and keeps the published
 report on screen.
+
+### Opening the workbook itself
+
+The dashboard reads the workbook's **Export** tab (or, if it was renamed, the tab whose first row is
+the seven columns below) and turns it into the CSV text Excel would write, which then goes through
+the same checks. What it takes from a cell is the value Excel stored, not what the cell displays.
+
+- **Formulas must have been calculated.** A workbook saved by Excel always is. A file written by
+  another program (the blank template exactly as generated, or a script) carries formulas without
+  results; it is refused — "the workbook's formulas have not been calculated" — rather than read as
+  blanks. Open it in Excel, save, and open it again.
+- **Excel errors are refused**, naming the cells (`#DIV/0!`, `#REF!`, `#N/A`…).
+- **Dates** are read as calendar dates (YYYY-MM-DD), whatever their display format.
+- The reader is [SheetJS](https://sheetjs.com) Community Edition 0.20.3 (Apache-2.0), installed
+  from SheetJS's own package with an integrity hash in `app/package-lock.json` and bundled with the
+  site. It is fetched from the site itself only when a workbook is opened; the file is never sent
+  anywhere. Workbooks up to 10 MB.
 
 ## Format `cio-template-1`
 

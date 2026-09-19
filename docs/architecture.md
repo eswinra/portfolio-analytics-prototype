@@ -3,9 +3,10 @@
 ## Stack
 
 Vite 5 + React 18 + TypeScript (strict, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`),
-Zod at the import boundary, PapaParse for CSV, Recharts for the two charts, Vitest for tests,
-ESLint (flat) + Prettier. No backend, no secrets, no telemetry, no external fonts/CDNs — the
-built site makes zero network requests.
+Zod at the import boundary, PapaParse for CSV, SheetJS CE for workbooks (bundled, loaded only
+when a workbook is opened), Recharts for the two charts, Vitest for tests, ESLint (flat) +
+Prettier. No backend, no secrets, no telemetry, no external fonts/CDNs — the built site requests
+nothing but its own files.
 
 ## Layering
 
@@ -81,7 +82,14 @@ with tabular numerals for figures.
 
 ## Security posture
 
-- Imports parsed in-browser (FileReader); no network transmission; no storage.
+- Imports parsed in-browser; no network transmission; no storage.
+- Workbooks (`lib/workbook.ts`): one sheet is turned into the CSV text Excel would write and goes
+  through the same validator as a CSV — there is no second path for the data. Stored values, not
+  displayed ones; dates as calendar dates; formulas never calculated (a file not saved by Excel)
+  and cells showing Excel errors are refused with the cells named, never read as blanks. SheetJS
+  CE 0.20.3 comes from its official tarball (the npm registry's `xlsx` stops at 0.18.5, which
+  has published advisories), pinned by integrity hash, bundled as its own chunk (~163 KB gzip)
+  and fetched from the site only on first use. Workbooks up to 10 MB.
 - Imported strings rendered as text nodes only (React default escaping; no `dangerouslySetInnerHTML`).
 - CSV cell values are never re-emitted into downloadable CSV without escaping (no export path in v1).
 - Bounds: 5 MB / 20,000 rows per import.

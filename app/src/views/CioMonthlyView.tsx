@@ -39,12 +39,18 @@ import { publishedFor, type EntityId } from '../fixtures/published';
 import type { SourceRecord } from '../fixtures/sources';
 import { useCioFile } from '../lib/cioFile';
 import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
-import { readCioPackage } from '../lib/cioPackage';
+import { PACKAGE_SHEET, readCioPackage } from '../lib/cioPackage';
 import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
 import { feedClassification } from '../lib/dataset/cioFeed';
 import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 import { useUrlFlag, useUrlParam } from '../lib/urlState';
+import {
+  isWorkbookName,
+  MAX_WORKBOOK_BYTES,
+  SPREADSHEET_ACCEPT,
+  workbookToCsv,
+} from '../lib/workbook';
 
 /** Sub-tabs: the report's slides first — opening the tab shows the deck inside the dashboard —
  *  then a one-screen summary and the detail, one click each. */
@@ -254,19 +260,32 @@ export function CioMonthlyView() {
     useCioVintage();
   const cioFile = useCioFile();
   const [fileErrors, setFileErrors] = useState<{ name: string; errors: string[] } | null>(null);
-  // a template file is read here, in the browser; nothing is uploaded or stored
+  // a template file (the workbook, or its Export tab saved as CSV) is read here, in the browser;
+  // nothing is uploaded or stored. A workbook becomes the same CSV text, checked the same way.
   const openFile = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     ev.target.value = '';
     if (!f) return;
-    if (f.size > 2_000_000) {
+    const book = isWorkbookName(f.name);
+    if (f.size > (book ? MAX_WORKBOOK_BYTES : 2_000_000)) {
       setFileErrors({
         name: f.name,
-        errors: ['The file is far larger than a template export; save the Export tab as CSV.'],
+        errors: ['The file is far larger than a CIO template; check that it is the right file.'],
       });
       return;
     }
-    const res = readCioPackage(await f.text(), f.name);
+    let text: string;
+    if (book) {
+      const sheet = await workbookToCsv(await f.arrayBuffer(), PACKAGE_SHEET);
+      if (!sheet.ok) {
+        setFileErrors({ name: f.name, errors: sheet.errors });
+        return;
+      }
+      text = sheet.csv;
+    } else {
+      text = await f.text();
+    }
+    const res = readCioPackage(text, f.name);
     if (!res.ok) {
       setFileErrors({ name: f.name, errors: res.errors });
       return;
@@ -450,15 +469,16 @@ export function CioMonthlyView() {
           Open a template file…
           <input
             type="file"
-            accept=".csv,text/csv"
+            accept={SPREADSHEET_ACCEPT}
             className="visually-hidden"
             aria-describedby="vs-file-help"
             onChange={(ev) => void openFile(ev)}
           />
         </label>
         <span id="vs-file-help" className="vs-file-help">
-          Builds the slides from the <a href="templates/CIO_Monthly_Template.xlsx">CIO template</a>
-          &apos;s CSV export, read in this browser only
+          Builds the slides from a filled{' '}
+          <a href="templates/CIO_Monthly_Template.xlsx">CIO template</a> (the workbook, or its
+          Export tab as CSV), read in this browser only
         </span>
         {feed || (tab !== 'performance' && tab !== 'positioning') ? null : (
           <label className="vintage-compare">
@@ -475,7 +495,7 @@ export function CioMonthlyView() {
         <div className="file-errors" role="alert">
           <p>
             <strong>{fileErrors.name} was not opened</strong> — nothing from it is shown. Fix these
-            in the workbook (its Checks tab helps), export the CSV again and open it:
+            in the workbook (its Checks tab helps), save it and open it again:
           </p>
           <ul>
             {fileErrors.errors.slice(0, 12).map((m) => (

@@ -20,8 +20,8 @@ and a static web dashboard can share one validated data contract — on **wholly
   cited public reference values.
 - **ACFR workflow** — the investment-data crosswalk and QA checklist as a filterable readiness
   board (structure from the public ACFR table of contents; statuses illustrative).
-- **Import** — client-side CSV import through the documented contract with row-level rejection
-  reports. Files never leave the browser.
+- **Import** — client-side CSV or Excel import through the documented contract with row-level
+  rejection reports. Files never leave the browser.
 
 ## Architecture in one paragraph
 
@@ -31,7 +31,7 @@ the demo dataset: inputs, calculations, controls, and a normalized 338-record ex
 (Vite + React + TypeScript strict, in `app/`) consumes it through a Zod-validated parser that
 implements `docs/import-validation-rules.md`. All finance math lives in pure, unit-tested
 modules (`app/src/lib/finance/`). The built site is fully static (relative base + hash routing)
-and makes zero network requests.
+and requests nothing but its own files.
 
 ## Local demo
 

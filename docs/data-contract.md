@@ -101,6 +101,13 @@ One flat CSV/table; one record per row; 29 columns exactly (order not significan
 UTF-8; ISO-8601 dates (civil dates, no time zone component — market closes are US business
 days, monthly records use month-end dates).
 
+The Import page also takes a workbook. It reads the sheet named `Export_Contract` (the demo
+workbook's) or `Contract`, else the sheet headed by the contract's column names; title rows above
+the column names are skipped. The sheet becomes CSV text and meets the same rules. Values are read
+as stored: a return shown as 1.23% is the decimal 0.0123 the contract expects. The demo workbooks
+read this way give the same 376 records as their exported CSVs, at full precision (the CSV export
+rounds to 10 significant digits).
+
 ## Record types
 
 | record_type | Grain | Value semantics |

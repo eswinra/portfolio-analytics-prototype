@@ -32,8 +32,8 @@ June 30, and monthly periods are not fiscal-year horizons.
 ## Before the report is published
 
 The slides can also be built from the team's own figures, before the PDF exists: fill the CIO
-Monthly Excel template, save its Export tab as CSV and open it with **Open a template file** on
-the tab. The file is read in the browser only and never published. See `docs/cio-template.md`.
+Monthly Excel template, save it and open it (the workbook, or its Export tab as CSV) with **Open a
+template file** on the tab. The file is read in the browser only and never published. See `docs/cio-template.md`.
 
 ## Monthly update
 

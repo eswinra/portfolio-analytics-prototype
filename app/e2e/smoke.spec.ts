@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 /** Smoke suite for the trust-and-controls tranche: every route renders, nothing scrolls
  *  the page body horizontally at any audited viewport, axe passes on every route, and the
@@ -42,6 +44,16 @@ const CIO_FEED_CSV = fileURLToPath(
 const CIO_TEMPLATE_CSV = fileURLToPath(
   new URL('../../data/sample/cio_template_example_aug2026.csv', import.meta.url),
 );
+
+// the filled example workbook as downloaded (saved by Excel, so its formulas carry values), and
+// the blank template as generated (its formulas not yet calculated)
+const CIO_EXAMPLE_XLSX = fileURLToPath(
+  new URL('../public/templates/CIO_Monthly_Template_Example.xlsx', import.meta.url),
+);
+const CIO_BLANK_XLSX = fileURLToPath(
+  new URL('../public/templates/CIO_Monthly_Template.xlsx', import.meta.url),
+);
+const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 async function ready(page: Page, route: string) {
   await page.goto(hash(route));
@@ -145,6 +157,42 @@ test.describe('CIO template file (read in the browser, never uploaded)', () => {
     expect(axeAlert.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
   });
 
+  test('opens the filled workbook itself, with the site’s own reader, sending nothing', async ({
+    page,
+    baseURL,
+  }) => {
+    const requests: string[] = [];
+    page.on('request', (r) => requests.push(`${r.method()} ${r.url()}`));
+    await ready(page, '/cio?tab=summary');
+    // the workbook reader loads only when a workbook is opened
+    expect(requests.filter((r) => /\/xlsx-[^/]*\.js$/.test(r))).toEqual([]);
+    await fileInput(page).setInputFiles(CIO_EXAMPLE_XLSX);
+    await expect(
+      page
+        .getByRole('status')
+        .filter({ hasText: 'Template file CIO_Monthly_Template_Example.xlsx' }),
+    ).toBeVisible();
+    await expect(page.locator('.masthead')).toContainText(
+      'template file for August 12, 2026 (not published)',
+    );
+    await expect(page.locator('.grid-kpi .stat-value').first()).toHaveText('$93.9B');
+    expect(requests.filter((r) => /\/xlsx-[^/]*\.js$/.test(r))).toHaveLength(1);
+    // nothing sent, and nothing fetched from anywhere but this site
+    expect(requests.filter((r) => !r.startsWith('GET '))).toEqual([]);
+    expect(
+      requests.filter((r) => /^GET https?:/.test(r) && !r.startsWith(`GET ${baseURL}`)),
+    ).toEqual([]);
+  });
+
+  test('asks for the blank template to be saved by Excel before it is read', async ({ page }) => {
+    await ready(page, '/cio?tab=summary');
+    await fileInput(page).setInputFiles(CIO_BLANK_XLSX);
+    const alert = page.getByRole('alert');
+    await expect(alert).toContainText('CIO_Monthly_Template.xlsx was not opened');
+    await expect(alert).toContainText('formulas have not been calculated');
+    await expect(page).not.toHaveURL(/v=file/);
+  });
+
   test('a reload clears the file, and the page says so', async ({ page }) => {
     await ready(page, '/cio?tab=summary');
     await fileInput(page).setInputFiles(CIO_TEMPLATE_CSV);
@@ -231,6 +279,59 @@ test.describe('demonstrated controls (desktop project)', () => {
   test('workstation surfaces the demonstrated publication gate', async ({ page }) => {
     await ready(page, '/recon');
     await expect(page.getByText(/Publication gate \(demonstrated\)/)).toBeVisible();
+  });
+});
+
+test.describe('contract workbook import (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+  const bookOf = (sheets: [string, unknown[][]][]) => {
+    const wb = XLSX.utils.book_new();
+    for (const [name, rows] of sheets) {
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), name);
+    }
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  };
+
+  test('a workbook with a title block is preflighted like its CSV, and applies', async ({
+    page,
+  }) => {
+    const [header, ...rows] = Papa.parse<string[]>(readFileSync(PENSION_CSV, 'utf8').trim()).data;
+    const num = (v: string) => (/^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v);
+    const buffer = bookOf([
+      ['README', [['Synthetic demonstration workbook']]],
+      [
+        'Contract',
+        [['DEMOFUND contract export'], ['synthetic'], [], header!, ...rows.map((r) => r.map(num))],
+      ],
+    ]);
+    await ready(page, '/import');
+    await page
+      .locator('input[type="file"]')
+      .setInputFiles({ name: 'demofund.xlsx', mimeType: XLSX_TYPE, buffer });
+    await expect(page.getByText('Preflight — demofund.xlsx, sheet Contract')).toBeVisible();
+    await page.getByRole('button', { name: 'Apply this dataset' }).click();
+    await expect(page.getByText(/Import applied/)).toBeVisible();
+  });
+
+  test('a workbook without a contract sheet is refused, naming its sheets', async ({ page }) => {
+    const buffer = bookOf([
+      ['README', [['notes']]],
+      [
+        'Returns',
+        [
+          ['month', 'return'],
+          ['2026-06-30', 0.01],
+        ],
+      ],
+    ]);
+    await ready(page, '/import');
+    await page
+      .locator('input[type="file"]')
+      .setInputFiles({ name: 'other.xlsx', mimeType: XLSX_TYPE, buffer });
+    const alert = page.getByRole('alert');
+    await expect(alert).toContainText('other.xlsx was not read');
+    await expect(alert).toContainText('Its sheets: README, Returns.');
+    await expect(page.getByText(/Preflight —/)).toHaveCount(0);
   });
 });
 

@@ -5,11 +5,19 @@ import invalidSampleCsv from '../../../data/sample/invalid/bad_schema_version.cs
 import templateCsv from '../../../data/sample/market_pulse_template.csv?raw';
 import { Panel, Pill } from '../components/ui';
 import { COLUMN_DOCS, DICTIONARY_COLUMNS } from '../lib/contract/dictionary';
+import { CONTRACT_SHEET } from '../lib/contract/schema';
 import { ENTITY_REGISTRY, WORKSPACE_ENTITY } from '../fixtures/entityRegistry';
 import { useDataset } from '../lib/dataset/useDataset';
 import type { ImportError } from '../lib/contract/parse';
+import {
+  isWorkbookName,
+  MAX_WORKBOOK_BYTES,
+  SPREADSHEET_ACCEPT,
+  workbookToCsv,
+} from '../lib/workbook';
 
-/** Import (team workflow demo): client-side contract-CSV import with preflight, the data
+/** Import (team workflow demo): client-side contract import (CSV, or a workbook's contract
+ *  sheet turned into the same CSV text) with preflight, the data
  *  dictionary rendered from the validator's own constants, and the template guide. Files
  *  never leave the browser. Synthetic/shareable data only on this public site. */
 
@@ -30,25 +38,43 @@ export function ImportView() {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [bookError, setBookError] = useState<{ name: string; errors: string[] } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     setBusy(true);
     setApplied(false);
-    const reader = new FileReader();
-    reader.onload = () => {
-      stageCsvText(String(reader.result ?? ''), file.name);
+    setBookError(null);
+    try {
+      if (!isWorkbookName(file.name)) {
+        stageCsvText(await file.text(), file.name);
+        return;
+      }
+      // a workbook: its contract sheet becomes CSV text and goes through the same preflight
+      const refused = (errors: string[]) => {
+        discardStaged();
+        setBookError({ name: file.name, errors });
+      };
+      if (file.size > MAX_WORKBOOK_BYTES) {
+        refused(['The workbook is larger than 10 MB; save the contract sheet as CSV instead.']);
+        return;
+      }
+      const sheet = await workbookToCsv(await file.arrayBuffer(), CONTRACT_SHEET);
+      if (!sheet.ok) refused(sheet.errors);
+      else stageCsvText(sheet.csv, `${file.name}, sheet ${sheet.sheetName}`);
+    } catch {
+      discardStaged();
+      setBookError({ name: file.name, errors: ['The file could not be read.'] });
+    } finally {
       setBusy(false);
-    };
-    reader.onerror = () => setBusy(false);
-    reader.readAsText(file);
+    }
   }
 
   function onDrop(e: DragEvent) {
     e.preventDefault();
     setDragging(false);
     const f = e.dataTransfer.files[0];
-    if (f) handleFile(f);
+    if (f) void handleFile(f);
   }
 
   return (
@@ -65,7 +91,7 @@ export function ImportView() {
 
       <Panel
         className="mt"
-        kicker="Contract CSV import — schema 1.x, V01–V23"
+        kicker="Contract import (CSV or Excel) — schema 1.x, V01–V23"
         title="Drop a file to preflight it"
         sub="Validated and summarized first — nothing changes until you apply it."
       >
@@ -87,7 +113,7 @@ export function ImportView() {
             <p>Validating…</p>
           ) : (
             <>
-              <p>Drop a contract CSV here, or</p>
+              <p>Drop a contract CSV or workbook here, or</p>
               <button
                 type="button"
                 className="btn-primary"
@@ -98,12 +124,12 @@ export function ImportView() {
               <input
                 ref={inputRef}
                 type="file"
-                accept=".csv,text/csv"
+                accept={SPREADSHEET_ACCEPT}
                 style={{ display: 'none' }}
-                aria-label="Choose a contract CSV file"
+                aria-label="Choose a contract CSV file or workbook"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) handleFile(f);
+                  if (f) void handleFile(f);
                   e.target.value = '';
                 }}
               />
@@ -111,7 +137,23 @@ export function ImportView() {
           )}
         </div>
 
+        <p className="footnote" style={{ margin: '8px 0 0' }}>
+          A workbook is read from its <code>Export_Contract</code> or <code>Contract</code> sheet,
+          or else the sheet headed by the contract&apos;s column names; title rows above the column
+          names are skipped. Values are read as stored (0.0123, not 1.23%), dates as calendar dates.
+        </p>
+
         <div aria-live="polite">
+          {bookError ? (
+            <div className="error-list" role="alert" style={{ marginTop: 16 }}>
+              <div>
+                <strong>{bookError.name} was not read</strong> — nothing was staged.
+              </div>
+              {bookError.errors.map((m) => (
+                <div key={m}>{m}</div>
+              ))}
+            </div>
+          ) : null}
           {preflight ? (
             <div style={{ marginTop: 16 }}>
               <div className="kicker">Preflight — {preflight.fileName}</div>

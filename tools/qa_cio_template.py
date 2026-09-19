@@ -2,9 +2,12 @@
 save the Export tab as "CSV UTF-8" — exactly what a person does — so the dashboard's reader is
 tested on a file Excel really wrote.
 
-  example workbook -> Checks all OK -> data/sample/cio_template_example_<mon><yyyy>.csv (committed;
+  example workbook -> recalculated and saved by Excel in place, so its formulas carry their values
+                      and the file opens on the dashboard as downloaded (app/src/lib/workbook.test.ts)
+                   -> Checks all OK -> data/sample/cio_template_example_<mon><yyyy>.csv (committed;
                       app/src/lib/cioPackage.test.ts rebuilds the published report from it)
-  blank template   -> Checks not OK (nothing entered) -> outputs/cio_template/blank_export.csv
+  blank template   -> left as generated (formulas not yet calculated — the dashboard says so)
+                   -> Checks not OK (nothing entered) -> outputs/cio_template/blank_export.csv
 
 Usage: python tools/qa_cio_template.py   (after tools/make_cio_template.py)
 """
@@ -19,6 +22,7 @@ import win32com.client as win32
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TEMPLATES = ROOT / "app" / "public" / "templates"
 XL_CSV_UTF8 = 62
+XL_WORKBOOK = 51
 
 
 def report_month(xl, book: pathlib.Path) -> str:
@@ -27,6 +31,19 @@ def report_month(xl, book: pathlib.Path) -> str:
     try:
         d = wb.Worksheets("Report").Range("C4").Value
         return f"{d.strftime('%b').lower()}{d.year}"
+    finally:
+        wb.Close(SaveChanges=False)
+
+
+def resave(xl, book: pathlib.Path) -> None:
+    """Recalculate and save the workbook through Excel, opening on the Start tab. openpyxl writes
+    formulas without results; a workbook Excel has saved carries them."""
+    wb = xl.Workbooks.Open(str(book))
+    try:
+        xl.CalculateFull()
+        wb.Worksheets("Start").Activate()
+        wb.Worksheets("Start").Range("A1").Select()
+        wb.SaveAs(str(book), FileFormat=XL_WORKBOOK)
     finally:
         wb.Close(SaveChanges=False)
 
@@ -59,6 +76,8 @@ def main() -> int:
     xl.DisplayAlerts = False
     failed = False
     try:
+        resave(xl, example)
+        print(f"example: recalculated and saved by Excel ({example.stat().st_size:,} bytes)")
         sample = ROOT / "data" / "sample" / f"cio_template_example_{report_month(xl, example)}.csv"
         res = run(xl, example, sample)
         bad = [label for label, result in res if result != "OK"]

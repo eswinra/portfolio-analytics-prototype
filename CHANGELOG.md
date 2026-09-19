@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-09-18 — Revision 21: open Excel workbooks directly, read in the browser
+
+The CIO Monthly tab and the Import page now open an Excel workbook as well as a CSV. Before, a
+person had to save the right tab as CSV first.
+
+- **One path for the data.** `lib/workbook.ts` turns one sheet into the CSV text Excel would write.
+  That text goes through the reader that already checks CSV files: `readCioPackage` for the CIO
+  template, and the contract validator for imports. A workbook passes exactly the same checks as its
+  CSV. The example workbook read this way gives a package equal to the one read from its "CSV UTF-8"
+  export (unit test). Both demo workbooks' `Export_Contract` sheets give the same 376 records as their
+  exported CSVs, at full precision (the CSV export rounds to 10 significant digits).
+- **Values as stored, not as displayed.** A cell shown as 1.23% is read as 0.0123 and a date as its
+  calendar date. A workbook whose formulas were never calculated (written by a program other than
+  Excel) is refused with that reason, never read as blanks. So are cells showing Excel errors, with
+  the cells named.
+- **Choosing the sheet.** The CIO template uses its Export tab. Contract imports use
+  `Export_Contract` or `Contract`, or else the sheet headed by the contract's column names. Title
+  rows above the column names are skipped. When no sheet fits, the message lists the sheets it found.
+- **SheetJS CE 0.20.3** (Apache-2.0) comes from its official tarball, pinned by integrity hash. The
+  npm registry's `xlsx` stops at 0.18.5, which has published advisories. It is bundled as its own
+  chunk (500 KB, 163 KB gzip), and the site fetches it from itself the first time a workbook is
+  opened. Nothing is loaded from a CDN, and the file is never sent anywhere (browser test: no
+  request other than GET, and none off-site). Workbooks are limited to 10 MB.
+- **The example workbook opens as downloaded.** `tools/qa_cio_template.py` now recalculates and
+  saves `CIO_Monthly_Template_Example.xlsx` through Excel, so its formulas carry their results. The
+  blank template stays as generated. Opened directly, it gets the "not calculated" message.
+- The how-it-works guide, `docs/cio-template.md`, `docs/data-contract.md`, `docs/architecture.md`
+  and the README describe the workbook path. The CSV step is now optional.
+- Verification: lint · format · Vitest 461/461 (11 new) · production audit 0 · build · Playwright 140/140 runnable
+  (4 new desktop tests: example workbook built with nothing sent, blank template refused, contract
+  workbook with a title block applied, workbook without a contract sheet refused).
+
 ## 2026-09-18 — Revision 20.1: dependency advisories cleared; browser tests gate every deploy
 
 Audit finding 8, and the release checks it recommended.

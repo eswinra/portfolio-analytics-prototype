@@ -13,6 +13,7 @@ import {
 import type { MacroLine } from './cioMacro';
 import { CIO_PERIOD_TOKENS } from './contract/schema';
 import { histBinOf } from './dataset/cioFeed';
+import type { SheetChoice } from './workbook';
 
 /**
  * The CIO Monthly template file: a whole report (both funds, market table, geography, macro
@@ -35,6 +36,13 @@ export const PACKAGE_COLUMNS = [
   'text',
 ] as const;
 export const PACKAGE_FORMAT = 'cio-template-1';
+/** In the template workbook itself, the rows are on the Export tab (found by name, or by its
+ *  columns if the tab was renamed). */
+export const PACKAGE_SHEET: SheetChoice = {
+  names: ['Export'],
+  headers: PACKAGE_COLUMNS,
+  what: "the template's Export tab",
+};
 
 export interface CioOpsItem {
   e: string;

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { SheetChoice } from '../workbook';
+
 /** Data contract schema 1.3.0 — mirrors docs/data-contract.md. */
 
 export const SCHEMA_MAJOR = 1;
@@ -127,6 +129,16 @@ export const REQUIRED_COLUMNS = [
 /** schema 1.2 provenance columns — a file carries all three or none (V02). */
 export const PROVENANCE_COLUMNS = ['entered_by', 'reviewed_by', 'review_status'] as const;
 export const COLUMNS_V12 = [...REQUIRED_COLUMNS, ...PROVENANCE_COLUMNS] as const;
+
+/** In a workbook, the contract rows are on the sheet named here (the demo workbook's is
+ *  Export_Contract, whose column names sit under a title block), or else on the sheet carrying
+ *  the contract's column names. Which columns are required is the validator's business (V02). */
+export const CONTRACT_SHEET: SheetChoice = {
+  names: ['Export_Contract', 'Contract'],
+  headers: COLUMNS_V12,
+  minMatch: 10,
+  what: 'a contract export (a sheet headed by the contract’s column names)',
+};
 
 const isoDate = z
   .string()
