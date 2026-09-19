@@ -50,7 +50,8 @@ for (const fund of funds) {
     const seg = document.querySelector('#entity-seg .seg-btn[aria-pressed="true"]');
     return {
       vintage: v,
-      pages: document.querySelectorAll('.pp').length + document.querySelectorAll('.slide').length,
+      // the printed pages are the stage's own children: cover, slides, tab snapshots, figures
+      pages: document.querySelectorAll('.stage > .slide, .stage > .pp').length,
       name: seg ? seg.textContent.trim() : '',
     };
   });
@@ -58,7 +59,7 @@ for (const fund of funds) {
   const file = join(outDir, `CIO_Monthly_${month}_${fund === 'pension' ? 'PensionFund' : 'OPEBMasterTrust'}.pdf`);
   await page.pdf({ path: file, printBackground: true, preferCSSPageSize: true });
   const kb = Math.round(statSync(file).size / 1024);
-  console.log(`${name}: ${pages} pages (cover + 9 slides + 9 figures pages) → ${file} (${kb} KB)`);
+  console.log(`${name}: ${pages} pages (cover, then each slide with its tabs and its figures) → ${file} (${kb} KB)`);
 }
 
 await browser.close();

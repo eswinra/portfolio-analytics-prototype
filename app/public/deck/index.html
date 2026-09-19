@@ -433,6 +433,9 @@
   .pp th { font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   .pp td:first-child, .pp th:first-child { text-align: left; }
   .pp tr.pp-grp td { background: var(--band); font-weight: 700; text-align: left; color: var(--navy); }
+  .pp-variant { position: relative; }
+  .pp-variant .pp-hide { display: none !important; }
+  .pp-variant .pp-tag { position: absolute; left: 0; top: 0; z-index: 3; background: var(--navy); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 12px; }
   .pp .pp-meta { font-size: 10.5px; line-height: 1.45; color: var(--cat); }
   .pp .pp-meta h4 { margin: 8px 0 2px; font-size: 10.5px; color: var(--navy); }
   .pp .pp-meta p { margin: 0 0 4px; }
@@ -1724,6 +1727,58 @@
       return '';
     }
 
+    /** A snapshot of one slide with a tab chosen: the tab is set, the slide is copied as it
+     *  then stands, and the screen is put back. Ids are dropped from the copy so nothing else
+     *  looks it up. */
+    function variant(i, label, choose, restore) {
+      const sl = slides[i];
+      // the slide is made current for the moment of the copy: a slide waiting its turn is hidden
+      // as a whole, and everything inside it would read as hidden
+      const wasActive = sl.classList.contains('active');
+      sl.classList.add('active');
+      choose();
+      // what this tab hides is marked before the copy is taken: print shows every build, and
+      // without the mark the copy would show the bars this tab turned off
+      const hidden = [];
+      sl.querySelectorAll('*').forEach(el => {
+        // what the tab turned off, not what is waiting for its entrance: the tab sets these
+        // inline, and hurdle ticks are revealed by a class
+        const off = el.style.opacity === '0' || el.style.display === 'none' ||
+          (el.classList.contains('tick') && !el.classList.contains('on'));
+        if (off) {
+          el.classList.add('pp-hide');
+          hidden.push(el);
+        }
+      });
+      const copy = sl.cloneNode(true);
+      hidden.forEach(el => el.classList.remove('pp-hide'));
+      restore();
+      if (!wasActive) sl.classList.remove('active');
+      copy.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+      copy.removeAttribute('id');
+      copy.classList.remove('active', 'armed');
+      const wrap = document.createElement('div');
+      wrap.className = 'pp pp-variant';
+      wrap.innerHTML = '<div class="pp-tag">' + esc(label) + '</div>';
+      wrap.appendChild(copy);
+      return wrap;
+    }
+
+    /** Tabs that change the picture rather than the order of the same numbers. */
+    function variantsFor(i) {
+      const id = slides[i].dataset.id, out = [];
+      const seg = (sel, v) => { const b = $(sel + ' .seg-btn[data-v="' + v + '"]'); if (b) b.click(); };
+      if (id === 'perf') {
+        out.push(variant(i, 'Tab: excess vs. benchmark',
+          () => seg('#perf-mode', 'excess'), () => seg('#perf-mode', 'levels')));
+      }
+      if (id === 'market' && $('#mkt-order')) {
+        out.push(variant(i, 'Tab: sorted by return',
+          () => seg('#mkt-order', 'sorted'), () => seg('#mkt-order', 'report')));
+      }
+      return out;
+    }
+
     function build() {
       $$('.pp').forEach(el => el.remove());
       const e = E(), stage = $('.stage');
@@ -1751,6 +1806,8 @@
           '<h3>Slide ' + (i + 1) + ' · figures behind the slide</h3><h2>' + esc(sl.dataset.title) + ' — ' + esc(e.short) + '</h2>' +
           fig + '<div class="pp-meta">' + (src ? '<p>' + esc(src) + '</p>' : '') + notes + '</div>');
         sl.after(p);
+        // a tab that draws a different picture becomes its own page, before the figures
+        variantsFor(i).reverse().forEach(v => sl.after(v));
       });
     }
     window.addEventListener('beforeprint', build);

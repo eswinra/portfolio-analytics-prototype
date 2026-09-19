@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-19 — Revision 25.1: a tab that changes the picture gets its own page
+
+- The printed document now carries, straight after its slide, a snapshot of each tab that draws a
+  different picture: the performance slide's **excess vs. benchmark** view and the market slide
+  **sorted by return**. The snapshot is the slide itself with that tab chosen, and what the tab
+  hides stays hidden — the print stylesheet shows every build, which would otherwise bring the
+  benchmark bars and hurdle ticks back into the excess view.
+- Tabs that only reorder or filter the same numbers (periods, composites, the items filter) are
+  not duplicated: the figures page after each slide lists every period and every item.
+- 21 landscape pages per fund. Verification: lint · format · Vitest 476/476 · build · Playwright
+  150/150 runnable (the printed-document test now checks the snapshots and their order); both PDFs
+  regenerated and read back.
+
 ## 2026-09-19 — Revision 25: the deck prints as a document that can be posted
 
 Printing the deck now produces the publication file: **a cover, then every slide followed by a page

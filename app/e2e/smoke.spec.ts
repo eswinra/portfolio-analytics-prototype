@@ -458,18 +458,36 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     await page.emulateMedia({ media: 'print' });
     const doc = await page.evaluate(() => {
       (window as unknown as { __buildPrintout: () => void }).__buildPrintout();
-      const order = [...document.querySelectorAll('.slide, .pp')].map((el) =>
+      const order = [...document.querySelectorAll('.stage > .slide, .stage > .pp')].map((el) =>
         el.classList.contains('pp-cover')
           ? 'cover'
           : el.classList.contains('pp-data')
             ? 'figures'
-            : 'slide',
+            : el.classList.contains('pp-variant')
+              ? 'variant'
+              : 'slide',
       );
       const pages = [...document.querySelectorAll('.pp-data')].map((el) => el.textContent ?? '');
-      return { order, cover: document.querySelector('.pp-cover')?.textContent ?? '', pages };
+      const variants = [...document.querySelectorAll('.pp-variant')].map(
+        (el) => el.querySelector('.pp-tag')?.textContent ?? '',
+      );
+      return {
+        order,
+        cover: document.querySelector('.pp-cover')?.textContent ?? '',
+        pages,
+        variants,
+      };
     });
-    // cover, then slide/figures in pairs for all nine slides
-    expect(doc.order).toEqual(['cover', ...Array(9).fill(['slide', 'figures']).flat()]);
+    // a cover, then every slide with its tab snapshots and its figures page
+    expect(doc.order[0]).toBe('cover');
+    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(9);
+    expect(doc.order.filter((p) => p === 'figures')).toHaveLength(9);
+    // a tab that draws a different picture is its own page, right after its slide
+    expect(doc.variants).toEqual(['Tab: excess vs. benchmark', 'Tab: sorted by return']);
+    doc.order.forEach((p, i) => {
+      if (p === 'variant') expect(doc.order[i - 1]).toBe('slide');
+      if (p === 'figures') expect(['slide', 'variant']).toContain(doc.order[i - 1]);
+    });
     expect(doc.cover).toContain('not an official LACERA publication');
     expect(doc.cover).toContain('data through June 30, 2026');
     // each figures page carries the numbers behind its slide, with source and data labels

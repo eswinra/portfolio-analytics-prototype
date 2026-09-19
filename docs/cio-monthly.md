@@ -199,8 +199,13 @@ labelled. Nothing is redrawn for print: the slide pages are the slides, with eve
 
 | How | What |
 |---|---|
-| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 19 landscape pages |
+| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 21 landscape pages |
 | `npm run deck:pdf` (from `app/`) | Both funds, into `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf`; `-- --fund opeb` for one, `-- --out <dir>` elsewhere |
+
+A tab that draws a different picture — the performance slide's excess view, the market slide
+sorted by return — is captured as its own page straight after its slide, with what that tab hides
+kept hidden. Tabs that only reorder or filter the same numbers (periods, composites, the items
+filter) are covered by the figures page, which lists them all.
 
 The figures pages are built from the same data the slides are drawn from (`printout()` in the
 deck), so they cannot drift from the picture:
