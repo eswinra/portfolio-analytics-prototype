@@ -1,21 +1,34 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 /** View state that belongs in the address bar: the fund, the selected report, and the toggles
  *  that change what a panel shows. A pasted link must reproduce what the sender was looking at,
  *  so these live in the query string rather than in component state. Defaults are omitted from
- *  the URL, which keeps the common case clean. */
+ *  the URL, which keeps the common case clean.
+ *
+ *  React Router applies URL updates as a transition, so a control bound only to the URL would
+ *  snap back for a moment before its new value arrived. The value just set is shown at once and
+ *  held until the address has caught up with it (or moves on); the address stays the record. */
 export function useUrlParam(key: string, fallback: string): [string, (next: string) => void] {
   const [params, setParams] = useSearchParams();
-  const value = params.get(key) ?? fallback;
+  const fromUrl = params.get(key) ?? fallback;
+  // the value just set, and the address value it was set against
+  const [pending, setPending] = useState<{ v: string; base: string } | null>(null);
+  const value = pending && pending.base === fromUrl ? pending.v : fromUrl;
   const set = useCallback(
     (next: string) => {
-      const p = new URLSearchParams(params);
-      if (next === fallback) p.delete(key);
-      else p.set(key, next);
-      setParams(p, { replace: true });
+      setPending({ v: next, base: fromUrl });
+      setParams(
+        (prev) => {
+          const p = new URLSearchParams(prev);
+          if (next === fallback) p.delete(key);
+          else p.set(key, next);
+          return p;
+        },
+        { replace: true },
+      );
     },
-    [params, setParams, key, fallback],
+    [fromUrl, setParams, key, fallback],
   );
   return [value, set];
 }

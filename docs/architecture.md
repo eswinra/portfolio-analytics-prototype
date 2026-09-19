@@ -144,8 +144,11 @@ contract pipeline) modes. Revision 9 hardens that architecture per an external a
 - **Verification layers**: vitest unit + jsdom component tests (`src/**/*.test.ts(x)`), and
   a Playwright smoke suite (`app/e2e/`, `playwright.config.ts`) run against the production
   build at desktop and 320/360/375 widths — per-route overflow probe, axe checks, and the
-  three demonstrated controls. CI (pages.yml) gates deploy on lint, format, tests, and a
-  production-dependency audit; Playwright runs locally by design (no browsers in CI).
+  three demonstrated controls. CI (pages.yml) gates deploy on lint, format, tests, a
+  production-dependency audit, the build (which type-checks `app/scripts` too) and, since the
+  September 18, 2026 audit, the Playwright suite on the built site; the full dependency audit
+  (development tooling included) is reported in each run's summary without blocking a release.
+  Visual baselines stay local (platform-specific; `playwright.visual.config.ts`).
 - Dev-server `fs.allow` is narrowed to the app and `data/sample`, keeping `reference/`
   outside every served root.
 

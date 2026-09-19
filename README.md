@@ -62,8 +62,9 @@ Regenerating the dataset end-to-end (requires desktop Excel for the QA step):
 ## Deployment
 
 A standard GitHub Pages workflow (`.github/workflows/pages.yml`) builds `app/` and publishes
-`app/dist`. No backend, secrets, analytics, or API keys — the workflow needs only the default
-Pages permissions. The app uses a relative asset base and hash routing, so it works at any
+`app/dist` once lint, formatting, unit tests, the production-dependency audit, the build and the
+browser suite (desktop and phone widths, accessibility) pass. No backend, secrets, analytics, or
+API keys — the workflow needs only the default Pages permissions. The app uses a relative asset base and hash routing, so it works at any
 site path without configuration.
 
 ## License and data notes

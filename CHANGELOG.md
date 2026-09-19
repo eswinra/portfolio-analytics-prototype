@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-09-18 — Revision 20.1: dependency advisories cleared; browser tests gate every deploy
+
+Audit finding 8, and the release checks it recommended.
+
+- **Dependencies:** the smallest upgrades that clear every advisory — Vite 5 → 6.4.3, Vitest
+  2 → 4.1.11, `@vitejs/plugin-react` → 4.7.0, `react-router-dom` 6 → 7.18.4, `vite-node` 3.2.4
+  added explicitly (Vitest 4 no longer brings it; the project's scripts run on it), and the
+  non-breaking fixes for `js-yaml` and `nanoid`. `npm audit`: 9 advisories (1 critical, 3 high,
+  5 moderate) → 0. None affected the published static site — the critical and high entries were
+  the Vitest UI server and Vite's dev server (the latter on Windows) — but both are the tools
+  used to build it. Newer majors (Vite 8, Vitest 5) were not needed and not taken.
+- **URL-bound controls:** React Router 7 applies URL updates as a transition, so a checkbox or
+  selector bound to the address snapped back for a moment (the browser suite caught it on
+  "Compare both funds"). `useUrlParam` now shows the value just set until the address catches up,
+  and updates the address from its latest state.
+- **Deploy gates** (`pages.yml`): the Playwright suite now runs on the built site before it is
+  published (every route at desktop and three phone widths, accessibility scans, the CIO flows);
+  the full dependency audit, development tooling included, is written to each run's summary.
+- Verification: lint · format · Vitest 450/450 · build · Playwright 136/136 runnable (twice on
+  the new versions) · `npm run sync:deck` and `cio:diff` on vite-node 3.2.4 · clean-checkout
+  rehearsal of the deploy job including the browser suite.
+
 ## 2026-09-18 — Revision 20: fixes from the September 18 audit (import integrity, CIO reporting)
 
 An independent read-only audit at `7c150c0` reproduced eight problems; all eight reproduced here
