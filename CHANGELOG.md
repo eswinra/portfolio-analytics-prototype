@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-18 — Revision 19.1: the how-it-works guide has the template steps
+
+- `/how-it-works/` now walks through building the slides from the CIO template in five steps —
+  download (with the filled example), fill the yellow cells, check, save the Export tab as CSV
+  UTF-8, open it on the CIO Monthly tab — and says what happens with a faulty file and how the
+  file is kept private. "Where the numbers come from" lists the template as a fourth source, and
+  the GitHub section is now titled for published reports so the two routes are not confused.
+- Verification: build · Playwright (the guide: heading, code links, template downloads, no
+  horizontal overflow, axe) · page rendered at 1100 px and 360 px.
+
 ## 2026-09-18 — Revision 19: build the CIO slides from a template, before the report is published
 
 - New Excel template (`app/public/templates/CIO_Monthly_Template.xlsx`, and a filled example of the

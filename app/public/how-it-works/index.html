@@ -22,6 +22,8 @@
     --fred-ink: #1d6b3f;
     --hand-bg: #fbeed8;
     --hand-ink: #7a4b00;
+    --tpl-bg: #eceff3;
+    --tpl-ink: #3f4a58;
     --sans: Arial, 'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif;
     --mono: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
   }
@@ -42,6 +44,8 @@
       --fred-ink: #9fe0b8;
       --hand-bg: #3a2c12;
       --hand-ink: #f3cf8e;
+      --tpl-bg: #232f3d;
+      --tpl-ink: #c3ccd7;
     }
   }
 
@@ -117,6 +121,7 @@
   .tag.pdf { background: var(--pdf-bg); color: var(--pdf-ink); }
   .tag.fred { background: var(--fred-bg); color: var(--fred-ink); }
   .tag.hand { background: var(--hand-bg); color: var(--hand-ink); }
+  .tag.tpl { background: var(--tpl-bg); color: var(--tpl-ink); }
 
   /* a new month, step by step: a real sequence, so it is numbered */
   ol.steps { counter-reset: step; list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
@@ -155,8 +160,8 @@
 <div class="page">
   <header>
     <h1>How the CIO Monthly slides work</h1>
-    <p>Where the numbers come from, how a new report gets onto the slides, and where to find the
-      code.</p>
+    <p>Where the numbers come from, how a report gets onto the slides, how to build them from the
+      template before it's published, and where to find the code.</p>
     <div class="actions">
       <a class="btn" href="../#/cio">Open the slides</a>
       <a class="btn ghost" href="https://github.com/eswinra/portfolio-analytics-prototype">See the code on GitHub</a>
@@ -183,9 +188,15 @@
         <span class="tag hand">Typed in</span>
         <span class="d">Written parts of the newest report, entered with their page numbers.</span>
       </li>
+      <li>
+        <strong>Everything, before a report is published</strong>
+        <span class="tag tpl">Template</span>
+        <span class="d">Your team's own figures in the CIO template, read in your browser only and
+          never published. <a href="#template">Steps below</a>.</span>
+      </li>
     </ul>
 
-    <h2>How a new month gets onto the slides</h2>
+    <h2>How a published report gets onto the slides</h2>
     <p>It's all done on GitHub, in a browser. You need a GitHub account with access to the
       project.</p>
     <ol class="steps">
@@ -209,19 +220,55 @@
       <li><div><p>When its checks turn green, merge it. The site publishes within minutes.</p></div></li>
     </ol>
 
-    <h2>Before the report is published</h2>
-    <p>The team can build the slides from its own figures, without the PDF:</p>
+    <h2 id="template">Build the slides from the template</h2>
+    <p>Use this to prepare a month's slides from your team's own figures, before the report is
+      published. You don't need the PDF or a GitHub account.</p>
     <ol class="steps">
-      <li><div><p>Fill in the <a href="../templates/CIO_Monthly_Template.xlsx">CIO template</a>
-        (Excel). The <a href="../templates/CIO_Monthly_Template_Example.xlsx">filled example</a>
-        shows the latest published report in it. Its Checks tab should say OK throughout.</p></div></li>
-      <li><div><p>Save its Export tab as <b>CSV UTF-8</b>.</p></div></li>
-      <li><div><p>On the CIO Monthly tab, choose <b>Open a template file</b> and pick the CSV.</p></div></li>
+      <li>
+        <div>
+          <p>Download the <a href="../templates/CIO_Monthly_Template.xlsx">CIO template</a> (Excel).</p>
+          <p class="file">To see a finished one, open the
+            <a href="../templates/CIO_Monthly_Template_Example.xlsx">filled example</a>. It holds
+            the latest published report.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p>Fill in the yellow cells on the <b>Report</b>, <b>Pension</b>, <b>OPEB</b>,
+            <b>Markets</b>, <b>Macro</b> and <b>Items</b> tabs.</p>
+          <p class="file">Percent as printed (0.1 means 0.1%), money in $ millions. Leave a cell
+            empty when the report has no figure.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p>Open the <b>Checks</b> tab. Every line should say OK.</p>
+          <p class="file">It tests what every published report satisfies: weights add to 100%,
+            categories add to the fund total, the return histogram adds to 120 months, and every
+            return has a benchmark.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p>Open the <b>Export</b> tab, then <b>File → Save As → CSV UTF-8 (Comma
+            delimited)</b>.</p>
+          <p class="file">Excel saves only the tab that's open, so make sure it's Export.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p>On the <a href="../#/cio?tab=summary">CIO Monthly tab</a>, click
+            <b>Open a template file</b> and pick the CSV.</p>
+          <p class="file">The tabs and slides build from it, marked "template file, not
+            published" everywhere. If anything in the file is wrong, nothing is shown and the page
+            lists what to fix. <b>Close file</b> puts the published report back.</p>
+        </div>
+      </li>
     </ol>
-    <p class="note-line">The file is read in your browser only. It is never uploaded or published,
-      and closing the page clears it. Until LACERA publishes the report its figures are
-      confidential: keep the files on the team's systems, and don't use the GitHub form or AI
-      tools for them.</p>
+    <p class="note-line">The file is read in your browser only. It is never uploaded, saved or
+      published, and closing or reloading the page clears it. Until LACERA publishes the report
+      its figures are confidential: keep the files on the team's systems, and don't use the
+      GitHub form or AI tools for them.</p>
 
     <h2>How the slides work</h2>
     <ul class="plain">
