@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-19 — Revision 24: slide 2 opens to what drove the month
+
+A composite chosen on slide 2 now expands to the drivers behind its return. The report prints no
+sub-asset-class returns, so the drivers are what its own figures support, and each is labelled for
+what it is:
+
+- **Its share of the fund's month** — month-end weight × its return, called indicative because
+  beginning-of-month weights are not published, against the fund's return. For the Total Fund the
+  column is the four composites and the reported total, with the difference (overlays, cash, other
+  assets, weight drift) carried in the note rather than hidden.
+- **Value since the previous report** — earlier close + return effect + the report's rebalancing
+  flow + an unexplained remainder = this month's close. The remainder is shown, never absorbed; a
+  fund whose flows are not supplied says so.
+- **Markets this month** — the month's index moves from the report's own market table, named as
+  context, not attribution: a composite holds far more than those indices, and public markets do
+  not explain private valuations.
+- The previous report's market values travel with the deck data (`PRIOR`, built by `deckPrior`),
+  and are absent — with the bridge — for a template file or an imported feed, which are not part
+  of the published series.
+- Opening the drivers replaces the headline row they restate, so the card still clears the note and
+  source row beneath it: 4 px on every selection, both funds (checked in the browser suite).
+- Verification: lint · format · Vitest 476/476 · build · Playwright 149/149 runnable (1 new).
+
 ## 2026-09-19 — Revision 23: the deck's chrome, and steps that only cost a press where they build
 
 - **One bar, at the bottom.** The top bar is gone. The section strip (Where we stand → Why →

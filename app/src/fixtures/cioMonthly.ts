@@ -115,7 +115,20 @@ export interface CioVintage {
   origin?: 'file';
 }
 
+/** The previous published report's market values, for the value bridge on slide 2: a month's
+ *  closing value against the month before it. Absent for a template file or an imported feed,
+ *  whose figures are not part of the published series. */
+export interface DeckPrior {
+  reportLabel: string;
+  monthYear: string;
+  ENT: Record<
+    'pension' | 'opeb',
+    { mv: number; comps: Record<string, number>; other: number | null }
+  >;
+}
+
 export interface CioDeckData {
+  PRIOR: DeckPrior | null;
   PERIODS: string[];
   ENT: { pension: CioEntity; opeb: CioEntity };
   BINS: string[];

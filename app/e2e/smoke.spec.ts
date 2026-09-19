@@ -417,6 +417,38 @@ test.describe('contract workbook import (desktop project)', () => {
   });
 });
 
+test.describe('CIO slide 2 drivers (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('a category opens to what drove its month, from the published figures', async ({ page }) => {
+    await ready(page, '/cio?tab=slides&slide=2');
+    const deck = page.frameLocator('.deck-frame-wrap iframe');
+    await deck.locator('#alloc-legend button', { hasText: 'Credit' }).first().click();
+    await deck.getByRole('button', { name: /What drove this month/ }).click();
+    const det = deck.locator('.det');
+    // its share of the fund's month: month-end weight x its return, called indicative
+    await expect(det).toContainText('Indicative contribution');
+    await expect(det).toContainText('+0.11 pts');
+    // the value bridge against the previous report, which adds up to the month's close
+    await expect(det).toContainText('Value since May 2026');
+    await expect(det).toContainText('$11,760 mm');
+    await expect(det).toContainText('$11,749 mm');
+    await expect(det).toContainText('Rebalancing flow');
+    // market moves are named as context, never as attribution
+    await expect(det).toContainText('Markets this month');
+    await expect(det).toContainText('Index moves (p. 5) are context, not attribution.');
+    // the card still clears the note row under it
+    const gap = await deck.locator('.slide.active').evaluate((slide) => {
+      const d = slide.querySelector('.det')!.getBoundingClientRect();
+      const nb = slide.querySelector('.nb')!.getBoundingClientRect();
+      return nb.top - d.bottom;
+    });
+    expect(gap).toBeGreaterThan(0);
+    await deck.getByRole('button', { name: /Hide what drove this month/ }).click();
+    await expect(det).not.toContainText('Indicative contribution');
+  });
+});
+
 test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 

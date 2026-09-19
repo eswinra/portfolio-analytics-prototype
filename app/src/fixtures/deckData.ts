@@ -1,3 +1,5 @@
+import { deckPrior } from '../lib/deckFeed';
+
 import {
   BINS,
   CIO_LATEST,
@@ -19,6 +21,7 @@ export const DECK_BLOCK_BEGIN =
 export const DECK_BLOCK_END = '  /* ==== END SHARED DATA ==== */';
 
 export const DECK_DATA: CioDeckData = {
+  PRIOR: deckPrior(CIO_LATEST),
   PERIODS,
   ENT: CIO_LATEST.ENT,
   BINS,
@@ -29,7 +32,17 @@ export const DECK_DATA: CioDeckData = {
   VINTAGE: deckVintage(CIO_LATEST),
 };
 
-const NAMES = ['PERIODS', 'ENT', 'BINS', 'MKT', 'MACRO', 'OPS', 'STATUS', 'VINTAGE'] as const;
+const NAMES = [
+  'PERIODS',
+  'ENT',
+  'BINS',
+  'MKT',
+  'MACRO',
+  'OPS',
+  'STATUS',
+  'VINTAGE',
+  'PRIOR',
+] as const;
 
 /** The lines between the markers (no trailing newline). Declared with `let` so the deck, when
  *  presented inside the dashboard, can take the report on screen instead (lib/deckFeed.ts). */

@@ -205,7 +205,7 @@
   .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; font-size: 12px; color: var(--cat); font-weight: 700; }
   .legend button { font: inherit; color: inherit; background: none; border: 0; padding: 2px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
   .legend button:hover { color: var(--blue); }
-  .det { margin-top: 18px; border: 1px solid var(--line); background: var(--tint); padding: 14px 18px; min-height: 196px; }
+  .det { margin-top: 18px; border: 1px solid var(--line); background: var(--tint); padding: 13px 18px 9px; min-height: 196px; }
   .det .name { font-size: 20px; font-weight: 700; color: var(--navy); }
   .det .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
   .det .kv { font-size: 12px; color: var(--cat); }
@@ -214,10 +214,26 @@
   .meter > i { position: absolute; left: 0; top: 0; height: 100%; background: var(--blue); border-radius: 4px; transition: width .6s cubic-bezier(.2,.7,.2,1); }
   .meter > s { position: absolute; top: -4px; width: 2px; height: 16px; background: var(--ink); transition: left .6s; }
   .det table { border-collapse: collapse; margin-top: 12px; font-size: 12.5px; font-variant-numeric: tabular-nums; width: 100%; }
+  .drv-btn { display: block; width: 100%; margin-top: 10px; font: inherit; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--navy); background: transparent; border: 0; border-top: 1px solid #D4DEE9; padding: 8px 0 0; text-align: left; cursor: pointer; }
+  .drv-btn:hover { color: var(--blue); }
+  .drv-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .drv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; margin-top: 4px; }
+  /* opened, the card is taller: it takes the room from its own margins rather than from the
+     note and source row under it */
+  .det.drv-on { margin-top: 8px; }
+  .det.drv-on table { margin-top: 8px; }
+  .drv .dcol h4 { margin: 0 0 2px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .drv table { margin-top: 0; font-size: 11.5px; }
+  .drv td { padding: 1px 0; border-bottom: 1px solid #E4EAF1; }
+  .drv td:first-child { text-align: left; color: var(--cat); padding-right: 6px; }
+
+  .drv-foot { margin: 5px 0 0; font-size: 10px; line-height: 1.35; color: var(--muted); }
   .det td, .det th { padding: 4px 6px; text-align: right; border-bottom: 1px solid #D4DEE9; }
   .det th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .det td:first-child, .det th:first-child { text-align: left; }
   .det td.neg { color: #8A2F2F; }
+  .drv td { padding: 1px 0; font-size: 11.5px; border-bottom: 1px solid #E4EAF1; }
+  .drv tr.dsum td { font-weight: 700; color: var(--ink); }
 
   /* ---------- geographic exposure ---------- */
   .geo { display: grid; grid-template-columns: 330px 1fr; gap: 36px; margin-top: 10px; height: 440px; }
@@ -784,6 +800,7 @@
   let OPS = [{"e":"Total Fund","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"Total Fund","item":"Adhering to the BOI-approved 2026 Strategic Framework","st":"prog","p":19},{"e":"Total Fund","item":"Planning for the Strategic Framework and Initiatives Refresh","st":"prog","p":19},{"e":"Total Fund","item":"Risk system onboarding","st":"prog","p":19},{"e":"OPEB Master Trust","item":"April 2024 approved Strategic Asset Allocation implementation","st":"prog","p":19},{"e":"OPEB Master Trust","item":"Risk system onboarding","st":"prog","p":19},{"e":"Investments Division","item":"Principal Investment Officer — 1 position","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst III — 5 positions","st":"dev","p":19},{"e":"Investments Division","item":"Finance Analyst II — 1 position","st":"prog","p":19},{"e":"Investments Division","item":"Finance Analyst Fellowship — 2 positions","st":"done","p":19},{"e":"Manager update","item":"Acadian Asset Management (global equities separate account, $1,023 mm): Alexandre Voitenok appointed co-Chief Investment Officer effective January 1, 2027, after serving as Deputy CIO since 2024","st":"info","p":20},{"e":"Consultant search","item":"Real Estate Consultant RFP launched Q1 2026, diligence Q1–Q3 2026 — quiet period for respondents (Albourne, Mercer, NEPC, RCLCO, StepStone, Meketa)","st":"quiet","p":24}];
   let STATUS = {"prog":["In progress","prog"],"dev":["In development","dev"],"info":["For attention","info"],"quiet":["Quiet period","quiet"],"done":["Completed","done"]};
   let VINTAGE = {"reportLabel":"August 12, 2026","throughLabel":"June 30, 2026","month":"June","monthYear":"June 2026","marketLabel":"July 31, 2026","histRange":"July 2016 – June 2026","url":"https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-Aug-2026.pdf","macroLabel":"July 31, 2026"};
+  let PRIOR = {"reportLabel":"July 8, 2026","monthYear":"May 2026","ENT":{"pension":{"mv":93948,"comps":{"growth":45822,"credit":11760,"ra":13658,"rrm":22158},"other":549},"opeb":{"mv":6264,"comps":{"growth":2840,"credit":989,"ra":756,"rrm":1678},"other":null}}};
   /* ==== END SHARED DATA ==== */
   /* ---- dashboard feed: presented inside the dashboard (?embed=1), the deck takes the report on screen
      from the parent window; a presenter window takes whatever its opener shows. Text is stripped of
@@ -798,9 +815,9 @@
     if (!f) { try { if (window.opener && window.opener !== window && ok(window.opener.__laceraDeckData)) f = window.opener.__laceraDeckData; } catch (e) { f = null; } }
     if (!f) return;
     f = strip(f);
-    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE;
+    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE; PRIOR = f.PRIOR || null;
   })();
-  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE };
+  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE, PRIOR };
   const NOTES = [
     '<h4>Slide 1 · Executive read</h4><p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
     '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges and Other Asset (an operational holding) are combined into one sliver with no policy target; the slide shows their combined value. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
@@ -1060,7 +1077,62 @@
     const tiles = $('#sum-tiles'), actual = $('#stack-actual'), target = $('#stack-target'), legend = $('#alloc-legend'), det = $('#det');
     const COLORS = { growth: 'var(--a1)', credit: 'var(--a2)', ra: 'var(--a3)', rrm: 'var(--a4)', other: 'var(--gray)' };
     const BARLAB = { growth: 'Growth', credit: 'Credit', ra: 'Real Assets', rrm: 'Risk Reduction & Mit.' };
-    let sel = 'total', prevT = null;
+    let sel = 'total', prevT = null, drvOpen = false;
+    // the month's index moves that belong beside each composite — the report's own market table,
+    // shown as context: a composite holds far more than these, and this is not attribution
+    const MKT_FOR = {
+      total: ["60:40 Equity:Bond"],
+      growth: ["U.S. Large Cap", "Non-U.S. All Cap", "Private Equity Buyout"],
+      credit: ["U.S. Corporate High Yield", "DM Leveraged Loans"],
+      ra: ["Natural Resources", "Global Infrastructure", "Real Estate (ODCE, net)\u00b9"],
+      rrm: ["U.S. Long-Term Treasuries"],
+    };
+    const mktRow = name => {
+      for (const g of MKT) { const r = g.rows.find(x => x.n === name); if (r) return r; }
+      return null;
+    };
+    const dTable = rows => '<table>' + rows.map(r => '<tr' + (r[3] ? ' class="dsum"' : '') + '><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>').join('') + '</table>';
+    const col = (title, rows) => '<div class="dcol"><h4>' + title + '</h4>' + dTable(rows) + '</div>';
+
+    /** What drove the selected line this month, from the published figures only. */
+    function driversHTML(c, e) {
+      const r1 = c.r ? c.r[0] : null, fund1 = e.total.r[0], cols = [], notes = [];
+      if (c.k === 'total') {
+        const rows = e.comps.map(x => [x.short + ' <span style="color:var(--muted)">' + pct(x.pct) + ' \u00d7 ' + pct(x.r[0]) + '</span>', sgn(x.pct * x.r[0] / 100, 2) + ' pts']);
+        const sum = e.comps.reduce((a, x) => a + x.pct * x.r[0] / 100, 0);
+        rows.push(['Reported ' + e.short, sgn(fund1, 2) + ' pts', 0, 1]);
+        cols.push(col('What made up the month', rows));
+        notes.push('The four add to ' + sgn(sum, 2) + ' pts against the reported ' + sgn(fund1, 2) + ': month-end weights are the only ones published, and the difference carries overlays, cash, other assets and weight drift.');
+      } else if (r1 != null) {
+        cols.push(col('Its share of the fund\u2019s month', [
+          ['Weight, month end', pct(c.pct)],
+          ['Net return, ' + VINTAGE.monthYear, pct(r1)],
+          ['Indicative contribution', sgn(c.pct * r1 / 100, 2) + ' pts', 0, 1],
+        ]));
+        notes.push('Weight \u00d7 return, against ' + pct(fund1) + ' for the fund; indicative, because beginning-of-month weights are not published.');
+      }
+      const p = PRIOR && PRIOR.ENT[entity];
+      const start = !p ? null : c.k === 'total' ? p.mv : c.k === 'other' ? p.other : p.comps[c.k];
+      if (start != null) {
+        const flow = c.k === 'total' ? e.netflow : c.flow;
+        const ret = r1 == null ? null : start * r1 / 100;
+        const rows = [[PRIOR.monthYear + ' close', money(start) + ' mm']];
+        if (ret != null) rows.push(['Return effect ' + pct(r1), money(Math.round(ret)) + ' mm']);
+        rows.push(['Rebalancing flow', flow == null ? 'not supplied' : money(flow) + ' mm']);
+        const known = start + (ret || 0) + (flow || 0);
+        rows.push([flow == null ? 'Flows and other' : 'Unexplained', money(Math.round(c.mv - known)) + ' mm']);
+        rows.push([VINTAGE.monthYear + ' close', money(c.mv) + ' mm', 0, 1]);
+        cols.push(col('Value since ' + PRIOR.monthYear, rows));
+        notes.push('Return effect = earlier close \u00d7 return; flows are the report\u2019s rebalancing activity (p. 18); the rest is timing, valuation lags and rounding.');
+      }
+      const names = MKT_FOR[c.k] || [];
+      const mrows = names.map(n => { const r = mktRow(n); return r ? [r.n, pct(r.v[0])] : null; }).filter(Boolean);
+      if (mrows.length) {
+        cols.push(col('Markets this month', mrows));
+        notes.push('Index moves (p. 5) are context, not attribution.');
+      }
+      return cols.length ? '<div class="drv">' + cols.join('') + '</div><p class="drv-foot">' + notes.join(' ') + '</p>' : '';
+    }
     function segsOf(e) {
       const s = e.comps.slice();
       if (e.other) s.push({ k: 'other', n: e.other.n, short: 'Overlays + Other', mv: e.other.mv, pct: e.other.pct, tgt: 0, r: null, b: null });
@@ -1117,11 +1189,13 @@
       const segs = segsOf(e);
       $$('.seg-a', actual).forEach((el, i) => el.classList.toggle('sel', segs[i].k === k));
       const hasTgt = c.k !== 'total' && c.k !== 'other';
-      let html = '<div class="fade"><div class="name">' + c.n + '</div><div class="row">' +
+      const drv = driversHTML(c, E());
+      const showDrv = drvOpen && drv !== '';
+      let html = '<div class="fade"><div class="name">' + c.n + '</div>' + (showDrv ? '' : '<div class="row">' +
         '<div class="kv">Market value<b>$' + c.mv.toLocaleString('en-US') + ' mm</b></div>' +
         '<div class="kv">Weight vs. 2024 SAA target<b>' + pct(c.pct) + ' <span style="font-size:13px;font-weight:400;color:var(--cat)">vs ' + (hasTgt ? pct(c.tgt) + ' target · ' + sgn(c.pct - c.tgt) + ' pts' : c.k === 'total' ? '100.0% target' : 'no target') + '</span></b>' +
         (hasTgt ? '<div class="meter"><i style="width:' + (c.pct / 50 * 100) + '%"></i><s style="left:' + (c.tgt / 50 * 100) + '%"></s></div><div style="font-size:10.5px;color:var(--muted);margin-top:4px">Bar = actual, tick = target, scale 0–50%</div>' : '') +
-        '</div></div>';
+        '</div></div>');
       if (c.r) {
         const ix = [0, 2, 4, 6];
         html += '<table><tr><th>Net return</th>' + ix.map(i => '<th>' + PERIODS[i] + '</th>').join('') + '</tr>' +
@@ -1131,7 +1205,13 @@
       } else {
         html += '<p style="font-size:12.5px;color:var(--cat);margin:14px 0 0">' + (E().other ? E().other.n.replace(/&/g, '&amp;') + ' ($' + Math.round(E().other.mv).toLocaleString('en-US') + ' mm combined)' : 'Overlays &amp; Hedges and Other Asset') + ' have no policy target or composite return in the public report. Other Asset is an operational holding.</p>';
       }
+      if (drv) {
+        html += '<button class="drv-btn" id="drv-btn" aria-expanded="' + showDrv + '">' + (showDrv ? '\u25be Hide what drove this month' : '\u25b8 What drove this month') + '</button>' + (showDrv ? drv : '');
+      }
       det.innerHTML = html + '</div>';
+      det.classList.toggle('drv-on', showDrv);
+      const btn = $('#drv-btn', det);
+      if (btn) btn.addEventListener('click', () => { drvOpen = !drvOpen; select(sel); });
     }
     render(false);
     enterHooks[idx('summary')] = () => { prevT = null; render(false); };

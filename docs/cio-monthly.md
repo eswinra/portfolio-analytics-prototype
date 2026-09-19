@@ -173,6 +173,16 @@ screen:
   data. A presenter window (P) reads the same data from its opener. Messages between the two
   windows are checked for origin and source.
 
+- **Slide 2 drivers (Revision 24).** A composite chosen on slide 2 opens to what drove its
+  month, from the published figures only (the report prints no sub-asset-class returns): its
+  share of the fund's month (month-end weight x its return, called indicative because
+  beginning-of-month weights are not published), how its market value moved since the previous
+  report (earlier close + return effect + the report's rebalancing flow + an unexplained
+  remainder = this close), and the month's index moves from the report's own market table, named
+  as context rather than attribution. For the Total Fund the first column is the four composites
+  and the reported total, with the difference carried in the note. The previous report's market
+  values ride in the deck data as `PRIOR` (`deckPrior` in `lib/deckFeed.ts`), and are absent —
+  with the bridge — for a template file or an imported feed, which are not part of the series.
 - **Chrome (Revision 23).** One bar under the slide: the arrows and the section strip (Where we
   stand → Why → Positioning → Context → Attention) on the first row, the controls and one line of
   provenance on the second, so the slide takes the rest of the window. Speaker notes are in the

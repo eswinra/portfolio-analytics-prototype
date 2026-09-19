@@ -2,12 +2,15 @@ import {
   BINS,
   CIO_LATEST,
   deckVintage,
+  priorVintage,
   macroFor,
   OPS,
   PERIODS,
+  monthYear,
   STATUS,
   type CioDeckData,
   type CioVintage,
+  type DeckPrior,
   type DeckVintage,
 } from '../fixtures/cioMonthly';
 import type { CioPackage } from './cioPackage';
@@ -47,6 +50,9 @@ export function deckDataFor(
   // a template file carries its own macro strip and items for attention, typed by the team
   const pkg = opts.pkg ?? null;
   return sanitizeDeckData({
+    // the month before, for slide 2's value bridge — published reports only: a template file or
+    // an imported feed is not part of the series, and its month must not be bridged to one
+    PRIOR: opts.feed || pkg ? null : deckPrior(v),
     PERIODS,
     ENT: v.ENT,
     BINS,
@@ -58,6 +64,22 @@ export function deckDataFor(
       ? feedVintage(v, opts.feedName ?? 'unnamed', opts.feedCls ?? [])
       : deckVintage(v),
   });
+}
+
+/** The previous published report's market values, or null when there is no earlier report. */
+export function deckPrior(v: CioVintage): DeckPrior | null {
+  const p = priorVintage(v);
+  if (!p || p.origin === 'file') return null;
+  const mvOf = (e: CioVintage['ENT']['pension']) => ({
+    mv: e.mv,
+    comps: Object.fromEntries(e.comps.map((c) => [c.k, c.mv])),
+    other: e.other ? e.other.mv : null,
+  });
+  return {
+    reportLabel: p.reportLabel,
+    monthYear: monthYear(p.dataThrough),
+    ENT: { pension: mvOf(p.ENT.pension), opeb: mvOf(p.ENT.opeb) },
+  };
 }
 
 /** A workstation feed's labels: one fund, no macro strip, and its own name and classification

@@ -233,7 +233,13 @@ describe('slide deck at /deck/ reads the same data', () => {
   });
 
   it('no month or report date is hardcoded in the deck prose', () => {
-    const prose = lines.filter((l) => !l.startsWith('  const ')).join('\n');
+    // the generated block carries the vintage labels — including the previous report's, for the
+    // value bridge on slide 2; everything outside the block must take them from it
+    const begin = lines.indexOf(DECK_BLOCK_BEGIN);
+    const end = lines.indexOf(DECK_BLOCK_END);
+    const prose = lines
+      .filter((l, i) => (i <= begin || i >= end) && !l.startsWith('  const '))
+      .join('\n');
     expect(prose).not.toMatch(/As of May 31, 2026|July 8, 2026|June 2016 – May 2026/);
   });
 
