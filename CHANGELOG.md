@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-18 — Revision 22.1: play through the reports
+
+- **Play the reports** (beside the report slider on CIO Monthly): steps through the 16 published
+  reports every 1.6 seconds. It starts from the oldest when played at the latest and stops at the
+  latest. The page follows the report on screen, so the Explore markers, the headline figures and
+  the slides all move with it. **Pause** holds the current report. Choosing a report by hand while
+  it plays carries on from there. At each step a screen reader hears the report on screen. Play is
+  disabled while a template file or workstation dataset is shown. This restores the V3 "Play
+  timeline" control that Revision 22 left out.
+- Verification: lint · format · Vitest 476/476 · build · Playwright 148/148 runnable (new: play from
+  the oldest, pause holds, play on to the latest and stop, on a controlled clock).
+
 ## 2026-09-18 — Revision 22: CIO Monthly › Explore — the published reports as one history
 
 Three ideas from the ChatGPT "V3" package, rebuilt on the project's rules and the 16 published CIO

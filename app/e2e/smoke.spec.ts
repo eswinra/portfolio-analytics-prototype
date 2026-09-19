@@ -333,6 +333,30 @@ test.describe('CIO Monthly › Explore (desktop project)', () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test('Play steps through the reports, oldest first, and stops at the latest', async ({
+    page,
+  }) => {
+    await page.clock.install();
+    await ready(page, '/cio?tab=explore');
+    await page.getByRole('button', { name: 'Play the reports' }).click();
+    await expect(page).toHaveURL(/v=2025-02-28/);
+    const marked = page.locator('#cio-x-grid .x-month[aria-pressed="true"]');
+    await expect(marked).toHaveAccessibleName('Open the report with data through February 2025');
+    await page.clock.runFor(1600);
+    await expect(page).toHaveURL(/v=2025-03-31/);
+    await expect(marked).toHaveAccessibleName('Open the report with data through March 2025');
+    // Pause holds the report on screen
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await page.clock.runFor(5000);
+    await expect(page).toHaveURL(/v=2025-03-31/);
+    // playing on reaches the latest report and stops there
+    await page.getByRole('button', { name: 'Play the reports' }).click();
+    await page.clock.runFor(1600 * 20);
+    await expect(page).not.toHaveURL(/v=/);
+    await expect(marked).toHaveAccessibleName('Open the report with data through June 2026');
+    await expect(page.getByRole('button', { name: 'Play the reports' })).toBeVisible();
+  });
+
   test('the OPEB Trust uses its own policy ranges', async ({ page }) => {
     await ready(page, '/cio?tab=explore');
     await page.getByRole('button', { name: 'OPEB Trust' }).click();

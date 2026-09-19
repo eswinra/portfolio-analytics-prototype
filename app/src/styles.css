@@ -3627,3 +3627,14 @@ details.panel > summary {
     font-size: 19px;
   }
 }
+
+.vintage-bar .vs-play {
+  white-space: nowrap;
+}
+
+.vs-play-icon {
+  display: inline-block;
+  min-width: 1.1em;
+  margin-right: 6px;
+  text-align: center;
+}

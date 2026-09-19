@@ -5,6 +5,7 @@ import { DeckFrame } from '../components/DeckFrame';
 import { CioExplore } from './CioExplore';
 import { GlossaryLink } from '../components/Glossary';
 import { AboutFigures, PageMeta, PageSources } from '../components/page';
+import { ReportPlayer } from '../components/ReportPlayer';
 import { scrollToPanel, SubTabs } from '../components/SubTabs';
 import { TrendSparks } from '../components/TrendSparks';
 import { CONFIG } from '../config';
@@ -447,6 +448,13 @@ export function CioMonthlyView() {
             <span>{monthYear(CIO_LATEST.dataThrough)}</span>
           </span>
         </div>
+        <ReportPlayer
+          index={vIndex}
+          count={CIO_VINTAGES.length}
+          onStep={(i) => select(CIO_VINTAGES[i]!.dataThrough)}
+          nowShowing={`${monthLabel}: ${vintage.reportLabel} report`}
+          disabled={Boolean(feed || pkg)}
+        />
         <select
           aria-label="Report"
           className="vs-select"
