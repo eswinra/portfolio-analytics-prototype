@@ -85,14 +85,14 @@ test.describe('standalone deck on a phone', () => {
     const r = await page.evaluate(() => ({
       scroll: document.documentElement.scrollWidth,
       vw: window.innerWidth,
-      off: [...document.querySelectorAll('.topbar *, .acts *, .bar *')].filter((el) => {
+      off: [...document.querySelectorAll('.bar *, .metabar *, .acts *')].filter((el) => {
         const b = el.getBoundingClientRect();
         return b.width > 0 && (b.right > window.innerWidth + 1 || b.left < -1);
       }).length,
     }));
     expect(r.scroll).toBeLessThanOrEqual(r.vw + 1);
     expect(r.off).toBe(0);
-    for (const id of ['#prev', '#next', '#notes-btn', '#full-btn']) {
+    for (const id of ['#prev', '#next', '#full-btn']) {
       await expect(page.locator(id)).toBeInViewport();
     }
     await expect(page.getByRole('link', { name: 'read the dashboard summary' })).toBeVisible();

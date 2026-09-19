@@ -173,6 +173,14 @@ screen:
   data. A presenter window (P) reads the same data from its opener. Messages between the two
   windows are checked for origin and source.
 
+- **Chrome (Revision 23).** One bar under the slide: the arrows and the section strip (Where we
+  stand → Why → Positioning → Context → Attention) on the first row, the controls and one line of
+  provenance on the second, so the slide takes the rest of the window. Speaker notes are in the
+  presenter window (P), not a drawer. A build costs a key press only in the view that has it: a
+  slide showing its table, and the performance slide showing a composite or the excess view, are
+  drawn complete, so one press moves to the next slide. Each slide's footer carries "not an
+  official LACERA publication", the one disclosure that stays on screen and in print.
+
 The standalone `/deck/` is unchanged for people who open it directly: it shows the latest public
 report from its generated block, and the unit test fails if that block drifts from the fixture.
 

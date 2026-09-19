@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-19 — Revision 23: the deck's chrome, and steps that only cost a press where they build
+
+- **One bar, at the bottom.** The top bar is gone. The section strip (Where we stand → Why →
+  Positioning → Context → Attention) now sits beside the arrows under the slide, with the controls
+  and one line of provenance on the row below it. The slide gets the rest of the window: the deck's
+  chrome is 76 px at 1280 and wider, against 138 px before, and the dashboard's frame is sized to
+  the measured heights again.
+- **Speaker notes live in the presenter window.** The notes drawer and its button are gone (P opens
+  the presenter view, which has always carried the notes, a timer and the next slide).
+- **A finished look, with the disclosure kept.** The "PROTOTYPE SAMPLE" chip is removed. Each slide
+  footer says "NOT AN OFFICIAL LACERA PUBLICATION" and the bar carries one line of provenance: this
+  is built from the published report by this project, not by LACERA, and that has to stay legible
+  on screen and in print.
+- **Steps only where they build.** A slide's builds live in its chart view, so a slide showing its
+  table now reports no steps and one press moves to the next slide; the same holds on the
+  performance slide for a composite or the excess view, which are drawn complete. A build already
+  reached is remembered, so switching back to the chart returns to it.
+- Checked: no element on any of the nine slides overflows its slide; the deck keeps its controls on
+  screen at 320–375 px.
+- Verification: lint · format · Vitest 476/476 · build · Playwright 148/148 runnable.
+
 ## 2026-09-18 — Revision 22.1: play through the reports
 
 - **Play the reports** (beside the report slider on CIO Monthly): steps through the 16 published

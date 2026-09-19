@@ -24,16 +24,22 @@
   .app { height: 100vh; display: flex; flex-direction: column; }
 
   /* ---------- deck chrome ---------- */
-  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 7px 16px; font-size: 12px; color: var(--chrome-muted); background: var(--chrome); border-bottom: 1px solid var(--chrome-line); }
-  .topbar b { color: var(--chrome-ink); }
-  .topbar .tag { display: inline-block; padding: 2px 8px; border-radius: 3px; margin-right: 8px; background: var(--accent); color: #fff; font-weight: 700; letter-spacing: .06em; font-size: 10.5px; }
-  .entity { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--chrome-ink); }
+  .entity { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--chrome-ink); font-size: 12px; }
   .entity .seg { border-color: var(--chrome-line); }
   .entity .seg-btn { background: var(--chrome); color: var(--chrome-muted); border-right-color: var(--chrome-line); }
   .entity .seg-btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
   .viewport { flex: 1; position: relative; min-height: 0; }
   .stage { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; transform: translate(-50%, -50%) scale(1); transform-origin: center; box-shadow: 0 10px 40px rgba(0,0,0,.28); background: var(--paper); overflow: hidden; }
-  .bar { display: flex; align-items: center; gap: 14px; padding: 8px 16px; background: var(--chrome); border-top: 1px solid var(--chrome-line); font-size: 12.5px; color: var(--chrome-muted); }
+  .footer { background: var(--chrome); border-top: 1px solid var(--chrome-line); }
+  .bar { display: flex; align-items: center; gap: 12px; padding: 7px 16px 5px; font-size: 12.5px; color: var(--chrome-muted); }
+  .metabar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 0 16px 8px; font-size: 11.5px; color: var(--chrome-muted); }
+  .metabar button { font: inherit; font-size: 11.5px; font-weight: 700; color: var(--chrome-ink); background: transparent; border: 1px solid var(--chrome-line); border-radius: 4px; padding: 4px 9px; cursor: pointer; }
+  .metabar button:hover { border-color: var(--accent); color: var(--accent); }
+  .metabar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .metabar .spacer { flex: 1; }
+  .metabar b { color: var(--chrome-ink); }
+  .metabar a { color: var(--chrome-ink); font-weight: 700; }
+  .metabar kbd { font-family: inherit; font-size: 10.5px; border: 1px solid var(--chrome-line); border-radius: 3px; padding: 1px 4px; margin: 0 1px; color: var(--chrome-ink); }
   .bar button { font: inherit; font-weight: 700; color: var(--chrome-ink); background: transparent; border: 1px solid var(--chrome-line); border-radius: 4px; padding: 5px 11px; cursor: pointer; }
   .bar button:hover { border-color: var(--accent); color: var(--accent); }
   .bar button:focus-visible, .seg-btn:focus-visible, .pill:focus-visible, .tile[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -43,32 +49,32 @@
   .bar kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--chrome-line); border-radius: 3px; padding: 1px 5px; margin: 0 1px; color: var(--chrome-ink); }
   .progress { height: 3px; background: var(--chrome-line); }
   .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .4s ease; }
-  .notes { max-height: 200px; overflow: auto; padding: 12px 20px; font-size: 13px; line-height: 1.5; background: var(--chrome); color: var(--chrome-ink); border-top: 1px solid var(--chrome-line); }
-  .notes h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--chrome-muted); }
-  .notes p { margin: 0 0 6px; max-width: 110ch; }
-  .notes code { font-family: Consolas, "Courier New", monospace; font-size: 12px; background: var(--ground); padding: 1px 5px; border-radius: 3px; }
 
   /* ---------- story chrome: acts strip, help, presenter view, reveals ---------- */
-  .acts { display: flex; gap: 6px; padding: 6px 16px 0; background: var(--chrome); }
-  .act { flex: 1; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--chrome-muted); background: transparent; border: 0; border-top: 3px solid var(--chrome-line); padding: 5px 0 6px; cursor: pointer; text-align: left; transition: color .2s, border-color .2s, opacity .2s; }
+  .acts { display: flex; gap: 6px; flex: 1; min-width: 0; }
+  .act small { display: none; }
+  .act { flex: 1; min-width: 74px; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--chrome-muted); background: transparent; border: 0; border-bottom: 3px solid var(--chrome-line); padding: 4px 2px 5px; cursor: pointer; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .2s, border-color .2s, opacity .2s; }
   .act:hover { color: var(--chrome-ink); }
-  .act.done { border-top-color: var(--accent); opacity: .55; }
-  .act.now { border-top-color: var(--accent); color: var(--chrome-ink); opacity: 1; }
+  .act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .act.done { border-bottom-color: var(--accent); opacity: .55; }
+  .act.now { border-bottom-color: var(--accent); color: var(--chrome-ink); opacity: 1; }
   .narrow-note { display: none; }
   @media (max-width: 760px) {
-    .topbar { flex-wrap: wrap; gap: 6px 12px; padding: 6px 10px; }
-    .topbar .entity > span:last-child { display: none; }
-    .acts { padding: 4px 10px 0; gap: 4px; }
-    .act { min-width: 0; font-size: 10px; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .act small { display: none !important; }
+    .acts { gap: 4px; }
+    .act { font-size: 10px; letter-spacing: .02em; }
+    /* a phone keeps the controls and drops the words: the slide footer still carries the
+       disclosure, and the section names stay beside the arrows */
+    .metabar { padding: 0 10px 7px; gap: 6px 8px; }
+    .metabar b, .metabar > span { display: none; }
+    .metabar button { padding: 5px 8px; }
+    .entity { font-size: 11px; }
     .viewport { overflow: hidden; }
     .bar { flex-wrap: wrap; gap: 6px 10px; padding: 6px 10px; }
-    .bar .spacer, .bar > span:not(.counter):not(#slide-title), #pres-btn, #print-btn { display: none; }
+    .bar .spacer, .bar > span:not(.counter) { display: none; }
     .narrow-note { display: block; padding: 7px 12px; font-size: 12.5px; background: var(--chrome); color: var(--chrome-ink); border-bottom: 1px solid var(--chrome-line); }
     .narrow-note a { color: var(--accent); font-weight: 700; }
     body.embedded .narrow-note { display: none; }
   }
-  .act small { display: block; font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 11px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .help { position: absolute; inset: 0; z-index: 30; background: rgba(16,34,60,.93); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .help .box { width: 600px; padding: 28px 32px; }
   .help h3 { margin: 0 0 14px; font-size: 20px; }
@@ -383,7 +389,7 @@
     @page { size: 13.333in 7.5in; margin: 0; }
     html, body { height: auto; overflow: visible; background: #fff; }
     .app { height: auto; display: block; }
-    .topbar, .bar, .progress, .notes, .tip, .acts, .help { display: none !important; }
+    .footer, .bar, .metabar, .progress, .tip, .acts, .help { display: none !important; }
     .rev, .head { opacity: 1 !important; transform: none !important; }
     .formula .detail { display: block !important; }
     table.ops-t tr.hid { display: table-row !important; }
@@ -403,19 +409,7 @@
 
 
 <div class="app">
-  <div class="topbar">
-    <div><span class="tag">PROTOTYPE SAMPLE</span><b>CIO Monthly — decision deck</b> · <span id="deck-origin">public figures from the report presented <span class="v-report"></span></span> · not an official LACERA publication</div>
-    <div class="entity">Entity
-      <div class="seg" id="entity-seg">
-        <button class="seg-btn" data-v="pension" aria-pressed="true">Pension Fund</button>
-        <button class="seg-btn" data-v="opeb" aria-pressed="false">OPEB Master Trust</button>
-      </div>
-      <span style="font-weight:400;color:var(--chrome-muted)">(<kbd style="font-family:inherit;border:1px solid var(--chrome-line);border-radius:3px;padding:0 4px;font-size:11px">E</kbd> toggles)</span>
-    </div>
-  </div>
-
   <div class="narrow-note">The slides are small on a phone: <a href="../#/cio?tab=summary">read the dashboard summary</a>, or turn the phone sideways.</div>
-  <div class="acts" id="acts"></div>
   <div class="viewport">
     <div class="help" id="help" hidden>
       <div class="box">
@@ -424,12 +418,11 @@
           <tr><td><kbd>→</kbd><kbd>←</kbd></td><td>Next / previous step. Builds reveal one idea at a time; the finding line is the takeaway.</td></tr>
           <tr><td><kbd>E</kbd></td><td>Switch every slide between the Pension Fund and the OPEB Master Trust</td></tr>
           <tr><td><kbd>T</kbd></td><td>Show the table behind the current chart (and back)</td></tr>
-          <tr><td><kbd>N</kbd></td><td>Speaker notes drawer: source page, classification, caveats</td></tr>
-          <tr><td><kbd>P</kbd></td><td>Presenter view in a second window: notes, timer, next slide, remote control</td></tr>
+          <tr><td><kbd>P</kbd></td><td>Presenter view in a second window: speaker notes (source page, classification, caveats), timer, next slide, remote control</td></tr>
           <tr><td><kbd>F</kbd></td><td>Full screen</td></tr>
           <tr><td><kbd>Home</kbd><kbd>End</kbd></td><td>First / last slide · <kbd>?</kbd> this help · swipe on touch screens</td></tr>
         </table>
-        <p>Story arc: Where we stand → Why → Positioning → Context → Attention. Click an act in the strip above to jump. Hover any bar for the figures behind it.</p>
+        <p>Story arc: Where we stand → Why → Positioning → Context → Attention. Click a section in the strip at the bottom to jump. Hover any bar for the figures behind it.</p>
       </div>
     </div>
     <div class="stage" id="stage">
@@ -453,7 +446,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 8–9, 13–14, 18. Differences (pts) and sums are calculated from reported figures.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">1</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">1</span></div>
       </section>
 
       <!-- 2 · fund at a glance -->
@@ -484,7 +477,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 8–9 (Pension) and pp. 13–14 (OPEB). Differences vs. target and vs. benchmark are calculated from the reported figures.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">2</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">2</span></div>
       </section>
 
       <!-- 3 · scorecard -->
@@ -528,7 +521,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 9 (Pension) and p. 14 (OPEB). Excess = net return − policy benchmark, calculated in percentage points.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">3</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">3</span></div>
       </section>
 
       <!-- 4 · attribution -->
@@ -565,7 +558,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 9 / p. 14 (returns, benchmarks, weights). Contributions and residual are a proxy estimate, not reported attribution.<br><span class="cls">reported_public · proxy_estimate</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">4</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">4</span></div>
       </section>
 
       <!-- 5 · allocation & flows -->
@@ -600,7 +593,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 8–9, 13–14 (weights, targets) and p. 18 (rebalancing, overlay gains). Drift and flow direction are calculated.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">5</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">5</span></div>
       </section>
 
       <!-- 6 · risk context -->
@@ -629,7 +622,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 9 and 14. Shares of months and tail counts are calculated from the reported bin counts.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">6</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">6</span></div>
       </section>
 
       <!-- 7 · market context -->
@@ -667,7 +660,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 4–6 (Bloomberg, State Street, St. Louis Fed)<span id="macro-src"></span>. ¹NCREIF ODCE (net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">7</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">7</span></div>
       </section>
 
       <!-- 8 · geographic exposure -->
@@ -713,7 +706,7 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 11 (Pension) and p. 16 (OPEB); footnotes 7–8 / 11–12: domicile-based, best available holdings-level transparency, MSCI Market Classification.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">8</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">8</span></div>
       </section>
 
       <!-- 9 · operations -->
@@ -736,28 +729,37 @@
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 19 (initiatives, personnel), p. 20 (manager updates), p. 24 (quiet period).<br><span class="cls">reported_public</span></div>
           </div>
         </div>
-        <div class="ft"><span class="samp">PROTOTYPE SAMPLE · NOT AN OFFICIAL PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">9</span></div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">9</span></div>
       </section>
 
       <div class="tip" id="tip"></div>
     </div>
   </div>
 
-  <div class="notes" id="notes" hidden></div>
   <div class="progress"><div id="prog"></div></div>
-  <div class="bar">
-    <button id="prev" aria-label="Previous">◀</button>
-    <span class="counter" id="counter">1 / 8</span>
-    <button id="next" aria-label="Next">▶</button>
-    <span id="slide-title" style="color:var(--chrome-ink);font-weight:700"></span>
-    <a id="dash-link" href="../#/cio?tab=summary" style="color:var(--chrome-ink);font-weight:700;margin-left:10px">Dashboard ↗</a>
-    <span class="spacer"></span>
-    <span><kbd>→</kbd><kbd>←</kbd> navigate · <kbd>E</kbd> entity · <kbd>T</kbd> chart/table · <kbd>?</kbd> help</span>
-    <button id="help-btn" aria-label="Keyboard help">?</button>
-    <button id="full-btn">Full screen</button>
-    <button id="pres-btn">Presenter view</button>
-    <button id="print-btn">Print / PDF</button>
-    <button id="notes-btn" aria-pressed="false">Speaker notes</button>
+  <div class="footer">
+    <div class="bar">
+      <button id="prev" aria-label="Previous">◀</button>
+      <span class="counter" id="counter">1 / 9</span>
+      <button id="next" aria-label="Next">▶</button>
+      <div class="acts" id="acts" role="group" aria-label="Sections of the deck"></div>
+    </div>
+    <div class="metabar">
+      <b id="slide-title"></b>
+      <span><span id="deck-origin">public figures from the report presented <span class="v-report"></span></span> · not an official LACERA publication</span>
+      <span class="spacer"></span>
+      <div class="entity">Entity
+        <div class="seg" id="entity-seg">
+          <button class="seg-btn" data-v="pension" aria-pressed="true">Pension Fund</button>
+          <button class="seg-btn" data-v="opeb" aria-pressed="false">OPEB Master Trust</button>
+        </div>
+      </div>
+      <button id="help-btn" aria-label="Keyboard help">?</button>
+      <button id="full-btn">Full screen</button>
+      <button id="pres-btn">Presenter view</button>
+      <button id="print-btn">Print / PDF</button>
+      <a id="dash-link" href="../#/cio?tab=summary">Dashboard ↗</a>
+    </div>
   </div>
 </div>
 
@@ -861,7 +863,21 @@
     const s = $('.slide.active');
     if (s && !s.classList.contains('armed')) arm(s);
   });
-  function fragsOf(i) { return +(slides[i].dataset.frags || 0); }
+  // Steps a slide still has to build in the view on screen. The builds live in the chart view,
+  // so a slide showing its table has none, and a slide can report none for other reasons (the
+  // performance slide's composite and excess views are drawn complete). The next key press then
+  // moves to the next slide instead of doing nothing. A build already reached is remembered, so
+  // switching back to the chart returns to it.
+  const stepHooks = [];
+  function viewOf(i) {
+    const seg = slides[i].querySelector('[data-toggle-view]');
+    const wrap = seg && slides[i].querySelector('#' + seg.dataset.toggleView + '-wrap');
+    return wrap ? wrap.dataset.view : null;
+  }
+  function fragsOf(i) {
+    if (viewOf(i) === 'table') return 0;
+    return stepHooks[i] ? stepHooks[i]() : +(slides[i].dataset.frags || 0);
+  }
   function applyFrag(i) { if (fragHooks[i]) fragHooks[i](frag); }
   function go(n, opts) {
     opts = opts || {};
@@ -886,7 +902,6 @@
     $('#counter').textContent = (n + 1) + ' / ' + slides.length;
     $('#slide-title').textContent = s.dataset.title;
     $('#prog').style.width = ((n + 1) / slides.length * 100) + '%';
-    $('#notes').innerHTML = NOTES[n];
     hideTip();
     if (location.hash !== '#' + (n + 1)) history.replaceState(null, '', '#' + (n + 1));
     const aid = slides[n].dataset.id, ai = ACTS.findIndex(a => a[1].includes(aid));
@@ -894,7 +909,11 @@
     sync();
   }
   function next() { if (frag < fragsOf(cur)) { frag++; applyFrag(cur); sync(); return; } go(cur + 1); }
-  function prev() { if (frag > 0) { frag--; applyFrag(cur); sync(); return; } go(cur - 1, { atEnd: true }); }
+  function prev() {
+    const n = fragsOf(cur);
+    if (n > 0 && frag > 0) { frag = Math.min(frag, n) - 1; applyFrag(cur); sync(); return; }
+    go(cur - 1, { atEnd: true });
+  }
   $('#acts').innerHTML = ACTS.map((a, i) => '<button class="act" data-i="' + i + '">' + a[0] + '<small>' + a[1].map(id => slides[idx(id)].dataset.title).join(' · ') + '</small></button>').join('');
   $$('#acts .act').forEach(b => b.addEventListener('click', () => go(idx(ACTS[+b.dataset.i][1][0]))));
   function toggleFull() { if (!document.fullscreenElement) { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); } else document.exitFullscreen(); }
@@ -909,9 +928,7 @@
   if (bc && !isPresenter) bc.onmessage = ev => { const m = ev.data || {}; if (m.type !== 'cmd') return; if (m.cmd === 'next') next(); else if (m.cmd === 'prev') prev(); else if (m.cmd === 'entity') setEntity(entity === 'pension' ? 'opeb' : 'pension'); };
   $('#next').addEventListener('click', next);
   $('#prev').addEventListener('click', prev);
-  $('#notes-btn').addEventListener('click', toggleNotes);
   $('#print-btn').addEventListener('click', () => window.print());
-  function toggleNotes() { const nEl = $('#notes'); nEl.hidden = !nEl.hidden; $('#notes-btn').setAttribute('aria-pressed', String(!nEl.hidden)); fit(); }
   function setEntity(v) {
     if (v === entity || VINTAGE.single) return;
     entity = v;
@@ -938,12 +955,11 @@
       case 'ArrowLeft': case 'PageUp': e.preventDefault(); prev(); break;
       case 'Home': e.preventDefault(); go(0); break;
       case 'End': e.preventDefault(); go(slides.length - 1); break;
-      case 'n': case 'N': toggleNotes(); break;
       case 'e': case 'E': setEntity(entity === 'pension' ? 'opeb' : 'pension'); break;
       case 't': case 'T': { const seg = $('.slide.active [data-toggle-view]'); if (seg) { const cv = $('#' + seg.dataset.toggleView + '-wrap'); setView(seg, cv.dataset.view === 'chart' ? 'table' : 'chart'); } break; }
     }
   });
-  function setView(seg, v) { const wrap = $('#' + seg.dataset.toggleView + '-wrap'); wrap.dataset.view = v; $$('.seg-btn', seg).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
+  function setView(seg, v) { const wrap = $('#' + seg.dataset.toggleView + '-wrap'); wrap.dataset.view = v; $$('.seg-btn', seg).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); sync(); }
   $$('[data-toggle-view]').forEach(seg => seg.addEventListener('click', e => { const b = e.target.closest('.seg-btn'); if (b) setView(seg, b.dataset.v); }));
   function segControl(id, onChange) {
     const seg = $('#' + id);
@@ -1126,8 +1142,9 @@
   (function perfSlide() {
     const plot = $('#plot');
     let comp = 'total', mode = 'levels', fragState = 0;
-    pillRow('perf-comps', ['Total Fund', 'Growth', 'Credit', 'Real Assets & IH', 'Risk Reduction & Mit.'], 0, i => { comp = ['total', 'growth', 'credit', 'ra', 'rrm'][i]; render(); });
-    segControl('perf-mode', v => { mode = v; render(); });
+    pillRow('perf-comps', ['Total Fund', 'Growth', 'Credit', 'Real Assets & IH', 'Risk Reduction & Mit.'], 0, i => { comp = ['total', 'growth', 'credit', 'ra', 'rrm'][i]; render(); sync(); });
+    segControl('perf-mode', v => { mode = v; render(); sync(); });
+    stepHooks[idx('perf')] = () => (comp === 'total' && mode === 'levels' ? 3 : 0);
     const GW = 1200 / 8, PH = 372, BOT = 30;
     const base = document.createElement('div'); base.className = 'base'; plot.appendChild(base);
     const groups = PERIODS.map((p, i) => {
