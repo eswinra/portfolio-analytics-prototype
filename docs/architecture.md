@@ -212,3 +212,26 @@ reviewable in the repository like any other fixture.
 - **Generated data is prettier-ignored.** `worldMap.data.ts` joins the two macro fixtures in
   `app/.prettierignore`: one long path string per country is the point, and reformatting it would
   put the file permanently at odds with its generator.
+
+## Revision 33 (2026-09-20) — a vintage that is identified, and two bugs it uncovered
+
+Adding the report's GDP chart turned up two defects that had already shipped, both of the same
+shape: state that had to be listed in two places, with nothing checking the two lists agreed.
+
+- **The embedded feed dropped fields.** `public/deck/index.html` declares each data field with
+  `let` and the dashboard's feed assigns them one by one. `NETPOS` was added to the generated block
+  in Revision 31 but never to that assignment, so inside the dashboard an older report showed the
+  *latest* report's net position page under its own date — exactly the vintage mixing the project's
+  rules forbid. Both `NETPOS` and `GDP` are now read, both are handed on to a presenter window, and
+  a unit test walks `DECK_FIELDS` and fails if any field is missing from either place.
+- **The speaker notes were indexed by position.** `NOTES` was an array written when the executive
+  read was slide 1. Revision 26 put a cover and a contents page in front of it and Revision 31
+  added the net position page, so since Revision 26 the presenter view and every printed figures
+  page had carried the note for the wrong slide, and the last two slides had none. The notes are
+  now keyed by the slide's own `data-id`, the heading is derived from the slide's title and
+  position instead of typed into the note, and a unit test fails if a slide has no note or a note
+  has no slide.
+
+The GDP data itself is a vintage that is identified rather than assumed — see `docs/cio-monthly.md`,
+"The economy around the fund". The identification is only sound because it is over-determined:
+thirteen or fourteen printed figures must all match to a tenth before a month end is accepted.

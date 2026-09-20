@@ -1,5 +1,43 @@
 # Changelog
 
+## 2026-09-20 — Revision 33: quarterly real GDP, and the economy gets the page the report gives it
+
+- **The report's GDP chart, rebuilt from FRED rather than typed.** Quarterly real GDP growth
+  (`A191RL1Q225SBEA`, percent change from the preceding period at an annual rate) now appears for
+  every one of the sixteen reports, with the latest quarter picked out and every bar labelled.
+- **The vintage is identified, not assumed — because one rule does not fit.** Reading FRED as of the
+  month end before the report, the rule the same page's inflation and labour figures follow,
+  reproduces only eight of the fifteen charts. The reason is that **the report does not redraw this
+  chart every month**: the September, October, November and December 2025 reports all print it
+  exactly as FRED stood on July 31, 2025, revisions and all, and seven of the sixteen carry a chart
+  older than the rest of their own macro page. So `tools/fetch_cio_gdp.py` reads the printed bar
+  labels off each PDF and searches FRED's archive backwards for the month end that reproduces every
+  one of them. Thirteen or fourteen figures agreeing to a tenth is not chance. Where the identified
+  vintage is older than the rest of the macro page, the slide says so and by how many months —
+  without that, a reader comparing two reports takes a revision for a change in the economy.
+- **The macro indicators get their own slide, as they have their own page in the report.** Adding
+  GDP made a seventh chip in the market slide's strip, and measured at slide size seven chips of
+  that text ran 53px into the note beneath them; shrinking the market chart far enough to clear it
+  would have left the seventeen index rows 13px each. "The economy around the fund" now carries the
+  GDP chart with room and the other indicators as a readable list. The market slide is the index
+  table alone, at the height the strip gave back.
+- **Fixed: the dashboard's feed was dropping fields.** The deck declares each data field with `let`
+  and the embedded feed assigns them one by one; `NETPOS` was added to the generated block in
+  Revision 31 but never to that assignment, so inside the dashboard an older report showed the
+  *latest* report's net position page under its own date. Both `NETPOS` and `GDP` are now read and
+  handed on to a presenter window, and a unit test walks the field list and fails if either place
+  is missing one.
+- **Fixed: the speaker notes were on the wrong slides.** `NOTES` was an array indexed by slide
+  number, written when the executive read was slide 1. Revision 26 put a cover and contents page in
+  front of it and Revision 31 added the net position page, so since Revision 26 the presenter view
+  and every printed figures page carried the note for the wrong slide, and the last two slides had
+  none at all. The notes are keyed by the slide's own id now, the heading is derived from the slide
+  rather than typed into the note, and a unit test fails if a slide has no note or a note has no
+  slide. Notes for the net position and economy slides are written.
+- Verification: lint · format · Vitest 512/512 (13 new) · build · Playwright 155/155 runnable
+  (3 new) · `npm audit --omit=dev` 0 vulnerabilities · both PDFs regenerated at 27 pages · the new
+  slide, the market slide and the printed pages rendered and inspected.
+
 ## 2026-09-20 — Revision 32: geographic exposure as a map
 
 - **A map, beside the bars rather than instead of them.** The geography slide gains a third view

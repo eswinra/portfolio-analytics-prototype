@@ -383,7 +383,7 @@
   .stats tr:last-child td { border-bottom: 0; }
 
   /* ---------- slide 6: market ---------- */
-  .mkt { position: relative; height: 380px; margin-top: 6px; transition: height .55s cubic-bezier(.2,.7,.2,1); }
+  .mkt { position: relative; height: 440px; margin-top: 6px; transition: height .55s cubic-bezier(.2,.7,.2,1); }
   .mrow { position: absolute; left: 0; right: 0; height: 24px; transition: top .55s cubic-bezier(.2,.7,.2,1), height .55s; }
   .mrow .mname { position: absolute; left: 0; top: 0; width: 240px; height: 100%; display: flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--cat); white-space: nowrap; }
   .mbar { position: absolute; top: 50%; height: 13px; margin-top: -6.5px; background: var(--blue); transform: scaleX(0); transform-origin: left center; transition: transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s), left .55s cubic-bezier(.2,.7,.2,1), width .55s cubic-bezier(.2,.7,.2,1), top .55s; }
@@ -399,6 +399,37 @@
   .macro { display: flex; gap: 0; margin-top: 10px; border-top: 1px solid var(--line); }
   .mchip { flex: 1; padding: 9px 16px; font-size: 11.5px; color: var(--cat); line-height: 1.3; }
   .mchip + .mchip { border-left: 1px solid var(--line); }
+  /* the economy slide: the GDP chart with room, and the indicators as a list */
+  .econ { display: grid; grid-template-columns: 1.15fr 1fr; gap: 34px; margin-top: 4px; }
+  .econ h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .gplot { position: relative; height: 300px; }
+  .gplot .zl { position: absolute; left: 0; right: 0; height: 1px; background: var(--gray); }
+  .gplot .gc { position: absolute; top: 0; bottom: 0; }
+  .gplot .gb { position: absolute; left: 16%; right: 16%; background: var(--a4); transform: scaleY(0); transition: transform .6s cubic-bezier(.2,.7,.2,1) var(--d, 0s); }
+  .gplot .gb.up { transform-origin: bottom; } .gplot .gb.dn { transform-origin: top; background: var(--warm); }
+  .gplot .gb.last { background: var(--navy); }
+  .slide.armed .gplot .gb { transform: scaleY(1); }
+  .gplot .gv { position: absolute; left: -6px; right: -6px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .4s ease calc(var(--d, 0s) + .35s); }
+  .slide.armed .gplot .gv { opacity: 1; }
+  .gplot .gq { position: absolute; left: -8px; right: -8px; bottom: 0; text-align: center; font-size: 10px; color: var(--muted); }
+  .gcap { font-size: 11px; color: var(--muted); line-height: 1.45; margin-top: 10px; }
+  .gcap .stale { display: block; color: var(--warm); margin-top: 2px; }
+  .mstack { border-top: 1px solid var(--line); }
+  .mstack .mrowi { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 9px 0; }
+  .mstack .mrowi .l { font-size: 12.5px; color: var(--ink); }
+  .mstack .mrowi .l small { display: block; font-size: 11px; color: var(--cat); line-height: 1.35; margin-top: 2px; }
+  .mstack .mrowi .v { font-size: 15px; font-weight: 700; color: var(--navy); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* the GDP chip: fourteen quarters above and below a zero line, the latest one picked out */
+  .mchip.gdp { flex: 1.55; }
+  .gdpb { position: relative; height: 42px; margin: 6px 0 5px; }
+  .gdpb .zl { position: absolute; left: 0; right: 0; height: 1px; background: var(--gray); }
+  .gdpb i { position: absolute; background: var(--a4); }
+  .gdpb i.neg { background: var(--warm); }
+  .gdpb i.last { background: var(--navy); }
+  .gdpb .qf, .gdpb .ql { position: absolute; bottom: -13px; font-size: 9.5px; color: var(--muted); }
+  .gdpb .qf { left: 0; } .gdpb .ql { right: 0; }
+  .mchip.gdp .stale { display: block; margin-top: 3px; color: var(--warm); }
   .mchip:first-child { padding-left: 0; }
   .mchip:last-child { padding-right: 0; }
   .mchip b { display: block; font-size: 16px; color: var(--navy); font-weight: 700; margin-bottom: 1px; }
@@ -807,7 +838,7 @@
       </section>
 
       <!-- 7 · market context -->
-      <section class="slide" data-title="Market context" data-id="market" data-frags="1">
+      <section class="slide" data-title="Market context" data-id="market">
         <div class="hd">
           <div>
             <h2>Market context — not fund performance</h2>
@@ -832,16 +863,44 @@
           <div class="chart-wrap" id="mkt-wrap" data-view="chart">
             <div class="chartv">
               <div class="mkt" id="mkt"></div>
-              <div class="macro rev" id="macro"></div>
             </div>
             <div class="tablev" id="mkt-table"></div>
           </div>
           <div class="nb">
-            <div class="note"><span class="buildhint" id="mkt-hint"></span> Public index moves are context for the Fund's benchmark-relative results, not a measure of them. <span id="mkt-fy"></span></div>
-            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 4–6 (Bloomberg, State Street, St. Louis Fed)<span id="macro-src"></span>. ¹NCREIF ODCE (net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
+            <div class="note">Public index moves are context for the Fund's benchmark-relative results, not a measure of them. <span id="mkt-fy"></span></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 5 (Bloomberg, State Street). ¹NCREIF ODCE (net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
         <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">7</span></div>
+      </section>
+
+      <!-- the economy around the fund -->
+      <section class="slide" data-title="The economy around the fund" data-id="econ">
+        <div class="hd">
+          <div>
+            <h2>The economy the month happened in</h2>
+            <p class="finding" id="econ-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>Key macro indicators</b>Report p. 6 · FRED<br><span id="econ-asof"></span></div>
+        </div>
+        <div class="bd">
+          <div class="econ">
+            <div>
+              <h3>Real GDP growth, quarterly at an annual rate</h3>
+              <div class="gplot" id="gplot"></div>
+              <p class="gcap" id="gcap"></p>
+            </div>
+            <div>
+              <h3>Prices, policy, labour and the curve</h3>
+              <div class="mstack" id="mstack"></div>
+            </div>
+          </div>
+          <div class="nb">
+            <div class="note">Macro context is not fund performance: these are the conditions the benchmarks moved in, not a measure of the Fund against them.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 4 and 6 (Bloomberg, St. Louis Fed); FRED series read from FRED's real-time archive<span id="macro-src"></span>.<br><span class="cls">reported_public</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg"></span></div>
       </section>
 
       <!-- 8 · geographic exposure -->
@@ -969,6 +1028,7 @@
   let VINTAGE = {"reportLabel":"August 12, 2026","throughLabel":"June 30, 2026","month":"June","monthYear":"June 2026","marketLabel":"July 31, 2026","histRange":"July 2016 – June 2026","url":"https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-Aug-2026.pdf","macroLabel":"July 31, 2026"};
   let PRIOR = {"reportLabel":"July 8, 2026","monthYear":"May 2026","ENT":{"pension":{"mv":93948,"comps":{"growth":45822,"credit":11760,"ra":13658,"rrm":22158},"other":549},"opeb":{"mv":6264,"comps":{"growth":2840,"credit":989,"ra":756,"rrm":1678},"other":null}}};
   let NETPOS = {"page":21,"unit":"$ millions","scope":"LACERA Pension Plan","investmentBookFy":{"label":"FY2026","mm":8731},"months":[{"m":"2025-07","v":-326},{"m":"2025-08","v":880},{"m":"2025-09","v":1168},{"m":"2025-10","v":846},{"m":"2025-11","v":745},{"m":"2025-12","v":-123},{"m":"2026-01","v":1350},{"m":"2026-02","v":1307},{"m":"2026-03","v":-2457},{"m":"2026-04","v":2651},{"m":"2026-05","v":1664},{"m":"2026-06","v":136}],"trend":[{"fy":"FY2026","bn":7.8,"up":9,"down":3},{"fy":"FY2025","bn":7,"up":9,"down":3},{"fy":"FY2024","bn":5.2,"up":8,"down":4}],"components":["Employee and employer contributions","Net investment income or loss","Benefits and refunds","Administrative expenses and miscellaneous"]};
+  let GDP = {"asOf":"2026-07-31","asOfLabel":"July 31, 2026","reportAsOf":"2026-07-31","reportAsOfLabel":"July 31, 2026","stale":false,"behind":0,"quarters":[{"q":"2023Q1","v":2.9},{"q":"2023Q2","v":2.5},{"q":"2023Q3","v":4.7},{"q":"2023Q4","v":3.4},{"q":"2024Q1","v":0.8},{"q":"2024Q2","v":3.6},{"q":"2024Q3","v":3.3},{"q":"2024Q4","v":1.9},{"q":"2025Q1","v":-0.6},{"q":"2025Q2","v":3.8},{"q":"2025Q3","v":4.4},{"q":"2025Q4","v":0.5},{"q":"2026Q1","v":2.1},{"q":"2026Q2","v":1.5}]};
   /* ==== END SHARED DATA ==== */
 
   /* ==== WORLD OUTLINES — generated from src/fixtures/worldMap.data.ts (itself generated by tools/make_world_paths.py) by `npm run sync:deck` ==== */
@@ -990,20 +1050,26 @@
     if (!f) { try { if (window.opener && window.opener !== window && ok(window.opener.__laceraDeckData)) f = window.opener.__laceraDeckData; } catch (e) { f = null; } }
     if (!f) return;
     f = strip(f);
-    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE; PRIOR = f.PRIOR || null;
+    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE; PRIOR = f.PRIOR || null; NETPOS = f.NETPOS || null; GDP = f.GDP || null;
   })();
-  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE, PRIOR };
-  const NOTES = [
-    '<h4>Slide 1 · Executive read</h4><p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
-    '<h4>Slide 2 · Fund at a glance</h4><p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges and Other Asset (an operational holding) are combined into one sliver with no policy target; the slide shows their combined value. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
-    '<h4>Slide 3 · Performance vs. policy</h4><p><b>Source:</b> p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; excess in pts <code>calculated</code>. "Returns" view builds fund → benchmark → hurdle on click; "Excess vs. benchmark" draws the signed gap directly, which is the decision quantity. Hurdle ticks apply at the total-fund level only. Composites have no 10-year figure in the report. Periods under one year are cumulative, three years and longer annualized; net of fees.</p>',
-    '<h4>Slide 4 · Where the gap came from</h4><p><b>Classification:</b> <code>proxy_estimate</code>. Contribution = (composite return − its policy benchmark) × month-end weight. This is not the report\'s attribution and not a Brinson decomposition: beginning-of-period weights, the allocation effect, overlays, cash and compounding are all folded into the residual, which is shown as its own bar so the reader can see how much the proxy explains. Use it to decide where to look, not to quantify manager value-add. The slide names the composites that explain most of the 1 M, FYTD and 1 Y gaps.</p>',
-    '<h4>Slide 5 · Allocation and flows</h4><p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); monthly rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
-    '<h4>Slide 6 · Return distribution</h4><p><b>Source:</b> pp. 9 and 14. <b>Classification:</b> <code>reported_public</code> counts and statistics; shares, tail counts and the latest month\'s bin percentile <code>calculated</code>. Bin edges as printed; the latest month is placed by value. "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labelled in the report. The forecast-volatility pages (10, 15) are image-only in the PDF and are not reproduced.</p>',
-    '<h4>Slide 7 · Market context</h4><p><b>Source:</b> p. 5 table (Bloomberg, State Street), p. 4 notable items, p. 6 key macro indicators. In the macro strip, PCE inflation, the federal funds target range and the unemployment and participation rates are FRED series, read as FRED showed them at the month end before the month of the report (its real-time archive), so later revisions do not change them; for the latest report they equal the printed figures, which a unit test checks. The dollar index and themes are typed from the report (pp. 4, 6) and shown for the latest report only. <b>Classification:</b> <code>reported_public</code>; PCE inflation is <code>calculated</code> (year-over-year from the price index); the finding line is <code>calculated</code> (best/worst row). Kept separate from fund performance by design: index moves explain the environment the benchmarks moved in, not the Fund\'s result against them. FYTD runs from July 1, so in a table as of June 30 it equals 1 Y and in one as of July 31 it is July alone; NCREIF ODCE (net) is the latest available quarter.</p>',
-    '<h4>Slide 8 · Geographic exposure</h4><p><b>Source:</b> "Geographic Exposure by AUM as of ' + VINTAGE.monthYear + '", p. 11 (Pension Fund) and p. 16 (OPEB Master Trust). <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8 / 11–12):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries are the report\'s top five in each group; the remaining markets are not itemized. One fixed 0–80% scale is used for both groups so the U.S. weight is drawn to size.</p>',
-    '<h4>Slide 9 · Items for attention</h4><p><b>Source:</b> p. 19 (initiatives and personnel searches), p. 20 (manager/consultant updates), p. 24 (quiet period). Statuses are reproduced as printed; the report gives no dates or owners. The "for attention" grouping (a named manager personnel change; an external search process) is an editorial grouping to help the reader, not a report category.</p>',
-  ];
+  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE, PRIOR, NETPOS, GDP };
+  /* Speaker notes, keyed by the slide's own id. They were an array indexed by slide number
+     until Revision 33, which meant a slide inserted anywhere but the end silently moved every
+     note after it onto the wrong page. The heading is derived from the slide's title and
+     position when it is rendered, so it cannot go stale either. */
+  const NOTES = {
+    exec: '<p>Built for a two-minute read: four headline sentences answer the standing questions (on track vs. policy and hurdle; where the gap came from; positioned per policy; risk/market context) and six tiles carry the numbers with signed differences. Every figure is <code>reported_public</code> from pp. 8–9 (Pension) or pp. 13–14 (OPEB) and p. 18; differences and sums are <code>calculated</code>. The attribution sentence points to slide 4 and inherits its proxy status. Switch entity with E or the top bar.</p>',
+    summary: '<p><b>Source:</b> monthly return, growth of a dollar, market value and cash equivalents from p. 8 (Pension) / p. 13 (OPEB); composite market values, weights, targets and returns from p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; weight-minus-target and return-minus-benchmark in the drill-down card are <code>calculated</code> (one-decimal inputs, so ±0.1 rounding is possible).</p><p><b>Caveats:</b> weights use the p. 9 / p. 14 one-decimal values. For the Pension Fund, Overlays &amp; Hedges and Other Asset (an operational holding) are combined into one sliver with no policy target; the slide shows their combined value. Real estate and private equity values are best-available cash-flow-adjusted market values.</p>',
+    perf: '<p><b>Source:</b> p. 9 / p. 14. <b>Classification:</b> <code>reported_public</code>; excess in pts <code>calculated</code>. "Returns" view builds fund → benchmark → hurdle on click; "Excess vs. benchmark" draws the signed gap directly, which is the decision quantity. Hurdle ticks apply at the total-fund level only. Composites have no 10-year figure in the report. Periods under one year are cumulative, three years and longer annualized; net of fees.</p>',
+    wf: '<p><b>Classification:</b> <code>proxy_estimate</code>. Contribution = (composite return − its policy benchmark) × month-end weight. This is not the report\'s attribution and not a Brinson decomposition: beginning-of-period weights, the allocation effect, overlays, cash and compounding are all folded into the residual, which is shown as its own bar so the reader can see how much the proxy explains. Use it to decide where to look, not to quantify manager value-add. The slide names the composites that explain most of the 1 M, FYTD and 1 Y gaps.</p>',
+    alloc: '<p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); monthly rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
+    netpos: '<p><b>Source:</b> "Change In Fiduciary Net Position", p. 21 — a picture in the PDF, so its figures are read off the page and typed into the fixture. <b>Classification:</b> <code>reported_public</code>; the fiscal-year sum is <code>calculated</code>. Two figures printed beside the chart hold the transcription to account and are unit tests: the twelve months add to the printed fiscal-year total ($7,841mm against $7.8B) and their signs give the printed month counts.</p><p><b>Caveats:</b> the report prints this page once, in section 04, with no entity heading and no OPEB counterpart, so it does not follow the fund toggle; it is the pension plan’s, which the scale settles (the whole OPEB Master Trust moved $1,421mm over the same year). It is also a different book: the plan’s fiduciary net position is an accounting measure, and the investment-book market value moved $8,731mm over the same fiscal year. The page stacks contributions, net investment income, benefits and administrative expenses behind the net line without printing a figure for any of them, so only the net is carried.</p>',
+    hist: '<p><b>Source:</b> pp. 9 and 14. <b>Classification:</b> <code>reported_public</code> counts and statistics; shares, tail counts and the latest month\'s bin percentile <code>calculated</code>. Bin edges as printed; the latest month is placed by value. "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labelled in the report. The forecast-volatility pages (10, 15) are image-only in the PDF and are not reproduced.</p>',
+    econ: '<p><b>Source:</b> "Key Macro Indicators", p. 6, and the notable items on p. 4. <b>Classification:</b> <code>reported_public</code>; PCE inflation is <code>calculated</code> (year-over-year from the price index).</p><p>Quarterly real GDP growth, PCE inflation, the federal funds target range, the unemployment and participation rates and the Treasury curve are FRED series, read from FRED’s real-time archive as FRED showed them at the month end before the report’s month, so later revisions do not change them and every report has them. The dollar index and the themes are typed from the report and shown for the latest report only.</p><p><b>The GDP chart carries its own vintage.</b> The report does not redraw it every month: seven of the sixteen reports print it older than the rest of this page, and four consecutive reports in late 2025 print it exactly as FRED stood on July 31, 2025. The vintage is identified by matching every printed bar against FRED’s archive, and where the chart is behind the page says by how much — without that, a revision reads as a change in the economy. The Treasury curve is read at the fund’s month end rather than the report’s as-of date, which is the second as-of on this page.</p>',
+    market: '<p><b>Source:</b> p. 5 table (Bloomberg, State Street), p. 4 notable items, p. 6 key macro indicators. In the macro strip, PCE inflation, the federal funds target range and the unemployment and participation rates are FRED series, read as FRED showed them at the month end before the month of the report (its real-time archive), so later revisions do not change them; for the latest report they equal the printed figures, which a unit test checks. The dollar index and themes are typed from the report (pp. 4, 6) and shown for the latest report only. <b>Classification:</b> <code>reported_public</code>; PCE inflation is <code>calculated</code> (year-over-year from the price index); the finding line is <code>calculated</code> (best/worst row). Kept separate from fund performance by design: index moves explain the environment the benchmarks moved in, not the Fund\'s result against them. FYTD runs from July 1, so in a table as of June 30 it equals 1 Y and in one as of July 31 it is July alone; NCREIF ODCE (net) is the latest available quarter.</p>',
+    geo: '<p><b>Source:</b> "Geographic Exposure by AUM as of ' + VINTAGE.monthYear + '", p. 11 (Pension Fund) and p. 16 (OPEB Master Trust). <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8 / 11–12):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries are the report\'s top five in each group; the remaining markets are not itemized. One fixed 0–80% scale is used for both groups so the U.S. weight is drawn to size.</p>',
+    ops: '<p><b>Source:</b> p. 19 (initiatives and personnel searches), p. 20 (manager/consultant updates), p. 24 (quiet period). Statuses are reproduced as printed; the report gives no dates or owners. The "for attention" grouping (a named manager personnel change; an external search process) is an editorial grouping to help the reader, not a report category.</p>',
+  };
 
   /* ============ deck engine ============ */
   const stage = $('#stage');
@@ -1025,7 +1091,7 @@
       const cls = document.createElement('span'); cls.className = 'cls'; cls.textContent = L.cls;
       el.appendChild(document.createElement('br')); el.appendChild(cls);
     });
-    NOTES.forEach((n, i) => { NOTES[i] = '<p><b>' + L.kind.charAt(0).toUpperCase() + L.kind.slice(1) + '.</b> These notes describe the published report; the figures on this slide come from ' + L.name + ', which is not published.</p>' + n; });
+    Object.keys(NOTES).forEach(k => { NOTES[k] = '<p><b>' + L.kind.charAt(0).toUpperCase() + L.kind.slice(1) + '.</b> These notes describe the published report; the figures on this slide come from ' + L.name + ', which is not published.</p>' + NOTES[k]; });
   }
   // the three dates a CIO report carries, so the month on this slide is never read as the
   // month the report was presented, or as the month the market table covers
@@ -1048,7 +1114,13 @@
     if (EMBEDDED) window.parent.postMessage({ type: 'lacera-deck-state', slide: cur + 1, entity }, location.origin);
     if (pvHook) pvHook();
   }
-  const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc', 'netpos']], ['Context', ['hist', 'market', 'geo']], ['Attention', ['ops']]];
+  /** A slide's note, with the heading derived from the slide itself so it cannot drift. */
+  function noteFor(sl, i) {
+    const n = NOTES[sl.dataset.id];
+    return n ? '<h4>Slide ' + (i + 1) + ' \u00b7 ' + sl.dataset.title + '</h4>' + n : '';
+  }
+
+  const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc', 'netpos']], ['Context', ['hist', 'market', 'econ', 'geo']], ['Attention', ['ops']]];
   const ACT_ASKS = {
     'Where we stand': 'Did the fund earn its policy benchmark and the actuarial hurdle, and what is it worth?',
     'Why': 'Which composites account for the gap against the benchmark?',
@@ -1721,18 +1793,12 @@
   /* ============ slide 6 · market ============ */
   (function marketSlide() {
     const host = $('#mkt'), rows = [], heads = [];
-    const macroChips = MACRO.length ? MACRO.map(m => '<div class="mchip"><small>' + m.l + '</small><b>' + m.v + '</b>' + m.s + '</div>').join('')
-      : '<div class="mchip"><small>Macro strip</small><b>—</b>' + (VINTAGE.single ? 'Not part of the imported dataset.' : 'Not available for this report; see pp. 4–6 of the PDF.') + '</div>';
-    // PCE, the federal funds range and the labor figures are FRED's, as known on the report's as-of date
-    const macroSrc = $('#macro-src'); // absent when a template file has rewritten the source line
-    if (macroSrc) macroSrc.textContent = VINTAGE.macroLabel ? '; FRED figures as known on ' + VINTAGE.macroLabel : '';
+    // the macro indicators have their own slide now — the report gives them their own page —
+    // so this slide is the index table alone, at one chart height
     if (!MKT.length) {
-      host.style.height = '318px'; // no chart to draw: leave the strip its room
       host.innerHTML = '<div class="empty-note">The market table is not available for ' + (VINTAGE.single ? 'this dataset' : 'the ' + VINTAGE.reportLabel + ' report') + ' — the printed page is in the PDF.</div>';
       $('#mkt-finding').textContent = 'Market table not available for ' + (VINTAGE.single ? 'this dataset' : 'this report');
       $('#mkt-table').innerHTML = '';
-      $('#macro').innerHTML = macroChips;
-      fragHooks[idx('market')] = f => { $('#macro').classList.toggle('on', f >= 1); $('#mkt-hint').textContent = f >= 1 ? '' : 'PRESS → FOR THE MACRO STRIP'; };
       return;
     }
     const zero = document.createElement('div'); zero.className = 'zero'; host.appendChild(zero);
@@ -1746,12 +1812,12 @@
         bindTip($('.hit', el), () => '<b>' + r.n + '</b><span class="dim">' + r.i + '</span><table>' + PERIODS.map((p, i) => '<tr><td class="dim">' + p + '</td><td>' + f1(r.v[i]) + '%</td></tr>').join('') + '</table>');
       });
     });
-    const state = { p: 2, sorted: false, strip: false };
+    const state = { p: 2, sorted: false };
     pillRow('mkt-periods', PERIODS, state.p, i => { state.p = i; layout(); });
     segControl('mkt-order', v => { state.sorted = v === 'sorted'; layout(); });
     function layout() {
-      // the rows tighten when the macro strip is shown, so the strip clears the source line
-      const p = state.p, H = state.strip ? 318 : 380;
+      // the macro strip left this slide, so the index table takes the height it freed
+      const p = state.p, H = 440;
       host.style.height = H + 'px';
       const vals = rows.map(o => o.r.v[p]);
       const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
@@ -1774,12 +1840,6 @@
       $('#mkt-finding').textContent = PERIODS[p] + ': ' + best.r.n.replace('¹', '') + ' led at ' + f1(best.r.v[p]) + '%; ' + worst.r.n.replace('¹', '') + ' lagged at ' + f1(worst.r.v[p]) + '%';
     }
     layout();
-    $('#macro').innerHTML = macroChips;
-    const showStrip = on => { $('#macro').classList.toggle('on', on); $('#mkt-hint').textContent = on ? '' : 'PRESS → FOR THE MACRO STRIP (pp. 4–6)'; if (on !== state.strip) { state.strip = on; layout(); } };
-    fragHooks[idx('market')] = f => showStrip(f >= 1);
-    // print shows every build, so the chart takes its tight layout for the page and back after
-    window.addEventListener('beforeprint', () => { state.strip = true; layout(); });
-    window.addEventListener('afterprint', () => { state.strip = $('#macro').classList.contains('on'); layout(); });
     // the fiscal year starts July 1: a table as of July 31 has one month in it, and one as of
     // June 30 has twelve, so FYTD repeats another column and the slide says which
     (function fiscalNote() {
@@ -1930,6 +1990,68 @@
     render(false);
     enterHooks[idx('geo')] = () => { prevC = null; render(false); };
     entityHooks.push(() => render(cur === idx('geo')));
+  })();
+
+  /* ============ the economy around the fund ============
+     The report's Key Macro Indicators page (p. 6). The GDP chart carries its own vintage, because
+     the report does not redraw it every month: where it is behind the rest of that page the caption
+     says by how much, so a revision is not read as a change in the economy. */
+  (function econSlide() {
+    const plot = $('#gplot'), cap = $('#gcap'), stack = $('#mstack'), finding = $('#econ-finding');
+    if (!plot) return;
+    const G = typeof GDP !== 'undefined' ? GDP : null;
+    const asOf = $('#econ-asof');
+    if (asOf) asOf.textContent = VINTAGE.macroLabel ? 'FRED as known on ' + VINTAGE.macroLabel : '';
+
+    const shortQ = q => 'Q' + q.slice(5) + ' ' + q.slice(2, 4);
+    const longQ = q => 'Q' + q.slice(5) + ' ' + q.slice(0, 4);
+
+    if (!G || !G.quarters.length) {
+      plot.innerHTML = '<div class="empty-note">The GDP chart is carried for published reports only; this dataset has none.</div>';
+      cap.textContent = '';
+    } else {
+      const qs = G.quarters, n = qs.length, vals = qs.map(q => q.v);
+      const hi = Math.max(0, ...vals), lo = Math.min(0, ...vals), span = (hi - lo) || 1;
+      // the value labels sit inside the plot, so the bars are scaled into the band between them
+      // BOT holds the quarter row plus headroom for a label under the deepest negative bar
+      const H = 300, TOP = 22, BOT = 38, band = H - TOP - BOT;
+      const zero = TOP + (hi / span) * band, w = 100 / n;
+      let html = '<div class="zl" style="top:' + zero + 'px"></div>';
+      qs.forEach((q, i) => {
+        const h = Math.max(Math.abs(q.v) / span * band, 1), up = q.v >= 0;
+        html += '<div class="gc" style="left:' + (i * w) + '%;width:' + w + '%">' +
+          '<div class="gb ' + (up ? 'up' : 'dn') + (i === n - 1 ? ' last' : '') + '" style="--d:' + (i * 0.04) +
+          's;top:' + (up ? zero - h : zero) + 'px;height:' + h + 'px"></div>' +
+          '<div class="gv" style="--d:' + (i * 0.04) + 's;top:' + (up ? zero - h - 15 : zero + h + 3) + 'px">' +
+          q.v.toFixed(1) + '</div>' +
+          '<div class="gq">' + (i % 2 === 0 || i === n - 1 ? shortQ(q.q) : '') + '</div></div>';
+      });
+      plot.innerHTML = html;
+      cap.innerHTML = 'Percent, seasonally adjusted annual rate, ' + longQ(qs[0].q) + ' to ' + longQ(qs[n - 1].q) +
+        '. FRED as of ' + G.asOfLabel + ' \u2014 the vintage the report\u2019s chart was drawn from.' +
+        (G.stale
+          ? '<span class="stale">The report\u2019s chart is ' + G.behind + ' month' + (G.behind === 1 ? '' : 's') +
+            ' older than the rest of its macro page (' + G.reportAsOfLabel + '); reproduced as printed, revisions and all.</span>'
+          : '');
+    }
+
+    stack.innerHTML = MACRO.length
+      ? MACRO.map(m => '<div class="mrowi"><span class="l">' + m.l + '<small>' + m.s + '</small></span><span class="v">' + m.v + '</span></div>').join('')
+      : '<div class="empty-note">The macro indicators are not available for ' + (VINTAGE.single ? 'this dataset' : 'this report') + '; the printed page is in the PDF.</div>';
+
+    const bits = [];
+    if (G && G.quarters.length) {
+      const last = G.quarters[G.quarters.length - 1];
+      bits.push('Real GDP ' + (last.v >= 0 ? 'grew ' : 'fell ') + Math.abs(last.v).toFixed(1) + '% at an annual rate in ' + longQ(last.q));
+    }
+    if (MACRO.length) bits.push(MACRO[0].l.replace(/,.*$/, '') + ' ' + MACRO[0].v);
+    const lab = MACRO.find(m => /Unemployment/i.test(m.l));
+    if (lab) bits.push('unemployment and participation ' + lab.v);
+    finding.textContent = bits.length ? bits.join('; ') : 'Macro indicators not carried for this dataset';
+
+    // the FRED note on the source line, which lives on this slide now
+    const macroSrc = $('#macro-src');
+    if (macroSrc) macroSrc.textContent = VINTAGE.macroLabel ? ' as known on ' + VINTAGE.macroLabel : '';
   })();
 
   /* ============ slide 9 · operations ============ */
@@ -2116,8 +2238,18 @@
         if (!MKT.length) return '<p class="pp-kv">The market table was not machine-readable in this report.</p>';
         const rows = [];
         MKT.forEach(g => { rows.push({ grp: g.g }); g.rows.forEach(r => rows.push([r.n + ' — ' + r.i, ...r.v.map(pct)])); });
-        return tbl(['Index', ...P8], rows) +
-          (MACRO.length ? tbl(['Macro indicator', 'Value', 'Detail'], MACRO.map(m => [m.l, m.v, m.s])) : '');
+        return tbl(['Index', ...P8], rows);
+      }
+      if (id === 'econ') {
+        const gdp = typeof GDP !== 'undefined' && GDP && GDP.quarters.length
+          ? tbl(['Real GDP, quarterly, annualised (%)', ...GDP.quarters.map(q => 'Q' + q.q.slice(5) + ' ' + q.q.slice(2, 4))],
+              [['FRED as of ' + GDP.asOfLabel + (GDP.stale ? ' — ' + GDP.behind + ' month' + (GDP.behind === 1 ? '' : 's') + ' older than the rest of the macro page (' + GDP.reportAsOfLabel + ')' : ''),
+                ...GDP.quarters.map(q => q.v.toFixed(1))]])
+          : '<p class="pp-kv">The GDP chart is carried for published reports only.</p>';
+        return gdp +
+          (MACRO.length
+            ? tbl(['Macro indicator', 'Value', 'Detail'], MACRO.map(m => [m.l, m.v, m.s]))
+            : '<p class="pp-kv">The macro indicators are not available for this dataset.</p>');
       }
       if (id === 'geo') {
         return tbl(['Group', 'Share of AUM', 'Markets'], [['Developed', pct(e.geo.dm), String(e.geo.dmN)],
@@ -2194,7 +2326,7 @@
         // the cover and the contents have no figures behind them
         if (sl.dataset.id === 'cover' || sl.dataset.id === 'contents') return;
         const fig = figures(i, e);
-        const notes = NOTES[i] || '';
+        const notes = noteFor(sl, i);
         // the source sentence, with the classification chip lifted out of the middle of it
         const srcEl = $('.src', sl);
         let src = '';
@@ -2230,7 +2362,7 @@
       const s = slides[cur], nf = fragsOf(cur);
       $('#pv-title').textContent = (cur + 1) + ' / ' + slides.length + ' · ' + s.dataset.title + (nf ? ' — step ' + (frag + 1) + ' of ' + (nf + 1) : '') + ' · ' + E().short;
       const f = $('.finding', s); $('#pv-finding').textContent = f ? f.textContent : '';
-      $('#pv-notes').innerHTML = NOTES[cur];
+      $('#pv-notes').innerHTML = noteFor(slides[cur], cur) || '<p>No notes for this slide.</p>';
       $('#pv-next').textContent = frag < nf ? 'Next step on this slide' : cur + 1 < slides.length ? (cur + 2) + ' · ' + slides[cur + 1].dataset.title : 'End of deck';
     };
     $('#pv-prev').addEventListener('click', () => send('prev'));

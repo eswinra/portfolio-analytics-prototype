@@ -1,6 +1,7 @@
 import { deckPrior } from '../lib/deckFeed';
 
 import { NET_POSITION } from './cioMonthly.data';
+import { deckGdp } from '../lib/cioGdp';
 import { WORLD_MARKS, WORLD_NAMED, WORLD_SHAPES, WORLD_VIEWBOX } from './worldMap.data';
 
 import {
@@ -24,6 +25,7 @@ export const DECK_BLOCK_BEGIN =
 export const DECK_BLOCK_END = '  /* ==== END SHARED DATA ==== */';
 
 export const DECK_DATA: CioDeckData = {
+  GDP: deckGdp(CIO_LATEST.reportDate),
   NETPOS: NET_POSITION,
   PRIOR: deckPrior(CIO_LATEST),
   PERIODS,
@@ -36,7 +38,7 @@ export const DECK_DATA: CioDeckData = {
   VINTAGE: deckVintage(CIO_LATEST),
 };
 
-const NAMES = [
+export const DECK_FIELDS = [
   'PERIODS',
   'ENT',
   'BINS',
@@ -47,12 +49,15 @@ const NAMES = [
   'VINTAGE',
   'PRIOR',
   'NETPOS',
+  'GDP',
 ] as const;
 
 /** The lines between the markers (no trailing newline). Declared with `let` so the deck, when
  *  presented inside the dashboard, can take the report on screen instead (lib/deckFeed.ts). */
 export function deckDataBlock(): string {
-  return NAMES.map((name) => `  let ${name} = ${JSON.stringify(DECK_DATA[name])};`).join('\n');
+  return DECK_FIELDS.map((name) => `  let ${name} = ${JSON.stringify(DECK_DATA[name])};`).join(
+    '\n',
+  );
 }
 
 /** The country outlines for the geographic exposure map. They do not change with the report, so

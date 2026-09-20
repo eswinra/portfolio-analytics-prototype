@@ -222,7 +222,7 @@ slides, with every build shown.
 
 | How | What |
 |---|---|
-| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 25 landscape pages |
+| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 27 landscape pages |
 | `npm run deck:pdf` (from `app/`) | Both funds, into `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf`; `-- --fund opeb` for one, `-- --out <dir>` elsewhere |
 
 A tab that draws a different picture — the performance slide's excess view, the market slide
@@ -241,9 +241,10 @@ deck), so they cannot drift from the picture:
 | 7 Allocation and flows | Market value, weight, target, drift and flow by composite, the net flow, and the overlay programs |
 | 8 Change in fiduciary net position | The twelve months, their sum, the three fiscal years with their month counts, and the two books side by side |
 | 9 Return distribution | The 14 bins with their month counts, and the printed statistics |
-| 10 Market context | The market table over all periods, and the macro strip with its detail |
-| 11 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
-| 12 Items for attention | Every item as printed, with its status and report page |
+| 10 Market context | The market table over all periods |
+| 11 The economy around the fund | The GDP quarters with the vintage they were read at, and every macro indicator with its detail |
+| 12 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
+| 13 Items for attention | Every item as printed, with its status and report page |
 
 ### The change in fiduciary net position (slide 8)
 
@@ -320,6 +321,43 @@ dashboard must not find different breaks.
 The same map appears on the dashboard's Positioning tab above the country table
 (`app/src/components/WorldMap.tsx`). Both carry `role="img"` with alternative text that lists every
 named country and its share, so the figures are never only in the picture.
+
+### The economy around the fund (slide 11, and the Markets tab)
+
+The report gives its Key Macro Indicators a page of their own (p. 6), and so does the deck. Until
+Revision 33 those indicators were a strip of chips on the market slide, revealed by a build step;
+adding quarterly real GDP growth made a seventh chip, and measured at slide size seven chips of
+that text ran 53px into the note beneath them. Shrinking the market chart far enough to clear it
+would have left the seventeen index rows 13px each, so the macro page became its own slide. The
+market slide is now the index table alone, at the height the strip gave back.
+
+**Quarterly real GDP growth** is the report's own chart, rebuilt from FRED rather than typed
+(`tools/fetch_cio_gdp.py`, series `A191RL1Q225SBEA` — real GDP, percent change from the preceding
+period, at an annual rate). The obvious rule — read FRED as of the month end before the report, the
+rule the same page's inflation and labour figures follow — reproduces only eight of the fifteen
+charts, and the reason is worth stating plainly:
+
+> **The report does not redraw this chart every month.** The September, October, November and
+> December 2025 reports all print it exactly as FRED stood on July 31, 2025, revisions and all.
+> Seven of the sixteen reports carry a GDP chart older than the rest of their own macro page.
+
+So the vintage is **identified, not assumed**. For each report the tool reads the printed bar
+labels off the PDF and searches FRED's archive backwards from the report's as-of date for the month
+end whose vintage reproduces every one of them. Thirteen or fourteen figures agreeing to a tenth is
+not chance, so a match identifies the vintage; the latest matching month end is recorded, and where
+it is earlier than the rest of the macro page the slide says so and by how many months. Without
+that, a reader comparing two reports would take a revision for a change in the economy.
+
+The tool writes the printed labels alongside the FRED values, so a unit test checks the two still
+agree without a network call, and further tests check that the quarters are consecutive, that no
+quarter appears before it was published, and that the late-2025 run of four held vintages is still
+there. The same chart appears on the dashboard's Markets & items tab
+(`app/src/components/GdpBars.tsx`); both put the value labels inside the plot band so a negative
+quarter's label cannot land on the axis.
+
+```bash
+python tools/fetch_cio_gdp.py
+```
 
 The cover states what the deck is and what it is not, the contents page says what each section
 answers and which slides it holds, and every page keeps the footer disclosure.

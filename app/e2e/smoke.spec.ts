@@ -449,6 +449,54 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
   });
 });
 
+test.describe('quarterly real GDP growth (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('the dashboard charts the report’s own GDP page with its vintage', async ({ page }) => {
+    await ready(page, '/cio?tab=markets');
+    const fig = page.locator('#cio-macro figure.gdpf');
+    await expect(fig.locator('.gdpf-plot')).toHaveAttribute('role', 'img');
+    await expect(fig.locator('.gdpf-plot')).toHaveAttribute('aria-label', /Q2 26 1\.5%/);
+    await expect(fig.locator('.gdpf-col')).toHaveCount(14);
+    // the sign is the side of the zero line and the colour, not the colour alone
+    await expect(fig.locator('.gdpf-bar.neg')).toHaveCount(1);
+    await expect(fig.locator('.gdpf-bar.last')).toHaveCount(1);
+    await expect(fig.locator('figcaption')).toContainText('as FRED showed it on July 31, 2026');
+    // the latest report's chart is current, so it carries no "behind" note
+    await expect(fig.locator('.gdpf-stale')).toHaveCount(0);
+  });
+
+  test('a report whose chart was not redrawn says how far behind it is', async ({ page }) => {
+    await ready(page, '/cio?tab=markets&v=2025-10-31');
+    const fig = page.locator('#cio-macro figure.gdpf');
+    // the December 2025 report prints the chart as FRED stood on July 31, 2025
+    await expect(fig.locator('.gdpf-col')).toHaveCount(13);
+    await expect(fig.locator('figcaption')).toContainText('July 31, 2025');
+    await expect(fig.locator('.gdpf-stale')).toContainText('4 months older');
+    await expect(fig.locator('.gdpf-stale')).toContainText('reproduced as printed');
+  });
+
+  test('the slide carries it, and every fed field follows the report on screen', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    // an older report inside the dashboard: the whole deck must move to it, not just its labels
+    await ready(page, '/cio?v=2025-10-31&slide=11');
+    const deck = page.frameLocator('.deck-frame-wrap iframe');
+    await expect(deck.locator('.v-report').first()).toHaveText('December 10, 2025');
+    await expect(deck.locator('#gplot .gc')).toHaveCount(13);
+    await expect(deck.locator('#gcap')).toContainText('FRED as of July 31, 2025');
+    await expect(deck.locator('#gcap .stale')).toContainText('4 months older');
+    // the net position page is carried for the latest report only — it must not leak into an
+    // older report's deck, which is what happened before the feed carried every field
+    await expect(deck.locator('section[data-id="netpos"] #np-finding')).toHaveText(
+      'Not carried for this report',
+    );
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('geographic exposure map (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 
@@ -457,7 +505,7 @@ test.describe('geographic exposure map (desktop project)', () => {
   }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
-    await page.goto('/deck/#11');
+    await page.goto('/deck/#12');
     const slide = page.locator('section[data-id="geo"]');
     await expect(slide).toBeVisible();
     await slide.locator('[data-toggle-view="geo"] .seg-btn[data-v="map"]').click();
@@ -537,8 +585,8 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     // the deck's own cover and contents slides open the document; every other slide is
     // followed by its tab snapshots and its figures page
     expect(doc.order.slice(0, 2)).toEqual(['slide', 'slide']);
-    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(12);
-    expect(doc.order.filter((p) => p === 'figures')).toHaveLength(10);
+    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(13);
+    expect(doc.order.filter((p) => p === 'figures')).toHaveLength(11);
     // a tab that draws a different picture is its own page, right after its slide
     expect(doc.variants).toEqual([
       'Tab: excess vs. benchmark',
@@ -564,7 +612,10 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     expect(doc.pages[5]).toContain('Fiscal year, summed');
     expect(doc.pages[5]).toContain('Investment book market value');
     expect(doc.pages[7]).toContain('U.S. Large Cap');
-    expect(doc.pages[9]).toContain('Risk system onboarding');
+    // the macro page is its own slide now, and carries the GDP quarters with their vintage
+    expect(doc.pages[8]).toContain('Real GDP, quarterly, annualised');
+    expect(doc.pages[8]).toContain('Macro indicator');
+    expect(doc.pages[10]).toContain('Risk system onboarding');
     // and they are landscape slide-sized pages, like the slides
     const size = await page.locator('.pp-data').first().boundingBox();
     expect([Math.round(size!.width), Math.round(size!.height)]).toEqual([1280, 720]);
@@ -602,7 +653,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     // the page's arrow keys step the slides without clicking into them: the deck opens on its
     // cover, so two presses reach the executive read and the next two build it
     for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
-    await expect(deck.locator('#counter')).toHaveText('3 / 12');
+    await expect(deck.locator('#counter')).toHaveText('3 / 13');
     await expect(deck.locator('.v-report').first()).toHaveText('August 12, 2026');
     // inside the dashboard the deck does not link back to it
     await expect(deck.locator('#dash-link')).toBeHidden();
@@ -631,7 +682,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
       'true',
     );
     const deck = page.frameLocator('.deck-frame-wrap iframe');
-    await expect(deck.locator('#counter')).toHaveText('5 / 12');
+    await expect(deck.locator('#counter')).toHaveText('5 / 13');
   });
 
   test('selecting an earlier report moves the masthead, band and panels together', async ({

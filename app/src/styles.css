@@ -3734,3 +3734,77 @@ details.panel > summary {
   line-height: 1.45;
   color: var(--muted-62);
 }
+
+/* Quarterly Real GDP Growth — the report's own chart, rebuilt from FRED's real-time archive
+   (tools/fetch_cio_gdp.py). The latest quarter is picked out; a negative quarter is a different
+   colour AND on the other side of the zero line, so the sign survives a greyscale page. */
+.gdpf {
+  margin: 0 0 16px;
+}
+
+.gdpf-plot {
+  position: relative;
+}
+
+.gdpf-zero {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--neutral-500);
+}
+
+.gdpf-col {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.gdpf-bar {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  background: var(--accent-400);
+}
+
+.gdpf-bar.neg {
+  background: #b85c38;
+}
+
+.gdpf-bar.last {
+  background: var(--accent-900);
+}
+
+.gdpf-v {
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  text-align: center;
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--neutral-700);
+}
+
+.gdpf-axis {
+  position: relative;
+  height: 15px;
+  margin-top: 3px;
+}
+
+.gdpf-axis span {
+  position: absolute;
+  text-align: center;
+  font-size: 0.64rem;
+  color: var(--muted-62);
+}
+
+.gdpf figcaption {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--muted-62);
+}
+
+.gdpf-stale {
+  color: #b85c38;
+}

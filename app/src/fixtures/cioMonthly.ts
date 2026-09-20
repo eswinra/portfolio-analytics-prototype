@@ -1,3 +1,4 @@
+import type { DeckGdp } from '../lib/cioGdp';
 import { macroAsOf, macroLines, type MacroLine } from '../lib/cioMacro';
 import { CIO_MACRO } from './cioMacro.data';
 import {
@@ -147,6 +148,9 @@ export interface CioNetPosition {
 }
 
 export interface CioDeckData {
+  /** the report's Quarterly Real GDP Growth chart, rebuilt from FRED's archive; null for an
+   *  imported feed or a template file, which have no published report behind them */
+  GDP: DeckGdp | null;
   /** the Change in Fiduciary Net Position page, for the report that carries it */
   NETPOS: CioNetPosition | null;
   PRIOR: DeckPrior | null;

@@ -1,4 +1,5 @@
 import { NET_POSITION } from '../fixtures/cioMonthly.data';
+import { deckGdp } from './cioGdp';
 
 import {
   BINS,
@@ -55,6 +56,8 @@ export function deckDataFor(
     // the month before, for slide 2's value bridge — published reports only: a template file or
     // an imported feed is not part of the series, and its month must not be bridged to one
     // the net position page is transcribed for the latest report only, like the editorial pages
+    // the GDP chart is the report's own page, so an imported feed or a template file has none
+    GDP: opts.feed || pkg ? null : deckGdp(v.reportDate),
     NETPOS: latest ? NET_POSITION : null,
     PRIOR: opts.feed || pkg ? null : deckPrior(v),
     PERIODS,

@@ -4,3 +4,5 @@ src/fixtures/macroSnapshot.data.ts
 src/fixtures/cioMacro.data.ts
 # generated outlines: one long path string per country by design (tools/make_world_paths.py)
 src/fixtures/worldMap.data.ts
+# generated data: one JSON line per report by design (tools/fetch_cio_gdp.py)
+src/fixtures/cioGdp.data.ts

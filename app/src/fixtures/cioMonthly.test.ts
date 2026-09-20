@@ -26,6 +26,7 @@ import {
   DECK_BLOCK_END,
   DECK_WORLD_BEGIN,
   DECK_WORLD_END,
+  DECK_FIELDS,
   deckDataBlock,
   deckWorldBlock,
 } from './deckData';
@@ -318,6 +319,40 @@ describe('slide deck at /deck/ reads the same data', () => {
     expect(begin).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(begin);
     expect(lines.slice(begin + 1, end).join('\n')).toBe(deckWorldBlock());
+  });
+
+  it('every slide that carries figures has a speaker note, keyed by its own id', () => {
+    // NOTES was an array indexed by slide number until Revision 33, so inserting the cover, the
+    // contents page and the net position page silently moved every note onto the wrong slide
+    const ids = [...html.matchAll(/<section class="slide[^>]*data-id="([^"]+)"/g)].map(
+      (m) => m[1]!,
+    );
+    const block = html.slice(html.indexOf('const NOTES = {'), html.indexOf('\n  };'));
+    const keys = [...block.matchAll(/^ {4}(\w+):/gm)].map((m) => m[1]!);
+    for (const id of ids) {
+      if (id === 'cover' || id === 'contents') continue;
+      expect(keys, `slide "${id}" has no speaker note`).toContain(id);
+    }
+    // and no note for a slide that no longer exists
+    for (const key of keys) expect(ids, `note "${key}" has no slide`).toContain(key);
+    // the heading is derived from the slide, never typed into the note, so it cannot go stale
+    expect(block).not.toMatch(/<h4>Slide \d/);
+  });
+
+  it('every field the dashboard feeds it is read, and handed on to a presenter window', () => {
+    // the deck declares each field with `let` and the embedded feed assigns them one by one, so a
+    // field added to the block but forgotten here would leave that slide showing the LATEST
+    // report's figures under another report's date. This is how NETPOS shipped in Revision 31.
+    const feed = lines.find((l) => l.includes('PERIODS = f.PERIODS;'));
+    expect(feed, 'the feed assignment line was not found').toBeDefined();
+    const handOn = lines.find((l) => l.includes('window.__laceraDeckData = {'));
+    expect(handOn, 'the presenter hand-off was not found').toBeDefined();
+    for (const name of DECK_FIELDS) {
+      expect(feed, `${name} is never read from the embedded feed`).toContain(`${name} = f.${name}`);
+      expect(handOn, `${name} is not handed on to a presenter window`).toMatch(
+        new RegExp(`[{,]\\s*${name}\\s*[,}]`),
+      );
+    }
   });
 
   it('its script parses (the deploy job runs these tests, not the browser tests)', () => {

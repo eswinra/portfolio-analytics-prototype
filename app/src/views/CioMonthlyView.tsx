@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 
 import { DeckFrame } from '../components/DeckFrame';
 import { CioExplore } from './CioExplore';
+import { GdpBars } from '../components/GdpBars';
 import { GlossaryLink } from '../components/Glossary';
 import { AboutFigures, PageMeta, PageSources } from '../components/page';
 import { ReportPlayer } from '../components/ReportPlayer';
@@ -161,8 +162,9 @@ const SLIDE = {
   alloc: 7,
   hist: 9,
   market: 10,
-  geo: 11,
-  ops: 12,
+  econ: 11,
+  geo: 12,
+  ops: 13,
 } as const;
 
 /** Opens the Slides tab at the slide that carries this panel's figures, for the report on
@@ -1681,6 +1683,7 @@ export function CioMonthlyView() {
                     )
                   }
                 >
+                  {!pkg && !feed ? <GdpBars reportDate={vintage.reportDate} /> : null}
                   <div>
                     {macro.map((m) => (
                       <div className="flow-row" key={m.l}>
@@ -1698,7 +1701,7 @@ export function CioMonthlyView() {
                       ...(isLatest || pkg ? [cioSource(vintage, 'pp. 4–6', 4)] : []),
                     ]}
                   />
-                  <DeckLink n={SLIDE.market} />
+                  <DeckLink n={SLIDE.econ} />
                 </Panel>
               ) : null}
 
