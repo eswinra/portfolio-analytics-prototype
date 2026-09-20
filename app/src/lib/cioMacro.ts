@@ -35,7 +35,19 @@ export interface CioMacroVintage {
   /** federal funds target range (DFEDTARL / DFEDTARU), %, and the day it took effect — null
    *  when it was already in effect at the start of the window the tool reads */
   fed: { low: number; high: number; since: string | null };
+  /** Treasury constant maturity yields (DGS3MO … DGS30), %, each as last published on `asOf` */
+  curve: Record<CurveKey, MacroObs>;
 }
+
+export const CURVE_KEYS = ['m3', 'y2', 'y5', 'y10', 'y30'] as const;
+export type CurveKey = (typeof CURVE_KEYS)[number];
+export const CURVE_LABELS: Record<CurveKey, string> = {
+  m3: '3M',
+  y2: '2Y',
+  y5: '5Y',
+  y10: '10Y',
+  y30: '30Y',
+};
 
 /** One indicator as the strip shows it: label, value, and the detail line with its source. */
 export interface MacroLine {
@@ -49,6 +61,7 @@ export interface MacroNotes {
   pce?: string;
   fed?: string;
   labor?: string;
+  curve?: string;
 }
 
 /** The month end before the report's month — the date the report's macro page reads as of
@@ -107,6 +120,14 @@ export function macroLines(m: CioMacroVintage, notes: MacroNotes = {}): MacroLin
       l: `Unemployment and participation, ${laborMonth}`,
       v: `${m.unemployment.v.toFixed(1)}% · ${m.participation.v.toFixed(1)}%`,
       s: withNote('Unemployment rate · labor force participation rate (FRED · BLS)', notes.labor),
+    },
+    {
+      l: `Treasury yields, ${macroDay(m.curve.y10.date)}`,
+      v: CURVE_KEYS.map((k) => m.curve[k].v.toFixed(1)).join(' · ') + '%',
+      s: withNote(
+        `${CURVE_KEYS.map((k) => CURVE_LABELS[k]).join(' · ')} constant maturity (FRED · Federal Reserve)`,
+        notes.curve,
+      ),
     },
   ];
 }

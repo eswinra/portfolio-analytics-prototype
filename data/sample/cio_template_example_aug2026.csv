@@ -517,12 +517,12 @@ macro,,Federal funds target range,value,,,3.50–3.75%
 macro,,Federal funds target range,detail,,,"In effect since Dec 11, 2025 (FRED · Federal Reserve). Fifth consecutive pause; three dissents in favor of an increase (p. 4)"
 macro,,"Unemployment and participation, June 2026",value,,,4.2% · 61.5%
 macro,,"Unemployment and participation, June 2026",detail,,,Unemployment rate · labor force participation rate (FRED · BLS)
+macro,,"Treasury yields, Jun 30, 2026",value,,,3.9 · 4.1 · 4.2 · 4.4 · 4.9%
+macro,,"Treasury yields, Jun 30, 2026",detail,,,3M · 2Y · 5Y · 10Y · 30Y constant maturity (FRED · Federal Reserve)
 macro,,"U.S. Dollar Index, YTD to 7/31",value,,,+1.6%
 macro,,"U.S. Dollar Index, YTD to 7/31",detail,,,GBP +0.1 · EUR −1.9 · JPY −0.4 · CAD −2.1 · MXN +3.8 · CNY +3.5 (p. 6)
 macro,,Themes to watch,value,,,Tariffs · AI · rates
 macro,,Themes to watch,detail,,,Tariffs of 10–12.5% now cover over 99% of U.S. imports; Strait of Hormuz disruption; Q2 earnings beat with AI capex in focus (p. 4)
-macro,,,value,,,
-macro,,,detail,,,
 macro,,,value,,,
 macro,,,detail,,,
 macro,,,value,,,

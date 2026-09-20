@@ -105,9 +105,10 @@ performance table is an image in the PDF.
 ## Macro strip from FRED
 
 The report's macro pages (pp. 4 and 6, "Sources: Bloomberg, St. Louis Federal Reserve") print PCE
-inflation, the federal funds target range and the unemployment and participation rates. Those are
-FRED series (PCEPI, PCEPILFE, DFEDTARL/DFEDTARU, UNRATE, CIVPART), so the strip reads them from
-FRED for **every** report rather than typing them in for the latest:
+inflation, the federal funds target range, the unemployment and participation rates, and a
+Treasury yield curve. Those are FRED series (PCEPI, PCEPILFE, DFEDTARL/DFEDTARU, UNRATE, CIVPART,
+DGS3MO/DGS2/DGS5/DGS10/DGS30), so the strip reads them from FRED for **every** report rather than
+typing them in for the latest:
 
 - **As known then, not as revised since.** Each report is read from FRED's real-time archive
   (ALFRED) as of the **month end before the report's month** — July 31, 2026 for the August 12,
@@ -115,6 +116,16 @@ FRED for **every** report rather than typing them in for the latest:
   3.7% (core 3.3%), unemployment 4.2%, participation 61.5% and range 3.50–3.75%; as of the
   meeting date it gives July's labor figures (4.1% / 61.4%), which the report did not print.
   Reading today's values would show revised figures the meeting never saw.
+- **The yield curve carries the other as-of date (Revision 27).** The page's chart of 3M, 2Y, 5Y,
+  10Y and 30Y constant-maturity yields ends at the month the **fund figures** cover, not at the
+  date the rest of the page is read as of. Checked against the August 2026 report, which prints
+  3.9 / 4.1 / 4.2 / 4.4 / 4.9: FRED gives exactly those for June 30, 2026, and 3.8 / 4.2 / 4.4 /
+  4.7 / 5.2 for July 30. So the curve is read at the report's data-through date (the last
+  observation on or before it, read a few days later because the H.15 release lags a day and a
+  month can end on a weekend), and the strip's line names that date. The printed labels are held
+  in `MACRO_PRINTED.curve`, and a unit test fails if FRED stops reproducing them. Reading the
+  chart itself was rejected: its five end labels are a stacked list whose only link to a tenor is
+  the colour of the line, which would have to be guessed.
 - **What that means for older reports.** The strip shows what was published by that date. For the
   November and December 2025 reports that is August 2025 PCE: the fall 2025 federal shutdown
   held back the later releases, and the strip shows the gap as it stood rather than filling it.

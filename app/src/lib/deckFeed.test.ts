@@ -18,12 +18,13 @@ describe('dashboard → slides feed', () => {
     expect(older).not.toBe(CIO_LATEST);
     const d = deckDataFor(older);
     expect(d.ENT).toEqual(older.ENT);
-    // the macro strip: FRED's three lines as known on that report's date, without the latest
+    // the macro strip: FRED's four lines as known on that report's date, without the latest
     // report's commentary or typed lines
     expect(d.MACRO.map((m) => m.l)).toEqual([
       'PCE inflation, February 2025',
       'Federal funds target range',
       'Unemployment and participation, February 2025',
+      'Treasury yields, Feb 28, 2025',
     ]);
     for (const m of d.MACRO) expect(m.s).not.toMatch(/\(p\. \d+/);
     expect(d.VINTAGE.macroLabel).toBe('March 31, 2025');

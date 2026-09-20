@@ -10,6 +10,14 @@ const M: CioMacroVintage = {
   unemployment: { date: '2026-06-01', v: 4.2 },
   participation: { date: '2026-06-01', v: 61.5 },
   fed: { low: 3.5, high: 3.75, since: '2025-12-11' },
+  // the yield curve is read at the fund's month end, not at the date the rest is read as of
+  curve: {
+    m3: { date: '2026-06-30', v: 3.87 },
+    y2: { date: '2026-06-30', v: 4.14 },
+    y5: { date: '2026-06-30', v: 4.19 },
+    y10: { date: '2026-06-30', v: 4.44 },
+    y30: { date: '2026-06-30', v: 4.91 },
+  },
 };
 
 describe('macro strip from FRED', () => {
@@ -37,7 +45,7 @@ describe('macro strip from FRED', () => {
     expect(macroMonth('2025-01-01')).toBe('January 2025');
   });
 
-  it('builds the three lines with their FRED source', () => {
+  it('builds the four lines with their FRED source', () => {
     expect(macroLines(M)).toEqual([
       { l: 'PCE inflation, June 2026', v: '3.7% y/y', s: 'Core 3.3% (FRED · BEA)' },
       {
@@ -49,6 +57,11 @@ describe('macro strip from FRED', () => {
         l: 'Unemployment and participation, June 2026',
         v: '4.2% · 61.5%',
         s: 'Unemployment rate · labor force participation rate (FRED · BLS)',
+      },
+      {
+        l: 'Treasury yields, Jun 30, 2026',
+        v: '3.9 · 4.1 · 4.2 · 4.4 · 4.9%',
+        s: '3M · 2Y · 5Y · 10Y · 30Y constant maturity (FRED · Federal Reserve)',
       },
     ]);
   });

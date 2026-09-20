@@ -44,6 +44,9 @@ export const MACRO_PRINTED = {
   laborMonth: '2026-06',
   unemployment: 4.2,
   participation: 61.5,
+  // the yield chart's end labels, p. 6 (3M, 2Yr, 5Yr, 10Yr, 30Yr)
+  curveDate: '2026-06-30',
+  curve: [3.9, 4.1, 4.2, 4.4, 4.9],
 };
 
 /** The report's commentary beside the FRED figures, with its page. */

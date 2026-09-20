@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-import { yoy } from '../lib/cioMacro';
+import { CURVE_KEYS, yoy } from '../lib/cioMacro';
 import {
   BINS,
   CIO_LATEST,
@@ -198,13 +198,21 @@ describe('macro strip: FRED as known on each report’s date', () => {
     expect(m.participation.date.slice(0, 7), says('laborMonth')).toBe(MACRO_PRINTED.laborMonth);
     expect(m.unemployment.v, says('unemployment')).toBe(MACRO_PRINTED.unemployment);
     expect(m.participation.v, says('participation')).toBe(MACRO_PRINTED.participation);
+    // the yield chart ends at the month the fund figures cover, not at the report's as-of date
+    for (const o of Object.values(m.curve)) expect(o.date).toBe(MACRO_PRINTED.curveDate);
+    expect(
+      CURVE_KEYS.map((k) => one(m.curve[k].v)),
+      says('yield curve'),
+    ).toEqual(MACRO_PRINTED.curve);
+    expect(MACRO_PRINTED.curveDate).toBe(CIO_LATEST.dataThrough);
   });
 
-  it('the latest strip is FRED’s three lines with the report’s commentary, then its typed lines', () => {
+  it('the latest strip is FRED’s four lines with the report’s commentary, then its typed lines', () => {
     expect(MACRO.map((m) => m.l)).toEqual([
       'PCE inflation, June 2026',
       'Federal funds target range',
       'Unemployment and participation, June 2026',
+      'Treasury yields, Jun 30, 2026',
       'U.S. Dollar Index, YTD to 7/31',
       'Themes to watch',
     ]);

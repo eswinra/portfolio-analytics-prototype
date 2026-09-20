@@ -47,7 +47,15 @@ SERIES = {
     "CIVPART": ("Labor force participation rate", fm.BLS),
     "DFEDTARL": ("Federal funds target range, lower limit", fm.FRB),
     "DFEDTARU": ("Federal funds target range, upper limit", fm.FRB),
+    "DGS3MO": ("3-month Treasury constant maturity rate", fm.FRB),
+    "DGS2": ("2-year Treasury constant maturity rate", fm.FRB),
+    "DGS5": ("5-year Treasury constant maturity rate", fm.FRB),
+    "DGS10": ("10-year Treasury constant maturity rate", fm.FRB),
+    "DGS30": ("30-year Treasury constant maturity rate", fm.FRB),
 }
+
+# the report's macro page charts these five tenors; the keys are the ones the strip uses
+CURVE = [("m3", "DGS3MO"), ("y2", "DGS2"), ("y5", "DGS5"), ("y10", "DGS10"), ("y30", "DGS30")]
 
 
 def as_of(report_date: str) -> str:
@@ -98,10 +106,32 @@ def target_range(known_on: str) -> dict:
     return {"low": low[-1][1], "high": high[-1][1], "since": runs[-1] if runs else None}
 
 
+def curve_line(entry: dict) -> str:
+    """'3.9/4.1/4.2/4.4/4.9' for the run log."""
+    return "/".join(f"{entry['curve'][key]['v']:.1f}" for key, _ in CURVE)
+
+
+def curve_at(sid: str, through: str) -> dict:
+    """A daily rate at the fund's month end: the last observation on or before that date, read a
+    few days later because the H.15 release lags a day and a month can end on a weekend."""
+    known_on = (dt.date.fromisoformat(through) + dt.timedelta(days=5)).isoformat()
+    start = (dt.date.fromisoformat(through) - dt.timedelta(days=30)).isoformat()
+    obs = [(d, v) for d, v in observations(sid, known_on, start) if d <= through]
+    if not obs:
+        raise SystemExit(f"{sid}: no observation on or before {through}")
+    d, v = obs[-1]
+    return {"date": d, "v": v}
+
+
 def main() -> None:
-    reports = re.findall(r"reportDate: '([0-9-]+)'", VINTAGES.read_text(encoding="utf-8"))
+    text = VINTAGES.read_text(encoding="utf-8")
+    reports = re.findall(r"reportDate: '([0-9-]+)'", text)
+    through = re.findall(r"dataThrough: '([0-9-]+)'", text)
     if not reports:
         raise SystemExit(f"no reportDate found in {VINTAGES.relative_to(ROOT)}")
+    if len(through) != len(reports):
+        raise SystemExit("every report needs a dataThrough: the yield curve is read at that date")
+    through_of = dict(zip(reports, through))
 
     series_meta = []
     for sid, (title, provider) in SERIES.items():
@@ -120,12 +150,16 @@ def main() -> None:
             "unemployment": latest("UNRATE", known_on),
             "participation": latest("CIVPART", known_on),
             "fed": target_range(known_on),
+            # the report's yield chart ends at the month the fund figures cover, not at the
+            # date the rest of the page is read as of (checked against the printed labels)
+            "curve": {key: curve_at(sid, through_of[rd]) for key, sid in CURVE},
         }
         e = data[rd]
         pce = (e["pce"]["v"] / e["pce"]["yearAgo"]["v"] - 1) * 100
         print(f"{rd}: as of {known_on} · PCE {e['pce']['date'][:7]} {pce:.1f}% · "
               f"UNRATE {e['unemployment']['date'][:7]} {e['unemployment']['v']} · "
-              f"range {e['fed']['low']:.2f}-{e['fed']['high']:.2f} since {e['fed']['since']}")
+              f"range {e['fed']['low']:.2f}-{e['fed']['high']:.2f} since {e['fed']['since']} · "
+              f"curve {curve_line(e)} on {e['curve']['y10']['date']}")
 
     retrieved = dt.date.today().isoformat()
     OUT.write_text(

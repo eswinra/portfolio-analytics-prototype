@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-19 — Revision 27: the Treasury yield curve joins the macro strip
+
+The coverage check against the official August report found one gap whose figures are actually
+readable: the yield curve on the report's macro page. It is now in the strip, for all 16 reports.
+
+- **Read from FRED, at the date the report's chart ends.** The page carries two as-of dates:
+  inflation and labour as known when the report was written, and the yield curve at the month the
+  **fund figures** cover. Checked against the August 2026 report, which prints 3.9 / 4.1 / 4.2 /
+  4.4 / 4.9 — FRED gives exactly those for June 30, 2026, and 3.8 / 4.2 / 4.4 / 4.7 / 5.2 for July
+  30. The tool reads the last observation on or before the data-through date, a few days later,
+  because the H.15 release lags a day and a month can end on a weekend.
+- **Not scraped from the chart.** The chart's five end labels are a stacked list; the only link
+  from a label to its tenor is the colour of its line, and the colours do not match the legend
+  swatches exactly. Guessing that mapping would have put a number against the wrong maturity.
+- The printed labels are held as `MACRO_PRINTED.curve`, and a unit test fails if FRED stops
+  reproducing them — the same guard the other FRED-backed figures have.
+- The strip's line reads "Treasury yields, Jun 30, 2026 · 3.9 · 4.1 · 4.2 · 4.4 · 4.9% · 3M · 2Y ·
+  5Y · 10Y · 30Y constant maturity (FRED · Federal Reserve)" and appears on the deck's market
+  slide, in the dashboard's macro panel, and on that slide's figures page in the PDF.
+- The Excel template and its example were regenerated so the template's macro rows match the strip.
+- Verification: lint · format · Vitest 477/477 · build · Playwright 150/150 runnable · the macro
+  fetch re-run for all 16 reports · template rebuilt and re-exported through Excel (20 checks OK).
+
 ## 2026-09-19 — Revision 26: the deck opens like the report, and says what it used to leave implied
 
 Three questions in a row about figures the slides had right but did not explain: why slide 1 says
