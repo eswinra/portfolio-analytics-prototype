@@ -126,7 +126,7 @@
   .note { font-weight: 700; color: var(--cat); font-size: 13.5px; line-height: 1.3; max-width: 800px; }
   .src { font-size: 10.5px; line-height: 1.35; color: var(--ink); text-align: right; max-width: 380px; }
   .src .cls { display: inline-block; margin-top: 2px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 3px; font-family: Consolas, "Courier New", monospace; font-size: 10px; color: var(--cat); }
-  .ent-chip { display: inline-block; padding: 2px 8px; border-radius: 3px; background: rgba(255,255,255,.14); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .04em; margin-top: 6px; }
+  .scope-chip, .ent-chip { display: inline-block; padding: 2px 8px; border-radius: 3px; background: rgba(255,255,255,.14); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .04em; margin-top: 6px; }
 
   /* controls */
   .ctl { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 36px; }
@@ -414,6 +414,30 @@
   }
 
   /* ---------- print: one slide per landscape page, every build shown complete ---------- */
+  /* change in fiduciary net position: a column per month, above and below the line */
+  .np { display: grid; grid-template-columns: 1fr 268px; gap: 34px; margin-top: 6px; }
+  .np-chart { position: relative; height: 336px; }
+  .np-zero { position: absolute; left: 0; right: 0; height: 1px; background: var(--gray); }
+  .np-grid { position: absolute; left: 0; right: 0; height: 1px; background: rgba(26,26,26,.07); }
+  .np-gl { position: absolute; left: 0; font-size: 10.5px; color: var(--muted); transform: translateY(-50%); }
+  .np-cols { position: absolute; left: 52px; right: 0; top: 0; bottom: 0; }
+  .np-c { position: absolute; top: 0; bottom: 0; width: 44px; }
+  .np-bar { position: absolute; left: 0; right: 0; background: var(--blue); transform: scaleY(0); transition: transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s); }
+  .np-bar.up { transform-origin: bottom; }
+  .np-bar.down { transform-origin: top; background: var(--warm); }
+  .slide.armed .np-bar { transform: scaleY(1); }
+  .np-v { position: absolute; left: -6px; right: -6px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .4s ease calc(var(--d, 0s) + .4s); }
+  .slide.armed .np-v { opacity: 1; }
+  .np-m { position: absolute; left: -8px; right: -8px; text-align: center; font-size: 10px; color: var(--muted); }
+  .np-fy h3 { margin: 0 0 2px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .np-fy .sub { font-size: 11.5px; color: var(--cat); margin-bottom: 10px; }
+  .np-row { border-top: 1px solid var(--line); padding: 12px 0 11px; }
+  .np-row:last-of-type { border-bottom: 1px solid var(--line); }
+  .np-row .fy { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .np-row .bn { font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1.1; margin: 1px 0 3px; }
+  .np-row .mo { font-size: 11.5px; color: var(--cat); }
+  .np-note { font-size: 11px; color: var(--muted); line-height: 1.45; margin-top: 12px; }
+
   /* the opening slides: set, not boxed — hairlines and alignment, no fills or edge bars */
   .slide.cover { background: var(--navy); }
   .cover .cv { position: absolute; left: 84px; right: 84px; top: 176px; }
@@ -426,6 +450,7 @@
   .cover .cv-meta dd small { display: block; font-size: 12px; color: #9FB0C6; margin-top: 2px; }
   .cover .cv-note { position: absolute; left: 84px; right: 84px; bottom: 84px; font-size: 11.5px; color: #8FA0B8; line-height: 1.55; max-width: 104ch; }
   .cover .cv-note b { color: #BCCBDD; font-weight: 700; }
+  .np-h { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .contents .toc-head { display: grid; grid-template-columns: 196px 1fr 76px; gap: 0 24px; padding: 0 2px 7px; font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
   .contents .toc-head span:last-child { text-align: right; }
   .contents .toc { margin-top: 2px; }
@@ -705,6 +730,31 @@
         <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">5</span></div>
       </section>
 
+      <!-- change in fiduciary net position -->
+      <section class="slide" data-title="Change in fiduciary net position" data-id="netpos">
+        <div class="hd">
+          <div>
+            <h2>What the fund took in, and what it paid out</h2>
+            <p class="finding" id="np-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>Fiscal year to <span class="v-through"></span></b>Unaudited · USD<br>$ millions per month<span class="scope-chip" id="np-scope"></span></div>
+        </div>
+        <div class="bd">
+          <div class="np">
+            <div>
+              <h3 class="np-h">Additions less deductions, month by month</h3>
+              <div class="np-chart" id="np-chart"></div>
+            </div>
+            <div class="np-fy" id="np-fy"></div>
+          </div>
+          <div class="nb">
+            <div class="note" id="np-note"></div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 21 — transcribed from the page, which is an image in the PDF; the months add to the fiscal-year total and month counts printed beside them, which a unit test checks.<br><span class="cls">reported_public</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg"></span></div>
+      </section>
+
       <!-- 6 · risk context -->
       <section class="slide" data-title="Return distribution" data-id="hist" data-frags="1">
         <div class="hd">
@@ -894,6 +944,7 @@
   let STATUS = {"prog":["In progress","prog"],"dev":["In development","dev"],"info":["For attention","info"],"quiet":["Quiet period","quiet"],"done":["Completed","done"]};
   let VINTAGE = {"reportLabel":"August 12, 2026","throughLabel":"June 30, 2026","month":"June","monthYear":"June 2026","marketLabel":"July 31, 2026","histRange":"July 2016 – June 2026","url":"https://www.lacera.gov/sites/default/files/assets/documents/financials/cio_report/CIO-Monthly-Report-Aug-2026.pdf","macroLabel":"July 31, 2026"};
   let PRIOR = {"reportLabel":"July 8, 2026","monthYear":"May 2026","ENT":{"pension":{"mv":93948,"comps":{"growth":45822,"credit":11760,"ra":13658,"rrm":22158},"other":549},"opeb":{"mv":6264,"comps":{"growth":2840,"credit":989,"ra":756,"rrm":1678},"other":null}}};
+  let NETPOS = {"page":21,"unit":"$ millions","scope":"LACERA Pension Plan","investmentBookFy":{"label":"FY2026","mm":8731},"months":[{"m":"2025-07","v":-326},{"m":"2025-08","v":880},{"m":"2025-09","v":1168},{"m":"2025-10","v":846},{"m":"2025-11","v":745},{"m":"2025-12","v":-123},{"m":"2026-01","v":1350},{"m":"2026-02","v":1307},{"m":"2026-03","v":-2457},{"m":"2026-04","v":2651},{"m":"2026-05","v":1664},{"m":"2026-06","v":136}],"trend":[{"fy":"FY2026","bn":7.8,"up":9,"down":3},{"fy":"FY2025","bn":7,"up":9,"down":3},{"fy":"FY2024","bn":5.2,"up":8,"down":4}],"components":["Employee and employer contributions","Net investment income or loss","Benefits and refunds","Administrative expenses and miscellaneous"]};
   /* ==== END SHARED DATA ==== */
   /* ---- dashboard feed: presented inside the dashboard (?embed=1), the deck takes the report on screen
      from the parent window; a presenter window takes whatever its opener shows. Text is stripped of
@@ -966,7 +1017,7 @@
     if (EMBEDDED) window.parent.postMessage({ type: 'lacera-deck-state', slide: cur + 1, entity }, location.origin);
     if (pvHook) pvHook();
   }
-  const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc']], ['Context', ['hist', 'market', 'geo']], ['Attention', ['ops']]];
+  const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc', 'netpos']], ['Context', ['hist', 'market', 'geo']], ['Attention', ['ops']]];
   const ACT_ASKS = {
     'Where we stand': 'Did the fund earn its policy benchmark and the actuarial hurdle, and what is it worth?',
     'Why': 'Which composites account for the gap against the benchmark?',
@@ -1793,6 +1844,67 @@
     apply(groups[0]);
   })();
 
+  /* ============ change in fiduciary net position ============ */
+  (function netPosSlide() {
+    const host = $('#np-chart'), fy = $('#np-fy'), note = $('#np-note'), finding = $('#np-finding');
+    if (!host) return;
+    const NP = typeof NETPOS !== 'undefined' ? NETPOS : null;
+    if (!NP) {
+      host.innerHTML = '<div class="empty-note">The change in fiduciary net position is carried for the latest report only; this report\u2019s page is not transcribed.</div>';
+      if (fy) fy.innerHTML = '';
+      if (note) note.textContent = '';
+      if (finding) finding.textContent = 'Not carried for this report';
+      return;
+    }
+    const monthName = m => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(m.slice(5)) - 1] + ' ' + m.slice(2, 4);
+    const vals = NP.months.map(m => m.v);
+    const hi = Math.max(0, ...vals), lo = Math.min(0, ...vals);
+    // the bottom band holds the month row plus headroom for a label under the deepest bar
+    const step = 1000, H = 336, BOT = 34, TOP = 16, usable = H - BOT - TOP;
+    const ppu = usable / ((hi - lo) || 1), zero = BOT + (-lo) * ppu;
+    let html = '';
+    for (let g = Math.ceil(lo / step) * step; g <= hi + 1; g += step) {
+      const y = BOT + (g - lo) * ppu;
+      html += '<div class="' + (g === 0 ? 'np-zero' : 'np-grid') + '" style="bottom:' + y + 'px"></div>';
+      html += '<div class="np-gl" style="bottom:' + y + 'px">' + (g === 0 ? '0' : money(g / 1000) + 'B') + '</div>';
+    }
+    html += '<div class="np-cols">';
+    const w = 100 / NP.months.length;
+    NP.months.forEach((m, i) => {
+      const h = Math.abs(m.v) * ppu, up = m.v >= 0;
+      html += '<div class="np-c" style="left:calc(' + (i * w) + '% + ' + (w / 2) + '% - 22px)">' +
+        '<div class="np-bar ' + (up ? 'up' : 'down') + '" style="--d:' + (i * 0.05) + 's;bottom:' + (up ? zero : zero - h) + 'px;height:' + h + 'px"></div>' +
+        '<div class="np-v" style="bottom:' + (up ? zero + h + 4 : zero - h - 17) + 'px">' + money(m.v) + '</div>' +
+        '<div class="np-m" style="bottom:0">' + monthName(m.m) + '</div></div>';
+    });
+    host.innerHTML = html + '</div>';
+
+    fy.innerHTML = '<h3>Total net position change</h3><div class="sub">$ billions, by fiscal year</div>' +
+      NP.trend.map(t => '<div class="np-row"><div class="fy">' + t.fy + '</div><div class="bn">' +
+        (t.bn < 0 ? '\u2212$' : '$') + Math.abs(t.bn).toFixed(1) + 'B</div>' +
+        '<div class="mo">' + t.up + ' months added \u00b7 ' + t.down + ' took away</div></div>').join('') +
+      '<p class="np-note">The page stacks ' + NP.components.map(c => c.toLowerCase()).join(', ') +
+      ' behind this line, printing no figure for any of them, so only the net is carried here.</p>';
+
+    const worst = NP.months.reduce((a, b) => (b.v < a.v ? b : a));
+    const total = NP.months.reduce((t, m) => t + m.v, 0);
+    finding.textContent = 'The fiscal year added ' + money(total / 1000) + ' billion: ' +
+      NP.trend[0].up + ' months added, ' + NP.trend[0].down + ' took away; ' +
+      monthName(worst.m) + ' alone took away ' + money(Math.abs(worst.v)) + ' mm';
+    const scope = $('#np-scope');
+    if (scope) scope.textContent = NP.scope;
+    // the printed header follows this rather than the entity on screen
+    const sl = host.closest('.slide');
+    if (sl) sl.dataset.scope = NP.scope;
+    note.innerHTML = 'Additions are employer and employee contributions and net investment income; ' +
+      'deductions are benefits, refunds and administrative expenses. Unaudited, as the report states.<br>' +
+      'This is the plan\u2019s fiduciary net position, an accounting measure. It is not the change in ' +
+      'the market value the other slides show: on the investment book the fund moved ' +
+      money(NP.investmentBookFy.mm / 1000) + ' billion over the same ' + NP.investmentBookFy.label +
+      '. The report prints this page once, outside its Total Fund and OPEB sections, so it does not ' +
+      'follow the entity chosen below.';
+  })();
+
   /* ============ printed document: cover, then each slide with its figures page ============
      Built from the data the slides are drawn from, so a reader can check any number on the slide
      it follows: the table, the report pages it came from, and how each figure is classified. */
@@ -1852,6 +1964,26 @@
             .concat(e.other ? [[e.other.n, money(e.other.mv), pct(e.other.pct), 'no target', '—', e.other.flow == null ? 'not supplied' : money(e.other.flow)]] : [])
             .concat([['Net flow', '', '', '', '', e.netflow == null ? 'not supplied' : money(e.netflow)]])) +
           (e.overlays ? tbl(['Overlay program', VINTAGE.month + ' gain ($ mm)', 'Since inception ($ mm)'], e.overlays.map(o => [o.n, money(o.may), money(o.si)])) : '');
+      }
+      if (id === 'netpos') {
+        if (typeof NETPOS === 'undefined' || !NETPOS) {
+          return '<p class="pp-kv">The change in fiduciary net position was not transcribed for this report.</p>';
+        }
+        const mn = m => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(m.slice(5)) - 1] + ' ' + m.slice(0, 4);
+        const tot = NETPOS.months.reduce((t, m) => t + m.v, 0);
+        return '<p class="pp-kv">' + esc(NETPOS.scope) + ' \u00b7 report p. ' + NETPOS.page +
+          ' \u00b7 transcribed from the page, which is an image in the PDF.</p>' +
+          tbl(['Month', 'Additions less deductions (' + NETPOS.unit + ')'],
+            NETPOS.months.map(m => [mn(m.m), money(m.v)])
+              .concat([['Fiscal year, summed', money(tot)]])) +
+          tbl(['Fiscal year', 'Total net position change ($ B)', 'Months that added', 'Months that took away'],
+            NETPOS.trend.map(t => [t.fy, (t.bn < 0 ? '\u2212$' : '$') + Math.abs(t.bn).toFixed(1) + 'B', String(t.up), String(t.down)])) +
+          tbl(['Basis', 'Change'],
+            [['Fiduciary net position (accounting book), ' + NETPOS.trend[0].fy, money(tot) + ' mm'],
+             ['Investment book market value, ' + NETPOS.investmentBookFy.label, money(NETPOS.investmentBookFy.mm) + ' mm'],
+             ['Difference (calculated)', money(NETPOS.investmentBookFy.mm - tot) + ' mm']]) +
+          '<p class="pp-kv">The page stacks ' + esc(NETPOS.components.join('; ').toLowerCase()) +
+          ' behind the net line and prints no figure for any of them, so they are not carried here.</p>';
       }
       if (id === 'hist') {
         if (!e.hist) return '<p class="pp-kv">The return distribution was not supplied for this report.</p>';
@@ -1949,7 +2081,7 @@
           src = c.textContent.replace(/\s+/g, ' ').trim() + (labels ? ' Data labels: ' + labels + '.' : '');
         }
         const p = page('pp-data',
-          '<h3>Slide ' + (i + 1) + ' · figures behind the slide</h3><h2>' + esc(sl.dataset.title) + ' — ' + esc(e.short) + '</h2>' +
+          '<h3>Slide ' + (i + 1) + ' · figures behind the slide</h3><h2>' + esc(sl.dataset.title) + ' — ' + esc(sl.dataset.scope || e.short) + '</h2>' +
           fig + '<div class="pp-meta">' + (src ? '<p>' + esc(src) + '</p>' : '') + notes + '</div>');
         sl.after(p);
         // a tab that draws a different picture becomes its own page, before the figures

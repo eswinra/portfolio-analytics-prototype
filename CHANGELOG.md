@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-09-20 — Revision 31: the change in fiduciary net position
+
+- **The page the deck did not have.** The report's page 21 — what the fund took in and what it paid
+  out, month by month across the fiscal year, with the three fiscal years beside it — is now slide
+  8, between allocation and the return distribution. A column per month above or below the zero
+  line, each labelled and signed; the fiscal years as figures, with the months that added and the
+  months that took away.
+- **Typed, because the page is a picture.** Page 21 is an image in the PDF, so nothing can be
+  extracted from it. The figures are read from the page into `NET_POSITION`, and the two figures
+  printed beside them hold the reading to account: the twelve months add to the printed fiscal-year
+  total ($7,841mm against $7.8B) and their signs give the printed month counts (9 added, 3 took
+  away). Both are unit tests. Only the net line is carried — the page stacks contributions, net
+  investment income, benefits and administrative expenses behind it and prints no figure for any of
+  them, and the slide says so rather than implying a split it cannot show.
+- **Whose net position it is, established rather than assumed.** The report prints this page once,
+  in section 04, with no entity heading and no OPEB counterpart. Scale settles it: the year's months
+  add to $7,841mm, while the entire OPEB Master Trust moved $1,421mm over the same year. The slide
+  carries a fixed scope chip — `LACERA Pension Plan` — instead of the entity chip, does not follow
+  the entity toggle, and says so on the page. The reasoning is a unit test reading the market values
+  the reports themselves print, so it is re-run rather than inherited.
+- **The two books kept apart.** This is the plan's fiduciary net position, an accounting measure.
+  Over the same fiscal year the investment-book market value moved $8,731mm. The slide names the
+  difference so that $7.8B is not read as the change in market value, and the figures page sets the
+  two bases against each other with the $890mm difference marked `calculated`.
+- A slide that is not drawn per entity now sets `data-scope`, and the printed header follows it
+  instead of the fund on screen — general, rather than a branch for this one page.
+- The contents slide picked the new page up on its own, as it is built from the sections.
+- Verification: lint · format · Vitest 484/484 (7 new) · build · Playwright 150/150 runnable · both
+  PDFs regenerated at 24 pages · the slide and both printed pages checked in the browser and in the
+  OPEB PDF, where the scope note has to do its work.
+
 ## 2026-09-19 — Revision 30: the items table and the bars
 
 - **Status is a marker and a word.** The five pastel pills — each with its own fill, border and

@@ -479,8 +479,8 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     // the deck's own cover and contents slides open the document; every other slide is
     // followed by its tab snapshots and its figures page
     expect(doc.order.slice(0, 2)).toEqual(['slide', 'slide']);
-    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(11);
-    expect(doc.order.filter((p) => p === 'figures')).toHaveLength(9);
+    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(12);
+    expect(doc.order.filter((p) => p === 'figures')).toHaveLength(10);
     // a tab that draws a different picture is its own page, right after its slide
     expect(doc.variants).toEqual(['Tab: excess vs. benchmark', 'Tab: sorted by return']);
     doc.order.forEach((p, i) => {
@@ -497,8 +497,12 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     expect(doc.pages[1]).toContain('$45,687');
     expect(doc.pages[1]).toContain('Data labels: reported_public · calculated');
     expect(doc.pages[4]).toContain('Net flow');
-    expect(doc.pages[6]).toContain('U.S. Large Cap');
-    expect(doc.pages[8]).toContain('Risk system onboarding');
+    // the net position page names its own scope and keeps the two books apart
+    expect(doc.pages[5]).toContain('LACERA Pension Plan');
+    expect(doc.pages[5]).toContain('Fiscal year, summed');
+    expect(doc.pages[5]).toContain('Investment book market value');
+    expect(doc.pages[7]).toContain('U.S. Large Cap');
+    expect(doc.pages[9]).toContain('Risk system onboarding');
     // and they are landscape slide-sized pages, like the slides
     const size = await page.locator('.pp-data').first().boundingBox();
     expect([Math.round(size!.width), Math.round(size!.height)]).toEqual([1280, 720]);
@@ -536,7 +540,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     // the page's arrow keys step the slides without clicking into them: the deck opens on its
     // cover, so two presses reach the executive read and the next two build it
     for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
-    await expect(deck.locator('#counter')).toHaveText('3 / 11');
+    await expect(deck.locator('#counter')).toHaveText('3 / 12');
     await expect(deck.locator('.v-report').first()).toHaveText('August 12, 2026');
     // inside the dashboard the deck does not link back to it
     await expect(deck.locator('#dash-link')).toBeHidden();
@@ -565,7 +569,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
       'true',
     );
     const deck = page.frameLocator('.deck-frame-wrap iframe');
-    await expect(deck.locator('#counter')).toHaveText('5 / 11');
+    await expect(deck.locator('#counter')).toHaveText('5 / 12');
   });
 
   test('selecting an earlier report moves the masthead, band and panels together', async ({

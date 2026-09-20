@@ -1,3 +1,5 @@
+import { NET_POSITION } from '../fixtures/cioMonthly.data';
+
 import {
   BINS,
   CIO_LATEST,
@@ -52,6 +54,8 @@ export function deckDataFor(
   return sanitizeDeckData({
     // the month before, for slide 2's value bridge — published reports only: a template file or
     // an imported feed is not part of the series, and its month must not be bridged to one
+    // the net position page is transcribed for the latest report only, like the editorial pages
+    NETPOS: latest ? NET_POSITION : null,
     PRIOR: opts.feed || pkg ? null : deckPrior(v),
     PERIODS,
     ENT: v.ENT,

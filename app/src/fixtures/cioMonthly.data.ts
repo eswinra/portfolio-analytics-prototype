@@ -1,5 +1,5 @@
 import type { MacroLine, MacroNotes } from '../lib/cioMacro';
-import type { OpsStatus } from './cioMonthly';
+import type { CioNetPosition, OpsStatus } from './cioMonthly';
 
 /**
  * Editorial content of the CIO Monthly Report — the parts a reader writes rather than a table
@@ -72,6 +72,53 @@ export const MACRO_TYPED: MacroLine[] = [
 ];
 
 /** August 12, 2026 report, p. 19 (initiatives, personnel), p. 20 (manager updates), p. 24 (quiet period). */
+/** Change in Fiduciary Net Position, p. 21 — TRANSCRIBED from the page, which is an image in
+ *  the PDF. `reported_public`: these are the report's own printed figures, read from its chart.
+ *  The transcription is checked in cioMonthly.test.ts against the two figures printed beside
+ *  them: the months add to the fiscal-year total, and their signs give the month counts. The
+ *  page's stacked components (contributions, net investment income, benefits and refunds,
+ *  administrative expenses) carry no printed numbers, so only the net line is carried. */
+export const NET_POSITION: CioNetPosition = {
+  page: 21,
+  unit: '$ millions',
+  // The page sits in section 04 (Portfolio and Structural), not under Total Fund or OPEB, and the
+  // report gives it no entity heading. Scale settles it: the year's months add to $7,841mm, while
+  // the whole OPEB Master Trust moved $1,421mm over the same year (pp. 13, 16 of this report and
+  // of the August 2025 report). `calculated` from the report's own figures, not printed.
+  scope: 'LACERA Pension Plan',
+  // The same fiscal year on the investment book: pension market value $85,185mm at June 30, 2025
+  // (August 13, 2025 report, p. 8) to $93,916mm at June 30, 2026 (this report, p. 8). It differs
+  // from the net position change because it is a different book, which the slide says plainly.
+  investmentBookFy: { label: 'FY2026', mm: 8731 },
+  // "Total Additions and Deductions in Fiduciary Net Position", month by month
+  months: [
+    { m: '2025-07', v: -326 },
+    { m: '2025-08', v: 880 },
+    { m: '2025-09', v: 1168 },
+    { m: '2025-10', v: 846 },
+    { m: '2025-11', v: 745 },
+    { m: '2025-12', v: -123 },
+    { m: '2026-01', v: 1350 },
+    { m: '2026-02', v: 1307 },
+    { m: '2026-03', v: -2457 },
+    { m: '2026-04', v: 2651 },
+    { m: '2026-05', v: 1664 },
+    { m: '2026-06', v: 136 },
+  ],
+  // "Total Net Position Change Trend", $ billions, with the months that added and took away
+  trend: [
+    { fy: 'FY2026', bn: 7.8, up: 9, down: 3 },
+    { fy: 'FY2025', bn: 7.0, up: 9, down: 3 },
+    { fy: 'FY2024', bn: 5.2, up: 8, down: 4 },
+  ],
+  components: [
+    'Employee and employer contributions',
+    'Net investment income or loss',
+    'Benefits and refunds',
+    'Administrative expenses and miscellaneous',
+  ],
+};
+
 export const OPS: { e: string; item: string; st: OpsStatus; p: number }[] = [
   {
     e: 'Total Fund',

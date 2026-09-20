@@ -127,7 +127,28 @@ export interface DeckPrior {
   >;
 }
 
+/** The report's Change in Fiduciary Net Position page: what the fund took in and paid out each
+ *  month of the fiscal year, and the fiscal years before it. Transcribed from the page (it is an
+ *  image in the PDF) and checked against the totals printed beside it. */
+export interface CioNetPosition {
+  page: number;
+  unit: string;
+  /** whose net position this is. The report prints the page once, outside the Total Fund and
+   *  OPEB sections, so it does not follow the deck's entity toggle. */
+  scope: string;
+  /** the same fiscal year on the investment book, for the note that keeps the two apart */
+  investmentBookFy: { label: string; mm: number };
+  /** one entry per month of the fiscal year, oldest first; `v` is the net change */
+  months: { m: string; v: number }[];
+  /** the fiscal years the page charts, newest first, in $ billions */
+  trend: { fy: string; bn: number; up: number; down: number }[];
+  /** what the page stacks behind the net line, without printing a figure for any of them */
+  components: string[];
+}
+
 export interface CioDeckData {
+  /** the Change in Fiduciary Net Position page, for the report that carries it */
+  NETPOS: CioNetPosition | null;
   PRIOR: DeckPrior | null;
   PERIODS: string[];
   ENT: { pension: CioEntity; opeb: CioEntity };

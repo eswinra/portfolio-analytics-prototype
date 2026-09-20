@@ -222,7 +222,7 @@ slides, with every build shown.
 
 | How | What |
 |---|---|
-| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 22 landscape pages |
+| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 24 landscape pages |
 | `npm run deck:pdf` (from `app/`) | Both funds, into `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf`; `-- --fund opeb` for one, `-- --out <dir>` elsewhere |
 
 A tab that draws a different picture — the performance slide's excess view, the market slide
@@ -239,10 +239,39 @@ deck), so they cannot drift from the picture:
 | 3 Executive read · 4 Fund at a glance | Fund lines, the composites with weights, targets and returns — and, for slide 4, the indicative contribution and the month's flows the drill-down shows |
 | 5 Performance vs. policy · 6 Where the gap came from | Every composite over all eight periods: return, benchmark, calculated excess, the hurdle for the fund, and the indicative contribution to excess |
 | 7 Allocation and flows | Market value, weight, target, drift and flow by composite, the net flow, and the overlay programs |
-| 8 Return distribution | The 14 bins with their month counts, and the printed statistics |
-| 9 Market context | The market table over all periods, and the macro strip with its detail |
-| 10 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
-| 11 Items for attention | Every item as printed, with its status and report page |
+| 8 Change in fiduciary net position | The twelve months, their sum, the three fiscal years with their month counts, and the two books side by side |
+| 9 Return distribution | The 14 bins with their month counts, and the printed statistics |
+| 10 Market context | The market table over all periods, and the macro strip with its detail |
+| 11 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
+| 12 Items for attention | Every item as printed, with its status and report page |
+
+### The change in fiduciary net position (slide 8)
+
+The report's page 21 is a picture in the PDF, so nothing can be extracted from it. Its figures are
+read from the page and typed into `NET_POSITION` in `app/src/fixtures/cioMonthly.data.ts`, and two
+figures printed beside them hold the reading to account: the twelve months add to the fiscal year's
+printed total ($7,841mm against $7.8B), and their signs give the printed month counts (9 added, 3
+took away). Both are unit tests, so a slip in the typing fails the build instead of reaching a
+slide. Only the net line is carried — the page stacks contributions, net investment income,
+benefits and administrative expenses behind it but prints no figure for any of them, and the slide
+says so rather than implying a split it cannot show.
+
+Two things about this page differ from every other slide, and the slide states both:
+
+- **It is not drawn per entity.** The report prints it once, in section 04 (Portfolio and
+  Structural), with no entity heading and no OPEB counterpart. Which plan it belongs to is settled
+  by scale, not assumption: the year's months add to $7,841mm, while the whole OPEB Master Trust's
+  market value moved $1,421mm over the same year. The fixture records the scope, the slide shows it
+  as a fixed chip instead of the entity chip, and the slide does not follow the entity toggle. A
+  slide that opts out this way sets `data-scope`, which the printed header follows.
+- **It is a different book.** This is the plan's fiduciary net position, an accounting measure. The
+  investment-book market value the rest of the deck shows moved $8,731mm over the same fiscal year
+  (pension market value at each June 30, from the reports themselves). The slide names the
+  difference rather than letting $7.8B be read as the change in market value, and the figures page
+  sets the two bases against each other with the difference marked `calculated`.
+
+Only the latest report carries this page in the deck; earlier reports show "not carried for this
+report", as they do for other pages a vintage does not supply.
 
 The cover states what the deck is and what it is not, the contents page says what each section
 answers and which slides it holds, and every page keeps the footer disclosure.

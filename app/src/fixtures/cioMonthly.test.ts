@@ -20,6 +20,7 @@ import {
   type CioEntity,
   type CioVintage,
 } from './cioMonthly';
+import { NET_POSITION } from './cioMonthly.data';
 import { DECK_BLOCK_BEGIN, DECK_BLOCK_END, deckDataBlock } from './deckData';
 
 /** The CIO Monthly figures are quoted literals extracted from the public PDFs. As with
@@ -218,6 +219,74 @@ describe('macro strip: FRED as known on each report’s date', () => {
     ]);
     expect(MACRO[0]!.v).toBe('3.7% y/y');
     expect(MACRO[1]!.s).toMatch(/^In effect since Dec 11, 2025 \(FRED · Federal Reserve\)\. Fifth/);
+  });
+});
+
+describe('change in fiduciary net position (transcribed from p. 21)', () => {
+  // the page is an image in the PDF, so its figures are typed in; these are the checks the page
+  // prints beside them, and they fail the build rather than a slide
+  it('the months add to the fiscal-year total printed beside them', () => {
+    const fy = NET_POSITION.trend[0]!;
+    const sum = NET_POSITION.months.reduce((t, m) => t + m.v, 0);
+    expect(Math.abs(sum / 1000 - fy.bn), `${sum} mm vs ${fy.bn} bn`).toBeLessThanOrEqual(0.05);
+  });
+
+  it('their signs give the months that added and took away', () => {
+    const fy = NET_POSITION.trend[0]!;
+    expect(NET_POSITION.months.filter((m) => m.v > 0)).toHaveLength(fy.up);
+    expect(NET_POSITION.months.filter((m) => m.v < 0)).toHaveLength(fy.down);
+  });
+
+  it('covers the fiscal year the report ends in, month by month', () => {
+    expect(NET_POSITION.months).toHaveLength(12);
+    expect(NET_POSITION.months[0]!.m.slice(5)).toBe('07');
+    expect(NET_POSITION.months.at(-1)!.m).toBe(CIO_LATEST.dataThrough.slice(0, 7));
+    for (let i = 1; i < NET_POSITION.months.length; i++) {
+      const prev = NET_POSITION.months[i - 1]!.m;
+      const y = Number(prev.slice(0, 4));
+      const mo = Number(prev.slice(5));
+      const next = mo === 12 ? `${y + 1}-01` : `${y}-${String(mo + 1).padStart(2, '0')}`;
+      expect(NET_POSITION.months[i]!.m).toBe(next);
+    }
+  });
+
+  it('every fiscal year on the trend accounts for twelve months', () => {
+    for (const t of NET_POSITION.trend) expect(t.up + t.down).toBe(12);
+    expect(NET_POSITION.page).toBeGreaterThan(0);
+  });
+
+  // The report prints this page outside its Total Fund and OPEB sections and gives it no entity
+  // heading. Which plan it belongs to was settled by scale, against the market values the reports
+  // themselves print, so that reasoning is re-run here rather than left in a comment.
+  const fyEnd = (through: string, k: 'pension' | 'opeb'): number => {
+    const v = CIO_VINTAGES.find((x) => x.dataThrough === through);
+    if (!v) throw new Error(`no vintage through ${through}`);
+    const e = v.ENT[k];
+    if (!e) throw new Error(`no ${k} in the vintage through ${through}`);
+    return e.mv;
+  };
+
+  it('the investment-book comparison is the market values the reports print', () => {
+    const moved = fyEnd('2026-06-30', 'pension') - fyEnd('2025-06-30', 'pension');
+    expect(NET_POSITION.investmentBookFy.mm).toBeCloseTo(moved, 0);
+    expect(NET_POSITION.investmentBookFy.label).toBe(NET_POSITION.trend[0]!.fy);
+  });
+
+  it('the year is the pension plan’s, not the OPEB trust’s', () => {
+    const sum = NET_POSITION.months.reduce((t, m) => t + m.v, 0);
+    const opeb = fyEnd('2026-06-30', 'opeb') - fyEnd('2025-06-30', 'opeb');
+    // the whole OPEB trust moved a fraction of this; the pension plan moved about this much
+    expect(Math.abs(sum)).toBeGreaterThan(Math.abs(opeb) * 3);
+    expect(Math.abs(sum - NET_POSITION.investmentBookFy.mm)).toBeLessThan(
+      Math.abs(NET_POSITION.investmentBookFy.mm) * 0.2,
+    );
+    expect(NET_POSITION.scope).toMatch(/pension/i);
+  });
+
+  it('the two books are kept apart, not treated as one figure', () => {
+    const sum = NET_POSITION.months.reduce((t, m) => t + m.v, 0);
+    // they are different measures of the same year; a fixture that made them equal would be wrong
+    expect(sum).not.toBe(NET_POSITION.investmentBookFy.mm);
   });
 });
 
