@@ -112,6 +112,7 @@
   .hd .finding { margin: 8px 0 0; font-size: 15.5px; font-weight: 700; line-height: 1.25; color: #fff; max-width: 1000px; }
   .hd .asof { flex: none; align-self: flex-start; margin-top: 4px; text-align: right; font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.82); }
   .hd .asof b { display: block; color: #fff; font-size: 13px; }
+  .hd .datekey { margin: 7px 0 0; font-size: 11.5px; font-weight: 400; line-height: 1.35; color: rgba(255,255,255,.72); }
   .slide.active .hd h2, .slide.active .hd .finding { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
   .slide.active .hd .finding { animation-delay: .12s; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
@@ -399,6 +400,23 @@
   }
 
   /* ---------- print: one slide per landscape page, every build shown complete ---------- */
+  /* cover and contents: the deck opens the way the report does */
+  .slide.cover { background: var(--navy); }
+  .cover .cv { position: absolute; left: 76px; right: 76px; top: 150px; }
+  .cover .cv-rule { width: 240px; height: 7px; background: var(--rule); margin: 0 0 30px; }
+  .cover h1 { margin: 0 0 14px; font-size: 52px; line-height: 1.1; color: #fff; font-weight: 700; letter-spacing: -0.01em; }
+  .cover .cv-sub { margin: 0 0 8px; font-size: 21px; color: #C7D3E2; }
+  .cover .cv-dates { margin: 0; font-size: 15px; color: #9FB0C6; line-height: 1.6; }
+  .cover .cv-note { position: absolute; left: 76px; right: 76px; bottom: 96px; font-size: 12.5px; color: #8FA0B8; line-height: 1.5; max-width: 96ch; }
+  .cover .cv-note b { color: #C7D3E2; }
+  .contents .toc { display: grid; gap: 10px; margin-top: 4px; }
+  .toc-row { display: grid; grid-template-columns: 182px 1fr 92px; align-items: baseline; gap: 18px; width: 100%; text-align: left; font: inherit; background: var(--tint); border: 1px solid var(--line); border-left: 5px solid var(--blue); padding: 11px 16px; cursor: pointer; }
+  .toc-row:hover { border-color: var(--blue); }
+  .toc-row:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .toc-act { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: .01em; }
+  .toc-what { font-size: 13px; color: var(--cat); line-height: 1.45; }
+  .toc-what b { color: var(--ink); font-weight: 700; }
+  .toc-pages { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
   .empty-note { position: absolute; left: 40px; right: 40px; top: 40%; text-align: center; font-size: 18px; color: var(--muted); }
   body.embedded .stage { box-shadow: 0 6px 24px rgba(0,0,0,.22); }
   @media print {
@@ -441,10 +459,6 @@
   .pp .pp-meta p { margin: 0 0 4px; }
   .pp .pp-meta code { font-family: Consolas, "Courier New", monospace; font-size: 10px; }
   .pp .ft { position: absolute; left: 0; right: 0; bottom: 0; }
-  .pp-cover .pp-rule { height: 6px; background: var(--rule); margin: 0 0 22px; width: 220px; }
-  .pp-cover .pp-big { font-size: 40px; line-height: 1.15; color: var(--navy); font-weight: 700; margin: 0 0 10px; }
-  .pp-cover .pp-sub { font-size: 16px; color: var(--cat); margin: 0 0 26px; }
-  .pp-cover .pp-note { font-size: 12.5px; color: var(--cat); line-height: 1.55; max-width: 92ch; margin: 0 0 14px; }
 </style>
 </head>
 <body>
@@ -469,12 +483,44 @@
     </div>
     <div class="stage" id="stage">
 
-      <!-- 1 · executive read -->
+      <!-- 1 · cover -->
+      <section class="slide cover" data-title="Cover" data-id="cover">
+        <div class="cv">
+          <div class="cv-rule"></div>
+          <h1>Chief Investment Officer<br>Monthly Report</h1>
+          <p class="cv-sub" id="cv-fund"></p>
+          <p class="cv-dates" id="cv-dates"></p>
+        </div>
+        <p class="cv-note" id="cv-note"></p>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg"></span></div>
+      </section>
+
+      <!-- 2 · contents -->
+      <section class="slide contents" data-title="What this covers" data-id="contents">
+        <div class="hd">
+          <div>
+            <h2>What this covers</h2>
+            <p class="finding" id="toc-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>Net of fees · USD<br>Board of Investments, <span class="v-report"></span><span class="ent-chip"></span></div>
+        </div>
+        <div class="bd">
+          <div class="toc" id="toc"></div>
+          <div class="nb">
+            <div class="note">Each section answers one question. Choose a line to go there, or use the section strip under the slide.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>. The sections follow this deck; the report's own order is market environment, fund performance and risk, OPEB, portfolio and structural updates.<br><span class="cls">reported_public · calculated</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg"></span></div>
+      </section>
+
+      <!-- 3 · executive read -->
       <section class="slide" data-title="Executive read" data-id="exec" data-frags="3">
         <div class="hd">
           <div>
             <h2 id="s1-title">Chief Investment Officer Monthly Report — Executive read</h2>
             <p class="finding" id="s1-finding">&nbsp;</p>
+            <p class="datekey" id="s1-dates"></p>
           </div>
           <div class="asof"><b>As of <span class="v-through"></span></b>Net of fees · USD<br>Board of Investments, <span class="v-report"></span><span class="ent-chip" id="s1-ent"></span></div>
         </div>
@@ -559,7 +605,7 @@
             <div class="tablev" id="perf-table"></div>
           </div>
           <div class="nb">
-            <div class="note" id="perf-note"><span class="buildhint" id="buildhint"></span></div>
+            <div class="note" id="perf-note"><span class="buildhint" id="buildhint"></span><span id="perf-fy"></span></div>
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 9 (Pension) and p. 14 (OPEB). Excess = net return − policy benchmark, calculated in percentage points.<br><span class="cls">reported_public · calculated</span></div>
           </div>
         </div>
@@ -698,7 +744,7 @@
             <div class="tablev" id="mkt-table"></div>
           </div>
           <div class="nb">
-            <div class="note"><span class="buildhint" id="mkt-hint"></span> Public index moves are context for the Fund's benchmark-relative results, not a measure of them.</div>
+            <div class="note"><span class="buildhint" id="mkt-hint"></span> Public index moves are context for the Fund's benchmark-relative results, not a measure of them. <span id="mkt-fy"></span></div>
             <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, pp. 4–6 (Bloomberg, State Street, St. Louis Fed)<span id="macro-src"></span>. ¹NCREIF ODCE (net) is the latest available quarter.<br><span class="cls">reported_public</span></div>
           </div>
         </div>
@@ -878,6 +924,19 @@
     });
     NOTES.forEach((n, i) => { NOTES[i] = '<p><b>' + L.kind.charAt(0).toUpperCase() + L.kind.slice(1) + '.</b> These notes describe the published report; the figures on this slide come from ' + L.name + ', which is not published.</p>' + n; });
   }
+  // the three dates a CIO report carries, so the month on this slide is never read as the
+  // month the report was presented, or as the month the market table covers
+  (function dateKey() {
+    const el = $('#s1-dates');
+    if (!el) return;
+    const bits = ['Fund figures through ' + VINTAGE.throughLabel];
+    if (VINTAGE.marketLabel) bits.push('markets and macro as of ' + VINTAGE.marketLabel);
+    bits.push(VINTAGE.local
+      ? 'from a ' + VINTAGE.local.kind + ' (' + VINTAGE.local.name + '), not published'
+      : 'presented to the Board of Investments ' + VINTAGE.reportLabel);
+    el.textContent = bits.join(' · ');
+  })();
+
   const isPresenter = new URLSearchParams(location.search).has('presenter');
   const bc = ('BroadcastChannel' in window && location.protocol !== 'file:') ? new BroadcastChannel('cio-decision-deck') : null;
   const send = cmd => { if (bc) bc.postMessage({ type: 'cmd', cmd }); };
@@ -887,6 +946,13 @@
     if (pvHook) pvHook();
   }
   const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc']], ['Context', ['hist', 'market', 'geo']], ['Attention', ['ops']]];
+  const ACT_ASKS = {
+    'Where we stand': 'Did the fund earn its policy benchmark and the actuarial hurdle, and what is it worth?',
+    'Why': 'Which composites account for the gap against the benchmark?',
+    'Positioning': 'Is the fund where policy says it should be, and where did money move?',
+    'Context': 'What kind of month was it, and what were markets doing around it?',
+    'Attention': 'What needs a decision, a watch, or a note for the record?',
+  };
 
   function fit() {
     const vp = $('.viewport').getBoundingClientRect();
@@ -959,6 +1025,46 @@
   }
   $('#acts').innerHTML = ACTS.map((a, i) => '<button class="act" data-i="' + i + '">' + a[0] + '<small>' + a[1].map(id => slides[idx(id)].dataset.title).join(' · ') + '</small></button>').join('');
   $$('#acts .act').forEach(b => b.addEventListener('click', () => go(idx(ACTS[+b.dataset.i][1][0]))));
+
+  // the cover and the contents, written from the report's own labels and this deck's sections
+  (function opening() {
+    const fund = $('#cv-fund'), dates = $('#cv-dates'), note = $('#cv-note'), toc = $('#toc');
+    const label = () => (ENT[entity] || ENT.pension).name;
+    function fill() {
+      if (fund) fund.textContent = label() + ' \u00b7 decision deck';
+      if (dates) {
+        dates.innerHTML = 'Fund figures through <b style="color:#fff">' + VINTAGE.throughLabel + '</b>' +
+          (VINTAGE.marketLabel ? '<br>Markets and macro as of ' + VINTAGE.marketLabel : '') +
+          '<br>' + (VINTAGE.local
+            ? 'From a ' + VINTAGE.local.kind + ' (' + VINTAGE.local.name + '), not published'
+            : 'Presented to the Board of Investments ' + VINTAGE.reportLabel);
+      }
+      if (note) {
+        note.innerHTML = '<b>This deck is not an official LACERA publication.</b> It presents public figures from the ' +
+          'Chief Investment Officer Monthly Report named above; differences, sums and shares are calculated from those ' +
+          'figures and labelled where they appear. It is not a performance report, an audit product, or a statement of endorsement.';
+      }
+      if ($('#toc-finding')) {
+        $('#toc-finding').textContent = 'Five sections, ' + (slides.length - 2) + ' slides: where the fund stands, why, how it is positioned, the context around it, and what needs attention';
+      }
+    }
+    if (toc) {
+      toc.innerHTML = ACTS.map(a => {
+        const ids = a[1], first = idx(ids[0]) + 1, last = idx(ids[ids.length - 1]) + 1;
+        return '<button class="toc-row" data-go="' + ids[0] + '">' +
+          '<span class="toc-act">' + a[0] + '</span>' +
+          '<span class="toc-what"><b>' + ids.map(id => slides[idx(id)].dataset.title).join(' \u00b7 ') + '</b><br>' + (ACT_ASKS[a[0]] || '') + '</span>' +
+          '<span class="toc-pages">' + (first === last ? 'Slide ' + first : 'Slides ' + first + '\u2013' + last) + '</span></button>';
+      }).join('');
+      $$('.toc-row', toc).forEach(b => b.addEventListener('click', () => go(idx(b.dataset.go))));
+    }
+    fill();
+    entityHooks.push(fill);
+  })();
+
+  // page numbers follow the slide's place in the deck, so adding one never leaves a stale number
+  slides.forEach((sl, i) => { const pg = $('.ft .pg', sl); if (pg) pg.textContent = String(i + 1); });
+
   function toggleFull() { if (!document.fullscreenElement) { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); } else document.exitFullscreen(); }
   document.addEventListener('fullscreenchange', () => setTimeout(fit, 50));
   function toggleHelp() { $('#help').hidden = !$('#help').hidden; }
@@ -1248,6 +1354,7 @@
   (function perfSlide() {
     const plot = $('#plot');
     let comp = 'total', mode = 'levels', fragState = 0;
+    const FYTD = PERIODS.indexOf('FYTD'), ONEY = PERIODS.indexOf('1 Y');
     pillRow('perf-comps', ['Total Fund', 'Growth', 'Credit', 'Real Assets & IH', 'Risk Reduction & Mit.'], 0, i => { comp = ['total', 'growth', 'credit', 'ra', 'rrm'][i]; render(); sync(); });
     segControl('perf-mode', v => { mode = v; render(); sync(); });
     stepHooks[idx('perf')] = () => (comp === 'total' && mode === 'levels' ? 3 : 0);
@@ -1308,6 +1415,14 @@
       const who = comp === 'total' ? 'The ' + e.short : c.short;
       $('#perf-finding').textContent = !led.length ? who + ' trailed its policy benchmark over every reported period' : !trailed.length ? who + ' led its policy benchmark over every reported period' : who + ' led its policy benchmark over ' + led.join(', ') + ' and trailed over ' + trailed.join(', ');
       $('#perf-title').textContent = (comp === 'total' ? e.short : c.n) + ' — performance vs. policy';
+      // FYTD and 1 Y are the same twelve months in a report whose month ends the fiscal year
+      const fy = $('#perf-fy');
+      if (fy) {
+        const same = c.r[FYTD] != null && c.r[FYTD] === c.r[ONEY] && c.b[FYTD] === c.b[ONEY];
+        fy.textContent = same
+          ? 'The fiscal year ended with this month, so FYTD and 1 Y cover the same twelve months.'
+          : '';
+      }
       $('#leg-f-t').textContent = excess ? 'Ahead of benchmark' : 'Net return';
       $('#perf-callout').style.display = excess ? 'none' : '';
       $('#leg-w').style.display = excess ? '' : 'none';
@@ -1315,7 +1430,7 @@
       let bi = 0; diffs.forEach((d, i) => { if (d != null && Math.abs(d) > Math.abs(diffs[bi] == null ? 0 : diffs[bi])) bi = i; });
       $('#perf-callout').innerHTML = comp === 'total'
         ? '<b>Ten-year view.</b> ' + pct(c.r[7]) + ' net annualized vs. ' + pct(c.b[7]) + ' policy benchmark (' + sgn(diffs[7]) + ' pts) and a ' + pct(c.h[7]) + ' actuarial hurdle (' + sgn(c.r[7] - c.h[7]) + ' pts). Largest gap in the table: ' + PERIODS[bi] + ' at ' + sgn(diffs[bi]) + ' pts.'
-        : '<b>' + c.n + '.</b> Largest gap vs. its policy benchmark: ' + PERIODS[bi] + ' at ' + sgn(diffs[bi]) + ' pts. No 10-year composite figure is published.';
+        : '<b>' + c.n + '.</b> Largest gap vs. its policy benchmark: ' + PERIODS[bi] + ' at ' + sgn(diffs[bi]) + ' pts. The actuarial hurdle is a Total Fund measure, and the report prints no 10-year figure for a composite.';
       applyFrag(fragState);
       const rows = [[comp === 'total' ? e.short + ' (net)' : c.n + ' (net)', ...c.r], ['Policy benchmark', ...c.b]];
       if (c.h) rows.push(['Actuarial hurdle', ...c.h]);
@@ -1559,6 +1674,19 @@
     // print shows every build, so the chart takes its tight layout for the page and back after
     window.addEventListener('beforeprint', () => { state.strip = true; layout(); });
     window.addEventListener('afterprint', () => { state.strip = $('#macro').classList.contains('on'); layout(); });
+    // the fiscal year starts July 1: a table as of July 31 has one month in it, and one as of
+    // June 30 has twelve, so FYTD repeats another column and the slide says which
+    (function fiscalNote() {
+      const el = $('#mkt-fy');
+      if (!el || !MKT.length) return;
+      const i1 = PERIODS.indexOf('1 M'), ify = PERIODS.indexOf('FYTD'), i1y = PERIODS.indexOf('1 Y');
+      const allSame = (a, b) => MKT.every(g => g.rows.every(r => r.v[a] != null && r.v[a] === r.v[b]));
+      el.textContent = allSame(i1, ify)
+        ? 'The fiscal year began July 1, so FYTD here is that one month — the same figures as the 1 M column.'
+        : allSame(ify, i1y)
+          ? 'This table is as of a fiscal year end, so FYTD and 1 Y cover the same twelve months.'
+          : '';
+    })();
     const trows = []; MKT.forEach(g => { trows.push({ grp: g.g }); g.rows.forEach(r => trows.push([r.n + ' <span style="color:var(--muted);font-weight:400">' + r.i + '</span>', ...r.v])); });
     $('#mkt-table').innerHTML = tableHTML(['Index', ...PERIODS], trows);
   })();
@@ -1782,15 +1910,9 @@
     function build() {
       $$('.pp').forEach(el => el.remove());
       const e = E(), stage = $('.stage');
-      const cover = page('pp-cover',
-        '<div class="pp-rule"></div><p class="pp-big">Chief Investment Officer<br>Monthly Report — decision deck</p>' +
-        '<p class="pp-sub">' + esc(e.name) + ' · data through ' + esc(VINTAGE.throughLabel) + ' · report presented ' + esc(VINTAGE.reportLabel) + '</p>' +
-        '<p class="pp-note">Every figure is taken from the published report named above' + (VINTAGE.url ? ' (' + esc(VINTAGE.url) + ')' : '') +
-        '. Differences, sums and shares are calculated from those figures and labelled where they appear. ' +
-        'Each slide is followed by a page of the figures behind it, with the report pages they come from, so any number on a slide can be checked against the report.</p>' +
-        '<p class="pp-note"><b>This deck is not an official LACERA publication.</b> It presents public figures from the report above; it is not a performance report, an audit product, or a statement of endorsement.</p>');
-      stage.insertBefore(cover, slides[0]);
       slides.forEach((sl, i) => {
+        // the cover and the contents have no figures behind them
+        if (sl.dataset.id === 'cover' || sl.dataset.id === 'contents') return;
         const fig = figures(i, e);
         const notes = NOTES[i] || '';
         // the source sentence, with the classification chip lifted out of the middle of it

@@ -421,7 +421,7 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 
   test('a category opens to what drove its month, from the published figures', async ({ page }) => {
-    await ready(page, '/cio?tab=slides&slide=2');
+    await ready(page, '/cio?tab=slides&slide=4');
     const deck = page.frameLocator('.deck-frame-wrap iframe');
     await deck.locator('#alloc-legend button', { hasText: 'Credit' }).first().click();
     await deck.getByRole('button', { name: /What drove this month/ }).click();
@@ -459,13 +459,11 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     const doc = await page.evaluate(() => {
       (window as unknown as { __buildPrintout: () => void }).__buildPrintout();
       const order = [...document.querySelectorAll('.stage > .slide, .stage > .pp')].map((el) =>
-        el.classList.contains('pp-cover')
-          ? 'cover'
-          : el.classList.contains('pp-data')
-            ? 'figures'
-            : el.classList.contains('pp-variant')
-              ? 'variant'
-              : 'slide',
+        el.classList.contains('pp-data')
+          ? 'figures'
+          : el.classList.contains('pp-variant')
+            ? 'variant'
+            : 'slide',
       );
       const pages = [...document.querySelectorAll('.pp-data')].map((el) => el.textContent ?? '');
       const variants = [...document.querySelectorAll('.pp-variant')].map(
@@ -473,14 +471,15 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
       );
       return {
         order,
-        cover: document.querySelector('.pp-cover')?.textContent ?? '',
+        cover: document.querySelector('.slide.cover')?.textContent ?? '',
         pages,
         variants,
       };
     });
-    // a cover, then every slide with its tab snapshots and its figures page
-    expect(doc.order[0]).toBe('cover');
-    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(9);
+    // the deck's own cover and contents slides open the document; every other slide is
+    // followed by its tab snapshots and its figures page
+    expect(doc.order.slice(0, 2)).toEqual(['slide', 'slide']);
+    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(11);
     expect(doc.order.filter((p) => p === 'figures')).toHaveLength(9);
     // a tab that draws a different picture is its own page, right after its slide
     expect(doc.variants).toEqual(['Tab: excess vs. benchmark', 'Tab: sorted by return']);
@@ -489,7 +488,7 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
       if (p === 'figures') expect(['slide', 'variant']).toContain(doc.order[i - 1]);
     });
     expect(doc.cover).toContain('not an official LACERA publication');
-    expect(doc.cover).toContain('data through June 30, 2026');
+    expect(doc.cover).toContain('Fund figures through June 30, 2026');
     // each figures page carries the numbers behind its slide, with source and data labels
     expect(doc.pages[1]).toContain('Indicative contribution');
     expect(doc.pages[1]).toContain('$45,687');
@@ -531,9 +530,10 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     );
     const deck = page.frameLocator('.deck-frame-wrap iframe');
     await expect(deck.locator('#s1-title')).toContainText('Executive read');
-    // the page's arrow keys step the slides without clicking into them
+    // the page's arrow keys step the slides without clicking into them: the deck opens on its
+    // cover, so two presses reach the executive read and the next two build it
     for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
-    await expect(deck.locator('#counter')).toHaveText('2 / 9');
+    await expect(deck.locator('#counter')).toHaveText('3 / 11');
     await expect(deck.locator('.v-report').first()).toHaveText('August 12, 2026');
     // inside the dashboard the deck does not link back to it
     await expect(deck.locator('#dash-link')).toBeHidden();
@@ -554,15 +554,15 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     await ready(page, '/cio?tab=performance');
     await page
       .locator('#cio-perf')
-      .getByRole('link', { name: /Slide 3/ })
+      .getByRole('link', { name: /Slide 5/ })
       .click();
-    await expect(page).toHaveURL(/slide=3/);
+    await expect(page).toHaveURL(/slide=5/);
     await expect(page.getByRole('tab', { name: 'Slides' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
     const deck = page.frameLocator('.deck-frame-wrap iframe');
-    await expect(deck.locator('#counter')).toHaveText('3 / 9');
+    await expect(deck.locator('#counter')).toHaveText('5 / 11');
   });
 
   test('selecting an earlier report moves the masthead, band and panels together', async ({
@@ -654,7 +654,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     });
     await expect(page).toHaveURL(/v=file/);
     await expect(page.locator('#cio-read')).toContainText('June flows were not supplied');
-    await page.goto(hash('/cio?v=file&tab=slides&slide=5'));
+    await page.goto(hash('/cio?v=file&tab=slides&slide=7'));
     const deck = page.frameLocator('.deck-frame-wrap iframe');
     await expect(deck.locator('#al-finding')).toContainText('flows not supplied');
   });

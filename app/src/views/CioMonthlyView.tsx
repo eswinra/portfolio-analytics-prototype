@@ -153,7 +153,16 @@ function fredMacroSource(v: CioVintage): SourceRecord | null {
 }
 
 /** Slide index in the deck (its URL hash is the slide number). */
-const SLIDE = { summary: 2, perf: 3, wf: 4, alloc: 5, hist: 6, market: 7, geo: 8, ops: 9 } as const;
+const SLIDE = {
+  summary: 4,
+  perf: 5,
+  wf: 6,
+  alloc: 7,
+  hist: 8,
+  market: 9,
+  geo: 10,
+  ops: 11,
+} as const;
 
 /** Opens the Slides tab at the slide that carries this panel's figures, for the report on
  *  screen — the slides are built from the same data as the panel. */

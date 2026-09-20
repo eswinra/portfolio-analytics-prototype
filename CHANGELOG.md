@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-19 — Revision 26: the deck opens like the report, and says what it used to leave implied
+
+Three questions in a row about figures the slides had right but did not explain: why slide 1 says
+June on a report presented in August, why the market table's FYTD equals its 1 M column, and why
+only the Total Fund carries the actuarial hurdle. Each is now answered on the slide itself.
+
+- **Cover slide.** Title, fund, the report's three dates, and the disclosure, written from the
+  report's own labels.
+- **Contents slide.** The five sections with the slides in each, the question each one answers, and
+  where it starts; every line jumps there. Built from the deck's own section list, so it cannot
+  drift from the slides.
+- **Four computed notes**, each shown only where it is true, for any report:
+  - slide 3 (executive read): fund figures through · markets and macro as of · presented to the
+    Board — the three dates a CIO report carries;
+  - slide 5 (performance): FYTD and 1 Y cover the same twelve months when the month ends the
+    fiscal year; and, on a composite, that the actuarial hurdle is a Total Fund measure — the
+    report prints none for a composite (checked against p. 9: one hurdle row, four benchmark rows);
+  - slide 9 (market context): the fiscal year began July 1, so a table dated July 31 has one month
+    in it and its FYTD column repeats 1 M (checked against p. 5, where the two columns are printed
+    the same).
+- **Page numbers are computed** from a slide's place, so adding a slide leaves no stale number. The
+  dashboard's panel links (`SLIDE`) are pinned to the deck's order by a unit test that reads the
+  deck file — the source of the numbering is the deck, not a remembered constant.
+- The printed document opens with these two slides instead of its own generated cover: 22 landscape
+  pages per fund (11 slides, 2 tab snapshots, 9 figures pages; the opening slides carry no figures).
+- Verification: lint · format · Vitest 477/477 (1 new) · build · Playwright 150/150 runnable · both
+  PDFs regenerated and read back.
+
 ## 2026-09-19 — Revision 25.1: a tab that changes the picture gets its own page
 
 - The printed document now carries, straight after its slide, a snapshot of each tab that draws a

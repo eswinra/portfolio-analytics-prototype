@@ -183,6 +183,17 @@ screen:
   and the reported total, with the difference carried in the note. The previous report's market
   values ride in the deck data as `PRIOR` (`deckPrior` in `lib/deckFeed.ts`), and are absent —
   with the bridge — for a template file or an imported feed, which are not part of the series.
+- **Opening slides (Revision 26).** The deck opens the way the report does: a **cover** (title,
+  fund, the three dates, the disclosure) and a **contents** slide naming each section, the slides
+  in it and the question it answers, generated from the deck's own section list, with each line a
+  jump. Page numbers are computed from a slide's place, so adding a slide never leaves a stale
+  number. The dashboard's panel links (`SLIDE` in `views/CioMonthlyView.tsx`) are pinned to the
+  deck's order by a unit test.
+- **Said, not left to be inferred (Revision 26).** Slide 3 carries the report's three dates in one
+  line. Slide 5 says when FYTD and 1 Y are the same twelve months, and that the actuarial hurdle is
+  a Total Fund measure when a composite is chosen. Slide 9 says when the market table's FYTD column
+  is the same month as its 1 M column (a table dated July 31 holds one month of the fiscal year).
+  Each line is computed, so it appears only where it is true.
 - **Chrome (Revision 23).** One bar under the slide: the arrows and the section strip (Where we
   stand → Why → Positioning → Context → Attention) on the first row, the controls and one line of
   provenance on the second, so the slide takes the rest of the window. Speaker notes are in the
@@ -193,13 +204,14 @@ screen:
 
 ## The PDF for publication
 
-Printing the deck produces the document that can be posted: a cover, then every slide followed by
-a page of the figures behind it — the table, the report pages it came from, and how each figure is
-labelled. Nothing is redrawn for print: the slide pages are the slides, with every build shown.
+Printing the deck produces the document that can be posted: the deck's cover and contents slides,
+then every slide followed by a page of the figures behind it — the table, the report pages it came
+from, and how each figure is labelled. Nothing is redrawn for print: the slide pages are the
+slides, with every build shown.
 
 | How | What |
 |---|---|
-| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 21 landscape pages |
+| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 22 landscape pages |
 | `npm run deck:pdf` (from `app/`) | Both funds, into `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf`; `-- --fund opeb` for one, `-- --out <dir>` elsewhere |
 
 A tab that draws a different picture — the performance slide's excess view, the market slide
@@ -212,15 +224,17 @@ deck), so they cannot drift from the picture:
 
 | Slide | Its figures page |
 |---|---|
-| 1 Executive read · 2 Fund at a glance | Fund lines, the composites with weights, targets and returns — and, for slide 2, the indicative contribution and the month's flows the drill-down shows |
-| 3 Performance vs. policy · 4 Where the gap came from | Every composite over all eight periods: return, benchmark, calculated excess, the hurdle for the fund, and the indicative contribution to excess |
-| 5 Allocation and flows | Market value, weight, target, drift and flow by composite, the net flow, and the overlay programs |
-| 6 Return distribution | The 14 bins with their month counts, and the printed statistics |
-| 7 Market context | The market table over all periods, and the macro strip with its detail |
-| 8 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
-| 9 Items for attention | Every item as printed, with its status and report page |
+| 1 Cover · 2 What this covers | None: they carry no figures of their own |
+| 3 Executive read · 4 Fund at a glance | Fund lines, the composites with weights, targets and returns — and, for slide 4, the indicative contribution and the month's flows the drill-down shows |
+| 5 Performance vs. policy · 6 Where the gap came from | Every composite over all eight periods: return, benchmark, calculated excess, the hurdle for the fund, and the indicative contribution to excess |
+| 7 Allocation and flows | Market value, weight, target, drift and flow by composite, the net flow, and the overlay programs |
+| 8 Return distribution | The 14 bins with their month counts, and the printed statistics |
+| 9 Market context | The market table over all periods, and the macro strip with its detail |
+| 10 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
+| 11 Items for attention | Every item as printed, with its status and report page |
 
-The cover states what the deck is and what it is not, and every page keeps the footer disclosure.
+The cover states what the deck is and what it is not, the contents page says what each section
+answers and which slides it holds, and every page keeps the footer disclosure.
 A figure the report did not supply says "not supplied" on the page, as on the slide. The generated
 files are not committed (`outputs/` is ignored) — the report they come from is published, and the
 PDF is regenerated from it.

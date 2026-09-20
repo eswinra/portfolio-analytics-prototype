@@ -243,6 +243,21 @@ describe('slide deck at /deck/ reads the same data', () => {
     expect(prose).not.toMatch(/As of May 31, 2026|July 8, 2026|June 2016 – May 2026/);
   });
 
+  it('the slide numbers the dashboard links to are the deck’s own order', () => {
+    // the deck opens with a cover and a contents slide, so a panel's "Slide n" link must follow
+    // the file, not a remembered number (views/CioMonthlyView.tsx, SLIDE)
+    const ids = [...html.matchAll(/<section class="slide[^>]*data-id="([^"]+)"/g)].map(
+      (m) => m[1]!,
+    );
+    expect(ids.slice(0, 3)).toEqual(['cover', 'contents', 'exec']);
+    const view = readFileSync(new URL('../views/CioMonthlyView.tsx', import.meta.url), 'utf8');
+    const map = /const SLIDE = \{([\s\S]*?)\} as const;/.exec(view)?.[1] ?? '';
+    for (const m of map.matchAll(/(\w+):\s*(\d+)/g)) {
+      const key = m[1]!;
+      expect(`${key} is slide ${ids.indexOf(key) + 1}`).toBe(`${key} is slide ${m[2]!}`);
+    }
+  });
+
   it('links back to the dashboard tab', () => {
     expect(html).toContain('href="../#/cio?tab=summary"');
   });
