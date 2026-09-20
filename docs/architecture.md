@@ -188,3 +188,27 @@ Conventions every dashboard view now follows:
   Economy what-if sliders and a zoomable history chart. Every value a tooltip shows is also in a
   table or in text on the page.
 - **Slides inside the dashboard**: see `docs/cio-monthly.md`, "The dashboard feeds the slides".
+
+## Revision 32 (2026-09-20) — geography as a map, projected at build time
+
+The geographic exposure map ships no mapping library and makes no request at run time. Natural
+Earth's Admin 0 countries at 1:110m (public domain) are projected once by
+`tools/make_world_paths.py` — Robinson projection, Douglas-Peucker simplification, integer
+coordinates — into `app/src/fixtures/worldMap.data.ts`, about 44 KB of SVG path data that is
+reviewable in the repository like any other fixture.
+
+- **Where the rules live.** `app/src/lib/geoMap.ts` holds the pure parts: the class breaks, the
+  report-name to country-code lookup, the badge collision solver and the alternative text. It is
+  unit-tested on its own. `app/src/components/WorldMap.tsx` renders and holds no logic.
+- **Two generated blocks in the deck.** `public/deck/index.html` is one self-contained file and
+  cannot import anything, so `npm run sync:deck` now writes two marked blocks into it: the existing
+  per-report `SHARED DATA` (declared `let`, replaced when the dashboard feeds the deck another
+  vintage) and a new `WORLD OUTLINES` block (declared `const`). The outlines are the same for every
+  report, so they are kept off the per-report feed. Each block has its own drift test.
+- **Two copies, held together by tests.** The deck repeats the class breaks, the legend labels and
+  the badge radius in its own inline script. Three unit tests read the deck's HTML and fail if any
+  of them stops matching `geoMap.ts`, so a reader cannot find different breaks on the slide than on
+  the dashboard.
+- **Generated data is prettier-ignored.** `worldMap.data.ts` joins the two macro fixtures in
+  `app/.prettierignore`: one long path string per country is the point, and reformatting it would
+  put the file permanently at odds with its generator.

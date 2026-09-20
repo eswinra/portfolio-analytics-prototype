@@ -127,6 +127,17 @@ export const SOURCES = {
     asOf: 'FY2025',
     url: ACFR_URL,
   },
+  // Not a LACERA document: the country outlines the geographic exposure map is drawn from. It is
+  // credited here because the map is a published figure built on someone else's data, even though
+  // the shares on it are the report's own.
+  WORLD_OUTLINES: {
+    id: 'WORLD_OUTLINES',
+    label: 'Natural Earth 1:110m',
+    doc: 'Natural Earth, Admin 0 – Countries (public domain)',
+    pageTable: 'country outlines only; shares are from the CIO Monthly Report',
+    asOf: 'read September 20, 2026',
+    url: 'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/',
+  },
 } as const satisfies Record<string, SourceRecord>;
 
 export type SourceId = keyof typeof SOURCES;

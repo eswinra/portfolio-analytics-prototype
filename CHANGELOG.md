@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-09-20 — Revision 32: geographic exposure as a map
+
+- **A map, beside the bars rather than instead of them.** The geography slide gains a third view
+  next to Chart and Table: a world map with the countries the report names shaded and a numbered
+  badge on each. A share of AUM is a quantity, and a bar against a common axis is how a quantity is
+  read — on a map the United States at 75.7% and Canada at 2.5% cover comparable parts of the page.
+  The map answers what the bars cannot, which is where in the world those countries are, and the
+  slide's method note changes with the view so the reader is never told about a scale that is not
+  on screen.
+- **Class breaks, printed.** Four classes — under 1%, 1–2%, 2–10%, 10% and over — because the shares
+  run from about 76% to 0.4% and a continuous ramp would paint one country black and nine of them
+  the same near-white. The legend prints the breaks.
+- **Rank badges.** The number on each country is its rank in the table beside it, so a reader who
+  finds 7 on the map reads 7 in the list. They also locate the countries too small to see: Taiwan is
+  about three units wide on a 1000-unit map. Badges that would overlap are pushed apart along the
+  line between them, which is unit-tested for separation and for staying in frame.
+- **What the report does not name is missing, not zero.** The other 166 countries are drawn in one
+  neutral fill with its own legend entry and a caption that says what it means. The neutral is
+  `#E3E6EA` and not something paler because the first attempt, 4% off white, made the rest of the
+  world vanish when the deck was printed to PDF — caught by rendering the page, not by a test.
+- **Projected once, at build time.** `tools/make_world_paths.py` turns Natural Earth's Admin 0
+  countries at 1:110m (public domain) into `app/src/fixtures/worldMap.data.ts` — Robinson
+  projection, Douglas–Peucker simplification, integer coordinates, Antarctica dropped, about 44 KB.
+  No mapping library ships and nothing is fetched at run time. No country is ever dropped
+  altogether: one whose every ring falls under the area floor keeps its largest ring, which is what
+  keeps Luxembourg on the map.
+- **The deck gets a second generated block.** `npm run sync:deck` now writes `SHARED DATA` (the
+  report on screen, `let`, replaced when the dashboard feeds the deck another vintage) and
+  `WORLD OUTLINES` (`const`). The outlines are the same for every report, so they stay off the
+  per-report feed. Both blocks have drift tests.
+- **Two copies, held together.** The deck cannot import, so it repeats the class breaks, the legend
+  labels and the badge radius. Three unit tests read the deck's HTML and fail if any of them stops
+  matching `app/src/lib/geoMap.ts`.
+- The same map appears on the dashboard's Positioning tab above the country table, and the printed
+  document carries it as its own page after the geography slide. Both carry `role="img"` and
+  alternative text listing every named country and its share; Natural Earth is credited on the
+  slide and registered as a source record on the dashboard.
+- Verification: lint · format · Vitest 499/499 (15 new) · build · Playwright 152/152 runnable
+  (2 new) · `npm audit --omit=dev` 0 vulnerabilities · both PDFs regenerated at 25 pages · the
+  printed map page rendered and inspected, which is how the vanishing-fill problem was found.
+
 ## 2026-09-20 — Revision 31: the change in fiduciary net position
 
 - **The page the deck did not have.** The report's page 21 — what the fund took in and what it paid

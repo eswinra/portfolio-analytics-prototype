@@ -3634,3 +3634,103 @@ details.panel > summary {
   margin-right: 6px;
   text-align: center;
 }
+
+/* Geographic exposure map — the outlines come from src/fixtures/worldMap.data.ts, projected at
+   build time by tools/make_world_paths.py. Class breaks from the report's own accent ramp, and one
+   neutral fill for every country the report does not name: those are missing, not zero, and the
+   legend says so. */
+.wmap {
+  margin: 0 0 14px;
+}
+
+.wmap-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.wmap-svg path {
+  /* not var(--neutral-100): at 3% off white the unnamed countries vanish when the page is
+     printed, and the map loses the world around the ten the report names */
+  fill: #e3e6ea;
+  stroke: var(--bg);
+  stroke-width: 0.6;
+}
+
+.wmap-svg path.b0 {
+  fill: var(--accent-200);
+}
+
+.wmap-svg path.b1 {
+  fill: var(--accent-400);
+}
+
+.wmap-svg path.b2 {
+  fill: var(--accent-500);
+}
+
+.wmap-svg path.b3 {
+  fill: var(--accent-900);
+}
+
+.wmap-bdg circle {
+  fill: var(--bg);
+  stroke: var(--accent-900);
+  stroke-width: 1.2;
+}
+
+.wmap-bdg text {
+  fill: var(--accent-900);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.wmap-leg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: var(--neutral-700);
+}
+
+.wmap-leg span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wmap-leg i {
+  display: inline-block;
+  width: 14px;
+  height: 9px;
+}
+
+.wmap-leg i.b0 {
+  background: var(--accent-200);
+}
+
+.wmap-leg i.b1 {
+  background: var(--accent-400);
+}
+
+.wmap-leg i.b2 {
+  background: var(--accent-500);
+}
+
+.wmap-leg i.b3 {
+  background: var(--accent-900);
+}
+
+.wmap-leg i.na {
+  background: #e3e6ea;
+  outline: 1px solid var(--divider);
+  outline-offset: -1px;
+}
+
+.wmap figcaption {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--muted-62);
+}

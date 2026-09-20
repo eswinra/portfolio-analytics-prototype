@@ -222,12 +222,12 @@ slides, with every build shown.
 
 | How | What |
 |---|---|
-| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 24 landscape pages |
+| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 25 landscape pages |
 | `npm run deck:pdf` (from `app/`) | Both funds, into `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf`; `-- --fund opeb` for one, `-- --out <dir>` elsewhere |
 
 A tab that draws a different picture — the performance slide's excess view, the market slide
-sorted by return — is captured as its own page straight after its slide, with what that tab hides
-kept hidden. Tabs that only reorder or filter the same numbers (periods, composites, the items
+sorted by return, the geography slide's map — is captured as its own page straight after its
+slide, with what that tab hides kept hidden. Tabs that only reorder or filter the same numbers (periods, composites, the items
 filter) are covered by the figures page, which lists them all.
 
 The figures pages are built from the same data the slides are drawn from (`printout()` in the
@@ -272,6 +272,54 @@ Two things about this page differ from every other slide, and the slide states b
 
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
+
+### The geographic exposure map (slide 11, and the Positioning tab)
+
+The geography slide has a third view beside Chart and Table: a world map with the countries the
+report names shaded, and a numbered badge on each one. The map does not replace the bars. A share
+of AUM is a quantity, and a bar against a common axis is how a quantity is read; on a map the
+United States at 75.7% and Canada at 2.5% take up comparable parts of the page. The map answers the
+one question the bars cannot — where in the world those countries are — and the slide says as much
+in its own method note, which changes with the view.
+
+Three choices make it honest rather than decorative:
+
+- **Class breaks, not a ramp.** The shares run from about 76% to 0.4%. A linear ramp would paint one
+  country black and nine of them the same near-white, so the map uses four classes — under 1%, 1–2%,
+  2–10%, 10% and over — and the legend prints the breaks, so a shade is never left to be guessed.
+- **Rank badges.** The number on each country is its rank in the table beside it, so a reader who
+  finds 7 on the map reads 7 in the list. They also solve the small-country problem: Taiwan is about
+  three units wide on a 1000-unit map, and its badge, not its outline, is what locates it. Badges
+  that would overlap are pushed apart along the line between them (`spreadBadges` in
+  `app/src/lib/geoMap.ts`, unit-tested for separation and for staying in frame).
+- **One neutral fill for everything else, with its own legend entry.** The report names ten
+  countries; the other 166 drawn are `missing`, not zero, and the caption says so. The neutral is
+  `#E3E6EA` rather than something paler because at 4% off white the rest of the world disappeared
+  when the deck was printed to PDF.
+
+The outlines are Natural Earth's Admin 0 countries at 1:110m, public domain, projected **once at
+build time** by `tools/make_world_paths.py` into `app/src/fixtures/worldMap.data.ts`. Nothing is
+fetched at run time and no mapping library ships: the page draws plain `<path>` elements from a
+fixture that is reviewable like any other. The projection is Robinson — neither equal area nor
+conformal, which is acceptable precisely because the map is a locator and not a measuring device.
+Antarctica is dropped; rings that round to a splinter are dropped, except that no country is ever
+removed altogether, so Luxembourg survives as its largest ring alone.
+
+```bash
+python tools/make_world_paths.py --tolerance 1.0
+```
+
+Regenerate with the command above and then `npm run sync:deck`. The fixture is prettier-ignored
+(one long path string per country, by design) and the deck carries it in a second generated block,
+`WORLD OUTLINES`, declared `const`: it is the same for every report, so there is no reason for 44 KB
+of coastline to travel down the per-report feed. A unit test fails if that block drifts from the
+fixture, and three more fail if the deck's inlined copy of the class breaks, the legend labels or
+the badge radius stops matching `app/src/lib/geoMap.ts` — a reader comparing the slide with the
+dashboard must not find different breaks.
+
+The same map appears on the dashboard's Positioning tab above the country table
+(`app/src/components/WorldMap.tsx`). Both carry `role="img"` with alternative text that lists every
+named country and its share, so the figures are never only in the picture.
 
 The cover states what the deck is and what it is not, the contents page says what each section
 answers and which slides it holds, and every page keeps the footer disclosure.

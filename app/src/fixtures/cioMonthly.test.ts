@@ -21,7 +21,14 @@ import {
   type CioVintage,
 } from './cioMonthly';
 import { NET_POSITION } from './cioMonthly.data';
-import { DECK_BLOCK_BEGIN, DECK_BLOCK_END, deckDataBlock } from './deckData';
+import {
+  DECK_BLOCK_BEGIN,
+  DECK_BLOCK_END,
+  DECK_WORLD_BEGIN,
+  DECK_WORLD_END,
+  deckDataBlock,
+  deckWorldBlock,
+} from './deckData';
 
 /** The CIO Monthly figures are quoted literals extracted from the public PDFs. As with
  *  published.test.ts, the checks are the identities the report itself prints (composites sum
@@ -302,6 +309,17 @@ describe('slide deck at /deck/ reads the same data', () => {
     expect(lines.slice(begin + 1, end).join('\n')).toBe(deckDataBlock());
   });
 
+  it('carries the world outlines block generated from the map fixture', () => {
+    // the country outlines do not change with the report, so they are their own `const` block and
+    // do not travel down the per-report feed; they can drift the same way, so they are checked
+    // the same way
+    const begin = lines.indexOf(DECK_WORLD_BEGIN);
+    const end = lines.indexOf(DECK_WORLD_END);
+    expect(begin).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(begin);
+    expect(lines.slice(begin + 1, end).join('\n')).toBe(deckWorldBlock());
+  });
+
   it('its script parses (the deploy job runs these tests, not the browser tests)', () => {
     // slide prose sits in single-quoted strings, so an unescaped apostrophe breaks every slide
     const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]!);
@@ -314,8 +332,12 @@ describe('slide deck at /deck/ reads the same data', () => {
     // value bridge on slide 2; everything outside the block must take them from it
     const begin = lines.indexOf(DECK_BLOCK_BEGIN);
     const end = lines.indexOf(DECK_BLOCK_END);
+    const wb = lines.indexOf(DECK_WORLD_BEGIN);
+    const we = lines.indexOf(DECK_WORLD_END);
     const prose = lines
-      .filter((l, i) => (i <= begin || i >= end) && !l.startsWith('  const '))
+      .filter(
+        (l, i) => (i <= begin || i >= end) && !(i > wb && i < we) && !l.startsWith('  const '),
+      )
       .join('\n');
     expect(prose).not.toMatch(/As of May 31, 2026|July 8, 2026|June 2016 – May 2026/);
   });

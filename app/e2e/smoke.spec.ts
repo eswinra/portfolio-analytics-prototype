@@ -449,6 +449,64 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
   });
 });
 
+test.describe('geographic exposure map (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('the slide maps the countries the report names, and follows the filter', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/deck/#11');
+    const slide = page.locator('section[data-id="geo"]');
+    await expect(slide).toBeVisible();
+    await slide.locator('[data-toggle-view="geo"] .seg-btn[data-v="map"]').click();
+
+    const map = page.locator('#geo-map');
+    const svg = map.locator('svg.wm');
+    await expect(svg).toHaveAttribute('role', 'img');
+    // the alternative text carries the figures, so the map is not the only way to read them
+    await expect(svg).toHaveAttribute('aria-label', /United States 75\.7%/);
+    expect(await map.locator('path').count()).toBeGreaterThan(150);
+    await expect(map.locator('path[class]')).toHaveCount(10);
+    await expect(map.locator('.bdg')).toHaveCount(10);
+    // the legend states the class breaks rather than leaving a shade to be guessed
+    await expect(map.locator('.wm-leg')).toContainText('under 1%');
+    await expect(map.locator('.wm-leg')).toContainText('10% and over');
+    await expect(map.locator('.wm-leg')).toContainText('not named in the report');
+    // what the report does not name is missing, not zero, and the page says so
+    await expect(map.locator('.wm-cap')).toContainText('missing rather than zero');
+    // the method note is the map's, not the bar chart's
+    await expect(page.locator('#geo-note')).toContainText('Area is not value');
+
+    // the group filter takes the map with it, and badges keep the rank the table shows
+    await slide.locator('#geo-filter .seg-btn[data-v="em"]').click();
+    await expect(map.locator('.bdg:not(.off)')).toHaveCount(5);
+    await expect(map.locator('path[class].off')).toHaveCount(5);
+    await slide.locator('#geo-filter .seg-btn[data-v="all"]').click();
+    await expect(map.locator('.bdg:not(.off)')).toHaveCount(10);
+
+    // going back to the chart restores its own note
+    await slide.locator('[data-toggle-view="geo"] .seg-btn[data-v="chart"]').click();
+    await expect(page.locator('#geo-note')).toContainText('fixed 0–80% scale');
+    expect(errors).toEqual([]);
+  });
+
+  test('the dashboard panel shows the same map above the table', async ({ page }) => {
+    await ready(page, '/cio?tab=positioning');
+    const fig = page.locator('#cio-geo figure.wmap');
+    await expect(fig.locator('svg.wmap-svg')).toHaveAttribute('role', 'img');
+    await expect(fig.locator('.wmap-bdg')).toHaveCount(10);
+    await expect(fig.locator('path[class]')).toHaveCount(10);
+    await expect(fig.locator('figcaption')).toContainText('area is not value');
+    await expect(fig.locator('figcaption')).toContainText('missing rather than zero');
+    // the badge numbers are the table's row order
+    const first = await fig.locator('.wmap-bdg text').first().textContent();
+    expect(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']).toContain(first);
+    await expect(page.locator('#cio-geo tbody tr').first()).toContainText('United States');
+  });
+});
+
 test.describe('the deck prints as a publishable document (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 
@@ -482,7 +540,11 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     expect(doc.order.filter((p) => p === 'slide')).toHaveLength(12);
     expect(doc.order.filter((p) => p === 'figures')).toHaveLength(10);
     // a tab that draws a different picture is its own page, right after its slide
-    expect(doc.variants).toEqual(['Tab: excess vs. benchmark', 'Tab: sorted by return']);
+    expect(doc.variants).toEqual([
+      'Tab: excess vs. benchmark',
+      'Tab: sorted by return',
+      'Tab: map',
+    ]);
     doc.order.forEach((p, i) => {
       if (p === 'variant') expect(doc.order[i - 1]).toBe('slide');
       if (p === 'figures') expect(['slide', 'variant']).toContain(doc.order[i - 1]);

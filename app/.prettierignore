@@ -2,3 +2,5 @@
 src/fixtures/macroSnapshot.data.ts
 # generated data: one JSON line per value by design (tools/fetch_cio_macro.py)
 src/fixtures/cioMacro.data.ts
+# generated outlines: one long path string per country by design (tools/make_world_paths.py)
+src/fixtures/worldMap.data.ts

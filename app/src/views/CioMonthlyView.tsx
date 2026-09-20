@@ -8,6 +8,7 @@ import { AboutFigures, PageMeta, PageSources } from '../components/page';
 import { ReportPlayer } from '../components/ReportPlayer';
 import { scrollToPanel, SubTabs } from '../components/SubTabs';
 import { TrendSparks } from '../components/TrendSparks';
+import { WorldMap } from '../components/WorldMap';
 import { CONFIG } from '../config';
 import {
   ChangeChip,
@@ -38,7 +39,7 @@ import {
   type OpsStatus,
 } from '../fixtures/cioMonthly';
 import { publishedFor, type EntityId } from '../fixtures/published';
-import type { SourceRecord } from '../fixtures/sources';
+import { SOURCES, type SourceRecord } from '../fixtures/sources';
 import { useCioFile } from '../lib/cioFile';
 import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
 import { PACKAGE_SHEET, readCioPackage } from '../lib/cioPackage';
@@ -1569,8 +1570,9 @@ export function CioMonthlyView() {
               </p>
             }
           >
+            <WorldMap top={e.geo.top} fund={e.short} page={e.geo.page} />
             <GeoTable e={e} />
-            <SourceLine records={[src.geo]} />
+            <SourceLine records={[src.geo, SOURCES.WORLD_OUTLINES]} />
             <DeckLink n={SLIDE.geo} />
           </Panel>
         ) : null}
