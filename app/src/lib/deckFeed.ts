@@ -4,6 +4,7 @@ import { deckGdp } from './cioGdp';
 import {
   BINS,
   CIO_LATEST,
+  CIO_VINTAGES,
   deckVintage,
   priorVintage,
   macroFor,
@@ -58,6 +59,8 @@ export function deckDataFor(
     // the net position page is transcribed for the latest report only, like the editorial pages
     // the GDP chart is the report's own page, so an imported feed or a template file has none
     GDP: opts.feed || pkg ? null : deckGdp(v.reportDate),
+    // the trend under each figure on Fund at a glance; an imported feed is not part of the series
+    HISTORY: opts.feed || pkg ? [] : deckHistory(v),
     NETPOS: latest ? NET_POSITION : null,
     PRIOR: opts.feed || pkg ? null : deckPrior(v),
     PERIODS,
@@ -87,6 +90,64 @@ export function deckPrior(v: CioVintage): DeckPrior | null {
     monthYear: monthYear(p.dataThrough),
     ENT: { pension: mvOf(p.ENT.pension), opeb: mvOf(p.ENT.opeb) },
   };
+}
+
+/** One point per month the published reports cover, up to and including the report on screen.
+ *
+ *  The deck draws the trend under each figure on Fund at a glance, as the report's page 8 does.
+ *  A month no report covers is `null` on both funds, and the line breaks there: November 2025 has
+ *  no report in the published set, and a segment drawn across it would invent a month that was
+ *  never published. Truncated at the report on screen, because an older report cannot show months
+ *  it could not have known. */
+export interface DeckHistoryPoint {
+  /** 'YYYY-MM' of the month the figures cover */
+  m: string;
+  /** 'Jun 26', for the axis ends */
+  label: string;
+  pension: DeckHistoryFigures | null;
+  opeb: DeckHistoryFigures | null;
+}
+
+export interface DeckHistoryFigures {
+  /** total market value, $ billions */
+  aum: number;
+  /** the month's net return, percent */
+  r1: number | null;
+  /** growth of a dollar over trailing five years */
+  god: number | null;
+  /** cash equivalents, $ millions */
+  cash: number | null;
+}
+
+function figuresOf(e: CioVintage['ENT']['pension']): DeckHistoryFigures {
+  return { aum: e.aum, r1: e.total.r[0] ?? null, god: e.god ?? null, cash: e.cash ?? null };
+}
+
+export function deckHistory(v: CioVintage): DeckHistoryPoint[] {
+  const published = CIO_VINTAGES.filter((x) => x.origin !== 'file');
+  const byMonth = new Map(published.map((x) => [x.dataThrough.slice(0, 7), x]));
+  const first = published[0];
+  if (!first || !byMonth.has(v.dataThrough.slice(0, 7))) return [];
+  const out: DeckHistoryPoint[] = [];
+  let [y, m] = [Number(first.dataThrough.slice(0, 4)), Number(first.dataThrough.slice(5, 7))];
+  const last = v.dataThrough.slice(0, 7);
+  for (let guard = 0; guard < 600; guard++) {
+    const key = `${y}-${String(m).padStart(2, '0')}`;
+    const hit = byMonth.get(key) ?? null;
+    out.push({
+      m: key,
+      label: monthYear(`${key}-01`).replace(/^(\w{3})\w* (\d\d)(\d\d)$/, '$1 $3'),
+      pension: hit ? figuresOf(hit.ENT.pension) : null,
+      opeb: hit ? figuresOf(hit.ENT.opeb) : null,
+    });
+    if (key === last) break;
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+  }
+  return out;
 }
 
 /** A workstation feed's labels: one fund, no macro strip, and its own name and classification

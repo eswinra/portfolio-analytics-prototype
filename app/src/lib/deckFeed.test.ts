@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CIO_LATEST, CIO_VINTAGES, vintageFromFeed } from '../fixtures/cioMonthly';
 import { DECK_DATA, deckDataBlock } from '../fixtures/deckData';
-import { deckDataFor, sanitizeDeckData } from './deckFeed';
+import { deckDataFor, deckHistory, sanitizeDeckData } from './deckFeed';
 
 describe('dashboard → slides feed', () => {
   it('gives the embedded deck exactly the standalone deck data for the latest report', () => {
@@ -62,5 +62,62 @@ describe('dashboard → slides feed', () => {
       a: ['b', 1, null],
       b: { c: 'x' },
     });
+  });
+});
+
+describe('the history behind Fund at a glance', () => {
+  const published = CIO_VINTAGES.filter((v) => v.origin !== 'file');
+
+  it('runs one point per month, from the first report to the one on screen', () => {
+    const h = deckHistory(CIO_LATEST);
+    expect(h[0]!.m).toBe(published[0]!.dataThrough.slice(0, 7));
+    expect(h.at(-1)!.m).toBe(CIO_LATEST.dataThrough.slice(0, 7));
+    // contiguous months, no jumps
+    for (let i = 1; i < h.length; i++) {
+      const [y, m] = h[i - 1]!.m.split('-').map(Number) as [number, number];
+      const next = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+      expect(h[i]!.m, `after ${h[i - 1]!.m}`).toBe(next);
+    }
+  });
+
+  it('a month no report covers is null on both funds, not zero and not carried forward', () => {
+    const h = deckHistory(CIO_LATEST);
+    const months = new Set(published.map((v) => v.dataThrough.slice(0, 7)));
+    for (const p of h) {
+      if (months.has(p.m)) {
+        expect(p.pension, p.m).not.toBeNull();
+        expect(p.opeb, p.m).not.toBeNull();
+      } else {
+        expect(p.pension, p.m).toBeNull();
+        expect(p.opeb, p.m).toBeNull();
+      }
+    }
+    // the published set has exactly one such month, and the slide says so in words
+    expect(h.filter((p) => !p.pension).map((p) => p.m)).toEqual(['2025-11']);
+  });
+
+  it('every point carries the figures that report printed', () => {
+    const h = deckHistory(CIO_LATEST);
+    for (const v of published) {
+      const p = h.find((x) => x.m === v.dataThrough.slice(0, 7));
+      expect(p, v.dataThrough).toBeDefined();
+      expect(p!.pension!.aum).toBe(v.ENT.pension.aum);
+      expect(p!.pension!.r1).toBe(v.ENT.pension.total.r[0] ?? null);
+      expect(p!.pension!.cash).toBe(v.ENT.pension.cash ?? null);
+      expect(p!.opeb!.aum).toBe(v.ENT.opeb.aum);
+    }
+  });
+
+  it('an older report shows no month it could not have known', () => {
+    const older = published[published.length - 4]!;
+    const h = deckHistory(older);
+    expect(h.at(-1)!.m).toBe(older.dataThrough.slice(0, 7));
+    expect(h.length).toBeLessThan(deckHistory(CIO_LATEST).length);
+    for (const p of h) expect(p.m <= older.dataThrough.slice(0, 7)).toBe(true);
+  });
+
+  it('an imported feed is not part of the series', () => {
+    const d = deckDataFor(CIO_LATEST, { feed: true, feedName: 'X', feedCls: [] });
+    expect(d.HISTORY).toEqual([]);
   });
 });

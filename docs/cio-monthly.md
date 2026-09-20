@@ -274,6 +274,27 @@ Two things about this page differ from every other slide, and the slide states b
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
 
+### The trend under each figure on Fund at a glance (slide 4)
+
+The report's page 8 puts a chart under each of its four headline figures — total market value,
+monthly return, growth of a dollar and cash equivalents. The deck printed the figures without the
+trend, so a reader could see what the month was but not whether it was a change. Each figure now
+carries its history beside it, drawn from the published reports rather than from anything new.
+
+The series is one point per month the extracted reports cover, truncated at the report on screen —
+an older report must not show months it could not have known — and it is built by `deckHistory()`
+in `app/src/lib/deckFeed.ts`, travelling to the deck as the `HISTORY` field of the per-report
+block.
+
+**The gap is the point worth reading.** No published report covers November 2025, so that month is
+`null` on both funds and the line breaks there, with a dotted rule marking the break. A straight
+segment across it would invent a month that was never published, which is the same mistake as
+showing missing data as zero. The caption under the tiles says it in words as well, and the figures
+page prints `no report` in every column of that row. Unit tests check that the series is
+contiguous, that exactly the months with reports carry values, that November 2025 is the only gap,
+that each point equals what that report printed, and that an older report shows no later month; a
+browser test checks that each drawn path is in two pieces rather than one.
+
 ### The geographic exposure map (slide 11, and the Positioning tab)
 
 The geography slide has a third view beside Chart and Table: a world map with the countries the

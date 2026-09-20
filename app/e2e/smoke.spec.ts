@@ -449,6 +449,28 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
   });
 });
 
+test.describe('the trend under each figure on Fund at a glance (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('each of the four figures carries its history, with the missing month broken', async ({
+    page,
+  }) => {
+    await page.goto('/deck/#4');
+    const tiles = page.locator('#sum-tiles .tile');
+    await expect(tiles).toHaveCount(4);
+    // one trend per figure, as the report's page 8 has it
+    await expect(page.locator('#sum-tiles .spk')).toHaveCount(4);
+    await expect(page.locator('#sum-tiles .spk path')).toHaveCount(4);
+    // no report covers November 2025, so every trend breaks there and says so
+    await expect(page.locator('#sum-tiles .spk .gapmark')).toHaveCount(4);
+    await expect(page.locator('#sum-sparknote')).toContainText('No report covers Nov 25');
+    await expect(page.locator('#sum-sparknote')).toContainText('never published');
+    // the line is drawn in two pieces around the gap, not straight through it
+    const d = await page.locator('#sum-tiles .spk path').first().getAttribute('d');
+    expect((d!.match(/M /g) ?? []).length).toBe(2);
+  });
+});
+
 test.describe('quarterly real GDP growth (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 

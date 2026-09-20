@@ -1,4 +1,4 @@
-import { deckPrior } from '../lib/deckFeed';
+import { deckHistory, deckPrior } from '../lib/deckFeed';
 
 import { NET_POSITION } from './cioMonthly.data';
 import { deckGdp } from '../lib/cioGdp';
@@ -26,6 +26,7 @@ export const DECK_BLOCK_END = '  /* ==== END SHARED DATA ==== */';
 
 export const DECK_DATA: CioDeckData = {
   GDP: deckGdp(CIO_LATEST.reportDate),
+  HISTORY: deckHistory(CIO_LATEST),
   NETPOS: NET_POSITION,
   PRIOR: deckPrior(CIO_LATEST),
   PERIODS,
@@ -50,6 +51,7 @@ export const DECK_FIELDS = [
   'PRIOR',
   'NETPOS',
   'GDP',
+  'HISTORY',
 ] as const;
 
 /** The lines between the markers (no trailing newline). Declared with `let` so the deck, when

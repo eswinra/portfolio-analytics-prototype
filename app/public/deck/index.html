@@ -216,6 +216,14 @@
   .tiles4 .tile { cursor: default; }
   .tiles4 .tile .v { font-size: 32px; }
   .tiles4 .tile .s { font-size: 11px; color: var(--cat); margin-top: 3px; }
+  /* the trend under each figure, as the report's page 8 has it */
+  .vrow { display: flex; align-items: center; gap: 16px; }
+  .vrow .v { flex: none; }
+  .spk { display: block; flex: 1; min-width: 0; height: 26px; overflow: visible; }
+  .spk path { fill: none; stroke: var(--a4); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+  .spk circle { fill: var(--navy); }
+  .spk .gapmark { stroke: var(--gray); stroke-width: 1; stroke-dasharray: 2 2; }
+  .sparknote { font-size: 10.5px; color: var(--muted); line-height: 1.4; margin: 8px 0 0; }
   .alloc h3, .det h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .stack { position: relative; display: flex; height: 48px; gap: 2px; }
   .stack.thin { height: 16px; margin-top: 6px; }
@@ -647,7 +655,10 @@
         </div>
         <div class="bd">
           <div class="sum">
-            <div class="tiles4" id="sum-tiles"></div>
+            <div>
+              <div class="tiles4" id="sum-tiles"></div>
+              <p class="sparknote" id="sum-sparknote"></p>
+            </div>
             <div>
               <div class="alloc">
                 <h3>Asset allocation by functional category — actual (top) vs. 2024 SAA target (thin bar)</h3>
@@ -1029,6 +1040,7 @@
   let PRIOR = {"reportLabel":"July 8, 2026","monthYear":"May 2026","ENT":{"pension":{"mv":93948,"comps":{"growth":45822,"credit":11760,"ra":13658,"rrm":22158},"other":549},"opeb":{"mv":6264,"comps":{"growth":2840,"credit":989,"ra":756,"rrm":1678},"other":null}}};
   let NETPOS = {"page":21,"unit":"$ millions","scope":"LACERA Pension Plan","investmentBookFy":{"label":"FY2026","mm":8731},"months":[{"m":"2025-07","v":-326},{"m":"2025-08","v":880},{"m":"2025-09","v":1168},{"m":"2025-10","v":846},{"m":"2025-11","v":745},{"m":"2025-12","v":-123},{"m":"2026-01","v":1350},{"m":"2026-02","v":1307},{"m":"2026-03","v":-2457},{"m":"2026-04","v":2651},{"m":"2026-05","v":1664},{"m":"2026-06","v":136}],"trend":[{"fy":"FY2026","bn":7.8,"up":9,"down":3},{"fy":"FY2025","bn":7,"up":9,"down":3},{"fy":"FY2024","bn":5.2,"up":8,"down":4}],"components":["Employee and employer contributions","Net investment income or loss","Benefits and refunds","Administrative expenses and miscellaneous"]};
   let GDP = {"asOf":"2026-07-31","asOfLabel":"July 31, 2026","reportAsOf":"2026-07-31","reportAsOfLabel":"July 31, 2026","stale":false,"behind":0,"quarters":[{"q":"2023Q1","v":2.9},{"q":"2023Q2","v":2.5},{"q":"2023Q3","v":4.7},{"q":"2023Q4","v":3.4},{"q":"2024Q1","v":0.8},{"q":"2024Q2","v":3.6},{"q":"2024Q3","v":3.3},{"q":"2024Q4","v":1.9},{"q":"2025Q1","v":-0.6},{"q":"2025Q2","v":3.8},{"q":"2025Q3","v":4.4},{"q":"2025Q4","v":0.5},{"q":"2026Q1","v":2.1},{"q":"2026Q2","v":1.5}]};
+  let HISTORY = [{"m":"2025-02","label":"Feb 25","pension":{"aum":82.5,"r1":0.4,"god":1.54,"cash":1076},"opeb":{"aum":4.6,"r1":0.7,"god":1.48,"cash":103}},{"m":"2025-03","label":"Mar 25","pension":{"aum":81.5,"r1":-1,"god":1.64,"cash":1241},"opeb":{"aum":4.6,"r1":-2,"god":1.66,"cash":104}},{"m":"2025-04","label":"Apr 25","pension":{"aum":81.6,"r1":0.2,"god":1.58,"cash":1296},"opeb":{"aum":4.6,"r1":0.3,"god":1.54,"cash":104}},{"m":"2025-05","label":"May 25","pension":{"aum":83,"r1":1.9,"god":1.58,"cash":1204},"opeb":{"aum":4.7,"r1":2.7,"god":1.53,"cash":105}},{"m":"2025-06","label":"Jun 25","pension":{"aum":85.2,"r1":2.7,"god":1.6,"cash":1457},"opeb":{"aum":5,"r1":2.6,"god":1.54,"cash":104}},{"m":"2025-07","label":"Jul 25","pension":{"aum":85.9,"r1":1,"god":1.57,"cash":1166},"opeb":{"aum":5.1,"r1":0.5,"god":1.48,"cash":104}},{"m":"2025-08","label":"Aug 25","pension":{"aum":86.8,"r1":1.2,"god":1.54,"cash":1286},"opeb":{"aum":5.2,"r1":2,"god":1.46,"cash":104}},{"m":"2025-09","label":"Sep 25","pension":{"aum":88,"r1":1.5,"god":1.58,"cash":1196},"opeb":{"aum":5.4,"r1":2.3,"god":1.53,"cash":72}},{"m":"2025-10","label":"Oct 25","pension":{"aum":88.8,"r1":1.1,"god":1.61,"cash":1511},"opeb":{"aum":5.5,"r1":1.1,"god":1.56,"cash":112}},{"m":"2025-11","label":"Nov 25","pension":null,"opeb":null},{"m":"2025-12","label":"Dec 25","pension":{"aum":89.4,"r1":0,"god":1.49,"cash":1380},"opeb":{"aum":5.7,"r1":0.2,"god":1.4,"cash":114}},{"m":"2026-01","label":"Jan 26","pension":{"aum":90.8,"r1":1.6,"god":1.51,"cash":1097},"opeb":{"aum":5.8,"r1":1.8,"god":1.43,"cash":84}},{"m":"2026-02","label":"Feb 26","pension":{"aum":92.1,"r1":1.6,"god":1.51,"cash":1276},"opeb":{"aum":5.9,"r1":1.7,"god":1.43,"cash":137}},{"m":"2026-03","label":"Mar 26","pension":{"aum":89.6,"r1":-2.5,"god":1.44,"cash":969},"opeb":{"aum":5.8,"r1":-3.8,"god":1.35,"cash":122}},{"m":"2026-04","label":"Apr 26","pension":{"aum":92.3,"r1":3.1,"god":1.44,"cash":1188},"opeb":{"aum":6.1,"r1":5,"god":1.37,"cash":138}},{"m":"2026-05","label":"May 26","pension":{"aum":93.9,"r1":2,"god":1.44,"cash":1228},"opeb":{"aum":6.3,"r1":2.2,"god":1.38,"cash":199}},{"m":"2026-06","label":"Jun 26","pension":{"aum":93.9,"r1":0.1,"god":1.43,"cash":1309},"opeb":{"aum":6.4,"r1":0.2,"god":1.37,"cash":145}}];
   /* ==== END SHARED DATA ==== */
 
   /* ==== WORLD OUTLINES — generated from src/fixtures/worldMap.data.ts (itself generated by tools/make_world_paths.py) by `npm run sync:deck` ==== */
@@ -1050,9 +1062,9 @@
     if (!f) { try { if (window.opener && window.opener !== window && ok(window.opener.__laceraDeckData)) f = window.opener.__laceraDeckData; } catch (e) { f = null; } }
     if (!f) return;
     f = strip(f);
-    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE; PRIOR = f.PRIOR || null; NETPOS = f.NETPOS || null; GDP = f.GDP || null;
+    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE; PRIOR = f.PRIOR || null; NETPOS = f.NETPOS || null; GDP = f.GDP || null; HISTORY = f.HISTORY || [];
   })();
-  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE, PRIOR, NETPOS, GDP };
+  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE, PRIOR, NETPOS, GDP, HISTORY };
   /* Speaker notes, keyed by the slide's own id. They were an array indexed by slide number
      until Revision 33, which meant a slide inserted anywhere but the end silently moved every
      note after it onto the wrong page. The heading is derived from the slide's title and
@@ -1382,6 +1394,36 @@
     entityHooks.push(() => { if (cur === idx('exec')) render(true); else prev = null; });
   })();
 
+  /* A trend line for one figure across the published reports. A month no report covers is null
+     and breaks the line: drawing through it would invent a month that was never published. The
+     dotted rule marks where the break is, so an absence is visible rather than merely not drawn. */
+  function sparkSVG(values) {
+    const W = 200, H = 30, PAD = 2;
+    const present = values.filter(v => v != null);
+    if (present.length < 2) return '';
+    const lo = Math.min(...present), hi = Math.max(...present), span = (hi - lo) || 1;
+    const n = values.length;
+    const xOf = i => PAD + (n > 1 ? i * (W - PAD * 2) / (n - 1) : 0);
+    const yOf = v => H - PAD - ((v - lo) / span) * (H - PAD * 2);
+    let d = '', pen = false, gaps = '';
+    values.forEach((v, i) => {
+      if (v == null) {
+        pen = false;
+        gaps += '<line class="gapmark" x1="' + xOf(i).toFixed(1) + '" y1="0" x2="' + xOf(i).toFixed(1) + '" y2="' + H + '"></line>';
+        return;
+      }
+      d += (pen ? ' L' : ' M') + ' ' + xOf(i).toFixed(1) + ' ' + yOf(v).toFixed(1);
+      pen = true;
+    });
+    let lastI = -1;
+    for (let i = n - 1; i >= 0; i--) if (values[i] != null) { lastI = i; break; }
+    const dot = lastI >= 0
+      ? '<circle cx="' + xOf(lastI).toFixed(1) + '" cy="' + yOf(values[lastI]).toFixed(1) + '" r="2.6"></circle>'
+      : '';
+    return '<svg class="spk" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+      gaps + '<path d="' + d.trim() + '"></path>' + dot + '</svg>';
+  }
+
   /* ============ slide 2 · fund at a glance ============ */
   (function summarySlide() {
     const tiles = $('#sum-tiles'), actual = $('#stack-actual'), target = $('#stack-target'), legend = $('#alloc-legend'), det = $('#det');
@@ -1458,7 +1500,28 @@
         ...(e.god == null ? [] : [['Growth of a dollar', e.god, v => '$' + v.toFixed(2), 'Trailing 5 years, net']]),
         ['Cash equivalents', e.cash, v => '$' + Math.round(v).toLocaleString('en-US') + 'M', 'In $ millions']
       ];
-      tiles.innerHTML = T.map((x, i) => '<div class="tile"><div class="l">' + x[0] + '</div><div class="v" data-i="' + i + '"></div><div class="s">' + x[3] + '</div></div>').join('');
+      // the trend the report prints under each of these figures, across the published reports
+      const H4 = typeof HISTORY !== 'undefined' ? HISTORY : [];
+      const seriesOf = key => H4.map(p => (p[entity] ? p[entity][key] : null));
+      const KEYS = ['aum', 'r1', 'god', 'cash'];
+      const keyOf = label => KEYS[['Total market value', 'Monthly return (net)', 'Growth of a dollar', 'Cash equivalents'].indexOf(label)];
+      tiles.innerHTML = T.map((x, i) => {
+        const k = keyOf(x[0]);
+        const spark = k && H4.length > 1 ? sparkSVG(seriesOf(k)) : '';
+        return '<div class="tile"><div class="l">' + x[0] + '</div>' +
+          '<div class="vrow"><div class="v" data-i="' + i + '"></div>' + spark + '</div>' +
+          '<div class="s">' + x[3] + '</div></div>';
+      }).join('');
+      const gaps = H4.filter(p => !p[entity]);
+      const note = $('#sum-sparknote');
+      if (note) {
+        note.textContent = H4.length > 1
+          ? 'Each trend runs across the published reports, ' + H4[0].label + ' to ' + H4[H4.length - 1].label + '. ' +
+            (gaps.length
+              ? 'No report covers ' + gaps.map(p => p.label).join(', ') + ', so the line breaks there rather than drawing through a month that was never published.'
+              : 'Every month in the range has a report.')
+          : '';
+      }
       T.forEach((x, i) => countUp($('.v[data-i="' + i + '"]', tiles), x[1], x[2], animate && prevT ? prevT[i] : 0));
       prevT = T.map(x => x[1]);
       actual.innerHTML = ''; target.innerHTML = ''; legend.innerHTML = '';
@@ -2182,7 +2245,17 @@
           .concat(drv ? ['—', e.other.flow == null ? 'not supplied' : money(e.other.flow)] : []));
         alloc.push([e.short + ' total', money(e.mv), '100.0%', '100.0%', pct(e.total.r[0])]
           .concat(drv ? [sgn(e.comps.reduce((a, c) => a + c.pct * c.r[0] / 100, 0), 2) + ' summed', e.netflow == null ? 'not supplied' : money(e.netflow)] : []));
-        return tbl(['Fund', 'Value'], rows) + tbl(head, alloc) +
+        // the trend drawn beside each figure on slide 4, so it can be checked on paper
+        const hist = drv && typeof HISTORY !== 'undefined' && HISTORY.length > 1
+          ? tbl(['Report month', 'Total market value ($B)', 'Monthly return (net)', 'Growth of a dollar', 'Cash equivalents ($ mm)'],
+              HISTORY.map(h => {
+                const f = h[entity];
+                return f
+                  ? [h.label, f.aum.toFixed(1), f.r1 == null ? '—' : pct(f.r1), f.god == null ? '—' : '$' + f.god.toFixed(2), f.cash == null ? '—' : money(f.cash)]
+                  : [h.label, 'no report', 'no report', 'no report', 'no report'];
+              }))
+          : '';
+        return tbl(['Fund', 'Value'], rows) + tbl(head, alloc) + hist +
           tbl(['Return, net', ...P8], [[e.short, ...e.total.r.map(pct)], ['Policy benchmark', ...e.total.b.map(pct)],
             ['Actuarial hurdle', ...(e.total.h || []).map(pct)],
             ['Excess vs. benchmark (pts)', ...e.total.r.map((v, j) => v == null || e.total.b[j] == null ? null : sgn(v - e.total.b[j]))]]);

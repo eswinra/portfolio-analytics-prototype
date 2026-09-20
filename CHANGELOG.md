@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-20 — Revision 34: the trend under each figure on Fund at a glance
+
+- **The report's page 8 puts a chart under each headline figure; now so does slide 4.** Total market
+  value, monthly return, growth of a dollar and cash equivalents each carry their history beside
+  the number, drawn from the published reports. A figure alone says what the month was; the trend
+  says whether it was a change.
+- **The gap is the point.** No published report covers November 2025, so that month is null on both
+  funds and every line breaks there, with a dotted rule marking the break. Drawing a straight
+  segment across it would invent a month that was never published — the same mistake as showing
+  missing data as zero. The caption under the tiles says so in words, and the figures page prints
+  `no report` in all four columns of that row so the absence survives onto paper.
+- **The series is truncated at the report on screen.** An older report shows no month it could not
+  have known.
+- **The field list test earned its keep on its first day.** `HISTORY` was added to the generated
+  block and forgotten in the deck's feed assignment — the same slip that shipped as a bug in
+  Revision 31 — and the unit test added yesterday to walk `DECK_FIELDS` failed immediately instead
+  of letting an older report show the latest report's trends.
+- Verification: lint · format · Vitest 517/517 (5 new) · build · Playwright 156/156 runnable
+  (1 new) · both PDFs regenerated at 27 pages · slide 4 and its figures page rendered and
+  inspected, gap included.
+
 ## 2026-09-20 — Revision 33: quarterly real GDP, and the economy gets the page the report gives it
 
 - **The report's GDP chart, rebuilt from FRED rather than typed.** Quarterly real GDP growth
