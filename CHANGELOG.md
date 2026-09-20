@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-19 — Revision 30: the items table and the bars
+
+- **Status is a marker and a word.** The five pastel pills — each with its own fill, border and
+  rounded corners, in colours from outside the report's palette — are replaced by a marker whose
+  *shape* carries the status as much as its colour: a filled square in progress, a hollow square in
+  development, a filled circle for attention, a rule for a quiet period, a check for completed.
+  It reads in greyscale and for a colour-blind reader, which the pills did not, and the legend on
+  the slide now shows the same markers. The status and page columns are set as columns of their
+  own, the page right-aligned.
+- **Bars end where the number says they end.** The drift and flow bars, and the distribution's
+  columns, lose their rounded ends: a rounded end moves where a bar appears to stop against its
+  axis, which is the one thing a bar chart is for.
+- Checked at slide size: nothing overflows on any of the eleven slides, with every build shown.
+- Verification: lint · format · Vitest 477/477 · build · Playwright 150/150 runnable · both PDFs
+  regenerated (22 pages, and 21 KB smaller for the ink taken out).
+
 ## 2026-09-19 — Revision 29: the figures are set, not boxed
 
 The pass that redrew the opening slides, carried through the rest of the deck. Nothing is drawn
