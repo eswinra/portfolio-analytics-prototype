@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-19 — Revision 29: the figures are set, not boxed
+
+The pass that redrew the opening slides, carried through the rest of the deck. Nothing is drawn
+around a number any more: a hairline above each block separates it, type carries the hierarchy, and
+colour is kept for the two places it means something — the tiles belonging to the question on
+screen, and a figure under the pointer.
+
+- **Executive read.** The six tiles are a hairline grid rather than six bordered cards. The tiles
+  belonging to the question on screen keep a two-pixel rule above them and a darker label; the rest
+  are quiet. Hovering colours the figure and underlines its slide link.
+- **Fund at a glance.** The four fund tiles lose the blue left edge, and the drill-down card loses
+  its tinted panel: a hairline, then the composite, its market value against target, the return
+  table and the drivers.
+- **Performance.** The ten-year callout is set under a navy rule instead of in a tinted card with a
+  coloured edge.
+- **Distribution, geography, market context.** The statistics panel and the geography figures are
+  separated by hairlines; the macro strip is six columns under one rule, divided by hairlines,
+  rather than six boxes.
+- Checked at slide size: no element on any of the eleven slides overflows its slide, with every
+  build shown.
+- Verification: lint · format · Vitest 477/477 · build · Playwright 150/150 runnable · both PDFs
+  regenerated (22 pages each).
+
 ## 2026-09-19 — Revision 28: the opening slides are set, not assembled
 
 The cover and contents slides were drawn from decoration — a gold bar, tinted cards with coloured

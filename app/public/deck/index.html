@@ -85,7 +85,8 @@
   .help p { font-size: 12.5px; color: rgba(255,255,255,.75); margin: 14px 0 0; }
   .rev { opacity: 0; transform: translateY(10px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
   .rev.on { opacity: 1; transform: none; }
-  .tile.qhl { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+  .tile.qhl { box-shadow: inset 0 2px 0 var(--blue); }
+  .tile.qhl .l { color: var(--navy); }
   .formula .detail { display: none; }
   .formula.open .detail { display: block; }
   .formula .more { font: inherit; font-size: 12px; font-weight: 700; color: var(--blue); background: none; border: 0; padding: 6px 0 0; cursor: pointer; }
@@ -177,9 +178,10 @@
   .head p { margin: 0; font-size: 15px; line-height: 1.42; color: var(--ink); }
   .head p b { color: var(--navy); }
   .head p small { display: block; font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .04em; margin-top: 3px; }
-  .tiles6 { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 12px; }
-  .tile { border: 1px solid var(--line); padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: border-color .2s; position: relative; }
-  .tile:hover { border-color: var(--blue); }
+  .tiles6 { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 0 40px; }
+  .tile { border-top: 1px solid var(--line); padding: 13px 0 13px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; position: relative; }
+  .tile:hover .v { color: var(--blue); }
+  .tile:hover .go { text-decoration: underline; }
   .tile .l { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
   .tile .v { font-size: 30px; font-weight: 700; color: var(--navy); line-height: 1.1; margin-top: 3px; }
   .tile .d { font-size: 12.5px; color: var(--cat); margin-top: 4px; font-weight: 700; }
@@ -188,8 +190,8 @@
 
   /* ---------- fund at a glance ---------- */
   .sum { display: grid; grid-template-columns: 300px 1fr; gap: 28px; height: 470px; margin-top: 6px; }
-  .tiles4 { display: grid; grid-template-rows: repeat(4, 1fr); gap: 12px; }
-  .tiles4 .tile { border-left: 4px solid var(--blue); cursor: default; }
+  .tiles4 { display: grid; grid-template-rows: repeat(4, 1fr); gap: 0; }
+  .tiles4 .tile { cursor: default; }
   .tiles4 .tile .v { font-size: 32px; }
   .tiles4 .tile .s { font-size: 11px; color: var(--cat); margin-top: 3px; }
   .alloc h3, .det h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -206,7 +208,7 @@
   .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; font-size: 12px; color: var(--cat); font-weight: 700; }
   .legend button { font: inherit; color: inherit; background: none; border: 0; padding: 2px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
   .legend button:hover { color: var(--blue); }
-  .det { margin-top: 18px; border: 1px solid var(--line); background: var(--tint); padding: 13px 18px 9px; min-height: 196px; }
+  .det { margin-top: 20px; border-top: 1px solid var(--line); padding: 14px 0 0; min-height: 196px; }
   .det .name { font-size: 20px; font-weight: 700; color: var(--navy); }
   .det .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
   .det .kv { font-size: 12px; color: var(--cat); }
@@ -221,7 +223,7 @@
   .drv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; margin-top: 4px; }
   /* opened, the card is taller: it takes the room from its own margins rather than from the
      note and source row under it */
-  .det.drv-on { margin-top: 8px; }
+  .det.drv-on { margin-top: 10px; }
   .det.drv-on table { margin-top: 8px; }
   .drv .dcol h4 { margin: 0 0 2px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
   .drv table { margin-top: 0; font-size: 11.5px; }
@@ -244,9 +246,9 @@
   .slide.armed .split div { transform: scaleX(1); }
   .split .dm { background: var(--blue); }
   .split .em { background: var(--cyan); }
-  .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-  .chip { border: 1px solid var(--line); padding: 10px 12px; }
-  .chip.wide { grid-column: 1 / -1; border-left: 4px solid var(--navy); }
+  .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px; margin-top: 16px; }
+  .chip { border-top: 1px solid var(--line); padding: 11px 0; }
+  .chip.wide { grid-column: 1 / -1; }
   .chip .v { font-size: 30px; font-weight: 700; color: var(--navy); line-height: 1.05; }
   .chip .l { font-size: 11.5px; color: var(--cat); font-weight: 700; margin-top: 3px; }
   .grows { position: relative; height: 360px; }
@@ -285,7 +287,7 @@
   .tick .tl { position: absolute; right: 0; top: -16px; white-space: nowrap; font-size: 11px; color: var(--ink); font-weight: 700; }
   .grp .hit { position: absolute; inset: 0; }
   .grp:hover .col { filter: brightness(.88); }
-  .callout { position: absolute; right: 0; top: 0; width: 300px; background: var(--tint); border-left: 4px solid var(--blue); padding: 12px 14px; font-size: 13px; line-height: 1.4; color: var(--ink); opacity: 0; transform: translateY(8px); transition: opacity .4s, transform .4s; }
+  .callout { position: absolute; right: 0; top: 0; width: 300px; border-top: 2px solid var(--navy); padding: 11px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink); opacity: 0; transform: translateY(8px); transition: opacity .4s, transform .4s; }
   .callout.on { opacity: 1; transform: none; }
   .callout b { color: var(--navy); }
   .buildhint { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
@@ -331,7 +333,7 @@
   .hrow .hit { position: absolute; left: 170px; right: 0; top: 0; bottom: 0; }
   .hrow:hover .hb { filter: brightness(.88); }
   .ovl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
-  .ovl .tile { cursor: default; padding: 10px 14px; }
+  .ovl .tile { cursor: default; padding: 10px 0; }
   .ovl .tile .v { font-size: 24px; }
 
   /* ---------- slide 5: histogram ---------- */
@@ -349,7 +351,7 @@
   .hbin:hover .hcol { filter: brightness(.88); }
   .latest-tag { position: absolute; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; transition: bottom .7s cubic-bezier(.2,.7,.2,1), left .7s; text-align: center; }
   .latest-tag i { display: block; width: 1px; height: 16px; background: var(--ink); margin: 3px auto 0; }
-  .stats { border: 1px solid var(--line); padding: 14px 16px; margin-top: 30px; align-self: start; }
+  .stats { border-top: 1px solid var(--line); padding: 14px 0 0; margin-top: 30px; align-self: start; }
   .stats h3 { margin: 0 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .stats .sub { font-size: 11.5px; color: var(--cat); margin-bottom: 8px; }
   .stats table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
@@ -372,8 +374,11 @@
   .zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--gray); transition: left .55s cubic-bezier(.2,.7,.2,1); }
   .mrow .hit { position: absolute; left: 240px; right: 0; top: 0; bottom: 0; }
   .mrow:hover .mbar { filter: brightness(.88); }
-  .macro { display: flex; gap: 10px; margin-top: 10px; }
-  .mchip { flex: 1; border: 1px solid var(--line); padding: 8px 12px; font-size: 11.5px; color: var(--cat); line-height: 1.3; }
+  .macro { display: flex; gap: 0; margin-top: 10px; border-top: 1px solid var(--line); }
+  .mchip { flex: 1; padding: 9px 16px; font-size: 11.5px; color: var(--cat); line-height: 1.3; }
+  .mchip + .mchip { border-left: 1px solid var(--line); }
+  .mchip:first-child { padding-left: 0; }
+  .mchip:last-child { padding-right: 0; }
   .mchip b { display: block; font-size: 16px; color: var(--navy); font-weight: 700; margin-bottom: 1px; }
   .mchip small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 2px; }
 
