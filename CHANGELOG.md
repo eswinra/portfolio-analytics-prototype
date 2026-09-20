@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-19 — Revision 28: the opening slides are set, not assembled
+
+The cover and contents slides were drawn from decoration — a gold bar, tinted cards with coloured
+left edges. They are now set the way a report is, with type, alignment and hairlines doing the
+work.
+
+- **Cover.** The organisation line above the title, the fund under it, then the report's three
+  dates as a colophon row under a hairline — each with its own small label — and the disclosure at
+  the foot. No rule bar.
+- **Contents.** A set list: the section in small capitals, the slides in it and the question they
+  answer, the slide numbers right-aligned under a "Slide" heading, rows separated by hairlines. No
+  fills, no coloured edges; hovering colours the type rather than the box.
+- **The gold is gone.** It was the only decorative colour in the palette and is no longer used
+  anywhere: the cover's rule, and — on the Explore tab — the benchmark marks and their legend key
+  (now graphite, which reads against both the blue and the grey bars) and the scenario's problem
+  panel (navy).
+- Verification: lint · format · Vitest 477/477 · build · Playwright 150/150 runnable · both PDFs
+  regenerated (22 pages each).
+
 ## 2026-09-19 — Revision 27: the Treasury yield curve joins the macro strip
 
 The coverage check against the official August report found one gap whose figures are actually

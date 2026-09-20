@@ -3380,7 +3380,7 @@ details.panel > summary {
 }
 
 .x-bench {
-  stroke: var(--rule-orange);
+  stroke: var(--neutral-900);
   stroke-width: 2.5;
 }
 
@@ -3439,7 +3439,7 @@ details.panel > summary {
 
 .x-key.bench {
   height: 3px;
-  background: var(--rule-orange);
+  background: var(--neutral-900);
 }
 
 .x-key.gap {
@@ -3606,7 +3606,7 @@ details.panel > summary {
 }
 
 .x-problems {
-  border-left: 3px solid var(--rule-orange);
+  border-left: 3px solid var(--accent-700);
   background: var(--neutral-100);
   padding: 8px 12px;
   font-size: 14px;

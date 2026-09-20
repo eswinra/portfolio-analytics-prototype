@@ -400,23 +400,29 @@
   }
 
   /* ---------- print: one slide per landscape page, every build shown complete ---------- */
-  /* cover and contents: the deck opens the way the report does */
+  /* the opening slides: set, not boxed — hairlines and alignment, no fills or edge bars */
   .slide.cover { background: var(--navy); }
-  .cover .cv { position: absolute; left: 76px; right: 76px; top: 150px; }
-  .cover .cv-rule { width: 240px; height: 7px; background: var(--rule); margin: 0 0 30px; }
-  .cover h1 { margin: 0 0 14px; font-size: 52px; line-height: 1.1; color: #fff; font-weight: 700; letter-spacing: -0.01em; }
-  .cover .cv-sub { margin: 0 0 8px; font-size: 21px; color: #C7D3E2; }
-  .cover .cv-dates { margin: 0; font-size: 15px; color: #9FB0C6; line-height: 1.6; }
-  .cover .cv-note { position: absolute; left: 76px; right: 76px; bottom: 96px; font-size: 12.5px; color: #8FA0B8; line-height: 1.5; max-width: 96ch; }
-  .cover .cv-note b { color: #C7D3E2; }
-  .contents .toc { display: grid; gap: 10px; margin-top: 4px; }
-  .toc-row { display: grid; grid-template-columns: 182px 1fr 92px; align-items: baseline; gap: 18px; width: 100%; text-align: left; font: inherit; background: var(--tint); border: 1px solid var(--line); border-left: 5px solid var(--blue); padding: 11px 16px; cursor: pointer; }
-  .toc-row:hover { border-color: var(--blue); }
-  .toc-row:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .toc-act { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: .01em; }
-  .toc-what { font-size: 13px; color: var(--cat); line-height: 1.45; }
-  .toc-what b { color: var(--ink); font-weight: 700; }
-  .toc-pages { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .cover .cv { position: absolute; left: 84px; right: 84px; top: 176px; }
+  .cover .cv-org { margin: 0 0 26px; font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+  .cover h1 { margin: 0 0 18px; font-size: 50px; line-height: 1.12; color: #fff; font-weight: 700; letter-spacing: -0.005em; }
+  .cover .cv-sub { margin: 0 0 40px; font-size: 19px; color: #BCCBDD; font-weight: 400; }
+  .cover .cv-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 250px)); gap: 0 44px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.22); }
+  .cover .cv-meta dt { margin: 0 0 5px; font-size: 10.5px; letter-spacing: .11em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+  .cover .cv-meta dd { margin: 0; font-size: 15px; color: #fff; line-height: 1.4; }
+  .cover .cv-meta dd small { display: block; font-size: 12px; color: #9FB0C6; margin-top: 2px; }
+  .cover .cv-note { position: absolute; left: 84px; right: 84px; bottom: 84px; font-size: 11.5px; color: #8FA0B8; line-height: 1.55; max-width: 104ch; }
+  .cover .cv-note b { color: #BCCBDD; font-weight: 700; }
+  .contents .toc-head { display: grid; grid-template-columns: 196px 1fr 76px; gap: 0 24px; padding: 0 2px 7px; font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .contents .toc-head span:last-child { text-align: right; }
+  .contents .toc { margin-top: 2px; }
+  .toc-row { display: grid; grid-template-columns: 196px 1fr 76px; align-items: baseline; gap: 0 24px; width: 100%; text-align: left; font: inherit; background: none; border: 0; border-top: 1px solid var(--line); padding: 21px 2px; cursor: pointer; }
+  .toc-row:last-child { border-bottom: 1px solid var(--line); }
+  .toc-row:hover .toc-act, .toc-row:hover .toc-titles { color: var(--blue); }
+  .toc-row:focus-visible { outline: 2px solid var(--blue); outline-offset: -1px; }
+  .toc-act { font-size: 11.5px; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+  .toc-titles { display: block; font-size: 16px; color: var(--navy); font-weight: 700; margin-bottom: 5px; }
+  .toc-what { display: block; font-size: 13px; color: var(--cat); line-height: 1.45; }
+  .toc-pages { font-size: 12.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; padding-top: 3px; }
   .empty-note { position: absolute; left: 40px; right: 40px; top: 40%; text-align: center; font-size: 18px; color: var(--muted); }
   body.embedded .stage { box-shadow: 0 6px 24px rgba(0,0,0,.22); }
   @media print {
@@ -486,10 +492,10 @@
       <!-- 1 · cover -->
       <section class="slide cover" data-title="Cover" data-id="cover">
         <div class="cv">
-          <div class="cv-rule"></div>
+          <p class="cv-org">Los Angeles County Employees Retirement Association</p>
           <h1>Chief Investment Officer<br>Monthly Report</h1>
           <p class="cv-sub" id="cv-fund"></p>
-          <p class="cv-dates" id="cv-dates"></p>
+          <dl class="cv-meta" id="cv-dates"></dl>
         </div>
         <p class="cv-note" id="cv-note"></p>
         <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg"></span></div>
@@ -505,6 +511,7 @@
           <div class="asof"><b>As of <span class="v-through"></span></b>Net of fees · USD<br>Board of Investments, <span class="v-report"></span><span class="ent-chip"></span></div>
         </div>
         <div class="bd">
+          <div class="toc-head"><span>Section</span><span>Slides in it, and the question they answer</span><span>Slide</span></div>
           <div class="toc" id="toc"></div>
           <div class="nb">
             <div class="note">Each section answers one question. Choose a line to go there, or use the section strip under the slide.</div>
@@ -1033,11 +1040,13 @@
     function fill() {
       if (fund) fund.textContent = label() + ' \u00b7 decision deck';
       if (dates) {
-        dates.innerHTML = 'Fund figures through <b style="color:#fff">' + VINTAGE.throughLabel + '</b>' +
-          (VINTAGE.marketLabel ? '<br>Markets and macro as of ' + VINTAGE.marketLabel : '') +
-          '<br>' + (VINTAGE.local
-            ? 'From a ' + VINTAGE.local.kind + ' (' + VINTAGE.local.name + '), not published'
-            : 'Presented to the Board of Investments ' + VINTAGE.reportLabel);
+        const cell = (label, value, under) => '<div><dt>' + label + '</dt><dd>' + value +
+          (under ? '<small>' + under + '</small>' : '') + '</dd></div>';
+        dates.innerHTML = cell('Fund figures through', VINTAGE.throughLabel) +
+          (VINTAGE.marketLabel ? cell('Markets and macro', 'As of ' + VINTAGE.marketLabel) : '') +
+          (VINTAGE.local
+            ? cell('Source', VINTAGE.local.kind.charAt(0).toUpperCase() + VINTAGE.local.kind.slice(1), VINTAGE.local.name + ' \u00b7 not published')
+            : cell('Presented', VINTAGE.reportLabel, 'Board of Investments'));
       }
       if (note) {
         note.innerHTML = '<b>This deck is not an official LACERA publication.</b> It presents public figures from the ' +
@@ -1053,8 +1062,9 @@
         const ids = a[1], first = idx(ids[0]) + 1, last = idx(ids[ids.length - 1]) + 1;
         return '<button class="toc-row" data-go="' + ids[0] + '">' +
           '<span class="toc-act">' + a[0] + '</span>' +
-          '<span class="toc-what"><b>' + ids.map(id => slides[idx(id)].dataset.title).join(' \u00b7 ') + '</b><br>' + (ACT_ASKS[a[0]] || '') + '</span>' +
-          '<span class="toc-pages">' + (first === last ? 'Slide ' + first : 'Slides ' + first + '\u2013' + last) + '</span></button>';
+          '<span><span class="toc-titles">' + ids.map(id => slides[idx(id)].dataset.title).join(' \u00b7 ') + '</span>' +
+          '<span class="toc-what">' + (ACT_ASKS[a[0]] || '') + '</span></span>' +
+          '<span class="toc-pages">' + (first === last ? first : first + '\u2013' + last) + '</span></button>';
       }).join('');
       $$('.toc-row', toc).forEach(b => b.addEventListener('click', () => go(idx(b.dataset.go))));
     }

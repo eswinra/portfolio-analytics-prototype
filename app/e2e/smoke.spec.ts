@@ -488,7 +488,10 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
       if (p === 'figures') expect(['slide', 'variant']).toContain(doc.order[i - 1]);
     });
     expect(doc.cover).toContain('not an official LACERA publication');
-    expect(doc.cover).toContain('Fund figures through June 30, 2026');
+    // the cover's dates are a labelled colophon: label and value are separate cells
+    expect(doc.cover).toContain('Fund figures through');
+    expect(doc.cover).toContain('June 30, 2026');
+    expect(doc.cover).toContain('Board of Investments');
     // each figures page carries the numbers behind its slide, with source and data labels
     expect(doc.pages[1]).toContain('Indicative contribution');
     expect(doc.pages[1]).toContain('$45,687');
