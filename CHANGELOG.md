@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-21 — Revision 37: compare two reports
+
+Phase 1, item 2. There are sixteen published reports; until now you could play through them but not
+put two side by side.
+
+- **A Compare tab on CIO Monthly.** The report on screen against any other, for the fund on screen.
+  It defaults to the same month a year earlier — the same point in the fiscal year, with one-year
+  windows that do not overlap — and falls back to the report before when there is none. Both
+  reports and the filter are in the address.
+- **What cannot honestly be compared is shown but not compared, and says why.** Period-to-date
+  figures reset: across a fiscal-year or calendar-year boundary FYTD and YTD measure different
+  things, so they are withheld and the two years are named. Trailing windows overlap: three-year
+  returns a year apart share 24 of their 36 months, and every overlapping row says by how much. A
+  change in market value includes contributions and benefit payments, and says so. A moved policy
+  target is called out.
+- **Columns always run earlier then later**, and every change is later minus earlier, whichever
+  report was on screen first — so the sign of a change never depends on the order two menus were
+  used.
+- **The marker means exactly what it means on Summary.** The first draft applied the return
+  threshold to all eight periods and, a year apart, marked seven of the eight return rows. It now
+  applies only the thresholds "What changed" already uses — FYTD and one-year returns, weights,
+  market value, excess sign changes, policy targets — and marks three rows year over year. A test
+  pins that the marker cannot cover the whole column.
+- **Found at phone width and fixed.** A `<select>` sized to its longest option was wider than the
+  screen. And the table's screen-reader text, being `position: absolute`, escaped its scroll box —
+  which is not its containing block — and made the page scroll sideways; the Compare scroll boxes
+  are now positioned. Rows were 140px tall on a phone from a squeezed note column; the table now
+  takes its natural width and scrolls inside its box.
+- The per-report source records moved to `app/src/lib/cioSource.ts`. The first draft hardcoded the
+  Pension Fund's pp. 8–9, which would have mis-cited the OPEB Master Trust's pp. 13–14.
+- Verification: lint · format · Vitest 558/558 (16 new) · build · Playwright 168/168 runnable
+  (4 new, plus the new route in the overflow and accessibility checks) · `npm audit --omit=dev`
+  0 vulnerabilities · checked at 320, 360, 375 and 1280px.
+
 ## 2026-09-20 — Revision 36.1: a date in prose reads like every other date
 
 - The freshness panel's GDP reason printed an ISO date (`2025-07-31`) in a sentence where every

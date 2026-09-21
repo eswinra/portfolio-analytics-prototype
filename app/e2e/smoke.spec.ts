@@ -28,6 +28,7 @@ const ROUTES = [
   '/cio?tab=positioning',
   '/cio?tab=markets',
   '/cio?tab=explore',
+  '/cio?tab=compare',
   '/macro',
   '/macro?tab=factors',
   '/macro?tab=indicators',
@@ -446,6 +447,72 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
     expect(gap).toBeGreaterThan(0);
     await deck.getByRole('button', { name: /Hide what drove this month/ }).click();
     await expect(det).not.toContainText('Indicative contribution');
+  });
+});
+
+test.describe('compare two reports (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('defaults to the same month a year earlier, and withholds what cannot be compared', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await ready(page, '/cio?tab=compare');
+    const head = page.locator('#cio-compare');
+    await expect(head.getByRole('heading')).toContainText('June 2025 against June 2026');
+    await expect(head.getByLabel('Report to compare with')).toHaveValue('2025-06-30');
+
+    const returns = page.locator('#cio-cmp-returns');
+    // across a fiscal-year reset FYTD measures different things, so it is shown but not compared
+    const fytd = returns.locator('tbody tr', { hasText: 'FYTD' });
+    await expect(fytd).toContainText('not compared');
+    await expect(fytd).toContainText('FY2025 and FY2026');
+    // a trailing window a year apart shares most of its months, and says so
+    await expect(returns.locator('tbody tr', { hasText: '3 Y' })).toContainText(
+      'share 24 of 36 months',
+    );
+    // a change in market value is not a return
+    await expect(page.locator('#cio-cmp-fund')).toContainText('not a return');
+    // a difference of two percentages is percentage points
+    await expect(returns.locator('tbody tr', { hasText: '1 Y' })).toContainText('pp');
+    expect(errors).toEqual([]);
+  });
+
+  test('the marker means what it means on Summary, so it does not mark everything', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=compare');
+    await expect(page.locator('tr.cmp-mat')).toHaveCount(3);
+    // the filter leaves only the marked rows
+    await page.getByRole('checkbox', { name: /Only rows that crossed a threshold/ }).check();
+    await expect(page).toHaveURL(/material=1/);
+    await expect(page.locator('table.cmp tbody tr')).toHaveCount(3);
+    await expect(page.locator('#cio-cmp-geo')).toContainText('Nothing in this section');
+  });
+
+  test('picking another report compares against it, in date order either way', async ({ page }) => {
+    await ready(page, '/cio?tab=compare');
+    await page.getByLabel('Report to compare with').selectOption('2026-05-31');
+    await expect(page).toHaveURL(/vs=2026-05-31/);
+    await expect(page.locator('#cio-compare').getByRole('heading')).toContainText(
+      'May 2026 against June 2026',
+    );
+    // an older report on screen compared with a newer one still runs earlier then later
+    await ready(page, '/cio?tab=compare&v=2025-06-30&vs=2026-06-30');
+    await expect(page.locator('#cio-compare').getByRole('heading')).toContainText(
+      'June 2025 against June 2026',
+    );
+  });
+
+  test('the other fund cites its own pages', async ({ page }) => {
+    // the first draft hardcoded the Pension Fund's pp. 8-9, which is wrong for the trust
+    await ready(page, '/cio?tab=compare');
+    const cite = page.locator('#cio-compare .src-chip summary');
+    await expect(cite).toHaveAttribute('aria-label', /pp\. 8–9/);
+    await page.getByRole('button', { name: 'OPEB Trust' }).click();
+    await expect(cite).toHaveAttribute('aria-label', /pp\. 13–14/);
+    await expect(cite).not.toHaveAttribute('aria-label', /pp\. 8–9/);
   });
 });
 

@@ -275,6 +275,54 @@ Two things about this page differ from every other slide, and the slide states b
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
 
+### Compare two reports (Compare tab)
+
+Any two of the sixteen published reports, side by side, for the fund on screen. The report on
+screen is one side; the other defaults to **the same month a year earlier** — the same point in
+the fiscal year, and one-year windows that do not overlap — and falls back to the report before
+when there is none. Both are in the address (`?tab=compare&v=…&vs=…`).
+
+A report-to-report comparison is only as honest as its rules about what is comparable, and three
+things make most of them quietly wrong. Each is handled on the row it affects, in
+`app/src/lib/compare.ts`:
+
+| | What goes wrong | What the tab does |
+|---|---|---|
+| **Period-to-date figures reset** | FYTD runs from July and YTD from January; an FYTD from a June report is twelve months, from a July report one | Across a reset the row is shown but **not compared**, with the two fiscal years named. Within one year it is compared, noting the later figure contains the earlier months |
+| **Trailing windows overlap** | Three-year returns a year apart share 24 of their 36 months | Every overlapping row says so — "the two windows share 24 of 36 months" — so the change reads as how the trailing figure moved, not a year of new performance |
+| **Market value is not a return** | A change in value includes contributions and benefit payments | The row says so |
+
+A moved policy target is called out as well, because drift is not comparable across policies.
+
+**Columns always run earlier then later**, and every change is later minus earlier, whichever
+report was on screen first. A change column whose sign depended on the order two menus were used
+would be its own trap.
+
+**The marker means what it means on Summary, and no more.** A row is marked only when it crosses
+the threshold the "What changed" panel already applies — a tenth of a point in the FYTD or one-year
+return, half a point of weight, $0.05 billion of market value, an excess that changes sign, any
+policy-target move. The first draft applied the return threshold to all eight periods, which a year
+apart marked seven of the eight return rows; a marker on nearly everything tells the reader nothing.
+Year over year it now marks three rows. Cash, geography and the other periods are shown with their
+change but never judged, and the method note says so.
+
+Two layout faults found while checking it at phone width, both worth knowing about elsewhere:
+
+- A `<select>` sizes itself to its longest option, which on a phone was wider than the screen. It
+  now shrinks, and its label wraps above it.
+- **The table's screen-reader text escaped its scroll box.** The site's `visually-hidden` class is
+  `position: absolute`, and an absolutely positioned element is clipped by a scroll container only
+  if that container is also its containing block. `.table-scroll` is not positioned, so the text
+  escaped and made the whole page scroll sideways. The Compare tables' scroll boxes are now
+  positioned. Other views put hidden text in table header cells near the left edge and their
+  phone-width tests pass, so this was not changed site-wide — making every scroll box positioned
+  could clip tooltips that rely on escaping it — but it is the thing to check if a table ever
+  starts scrolling the page.
+
+The per-report source records (`cioSource`, `entityPages`) moved to `app/src/lib/cioSource.ts`, so
+every CIO view cites the same pages. The Compare view's first draft hardcoded the Pension Fund's
+pp. 8–9, which would have been wrong for the OPEB Master Trust's pp. 13–14; a browser test pins it.
+
 ### When each figure was true — the freshness matrix (Summary tab)
 
 A report is not a single as-of date, and the tab had no way of saying so. The August 12, 2026

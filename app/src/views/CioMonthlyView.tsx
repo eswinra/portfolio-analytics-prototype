@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { DeckFrame } from '../components/DeckFrame';
+import { CioCompare } from './CioCompare';
 import { CioExplore } from './CioExplore';
 import { FreshnessMatrix } from '../components/FreshnessMatrix';
 import { offAnchorNote } from '../lib/freshness';
@@ -44,6 +45,7 @@ import {
 import { publishedFor, type EntityId } from '../fixtures/published';
 import { SOURCES, type SourceRecord } from '../fixtures/sources';
 import { useCioFile } from '../lib/cioFile';
+import { cioSource, entityPages } from '../lib/cioSource';
 import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
 import { PACKAGE_SHEET, readCioPackage } from '../lib/cioPackage';
 import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
@@ -67,6 +69,7 @@ const TABS: [key: string, label: string][] = [
   ['positioning', 'Positioning'],
   ['markets', 'Markets & items'],
   ['explore', 'Explore'],
+  ['compare', 'Compare'],
 ];
 
 /** Which sub-tab holds each panel, so a jump or a panel link opens the right tab. */
@@ -88,6 +91,12 @@ const TAB_OF: Record<string, string> = {
   'cio-x-cat': 'explore',
   'cio-x-corr': 'explore',
   'cio-x-scenario': 'explore',
+  'cio-compare': 'compare',
+  'cio-cmp-fund': 'compare',
+  'cio-cmp-returns': 'compare',
+  'cio-cmp-excess': 'compare',
+  'cio-cmp-alloc': 'compare',
+  'cio-cmp-geo': 'compare',
 };
 
 /** CIO Monthly — the monthly vintage rendered as dashboard panels from the same fixture that
@@ -115,33 +124,6 @@ const STATUS_VARIANT: Record<OpsStatus, TagVariant> = {
   quiet: 'blocked',
   done: 'accent',
 };
-
-/** Source record for one report's pages, built per vintage (the registry holds fixed documents). */
-function cioSource(v: CioVintage, pages: string, firstPage: number | null): SourceRecord {
-  if (v.origin === 'file') {
-    return {
-      id: `CIO_FILE_${v.file}`,
-      label: `template file ${v.file} (not published)`,
-      doc: 'CIO Monthly template file, read in this browser',
-      pageTable: 'as entered in the template',
-      asOf: longDate(v.dataThrough),
-    };
-  }
-  const url = v.url && firstPage ? `${v.url}#page=${firstPage}` : null;
-  const isFeed = v.url === null && v.pages.flows === 0;
-  return {
-    id: `CIO_${v.dataThrough}_${pages}`,
-    label: isFeed
-      ? `imported dataset ${v.file} (${pages})`
-      : `CIO Monthly Report (${v.reportLabel}), ${pages}`,
-    doc: isFeed
-      ? 'Workstation dataset — schema 1.4 cio_monthly rows'
-      : 'Chief Investment Officer Monthly Report',
-    pageTable: pages,
-    asOf: longDate(v.dataThrough),
-    ...(url ? { url } : {}),
-  };
-}
 
 /** Source record for the macro strip's FRED figures, read as of the report's as-of date. */
 function fredMacroSource(v: CioVintage): SourceRecord | null {
@@ -265,15 +247,6 @@ function CompositesCompare({ a, b }: { a: CioEntity; b: CioEntity }) {
       </table>
     </div>
   );
-}
-
-function entityPages(v: CioVintage, key: 'pension' | 'opeb') {
-  const [summary, table, hist, geo] = v.pages[key];
-  const last = Math.max(table, hist);
-  return {
-    main: cioSource(v, summary === last ? `p. ${summary}` : `pp. ${summary}–${last}`, summary),
-    geo: cioSource(v, `p. ${geo}`, geo),
-  };
 }
 
 export function CioMonthlyView() {
@@ -1803,6 +1776,14 @@ export function CioMonthlyView() {
             e={e}
             source={pkg ? 'template file' : feed ? 'workstation dataset' : 'published'}
             onSelectReport={select}
+          />
+        ) : null}
+
+        {tab === 'compare' ? (
+          <CioCompare
+            entity={entity}
+            vintage={vintage}
+            source={pkg ? 'template file' : feed ? 'workstation dataset' : 'published'}
           />
         ) : null}
 

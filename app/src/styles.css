@@ -3899,3 +3899,128 @@ table.fresh .footnote {
 .fresh-undated .fresh-off {
   color: var(--muted-62);
 }
+
+/* Compare two reports (views/CioCompare.tsx). A row that crossed a threshold is marked by a SHAPE
+   beside its change as well as by weight and colour; a row that is not compared is set quieter,
+   because its note is the thing to read. */
+.cmp-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 26px;
+  margin: 0 0 10px;
+}
+
+/* a <select> sizes itself to its longest option, which on a phone is wider than the screen: it
+   is allowed to shrink, and the label wraps above it when there is no room beside it */
+.cmp-pick {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 9px;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--neutral-700);
+}
+
+.cmp-pick select {
+  max-width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 5px 8px;
+  border: 1px solid var(--divider);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.cmp-only {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  color: var(--neutral-700);
+  cursor: pointer;
+}
+
+.cmp-lead {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: var(--neutral-800);
+}
+
+/* a row label is a label, not a column header: it takes the cell's type and the cell's hairline */
+/* the scroll box is the containing block for anything positioned inside it: the table's
+   screen-reader text is position:absolute, and without this it escaped the scroll box and made
+   the whole page scroll sideways on a phone */
+.cmp-wrap {
+  position: relative;
+}
+
+/* the label follows the cells' last-row rule, or it keeps a stub of hairline the cells dropped */
+table.cmp tbody tr:last-child th[scope='row'] {
+  border-bottom: none;
+}
+
+.cmp-legend {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
+  font-size: 0.78rem;
+  color: var(--neutral-700);
+}
+
+table.cmp th[scope='row'] {
+  font-size: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 400;
+  color: var(--ink);
+  text-align: left;
+  white-space: nowrap;
+  padding: 7px;
+  border-bottom: 1px solid rgb(26 26 26 / 5.5%);
+}
+
+/* the table takes its natural width, so on a phone it scrolls inside its box with compact rows
+   instead of squeezing the note into a strip one word wide; on a wide screen it still fills */
+table.cmp {
+  width: max-content;
+  min-width: 100%;
+}
+
+table.cmp .cmp-note {
+  font-size: 0.76rem;
+  color: var(--muted-62);
+  max-width: 44ch;
+}
+
+table.cmp .cmp-chg {
+  white-space: nowrap;
+}
+
+tr.cmp-mat .cmp-chg {
+  font-weight: 700;
+  color: var(--accent-900);
+}
+
+.cmp-mark {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-500);
+  margin-right: 6px;
+  vertical-align: 2px;
+}
+
+tr.cmp-off td,
+tr.cmp-off th {
+  color: var(--muted-62);
+}
+
+tr.cmp-off .cmp-note {
+  font-style: italic;
+}
