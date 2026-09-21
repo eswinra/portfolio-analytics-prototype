@@ -449,6 +449,50 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
   });
 });
 
+test.describe('when each figure was true (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('the tab states that its figures do not share one as-of date', async ({ page }) => {
+    await ready(page, '/cio?tab=summary');
+    const panel = page.locator('#cio-freshness');
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole('heading')).toContainText('Not everything here is as of June 30');
+    // the figures span the fund month and the month after it — not the publication date
+    await expect(panel.locator('.fresh-lead')).toContainText('June 30, 2026 to July 31, 2026');
+
+    // the subtler mistake is a figure AHEAD of the fund month, so those come first
+    const first = panel.locator('tbody tr').first();
+    await expect(first).toHaveClass(/fresh-ahead/);
+    await expect(panel.locator('tr.fresh-ahead')).toHaveCount(4);
+    await expect(panel.locator('tr.fresh-anchor')).toHaveCount(4);
+    await expect(panel.locator('tr.fresh-undated')).toHaveCount(2);
+
+    // the market table is a different month from the performance beside it, and says so
+    const market = panel.locator('tbody tr', { hasText: 'Market index returns' });
+    await expect(market).toContainText('1 month ahead');
+    await expect(market).toContainText('not the month the fund performance covers');
+
+    // a lag with no single date says how it is dated instead of showing a number
+    await expect(panel.locator('tbody tr', { hasText: 'NCREIF ODCE' })).toContainText(
+      'latest available quarter',
+    );
+  });
+
+  test('an older report shows its own dates, not the latest report’s', async ({ page }) => {
+    await ready(page, '/cio?tab=summary&v=2025-10-31');
+    const panel = page.locator('#cio-freshness');
+    await expect(panel.getByRole('heading')).toContainText('as of October 31, 2025');
+    // the curve is that report's observation — using the latest transcription put June 2026 here
+    await expect(panel.locator('tbody tr', { hasText: 'Treasury yield curve' })).toContainText(
+      'October 31, 2025',
+    );
+    // and its GDP chart is three months behind the fund figures
+    await expect(panel.locator('tbody tr', { hasText: 'Quarterly real GDP' })).toContainText(
+      '3 months behind',
+    );
+  });
+});
+
 test.describe('forecast volatility (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 

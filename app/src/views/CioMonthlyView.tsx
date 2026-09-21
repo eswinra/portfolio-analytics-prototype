@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 
 import { DeckFrame } from '../components/DeckFrame';
 import { CioExplore } from './CioExplore';
+import { FreshnessMatrix } from '../components/FreshnessMatrix';
+import { offAnchorNote } from '../lib/freshness';
 import { GdpBars } from '../components/GdpBars';
 import { GlossaryLink } from '../components/Glossary';
 import { AboutFigures, PageMeta, PageSources } from '../components/page';
@@ -71,6 +73,7 @@ const TABS: [key: string, label: string][] = [
 const TAB_OF: Record<string, string> = {
   'cio-read': 'summary',
   'cio-changed': 'summary',
+  'cio-freshness': 'summary',
   'cio-perf': 'performance',
   'cio-attr': 'performance',
   'cio-trend': 'performance',
@@ -770,6 +773,28 @@ export function CioMonthlyView() {
                 {prior ? <SourceLine records={[entityPages(prior, key).main]} /> : null}
               </Panel>
             </div>
+
+            <Panel
+              id="cio-freshness"
+              className="mt"
+              kicker="When each figure was true"
+              title={`Not everything here is as of ${longDate(vintage.dataThrough)}`}
+              sub={offAnchorNote(vintage)}
+              method={
+                <p>
+                  A report is not a single as-of date. Fund figures cover the month end on the
+                  masthead; the report prints its market table a month later; the FRED series are
+                  read as FRED showed them at the month end before the report; the Treasury curve is
+                  read at the fund&apos;s own month end; the GDP chart carries whatever vintage the
+                  report last drew it from. Real estate and private markets carry a valuation lag
+                  the report discloses in footnotes. This panel places each against the fund month
+                  rather than leaving the reader to assume they share one.
+                </p>
+              }
+            >
+              <FreshnessMatrix vintage={vintage} />
+              <SourceLine records={[entityPages(vintage, key).main]} />
+            </Panel>
           </>
         ) : null}
 

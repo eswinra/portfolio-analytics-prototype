@@ -3808,3 +3808,94 @@ details.panel > summary {
 .gdpf-stale {
   color: #b85c38;
 }
+
+/* When each figure was true — the freshness matrix (lib/freshness.ts).
+   Direction is carried by a marker SHAPE and the words, not by colour alone: a caret up for a
+   figure ahead of the fund month, a caret down for one behind, a square on the anchor, a rule
+   where there is no single date. Colour only reinforces it. */
+.fresh-lead {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--neutral-800);
+}
+
+table.fresh td {
+  vertical-align: top;
+}
+
+table.fresh .footnote {
+  margin-top: 3px;
+  max-width: 46ch;
+}
+
+.fresh-as {
+  white-space: nowrap;
+}
+
+.fresh-undated {
+  color: var(--muted-62);
+  font-style: italic;
+}
+
+.fresh-cad,
+.fresh-src {
+  color: var(--neutral-700);
+  font-size: 0.78rem;
+}
+
+.fresh-off {
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.fresh-mark {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  vertical-align: -1px;
+}
+
+/* ahead of the fund month: the subtler mistake, so it is the one that is marked */
+.fresh-ahead .fresh-off {
+  color: #8a4a2a;
+  font-weight: 700;
+}
+
+.fresh-ahead .fresh-mark {
+  width: 0;
+  height: 0;
+  margin-right: 12px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid #b85c38;
+}
+
+.fresh-behind .fresh-mark {
+  width: 0;
+  height: 0;
+  margin-right: 12px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid var(--neutral-600);
+}
+
+.fresh-anchor .fresh-mark {
+  background: var(--accent-900);
+}
+
+.fresh-anchor .fresh-off {
+  color: var(--accent-900);
+}
+
+.fresh-undated .fresh-mark,
+.fresh-undated-row .fresh-mark {
+  height: 2px;
+  background: var(--neutral-500);
+  vertical-align: 4px;
+}
+
+.fresh-undated .fresh-off {
+  color: var(--muted-62);
+}

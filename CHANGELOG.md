@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-09-20 — Revision 36: when each figure was true
+
+First item of the phased plan. A report is not a single as-of date, and until now the tab had no
+way of saying so.
+
+- **The Summary tab states what it actually spans.** The August 12, 2026 report carries fund
+  figures through June 30, a market table through July 31, FRED series read as of July 31, a
+  Treasury curve read at the fund's own month end, a GDP chart at whatever vintage the report last
+  drew it from, and two figures with a valuation lag and no single date. Five of its nine figures
+  carry a date other than the one on the masthead. The December 2025 report spans five months.
+- **Ahead is the ordering rule, not behind.** A lagging figure is the mistake people expect; a
+  figure *newer* than the month beside it is the one that gets read as coeval. The report prints
+  its market table a month after the fund figures, so the index moves on Markets & items are not
+  the month whose performance sits on Summary. Rows are ordered newest first so those come first.
+- **A figure with no single date says how it is dated**, never a number: NCREIF ODCE reads "latest
+  available quarter", private markets read "best available, cash-flow adjusted", both marked
+  `stale`.
+- Direction is a marker shape as well as a colour — caret up, caret down, square, rule — so it
+  survives a greyscale page and a colour-blind reader.
+- **Two bugs the tests caught while it was being built.** The Treasury curve was reading from
+  `MACRO_PRINTED`, the *latest* report's transcription, which put a June 2026 curve on the April
+  2025 report; it now uses each vintage's own observation. And the spread line counted the report's
+  publication date as a figure date, overstating the range — nothing is reported as of the day a
+  report is presented, so it is excluded from the span and the count while still shown as a row.
+- Logic is pure in `app/src/lib/freshness.ts`; the component renders rows and adds nothing.
+- Verification: lint · format · Vitest 542/542 (14 new) · build · Playwright 159/159 runnable
+  (2 new) · `npm audit --omit=dev` 0 vulnerabilities · checked on the latest report and on the
+  December 2025 report, which is the one with a three-month-old GDP chart.
+
 ## 2026-09-20 — Revision 35: forecast volatility, the last page the deck was missing
 
 - **The report's forecast risk pages are now a slide.** Pages 10 and 15 — one per fund — were the

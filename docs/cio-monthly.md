@@ -275,6 +275,41 @@ Two things about this page differ from every other slide, and the slide states b
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
 
+### When each figure was true — the freshness matrix (Summary tab)
+
+A report is not a single as-of date, and the tab had no way of saying so. The August 12, 2026
+report carries fund figures through June 30, a market table through July 31, FRED series read as of
+July 31, a Treasury curve read at the fund's own month end, a GDP chart at whatever vintage the
+report last drew it from, and two figures with a valuation lag and no single date at all. Five of
+nine figures carry a date other than the one the masthead shows.
+
+The panel places every figure against the month the fund figures cover, newest first:
+
+| | |
+|---|---|
+| **Ahead of the fund month** | the market table, the macro series, the GDP chart — and the report's own presentation date |
+| **On the fund month** | fund figures, return distribution, geography, the Treasury curve |
+| **No single date** | NCREIF ODCE (latest available quarter), private equity and real estate (best available, cash-flow adjusted) |
+
+**Ahead is the ordering rule, not behind.** A figure that lags is the mistake people expect; a
+figure that is *newer* than the month beside it is the one that gets read as coeval. The report
+prints its market table a month after the fund figures, so the index moves on the Markets tab are
+not the month whose performance sits on the Summary tab. Nothing else on the site said that.
+
+Direction is carried by a marker **shape** as well as colour — a caret up for ahead, a caret down
+for behind, a square on the anchor, a rule where there is no single date — so it survives a
+greyscale page and a colour-blind reader.
+
+The logic is pure and tested in `app/src/lib/freshness.ts`; `FreshnessMatrix.tsx` renders the rows
+and adds nothing. Two of the unit tests caught real bugs while the panel was being built:
+
+- the Treasury curve was being read from `MACRO_PRINTED`, which is the *latest* report's
+  transcription — putting a June 2026 curve on the April 2025 report. It now uses each vintage's
+  own observation (`CIO_MACRO[reportDate].curve.y10.date`), and a test pins that.
+- the spread line counted the report's publication date as a figure date, overstating the range.
+  Nothing is reported *as of* the day a report is presented, so it is excluded from the span and
+  from the headline count, while still appearing as a row for context.
+
 ### Forecast volatility (slide 10)
 
 The report gives each fund a page of forecast risk — p. 10 for the Pension Fund, p. 15 for the OPEB
