@@ -1,4 +1,4 @@
-import { CIO_MACRO, macroAsOf, type CioVintage } from '../fixtures/cioMonthly';
+import { CIO_MACRO, longDate, macroAsOf, type CioVintage } from '../fixtures/cioMonthly';
 import type { Classification } from '../components/pageMeta';
 
 import { gdpFor } from './cioGdp';
@@ -172,7 +172,7 @@ export function freshnessFor(v: CioVintage): Freshness {
         cls: gdp.stale ? 'stale' : 'reported_public',
         ...(gdp.stale
           ? {
-              why: `The report does not redraw this chart every month: it carries FRED as of ${gdp.asOf}, ${monthsApart(gdp.asOf, gdp.reportAsOf)} months older than the rest of its own macro page.`,
+              why: `The report does not redraw this chart every month: it carries FRED as of ${longDate(gdp.asOf)}, ${monthsApart(gdp.asOf, gdp.reportAsOf)} months older than the rest of its own macro page.`,
             }
           : {}),
         where: 'Markets & items',

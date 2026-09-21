@@ -87,6 +87,8 @@ describe('when each figure on the CIO Monthly tab was true', () => {
       const gdp = freshnessFor(v).rows.find((r) => r.key === 'gdp')!;
       expect(gdp.cls, `${v.reportDate}`).toBe('stale');
       expect(gdp.why).toMatch(/older than the rest of its own macro page/);
+      // dates in prose read the way every other date on the panel does, never ISO
+      expect(gdp.why, `${v.reportDate}`).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     }
     // the late-2025 run is behind the fund anchor as well as behind its own page
     const dec = freshnessFor(CIO_VINTAGES.find((v) => v.reportDate === '2025-12-10')!);

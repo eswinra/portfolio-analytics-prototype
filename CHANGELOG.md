@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-20 — Revision 36.1: a date in prose reads like every other date
+
+- The freshness panel's GDP reason printed an ISO date (`2025-07-31`) in a sentence where every
+  other date on the same panel is long form. On a panel whose whole subject is dates, that is the
+  wrong detail to get wrong. A unit test now fails on any ISO date in that prose.
+- Verification: lint · format · Vitest 542/542 · build · Playwright 159/159 runnable.
+
 ## 2026-09-20 — Revision 36: when each figure was true
 
 First item of the phased plan. A report is not a single as-of date, and until now the tab had no
