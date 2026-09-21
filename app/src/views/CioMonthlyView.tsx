@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { DeckFrame } from '../components/DeckFrame';
@@ -7,6 +7,7 @@ import { CioExplore } from './CioExplore';
 import { FreshnessMatrix } from '../components/FreshnessMatrix';
 import { offAnchorNote } from '../lib/freshness';
 import { GdpBars } from '../components/GdpBars';
+import { Fig, FigureProvenance } from '../components/Provenance';
 import { GlossaryLink } from '../components/Glossary';
 import { AboutFigures, PageMeta, PageSources } from '../components/page';
 import { ReportPlayer } from '../components/ReportPlayer';
@@ -42,7 +43,7 @@ import {
   type CioVintage,
   type OpsStatus,
 } from '../fixtures/cioMonthly';
-import { publishedFor, type EntityId } from '../fixtures/published';
+import { type EntityId } from '../fixtures/published';
 import { SOURCES, type SourceRecord } from '../fixtures/sources';
 import { useCioFile } from '../lib/cioFile';
 import { cioSource, entityPages } from '../lib/cioSource';
@@ -50,6 +51,7 @@ import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
 import { PACKAGE_SHEET, readCioPackage } from '../lib/cioPackage';
 import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
 import { feedClassification } from '../lib/dataset/cioFeed';
+import { figId, ipsRange, proxyAttribution } from '../lib/provenance';
 import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 import { useUrlFlag, useUrlParam } from '../lib/urlState';
@@ -328,6 +330,7 @@ export function CioMonthlyView() {
   // the other fund, for side-by-side comparison; the header toggle still sets the primary one
   const otherEntity: EntityId = P ? 'OPEB' : 'PENSION';
   const o = cioFor(otherEntity, vintage);
+  const otherKey = P ? 'opeb' : 'pension';
   const cmp = compare && !feed;
   // a jump to a panel on another sub-tab opens that tab first
   const jump = (id: string) => {
@@ -339,41 +342,21 @@ export function CioMonthlyView() {
 
   // IPS range for a composite: the policy in force (IPS Table 1, restated June 12, 2024) against
   // the month-end weight — calculated here; the IPS defines no mechanical trigger
-  const majors = publishedFor(entity).majors;
-  const norm = (s: string) =>
-    s
-      .replace(/^OPEB /, '')
-      .replace('&', 'and')
-      .toLowerCase();
-  const ipsFor = (name: string) => {
-    const m = majors.find((row) => norm(row[0]) === norm(name));
-    return m ? { lo: m[1] - m[2], hi: m[1] + m[2] } : null;
-  };
+  const ipsFor = (name: string) => ipsRange(key, name);
 
   // proxy attribution, as on the deck's slide 4: (composite return − its benchmark) × month-end
   // weight; the residual carries everything the proxy cannot see (allocation effect, overlays,
-  // cash, compounding, beginning-of-period weights) and is shown, never hidden
-  const attribution = [fytd, attrPeriod].map((i) => {
-    const rows = e.comps.map((c) => ({
-      label: c.short,
-      contrib: c.r[i] !== null && c.b[i] !== null ? (c.r[i]! - c.b[i]!) * (c.pct / 100) : null,
-    }));
-    const explained = rows.reduce((s, r) => s + (r.contrib ?? 0), 0);
-    const total = excess(e, i);
-    return {
-      period: PERIODS[i]!,
-      rows,
-      explained,
-      total,
-      residual: total === null ? null : total - explained,
-    };
-  });
+  // cash, compounding, beginning-of-period weights) and is shown, never hidden. When a composite
+  // prints no figure for the period (none prints ten years) nothing is explained: a sum over the
+  // composites that do print would read as the whole.
+  const attribution = [fytd, attrPeriod].map((i) => ({ i, ...proxyAttribution(e, i) }));
 
   const hist = e.hist;
   const histMax = hist ? Math.max(...hist.c) : 0;
   // an imported feed is labelled as its rows are, never as the published report
   const feedCls = feed ? feedClassification(feed.classifications) : null;
   const pageCls = pkg ? 'calculated' : feedCls ? feedCls.primary : 'reported_public';
+  const provCtx = useMemo(() => ({ vintage, base: pageCls }), [vintage, pageCls]);
   const alsoCls = [
     ...new Set([...(feedCls ? feedCls.also : []), 'calculated', 'proxy_estimate'] as const),
   ].filter((c) => c !== pageCls);
@@ -574,26 +557,39 @@ export function CioMonthlyView() {
         </p>
       </AboutFigures>
 
-      <div role="tabpanel" id="subtab-panel" aria-labelledby={`subtab-${tab}`}>
+      <FigureProvenance
+        ctx={provCtx}
+        role="tabpanel"
+        id="subtab-panel"
+        aria-labelledby={`subtab-${tab}`}
+      >
         {tab === 'summary' ? (
           <>
             <div className="grid-kpi">
               <Panel tight kicker="Total fund market value">
-                <div className="stat-value">${e.aum.toFixed(1)}B</div>
+                <div className="stat-value">
+                  <Fig id={figId.aum(key)}>${e.aum.toFixed(1)}B</Fig>
+                </div>
                 <div className="stat-sub">
-                  ${mm(e.mv)}M ·{' '}
-                  {e.cash === null
-                    ? 'cash and equivalents not supplied'
-                    : `cash and equivalents $${mm(e.cash)}M`}
+                  <Fig id={figId.mv(key)}>${mm(e.mv)}M</Fig> ·{' '}
+                  {e.cash === null ? (
+                    'cash and equivalents not supplied'
+                  ) : (
+                    <>
+                      cash and equivalents <Fig id={figId.cash(key)}>${mm(e.cash)}M</Fig>
+                    </>
+                  )}
                 </div>
                 <div className="stat-foot">
                   {ep ? (
-                    <ChangeChip
-                      delta={e.mv - ep.mv}
-                      unit="$M"
-                      dp={0}
-                      title={`against the ${prior?.reportLabel} report`}
-                    />
+                    <Fig id={figId.dmv(key)}>
+                      <ChangeChip
+                        delta={e.mv - ep.mv}
+                        unit="$M"
+                        dp={0}
+                        title={`against the ${prior?.reportLabel} report`}
+                      />
+                    </Fig>
                   ) : null}
                   <button type="button" className="linklike" onClick={() => jump('cio-comps')}>
                     composites ↓
@@ -601,18 +597,22 @@ export function CioMonthlyView() {
                 </div>
               </Panel>
               <Panel tight kicker="Net return — 1 month">
-                <div className="stat-value">{pct(e.total.r[oneMonth])}</div>
+                <div className="stat-value">
+                  <Fig id={figId.r(key, oneMonth)}>{pct(e.total.r[oneMonth])}</Fig>
+                </div>
                 <div className="stat-sub">
-                  Policy benchmark {pct(e.total.b[oneMonth])} · {signed(excess(e, oneMonth))} pp
-                  excess
+                  Policy benchmark <Fig id={figId.b(key, oneMonth)}>{pct(e.total.b[oneMonth])}</Fig>{' '}
+                  · <Fig id={figId.x(key, oneMonth)}>{signed(excess(e, oneMonth))} pp</Fig> excess
                 </div>
                 <div className="stat-foot">
                   {ep ? (
-                    <ChangeChip
-                      delta={diff(e.total.r[oneMonth], ep.total.r[oneMonth])}
-                      unit="pp"
-                      title={`against the prior report's month (${pct(ep.total.r[oneMonth])})`}
-                    />
+                    <Fig id={figId.dr(key, oneMonth)}>
+                      <ChangeChip
+                        delta={diff(e.total.r[oneMonth], ep.total.r[oneMonth])}
+                        unit="pp"
+                        title={`against the prior report's month (${pct(ep.total.r[oneMonth])})`}
+                      />
+                    </Fig>
                   ) : null}
                   <button type="button" className="linklike" onClick={() => jump('cio-perf')}>
                     by period ↓
@@ -620,24 +620,31 @@ export function CioMonthlyView() {
                 </div>
               </Panel>
               <Panel tight kicker="Net return — fiscal year to date">
-                <div className="stat-value">{pct(e.total.r[fytd])}</div>
+                <div className="stat-value">
+                  <Fig id={figId.r(key, fytd)}>{pct(e.total.r[fytd])}</Fig>
+                </div>
                 <div className="stat-sub">
-                  Benchmark {pct(e.total.b[fytd])} · actuarial hurdle {pct(e.total.h[fytd])}
+                  Benchmark <Fig id={figId.b(key, fytd)}>{pct(e.total.b[fytd])}</Fig> · actuarial
+                  hurdle <Fig id={figId.h(key, fytd)}>{pct(e.total.h[fytd])}</Fig>
                 </div>
                 <div className="stat-foot">
                   {ep && fyReset ? (
-                    <span
-                      className="chip-change"
-                      title={`FYTD restarted July 1; the ${prior?.reportLabel} report's ${pct(ep.total.r[fytd])} covered the prior fiscal year`}
-                    >
-                      new fiscal year
-                    </span>
+                    <Fig id={figId.dr(key, fytd)}>
+                      <span
+                        className="chip-change"
+                        title={`FYTD restarted July 1; the ${prior?.reportLabel} report's ${pct(ep.total.r[fytd])} covered the prior fiscal year`}
+                      >
+                        new fiscal year
+                      </span>
+                    </Fig>
                   ) : ep ? (
-                    <ChangeChip
-                      delta={diff(e.total.r[fytd], ep.total.r[fytd])}
-                      unit="pp"
-                      title={`against the ${prior?.reportLabel} report (${pct(ep.total.r[fytd])})`}
-                    />
+                    <Fig id={figId.dr(key, fytd)}>
+                      <ChangeChip
+                        delta={diff(e.total.r[fytd], ep.total.r[fytd])}
+                        unit="pp"
+                        title={`against the ${prior?.reportLabel} report (${pct(ep.total.r[fytd])})`}
+                      />
+                    </Fig>
                   ) : null}
                   <button type="button" className="linklike" onClick={() => jump('cio-attr')}>
                     where the difference came from ↓
@@ -645,18 +652,22 @@ export function CioMonthlyView() {
                 </div>
               </Panel>
               <Panel tight kicker="Net return — 1 year">
-                <div className="stat-value">{pct(e.total.r[oneYear])}</div>
+                <div className="stat-value">
+                  <Fig id={figId.r(key, oneYear)}>{pct(e.total.r[oneYear])}</Fig>
+                </div>
                 <div className="stat-sub">
-                  Policy benchmark {pct(e.total.b[oneYear])} · {signed(excess(e, oneYear))} pp
-                  excess
+                  Policy benchmark <Fig id={figId.b(key, oneYear)}>{pct(e.total.b[oneYear])}</Fig> ·{' '}
+                  <Fig id={figId.x(key, oneYear)}>{signed(excess(e, oneYear))} pp</Fig> excess
                 </div>
                 <div className="stat-foot">
                   {ep ? (
-                    <ChangeChip
-                      delta={diff(e.total.r[oneYear], ep.total.r[oneYear])}
-                      unit="pp"
-                      title={`against the ${prior?.reportLabel} report (${pct(ep.total.r[oneYear])})`}
-                    />
+                    <Fig id={figId.dr(key, oneYear)}>
+                      <ChangeChip
+                        delta={diff(e.total.r[oneYear], ep.total.r[oneYear])}
+                        unit="pp"
+                        title={`against the ${prior?.reportLabel} report (${pct(ep.total.r[oneYear])})`}
+                      />
+                    </Fig>
                   ) : null}
                   <button type="button" className="linklike" onClick={() => jump('cio-trend')}>
                     across reports ↓
@@ -858,18 +869,30 @@ export function CioMonthlyView() {
                           <tr key={p}>
                             <td>{p}</td>
                             <td className="num grp" style={{ fontWeight: 500 }}>
-                              {pct(e.total.r[i])}
+                              <Fig id={figId.r(key, i)}>{pct(e.total.r[i])}</Fig>
                             </td>
-                            <td className="num">{pct(e.total.b[i])}</td>
                             <td className="num">
-                              {excess(e, i) === null ? '—' : `${signed(excess(e, i))} pp`}
+                              <Fig id={figId.b(key, i)}>{pct(e.total.b[i])}</Fig>
+                            </td>
+                            <td className="num">
+                              {excess(e, i) === null ? (
+                                '—'
+                              ) : (
+                                <Fig id={figId.x(key, i)}>{signed(excess(e, i))} pp</Fig>
+                              )}
                             </td>
                             <td className="num grp" style={{ fontWeight: 500 }}>
-                              {pct(o.total.r[i])}
+                              <Fig id={figId.r(otherKey, i)}>{pct(o.total.r[i])}</Fig>
                             </td>
-                            <td className="num">{pct(o.total.b[i])}</td>
                             <td className="num">
-                              {excess(o, i) === null ? '—' : `${signed(excess(o, i))} pp`}
+                              <Fig id={figId.b(otherKey, i)}>{pct(o.total.b[i])}</Fig>
+                            </td>
+                            <td className="num">
+                              {excess(o, i) === null ? (
+                                '—'
+                              ) : (
+                                <Fig id={figId.x(otherKey, i)}>{signed(excess(o, i))} pp</Fig>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -910,14 +933,30 @@ export function CioMonthlyView() {
                             <tr key={p}>
                               <td>{p}</td>
                               <td className="num" style={{ fontWeight: 500 }}>
-                                {pct(e.total.r[i])}
+                                <Fig id={figId.r(key, i)}>{pct(e.total.r[i])}</Fig>
                               </td>
-                              <td className="num">{pct(e.total.b[i])}</td>
                               <td className="num">
-                                {t ? <Tag variant={t.variant}>{t.text}</Tag> : '—'}
+                                <Fig id={figId.b(key, i)}>{pct(e.total.b[i])}</Fig>
                               </td>
-                              <td className="num">{pct(e.total.h[i])}</td>
-                              {ep ? <td className="num">{pct(ep.total.r[i])}</td> : null}
+                              <td className="num">
+                                {t ? (
+                                  <Fig id={figId.x(key, i)}>
+                                    <Tag variant={t.variant}>{t.text}</Tag>
+                                  </Fig>
+                                ) : (
+                                  '—'
+                                )}
+                              </td>
+                              <td className="num">
+                                <Fig id={figId.h(key, i)}>{pct(e.total.h[i])}</Fig>
+                              </td>
+                              {ep ? (
+                                <td className="num">
+                                  <Fig id={figId.at(figId.r(key, i), prior)}>
+                                    {pct(ep.total.r[i])}
+                                  </Fig>
+                                </td>
+                              ) : null}
                             </tr>
                           );
                         })}
@@ -955,7 +994,7 @@ export function CioMonthlyView() {
                             <tr key={p}>
                               <td>{p}</td>
                               <td className="num" style={{ fontWeight: 500 }}>
-                                {x === null ? '—' : `${signed(x)} pp`}
+                                {x === null ? '—' : <Fig id={figId.x(key, i)}>{signed(x)} pp</Fig>}
                               </td>
                               <td className="excess-cell">
                                 {x === null ? null : (
@@ -968,10 +1007,18 @@ export function CioMonthlyView() {
                                   />
                                 )}
                               </td>
-                              <td className="num">{h === null ? '—' : `${signed(h)} pp`}</td>
+                              <td className="num">
+                                {h === null ? '—' : <Fig id={figId.xh(key, i)}>{signed(h)} pp</Fig>}
+                              </td>
                               {ep ? (
                                 <td className="num">
-                                  {excess(ep, i) === null ? '—' : `${signed(excess(ep, i))} pp`}
+                                  {excess(ep, i) === null ? (
+                                    '—'
+                                  ) : (
+                                    <Fig id={figId.at(figId.x(key, i), prior)}>
+                                      {signed(excess(ep, i))} pp
+                                    </Fig>
+                                  )}
                                 </td>
                               ) : null}
                             </tr>
@@ -1047,7 +1094,11 @@ export function CioMonthlyView() {
                             const v = a.rows[ci]!.contrib;
                             return (
                               <td className="num" key={a.period}>
-                                {v === null ? '—' : `${signed(v, 2)} pp`}
+                                {v === null ? (
+                                  '—'
+                                ) : (
+                                  <Fig id={figId.contrib(key, c.k, a.i)}>{signed(v, 2)} pp</Fig>
+                                )}
                               </td>
                             );
                           })}
@@ -1057,7 +1108,11 @@ export function CioMonthlyView() {
                         <td>Explained by the proxy</td>
                         {attribution.map((a) => (
                           <td className="num" key={a.period}>
-                            {signed(a.explained, 2)} pp
+                            {a.explained === null ? (
+                              '—'
+                            ) : (
+                              <Fig id={figId.explained(key, a.i)}>{signed(a.explained, 2)} pp</Fig>
+                            )}
                           </td>
                         ))}
                       </tr>
@@ -1065,7 +1120,11 @@ export function CioMonthlyView() {
                         <td>Residual (allocation, overlays, cash, compounding)</td>
                         {attribution.map((a) => (
                           <td className="num" key={a.period}>
-                            {a.residual === null ? '—' : `${signed(a.residual, 2)} pp`}
+                            {a.residual === null ? (
+                              '—'
+                            ) : (
+                              <Fig id={figId.residual(key, a.i)}>{signed(a.residual, 2)} pp</Fig>
+                            )}
                           </td>
                         ))}
                       </tr>
@@ -1073,7 +1132,11 @@ export function CioMonthlyView() {
                         <td>Total-fund excess (reported fund − benchmark)</td>
                         {attribution.map((a) => (
                           <td className="num" key={a.period}>
-                            {a.total === null ? '—' : `${signed(a.total, 1)} pp`}
+                            {a.total === null ? (
+                              '—'
+                            ) : (
+                              <Fig id={figId.x(key, a.i)}>{signed(a.total, 1)} pp</Fig>
+                            )}
                           </td>
                         ))}
                       </tr>
@@ -1161,7 +1224,7 @@ export function CioMonthlyView() {
                             {c.n}
                           </td>
                           <td role="cell" className="num" data-label="Market value ($M)">
-                            {mm(c.mv)}
+                            <Fig id={figId.comp(key, c.k, 'mv')}>{mm(c.mv)}</Fig>
                           </td>
                           <td
                             role="cell"
@@ -1169,37 +1232,51 @@ export function CioMonthlyView() {
                             data-label="Weight"
                             style={{ fontWeight: 500 }}
                           >
-                            {c.pct.toFixed(1)}%
+                            <Fig id={figId.comp(key, c.k, 'w')}>{c.pct.toFixed(1)}%</Fig>
                           </td>
                           <td role="cell" className="num" data-label="Target">
-                            {c.tgt.toFixed(1)}%
+                            <Fig id={figId.comp(key, c.k, 'tgt')}>{c.tgt.toFixed(1)}%</Fig>
                           </td>
                           <td role="cell" className="num" data-label="Drift">
-                            {signed(c.pct - c.tgt)} pp
+                            <Fig id={figId.comp(key, c.k, 'drift')}>{signed(c.pct - c.tgt)} pp</Fig>
                           </td>
                           <td role="cell" className="num" data-label="Δ weight">
-                            {pc ? `${signed(c.pct - pc.pct)} pp` : '—'}
+                            {pc ? (
+                              <Fig id={figId.comp(key, c.k, 'dw')}>{signed(c.pct - pc.pct)} pp</Fig>
+                            ) : (
+                              '—'
+                            )}
                           </td>
                           <td role="cell" className="num" data-label="IPS range">
-                            {ips ? `${ips.lo}–${ips.hi}%` : '—'}
+                            {ips ? (
+                              <Fig id={figId.comp(key, c.k, 'ips')}>
+                                {ips.lo}–{ips.hi}%
+                              </Fig>
+                            ) : (
+                              '—'
+                            )}
                           </td>
                           <td role="cell" className="num" data-label="To bound">
                             {dist === null ? (
                               '—'
                             ) : (
-                              <>
-                                {dist.toFixed(1)} pp{' '}
+                              <span>
+                                <Fig id={figId.comp(key, c.k, 'bound')}>{dist.toFixed(1)} pp</Fig>{' '}
                                 {dist < 0 ? (
                                   <Tag variant="blocked">outside</Tag>
                                 ) : dist <= CONFIG.nearBoundPp ? (
                                   <Tag variant="outline">near bound</Tag>
                                 ) : null}
-                              </>
+                              </span>
                             )}
                           </td>
                           {[oneMonth, fytd, oneYear].map((i) => (
                             <td role="cell" className="num" data-label={PERIODS[i]} key={i}>
-                              {pct(c.r[i])} / {pct(c.b[i])}
+                              {/* one child: on a phone the card lays a cell's children out as a row */}
+                              <span>
+                                <Fig id={figId.compR(key, c.k, i)}>{pct(c.r[i])}</Fig> /{' '}
+                                <Fig id={figId.compB(key, c.k, i)}>{pct(c.b[i])}</Fig>
+                              </span>
                             </td>
                           ))}
                         </tr>
@@ -1211,10 +1288,10 @@ export function CioMonthlyView() {
                           {e.other.n}
                         </td>
                         <td role="cell" className="num" data-label="Market value ($M)">
-                          {mm(e.other.mv)}
+                          <Fig id={figId.other(key, 'mv')}>{mm(e.other.mv)}</Fig>
                         </td>
                         <td role="cell" className="num" data-label="Weight">
-                          {e.other.pct.toFixed(1)}%
+                          <Fig id={figId.other(key, 'w')}>{e.other.pct.toFixed(1)}%</Fig>
                         </td>
                         <td role="cell" className="num" data-label="Target">
                           —
@@ -1247,7 +1324,7 @@ export function CioMonthlyView() {
                         {e.name}
                       </td>
                       <td role="cell" className="num" data-label="Market value ($M)">
-                        {mm(e.mv)}
+                        <Fig id={figId.mv(key)}>{mm(e.mv)}</Fig>
                       </td>
                       <td role="cell" className="num" data-label="Weight">
                         100.0%
@@ -1269,7 +1346,10 @@ export function CioMonthlyView() {
                       </td>
                       {[oneMonth, fytd, oneYear].map((i) => (
                         <td role="cell" className="num" data-label={PERIODS[i]} key={i}>
-                          {pct(e.total.r[i])} / {pct(e.total.b[i])}
+                          <span>
+                            <Fig id={figId.r(key, i)}>{pct(e.total.r[i])}</Fig> /{' '}
+                            <Fig id={figId.b(key, i)}>{pct(e.total.b[i])}</Fig>
+                          </span>
                         </td>
                       ))}
                     </tr>
@@ -1797,7 +1877,7 @@ export function CioMonthlyView() {
             intent={presentIntent}
           />
         ) : null}
-      </div>
+      </FigureProvenance>
       <PageSources sources={[src.main]} />
     </PageMeta>
   );

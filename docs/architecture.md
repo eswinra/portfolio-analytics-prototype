@@ -188,6 +188,12 @@ Conventions every dashboard view now follows:
   Economy what-if sliders and a zoomable history chart. Every value a tooltip shows is also in a
   table or in text on the page.
 - **Slides inside the dashboard**: see `docs/cio-monthly.md`, "The dashboard feeds the slides".
+- **Provenance drawer** (`lib/provenance.ts`, `components/Provenance.tsx`): every figure on the
+  CIO Monthly Summary, Performance and Positioning tabs has an address and opens a record of its
+  source page, classification, calculation (each input opens its own record) and period. The
+  library is pure and holds the calculations the tables show, so the two cannot disagree; the
+  component wraps a figure in `<Fig id>` and renders plain text outside the provider. See
+  `docs/cio-monthly.md`, "Where a figure came from".
 
 ## Revision 32 (2026-09-20) — geography as a map, projected at build time
 

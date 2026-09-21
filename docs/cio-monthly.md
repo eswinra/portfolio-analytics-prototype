@@ -275,6 +275,54 @@ Two things about this page differ from every other slide, and the slide states b
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
 
+### Where a figure came from — the provenance drawer (Summary, Performance, Positioning)
+
+Select any figure on the Summary, Performance or Positioning tab (they carry a faint dotted
+underline) and a drawer opens with its record:
+
+| Section | What it says |
+|---|---|
+| **The figure** | What it is in words, the value as the page shows it, and its classification with the definition beside it |
+| **Where it came from** | The document and page, linked to that page of the public PDF; for a printed figure, the check that tied it to another printed figure — or a plain statement that nothing did |
+| **How it was calculated** | For a calculated figure, the formula, the formula with the figures put in (`12.2% − 14.8% = −2.6 pp`), and each input — each of which opens its own record |
+| **When it was true** | The month end, or the dates the period covers (`July 1, 2025 – June 30, 2026, cumulative over 12 months`), or the two month ends a change runs between |
+| **Read it with** | What the figure does not say: net of fees, the rounding of one-decimal inputs, a change in value that is not a return, the months two trailing windows share, a proxy that is not attribution |
+
+**Every figure has an address**, `<fund>.<metric>[.<period>][@<data-through date>]` — for example
+`pension.x.FYTD` (the Pension Fund's fiscal-year-to-date excess in the report on screen) or
+`pension.r.1M@2026-05-31` (its one-month return in the report with data through May 31, 2026). The
+address is in the page URL (`?fig=`), so **Copy link to this figure** shares one figure's record.
+The `@` suffix is what makes lineage work: the Prior report column and every change against the
+prior report resolve their earlier figure with the same code, and so cite the earlier report's own
+page, not the page on screen.
+
+**The record says what checked a figure, and says so when nothing did.** The extractor rejects a
+report whose identities fail: the summary page's total must agree with the performance table's to
+within $0.06 billion, the composites must add up to the total, the weights to 100%, and the summary
+page's monthly return must agree with the table's one-month figure. Those checks are named on the
+figures they cover. A three-year benchmark return is tied to nothing else in the report, and its
+record says it rests on its position on the page alone, rather than implying a check that was
+never made.
+
+**One calculation, not two.** `app/src/lib/provenance.ts` is pure and unit-tested; it resolves an
+address to its record. The calculations the tables show — the proxy attribution and the IPS range —
+moved into it from the view, so the drawer cannot explain a number the table does not show.
+Moving them found a fault: **the proxy attribution showed "+0.00 pp explained" at ten years**.
+The report prints no ten-year composite returns, so every contribution was missing and the old sum
+counted them as zero, putting the whole excess in the residual as if the proxy had been tried and
+had explained nothing. It now shows "—" for both, as it does for any period where a composite
+prints no figure, because a sum over the composites that happen to print one would be read as the
+whole.
+
+A template file or an imported dataset is labelled as its page is (calculated, or the dataset's own
+classification), never as a published report, and cites no report page. A link to an address the
+page does not have opens the drawer with that said plainly, rather than opening nothing.
+
+The drawer is a native `<dialog>` opened with `showModal()`: focus moves to the figure's name,
+stays inside the drawer, and returns to the figure when it closes. Escape is handled by the drawer
+itself, because the browser's own Escape-to-close did not fire for scripted key presses when this
+was tested.
+
 ### Compare two reports (Compare tab)
 
 Any two of the sixteen published reports, side by side, for the fund on screen. The report on

@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-09-21 — Revision 38: where a figure came from
+
+Phase 1, item 3. Select any figure on the CIO Monthly Summary, Performance or Positioning tab and
+a drawer shows where it came from.
+
+- **One record per figure.** What the figure is; its classification with the definition; the
+  document and page, linked to that page of the public PDF; for a calculated figure, the formula,
+  the formula with the figures put in and each input; the dates it covers; and what to read it
+  with. A browser test selects every figure on the three tabs and checks each opens a record.
+- **Each input opens its own record**, so a proxy contribution can be followed to the printed
+  composite return and on to its page. Back retraces the path.
+- **Every figure has an address** in the URL (`?fig=pension.x.FYTD`), so a link opens one figure's
+  record. An `@` suffix names another report (`pension.r.1M@2026-05-31`): the Prior report column
+  and every change against the prior report cite the earlier report's own page.
+- **The record says what checked a figure, and says so when nothing did.** The extractor's
+  identities (the two printed totals agree, composites add up to the total, weights to 100%, the
+  summary and table monthly returns agree) are named on the figures they cover; a figure no
+  identity ties to anything else says it rests on its position on the page alone.
+- **Fixed: the proxy attribution showed "+0.00 pp explained" at ten years.** The report prints no
+  ten-year composite returns, and the old sum counted the missing contributions as zero, putting
+  the whole excess in the residual. It now shows "—", as for any period where a composite prints
+  no figure. Found by moving the calculation into the same library the drawer reads, so the two
+  cannot disagree; the IPS range moved with it.
+- **Found at phone width and fixed.** On the Positioning cards, a return and its benchmark had
+  become three separate items in a flex row and spread across the card; each pair is one item
+  again.
+- Escape is handled by the drawer itself: the browser's own Escape-to-close did not fire for
+  scripted key presses when tested.
+- Verification: lint · format · Vitest 584/584 (26 new) · build · Playwright 184/184 runnable
+  (6 new, plus two drawer-open routes in the overflow and accessibility checks) · checked at
+  375 and 1280px in the browser. The local visual-regression baselines date from September 6 and
+  fail on pages this revision did not touch; they were not updated.
+
 ## 2026-09-21 — Revision 37: compare two reports
 
 Phase 1, item 2. There are sixteen published reports; until now you could play through them but not

@@ -29,6 +29,10 @@ const ROUTES = [
   '/cio?tab=markets',
   '/cio?tab=explore',
   '/cio?tab=compare',
+  // the provenance drawer open, on the widest record (a proxy with four inputs) and on one that
+  // cites two documents
+  '/cio?tab=performance&fig=pension.attr.FYTD',
+  '/cio?tab=positioning&fig=pension.growth.bound',
   '/macro',
   '/macro?tab=factors',
   '/macro?tab=indicators',
@@ -513,6 +517,117 @@ test.describe('compare two reports (desktop project)', () => {
     await page.getByRole('button', { name: 'OPEB Trust' }).click();
     await expect(cite).toHaveAttribute('aria-label', /pp\. 13–14/);
     await expect(cite).not.toHaveAttribute('aria-label', /pp\. 8–9/);
+  });
+});
+
+test.describe('provenance drawer (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('selecting a figure shows its page, classification and period, and the address', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=summary');
+    const figure = page.locator('[data-fig="pension.r.FYTD"]');
+    await figure.click();
+    const drawer = page.getByRole('dialog');
+    await expect(drawer).toBeVisible();
+    await expect(page).toHaveURL(/fig=pension\.r\.FYTD/);
+    // focus moves into the drawer, onto the figure's name
+    await expect(drawer.getByRole('heading', { level: 2 })).toBeFocused();
+    await expect(drawer.getByRole('heading', { level: 2 })).toHaveText(
+      'Net return, fiscal year to date',
+    );
+    await expect(drawer).toContainText('reported public');
+    // the page it is printed on, linked to that page of the public PDF
+    const link = drawer.getByRole('link', {
+      name: /CIO Monthly Report \(August 12, 2026\), p\. 9/,
+    });
+    await expect(link).toHaveAttribute('href', /CIO-Monthly-Report-Aug-2026\.pdf#page=9$/);
+    await expect(drawer).toContainText('July 1, 2025 – June 30, 2026, cumulative over 12 months');
+
+    // Escape closes it, clears the address and returns focus to the figure
+    await page.keyboard.press('Escape');
+    await expect(drawer).toBeHidden();
+    await expect(page).not.toHaveURL(/fig=/);
+    await expect(figure).toBeFocused();
+  });
+
+  test('a calculated figure opens each of its inputs, and Back retraces the path', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=summary&fig=pension.x.FYTD');
+    const drawer = page.getByRole('dialog');
+    const title = drawer.getByRole('heading', { level: 2 });
+    await expect(title).toHaveText('Excess over the policy benchmark, fiscal year to date');
+    await expect(drawer).toContainText('12.2% − 14.8% = −2.6 pp');
+    await expect(drawer).toContainText('calculated');
+
+    await drawer
+      .getByRole('button', { name: 'Policy benchmark return, fiscal year to date' })
+      .click();
+    await expect(title).toHaveText('Policy benchmark return, fiscal year to date');
+    await expect(page).toHaveURL(/fig=pension\.b\.FYTD/);
+    await expect(drawer).toContainText('reported public');
+    // nothing else in the report ties a benchmark to another figure, and the record says so
+    await expect(drawer).toContainText('rests on its position on the page alone');
+
+    await drawer.getByRole('button', { name: /Back to Excess over the policy benchmark/ }).click();
+    await expect(title).toHaveText('Excess over the policy benchmark, fiscal year to date');
+    await expect(drawer.getByRole('button', { name: /Back to/ })).toHaveCount(0);
+  });
+
+  test('a figure from the prior report cites the prior report', async ({ page }) => {
+    await ready(page, '/cio?tab=performance');
+    await page.locator('[data-fig="pension.r.1M@2026-05-31"]').click();
+    const drawer = page.getByRole('dialog');
+    await expect(drawer).toContainText('July 8, 2026 report, data through May 31, 2026');
+    await expect(
+      drawer.getByRole('link', { name: /CIO Monthly Report \(July 8, 2026\)/ }),
+    ).toBeVisible();
+  });
+
+  test('the proxy says what it is at every level, and explains nothing it cannot', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=performance&attr=7');
+    const table = page.locator('#cio-attr table');
+    // no composite prints a ten-year return, so the proxy explains nothing rather than +0.00 pp
+    const explained = table.locator('tbody tr', { hasText: 'Explained by the proxy' });
+    await expect(explained.locator('td').nth(2)).toHaveText('—');
+    await explained.locator('[data-fig="pension.attr.FYTD"]').click();
+    const drawer = page.getByRole('dialog');
+    await expect(drawer).toContainText('proxy estimate');
+    await expect(drawer).toContainText('not a Brinson decomposition');
+    await expect(drawer.locator('.prov-inputs li')).toHaveCount(4);
+  });
+
+  test('a link to an address the page does not have says so', async ({ page }) => {
+    await ready(page, '/cio?tab=summary&fig=pension.nothing.here');
+    const drawer = page.getByRole('dialog');
+    await expect(drawer.getByRole('heading', { level: 2 })).toHaveText(
+      'Nothing on this page has that address',
+    );
+    await page.getByRole('button', { name: 'Close' }).click();
+    await expect(drawer).toBeHidden();
+  });
+
+  test('every figure on the three detail tabs opens a record', async ({ page }) => {
+    for (const tab of ['summary', 'performance', 'positioning']) {
+      await ready(page, `/cio?tab=${tab}`);
+      const ids = await page
+        .locator('[data-fig]')
+        .evaluateAll((els) => [...new Set(els.map((el) => el.getAttribute('data-fig')!))]);
+      expect(ids.length, tab).toBeGreaterThan(10);
+      const drawer = page.getByRole('dialog');
+      for (const id of ids) {
+        await page.locator(`[data-fig="${id}"]`).first().click();
+        await expect(drawer.getByRole('heading', { level: 2 }), id).not.toHaveText(
+          'Nothing on this page has that address',
+        );
+        await page.keyboard.press('Escape');
+        await expect(drawer).toBeHidden();
+      }
+    }
   });
 });
 
