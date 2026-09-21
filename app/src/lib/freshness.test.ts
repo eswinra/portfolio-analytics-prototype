@@ -173,3 +173,14 @@ describe('when each figure on the CIO Monthly tab was true', () => {
     }
   });
 });
+
+describe('the prose reads as prose', () => {
+  it('a count of one is singular, in every report', () => {
+    // the GDP note printed "1 months older" for a chart one month behind its page
+    for (const v of CIO_VINTAGES) {
+      for (const r of freshnessFor(v).rows) {
+        expect(r.why ?? '', `${v.reportDate} ${r.key}`).not.toMatch(/\b1 months\b/);
+      }
+    }
+  });
+});

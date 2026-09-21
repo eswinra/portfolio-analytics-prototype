@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-21 — Revision 39.1: "1 months older"
+
+- Found on the live Exception Center: a GDP chart one month behind its own macro page read "1 months
+  older". The sentence comes from the freshness matrix (Revision 36), so it read that way there
+  too. It is singular now, and a test checks every report's freshness notes for "1 months".
+- Verification: lint · format · Vitest 602/602 · build · Playwright 200/200 runnable.
+
 ## 2026-09-21 — Revision 39: the Exception Center
 
 Phase 1, item 4. What needs attention in a report is now the second item in the dashboard, not a

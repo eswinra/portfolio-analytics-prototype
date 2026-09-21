@@ -165,6 +165,7 @@ export function freshnessFor(v: CioVintage): Freshness {
 
   const gdp = gdpFor(v.reportDate);
   if (gdp) {
+    const older = monthsApart(gdp.asOf, gdp.reportAsOf);
     rows.push(
       row('gdp', 'Quarterly real GDP growth', gdp.asOf, anchor, {
         cadence: 'quarterly',
@@ -172,7 +173,7 @@ export function freshnessFor(v: CioVintage): Freshness {
         cls: gdp.stale ? 'stale' : 'reported_public',
         ...(gdp.stale
           ? {
-              why: `The report does not redraw this chart every month: it carries FRED as of ${longDate(gdp.asOf)}, ${monthsApart(gdp.asOf, gdp.reportAsOf)} months older than the rest of its own macro page.`,
+              why: `The report does not redraw this chart every month: it carries FRED as of ${longDate(gdp.asOf)}, ${older} month${older === 1 ? '' : 's'} older than the rest of its own macro page.`,
             }
           : {}),
         where: 'Markets & items',
