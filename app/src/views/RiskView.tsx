@@ -189,8 +189,8 @@ export function RiskView() {
           </div>
           <p className="panel-note">
             Operational data-quality triage runs in the{' '}
-            <Link to="/exceptions">team workflow demo</Link> (synthetic contract data): tiered, aged
-            exceptions with provenance and reconciliation checks.
+            <Link to="/data-quality">team workflow demo</Link> (synthetic contract data): tiered,
+            aged exceptions with provenance and reconciliation checks.
           </p>
         </Panel>
       </div>

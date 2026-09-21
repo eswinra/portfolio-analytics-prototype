@@ -135,9 +135,11 @@ Navigate to **Allocation**.
 
 ---
 
-## 6:30 — Exceptions: the queue, not a scavenger hunt
+## 6:30 — Data quality: the queue, not a scavenger hunt
 
-Navigate to **Exceptions**.
+Switch to **Workstation** and open **Data quality**. (The dashboard's **Exceptions** view is the
+Exception Center for the published CIO report — policy ranges, data conditions and changes to
+explain — and is a separate stop if the audience asks what needs attention this month.)
 
 > "The two issues from the Overview strip live here as **root-cause items** — the degraded
 > series and the control that caught it are one issue, not two rows to chase. Each names

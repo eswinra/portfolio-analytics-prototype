@@ -3,8 +3,10 @@ import { ClassBadge, Panel, Pill, statusTone, Tag, type TagVariant } from '../co
 import { policyFor } from '../fixtures/policyPack';
 import { useDataset } from '../lib/dataset/useDataset';
 
-/** Exceptions & data quality (team workflow demo): tiered, aged triage queue with the Team
- *  Activity provenance panel and the workbook control registers. Synthetic contract data. */
+/** Data quality (team workflow demo): the pipeline's tiered, aged triage queue with the Team
+ *  Activity provenance panel and the workbook control registers. Synthetic contract data. The
+ *  Exception Center on the Dashboard lists what needs attention in the published report; in the
+ *  internal version this queue would feed it. */
 
 const CHECK_DESCRIPTIONS: Record<string, string> = {
   'CHK-01': 'Beginning weights sum to 100% every month',
@@ -27,7 +29,7 @@ const TIER_VARIANT: Record<string, TagVariant> = {
   informational: 'neutral',
 };
 
-export function ExceptionsView() {
+export function DataQualityView() {
   const { dataset, source, importWarnings } = useDataset();
   const { exceptions, checks, meta, publicReferences, teamActivity } = dataset;
 

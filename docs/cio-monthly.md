@@ -323,6 +323,41 @@ stays inside the drawer, and returns to the figure when it closes. Escape is han
 itself, because the browser's own Escape-to-close did not fire for scripted key presses when this
 was tested.
 
+### The Exception Center (Dashboard › Exceptions)
+
+What in the report on screen needs attention before its figures are presented, for both funds on
+one page. It is the second item in the dashboard, and the Overview's monthly strip carries its one
+line — "In this report: no policy exceptions · no data conditions · 13 changes to explain, across
+both funds" — with a link. Any report can be chosen; the address carries it (`?v=`), and the
+masthead is dated by it, as on CIO Monthly.
+
+| Section | Listed | Empty state |
+|---|---|---|
+| **Policy ranges** | A composite outside its IPS range, or within 1.0 pp of a bound, and how many reports running it has been so | Names the nearest composite and its margin — "Real Assets & Inflation Hedges in the Pension Fund, 3.4 pp from its lower bound" — so an empty section still says how far from an exception the fund is |
+| **Data** | What is unusual about this report's data: a month missing from the series before it, a market table that could not be read, a GDP chart the report did not redraw, a figure it did not print | Points to the freshness matrix for what holds every month |
+| **Changes to explain** | Every change since the prior report past the "What changed" thresholds — the same function, so the two lists cannot disagree | Says whether there is no prior report or nothing crossed a threshold |
+
+Every item opens the CIO Monthly panel it comes from, for its fund and report, with the figure's
+provenance record on top (`/cio?tab=summary&p=cio-changed&e=OPEB&fig=opeb.ra.dw`).
+
+**What is deliberately not listed.** Caveats true of every report — real estate and private
+markets carried at lagged values, the market table a month ahead of the fund figures, ODCE undated
+— are stated once in the freshness matrix. An exception list that repeated them every month would
+bury what is new. Standing performance (below the benchmark, below the hurdle) is on the Summary
+sub-tab; this page lists what changed.
+
+**What the published series actually contains.** Across all sixteen reports no composite comes
+within 1.0 pp of an IPS bound — the nearest any report comes is 2.0 pp, and 3.4 pp in the latest —
+so the policy section is empty for every report today, and says by how much. The data section is
+not: seven reports have a market table that could not be read (the first six in a row), seven
+carry a GDP chart the report did not redraw,
+and the February 11, 2026 report follows a two-month gap — the series has no report with data
+through November 30, 2025, so every change on it spans two months.
+
+The rules are in `app/src/lib/exceptionCenter.ts` (pure, 17 tests). The synthetic pipeline's own
+triage queue is Workstation › **Data quality** (`/data-quality`, formerly `/exceptions`); in the
+internal version it would feed this page.
+
 ### Compare two reports (Compare tab)
 
 Any two of the sixteen published reports, side by side, for the fund on screen. The report on

@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-09-21 — Revision 39: the Exception Center
+
+Phase 1, item 4. What needs attention in a report is now the second item in the dashboard, not a
+route under the synthetic workstation.
+
+- **An Exception Center for the published report, both funds on one page.** Policy ranges (a
+  composite outside its IPS range or within 1.0 pp of a bound, with how many reports running);
+  data conditions particular to this report (a month missing from the series before it, a market
+  table that could not be read, a GDP chart the report did not redraw, a figure it did not print);
+  and the changes since the prior report someone will be asked to explain. Any report can be
+  chosen, and the masthead is dated by it.
+- **Every item opens where it comes from**: the CIO Monthly panel, for its fund and report, with
+  the figure's provenance record on top.
+- **The changes to explain are the "What changed" lists, by construction** — the same function,
+  and a browser test counts both pages and checks they agree.
+- **Standing caveats are not listed.** Lagged real estate and private-markets values and the
+  market table a month ahead hold for every report; listing them monthly would bury what is new.
+  They stay in the freshness matrix, one link away.
+- **An empty section says how far from an exception it is.** No composite in any of the sixteen
+  reports comes within 1.0 pp of an IPS bound (the nearest in any report is 2.0 pp), so the policy
+  section names the nearest instead — in the latest report, Real Assets & Inflation Hedges, 3.4 pp
+  from its lower bound. Seven reports carry an unreadable market table, seven a GDP chart the
+  report did not redraw, and one follows a month missing from the series.
+- **The Overview's monthly strip carries the one line**: "In this report: no policy exceptions ·
+  no data conditions · 13 changes to explain, across both funds", linked.
+- The synthetic pipeline's triage queue is now Workstation › **Data quality** (`/data-quality`);
+  `/exceptions` is the Exception Center. The demo script's step is updated.
+- **Fixed: a billion-dollar change could disagree with the values beside it.** "+0.2 $B" sat next
+  to "6.3 → 6.4 $B", both ends rounded to one decimal. Changes in $ billions now show two
+  decimals (+0.18 $B) here and in the CIO "What changed" panel, whose code already chose between
+  two decimal settings but set both to one.
+- Verification: lint · format · Vitest 601/601 (17 new) · build · Playwright 200/200 runnable
+  (6 new, plus two routes in the overflow and accessibility checks) · `npm audit --omit=dev`
+  0 vulnerabilities · checked at 320 and 1280px in the browser.
+
 ## 2026-09-21 — Revision 38: where a figure came from
 
 Phase 1, item 3. Select any figure on the CIO Monthly Summary, Performance or Positioning tab and

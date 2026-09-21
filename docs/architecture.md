@@ -194,6 +194,11 @@ Conventions every dashboard view now follows:
   library is pure and holds the calculations the tables show, so the two cannot disagree; the
   component wraps a figure in `<Fig id>` and renders plain text outside the provider. See
   `docs/cio-monthly.md`, "Where a figure came from".
+- **Exception Center** (`lib/exceptionCenter.ts`, `views/ExceptionCenterView.tsx`, `/exceptions`):
+  policy ranges, report-specific data conditions and the changes to explain, for both funds in
+  the report on screen; each item links to its panel with the provenance record open. The changes
+  come from the same `cioChanges` the CIO "What changed" panel uses. The synthetic pipeline's
+  queue moved to Workstation › Data quality (`/data-quality`).
 
 ## Revision 32 (2026-09-20) — geography as a map, projected at build time
 

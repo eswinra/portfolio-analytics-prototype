@@ -4229,3 +4229,42 @@ dialog.prov::backdrop {
     text-decoration: none;
   }
 }
+
+/* ---- Exception Center ---------------------------------------------------------------------- */
+
+.xc-bar {
+  margin-bottom: 4px;
+}
+
+.xc-lead {
+  margin: 10px 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.xc-table .xc-what {
+  font-weight: 500;
+}
+
+.xc-table td {
+  vertical-align: baseline;
+}
+
+.xc-pipeline {
+  margin-top: 22px;
+}
+
+.strip-exceptions {
+  margin-bottom: 4px;
+}
+
+/* on a phone a sentence reads left-aligned under its label, not squeezed against the right edge */
+@media (max-width: 640px) {
+  .xc-table td.xc-what,
+  .xc-table td.issue-impact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    text-align: left;
+  }
+}

@@ -21,6 +21,9 @@ const ROUTES = [
   '/import',
   '/recon',
   '/exceptions',
+  // the Exception Center on a report with a data condition (a month missing before it)
+  '/exceptions?v=2025-12-31',
+  '/data-quality',
   '/acfr',
   '/cio',
   '/cio?tab=summary',
@@ -517,6 +520,94 @@ test.describe('compare two reports (desktop project)', () => {
     await page.getByRole('button', { name: 'OPEB Trust' }).click();
     await expect(cite).toHaveAttribute('aria-label', /pp\. 13–14/);
     await expect(cite).not.toHaveAttribute('aria-label', /pp\. 8–9/);
+  });
+});
+
+test.describe('Exception Center (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('comes second in the dashboard, and the Overview says what it holds', async ({ page }) => {
+    await ready(page, '/');
+    const nav = page.locator('.mainnav-links a');
+    await expect(nav.nth(0)).toHaveText('Overview');
+    await expect(nav.nth(1)).toHaveText('Exceptions');
+    const line = page.locator('.strip-exceptions');
+    await expect(line).toContainText('no policy exceptions');
+    await expect(line).toContainText('across both funds');
+    await line.getByRole('link', { name: 'Open the Exception Center →' }).click();
+    await expect(page).toHaveURL(/#\/exceptions/);
+    await expect(page.locator('#view-title')).toHaveText('Exception Center');
+  });
+
+  test('an empty section still says how far from an exception it is', async ({ page }) => {
+    await ready(page, '/exceptions');
+    const lead = page.locator('.xc-lead');
+    await expect(lead).toHaveText(
+      'No policy exceptions · no data conditions · 13 changes to explain, across both funds.',
+    );
+    const policy = page.locator('#x-policy');
+    await expect(policy.getByRole('heading')).toHaveText(
+      'No composite is within 1.0 pp of an IPS bound',
+    );
+    await expect(policy).toContainText('The nearest is Real Assets & Inflation Hedges');
+    await expect(policy).toContainText('3.4 pp from its lower bound');
+    // what holds for every report is not listed; it is one link away
+    await expect(
+      page.locator('#x-data').getByRole('link', { name: 'freshness matrix' }),
+    ).toBeVisible();
+  });
+
+  test('the changes to explain are exactly the two funds’ “What changed” lists', async ({
+    page,
+  }) => {
+    await ready(page, '/exceptions');
+    const listed = await page.locator('#x-explain tbody tr').count();
+    let onCio = 0;
+    for (const e of ['PENSION', 'OPEB']) {
+      await ready(page, `/cio?tab=summary&e=${e}`);
+      // the fiscal-year reset line is context, not a change, on both pages
+      onCio += await page
+        .locator('#cio-changed .change-row')
+        .filter({ hasNotText: 'New fiscal year' })
+        .count();
+    }
+    expect(listed).toBe(13);
+    expect(onCio).toBe(listed);
+  });
+
+  test('an item opens its fund and panel with the figure’s record on top', async ({ page }) => {
+    await ready(page, '/exceptions');
+    await page.getByRole('link', { name: 'Open in CIO Monthly: Real Assets & IH weight' }).click();
+    await expect(page).toHaveURL(/tab=summary/);
+    await expect(page).toHaveURL(/e=OPEB/);
+    await expect(page.locator('.band .entity')).toHaveText('OPEB Master Trust');
+    const drawer = page.getByRole('dialog');
+    await expect(drawer.getByRole('heading', { level: 2 })).toContainText('change in weight');
+    await expect(drawer).toContainText('+1.0 pp');
+  });
+
+  test('a report with a month missing before it says so, dated by that report', async ({
+    page,
+  }) => {
+    await ready(page, '/exceptions?v=2025-12-31');
+    await expect(page.locator('.asof')).toContainText('Data through December 31, 2025');
+    const data = page.locator('#x-data');
+    await expect(data.getByRole('heading')).toHaveText('Data conditions in this report (1)');
+    await expect(data).toContainText('The prior report is 2 months earlier');
+    await expect(data).toContainText('no report with data through November 30, 2025');
+    // choosing another report keeps the page and moves the date
+    await page.getByLabel('Report', { exact: true }).selectOption('2026-06-30');
+    await expect(page).not.toHaveURL(/v=/);
+    await expect(page.locator('#x-data').getByRole('heading')).toHaveText(
+      "Nothing unusual about this report's data",
+    );
+  });
+
+  test('the synthetic pipeline queue is Workstation › Data quality', async ({ page }) => {
+    await ready(page, '/data-quality');
+    await expect(page.locator('#view-title')).toHaveText('Data quality');
+    await expect(page.locator('.mainnav-links a.active')).toHaveText('Data quality');
+    await expect(page.locator('.workflow-banner')).toContainText('synthetic contract data');
   });
 });
 

@@ -7,6 +7,7 @@ import { ChangeChip, ClassBadge, excessTag, Panel, SourceLine, Tag } from '../co
 import { CIO_LATEST, cioFor, longDate, PERIOD_INDEX, priorVintage } from '../fixtures/cioMonthly';
 import { GROWTH_YEARS, HORIZONS, publishedFor } from '../fixtures/published';
 import { useEntity } from '../lib/entity';
+import { centerSummary, exceptionCenter } from '../lib/exceptionCenter';
 
 /** Overview — the latest monthly state of the fund, then the fiscal-year picture: KPI row,
  *  decade growth bars, allocation strip, returns vs benchmark, and the FY2025 flows list.
@@ -43,6 +44,11 @@ export function PulseView() {
     Math.abs(b.pct - b.tgt) > Math.abs(a.pct - a.tgt) ? b : a,
   );
   const g = growth.active;
+  // what needs attention in the same report, both funds: the Exception Center's one line
+  const exceptions = exceptionCenter(CIO_LATEST);
+  const summary = centerSummary(exceptions);
+  // mid-sentence: only the first letter drops its capital ("IPS" keeps its own)
+  const exceptionsLine = summary.charAt(0).toLowerCase() + summary.slice(1);
 
   return (
     <PageMeta classification="reported_public">
@@ -113,6 +119,12 @@ export function PulseView() {
             </div>
           </div>
         </div>
+        <p className="panel-note strip-exceptions">
+          <span>
+            <strong>In this report:</strong> {exceptionsLine}, across both funds.
+          </span>{' '}
+          <Link to="/exceptions">Open the Exception Center →</Link>
+        </p>
         <p className="panel-note">
           <Link to="/cio">Open the CIO Monthly view →</Link>
         </p>

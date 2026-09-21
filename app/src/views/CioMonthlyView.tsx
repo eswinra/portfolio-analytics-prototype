@@ -76,6 +76,7 @@ const TABS: [key: string, label: string][] = [
 
 /** Which sub-tab holds each panel, so a jump or a panel link opens the right tab. */
 const TAB_OF: Record<string, string> = {
+  'cio-kpis': 'summary',
   'cio-read': 'summary',
   'cio-changed': 'summary',
   'cio-freshness': 'summary',
@@ -565,7 +566,7 @@ export function CioMonthlyView() {
       >
         {tab === 'summary' ? (
           <>
-            <div className="grid-kpi">
+            <div className="grid-kpi" id="cio-kpis">
               <Panel tight kicker="Total fund market value">
                 <div className="stat-value">
                   <Fig id={figId.aum(key)}>${e.aum.toFixed(1)}B</Fig>
@@ -747,7 +748,7 @@ export function CioMonthlyView() {
                         {c.reset ? (
                           <span className="chip-change">reset</span>
                         ) : (
-                          <ChangeChip delta={c.delta} unit={c.unit} dp={c.unit === '$B' ? 1 : 1} />
+                          <ChangeChip delta={c.delta} unit={c.unit} dp={c.unit === '$B' ? 2 : 1} />
                         )}
                         <span className="detail">{c.detail}</span>
                       </div>

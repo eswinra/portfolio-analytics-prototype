@@ -30,8 +30,12 @@ import { RiskView } from './views/RiskView';
  *  import surface, reconciliation, exceptions triage, and tracker code that only the
  *  pipeline demo needs. Dashboard views stay eager so the first paint is complete. */
 const AcfrView = lazy(() => import('./views/AcfrView').then((m) => ({ default: m.AcfrView })));
-const ExceptionsView = lazy(() =>
-  import('./views/ExceptionsView').then((m) => ({ default: m.ExceptionsView })),
+const DataQualityView = lazy(() =>
+  import('./views/DataQualityView').then((m) => ({ default: m.DataQualityView })),
+);
+// what needs attention in the published report on screen; loaded when opened
+const ExceptionCenterView = lazy(() =>
+  import('./views/ExceptionCenterView').then((m) => ({ default: m.ExceptionCenterView })),
 );
 const ImportView = lazy(() =>
   import('./views/ImportView').then((m) => ({ default: m.ImportView })),
@@ -59,6 +63,7 @@ function ViewLoading() {
 /** Dashboard mode — the published-figures presentation layer (2025 PAFR/ACFR, IPS). */
 const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/', 'Overview', 'Total fund overview'],
+  ['/exceptions', 'Exceptions', 'Exception Center'],
   ['/performance', 'Performance', 'Performance vs policy benchmark'],
   ['/allocation', 'Allocation', 'Asset allocation vs policy'],
   ['/funded', 'Funded Status', 'Funded status and membership'],
@@ -75,7 +80,7 @@ const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
 const WORKSTATION_VIEWS: [path: string, label: string, bandTitle: string][] = [
   ['/import', 'Data', 'Import a dataset'],
   ['/recon', 'Reconciliation', 'Reconciliation'],
-  ['/exceptions', 'Exceptions', 'Exceptions & data quality'],
+  ['/data-quality', 'Data quality', 'Data quality'],
   ['/acfr', 'ACFR Workflow', 'ACFR reporting workflow'],
 ];
 
@@ -202,6 +207,7 @@ function TitleBand() {
   const isOverview = !workstation && view[0] === '/';
   const isAcfr = pathname === '/acfr';
   const isCio = pathname === '/cio';
+  const isExceptions = pathname === '/exceptions';
   const isMacro = pathname === '/macro';
   const { vintage } = useCioVintage();
   // the masthead carries the one date statement; the band names the view
@@ -270,9 +276,11 @@ function TitleBand() {
                 : `Workstation · synthetic ${dataset.meta.entityId} data`
               : isCio
                 ? cioFor(entity, vintage).name
-                : isMacro
-                  ? `Market context · lens on the ${d.label} policy targets`
-                  : d.label}
+                : isExceptions
+                  ? `Both funds · ${vintage.reportLabel} CIO Monthly Report`
+                  : isMacro
+                    ? `Market context · lens on the ${d.label} policy targets`
+                    : d.label}
           </span>
           {isOverview ? (
             <span className="actions">
@@ -356,7 +364,8 @@ function Shell() {
   const { dataset } = useDataset();
   const { pathname } = useLocation();
   const workstation = isWorkstationPath(pathname);
-  const cio = pathname === '/cio';
+  // CIO Monthly and the Exception Center are dated by the report on screen
+  const cio = pathname === '/cio' || pathname === '/exceptions';
   const macro = pathname === '/macro';
   const { vintage, feed, pkg } = useCioVintage();
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
@@ -487,11 +496,11 @@ function Shell() {
               {/* team workflow demo — synthetic contract data */}
               <Route path="/import" element={<ImportView />} />
               <Route path="/recon" element={<ReconView />} />
-              <Route path="/exceptions" element={<ExceptionsView />} />
+              <Route path="/exceptions" element={<ExceptionCenterView />} />
+              <Route path="/data-quality" element={<DataQualityView />} />
               {/* legacy routes from revisions 1–7 */}
               <Route path="/trends" element={<Navigate to="/performance" replace />} />
               <Route path="/contribution" element={<Navigate to="/performance" replace />} />
-              <Route path="/data-quality" element={<Navigate to="/exceptions" replace />} />
               <Route path="/policy" element={<Navigate to="/allocation" replace />} />
               <Route path="/methodology" element={<Navigate to="/" replace />} />
               <Route path="/limitations" element={<Navigate to="/" replace />} />
