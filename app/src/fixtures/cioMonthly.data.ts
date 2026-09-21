@@ -1,5 +1,5 @@
 import type { MacroLine, MacroNotes } from '../lib/cioMacro';
-import type { CioNetPosition, OpsStatus } from './cioMonthly';
+import type { CioForecastVol, CioNetPosition, OpsStatus } from './cioMonthly';
 
 /**
  * Editorial content of the CIO Monthly Report — the parts a reader writes rather than a table
@@ -72,6 +72,141 @@ export const MACRO_TYPED: MacroLine[] = [
 ];
 
 /** August 12, 2026 report, p. 19 (initiatives, personnel), p. 20 (manager updates), p. 24 (quiet period). */
+/** Forecast Volatility, pp. 10 (Pension Fund) and 15 (OPEB Master Trust) — TRANSCRIBED. Both
+ *  pages are images in the PDF; page 10 carries eleven words of extractable text and nothing from
+ *  its charts. `reported_public`: these are the report's own printed figures, read from the pages.
+ *
+ *  Every figure is checked in cioMonthly.test.ts against something the report prints beside it:
+ *  allocation + selection = total active risk; the contributions sum to 100%; the capital-based
+ *  bar sums to 100% and equals the fund's weights from pp. 9 / 14 rounded to whole percent, which
+ *  is a check against a different page and is what makes the category mapping verifiable; and
+ *  each trend ends at the headline figure above it. The risk-based bar has no such check — the
+ *  Pension Fund's five printed shares sum to 99% — so its printed sum is recorded and the test
+ *  asserts it stays within rounding.
+ *
+ *  Source on both pages: MSCI BarraOne. Footnotes 6 / 10: real estate and private equity use best
+ *  available cash-flow-adjusted market values; exposure uses security-level holdings and/or
+ *  proxies. */
+export const FORECAST_VOL: Record<'pension' | 'opeb', CioForecastVol> = {
+  pension: {
+    page: 10,
+    vol: 8.9,
+    benchVol: 8.6,
+    activeRisk: 1.28,
+    allocationRisk: 0.04,
+    selectionRisk: 1.24,
+    // "Current Asset Allocation" — the same weights as p. 9, to whole percent
+    capital: [
+      { k: 'growth', v: 49 },
+      { k: 'credit', v: 13 },
+      { k: 'ra', v: 14 },
+      { k: 'rrm', v: 24 },
+    ],
+    // "Total Fund Risk by Functional Category"; the printed labels sum to 99%
+    risk: [
+      { k: 'growth', v: 78 },
+      { k: 'credit', v: 4 },
+      { k: 'ra', v: 13 },
+      { k: 'rrm', v: 3 },
+      { k: 'other', v: 1 },
+    ],
+    // "Functional Category Contributions to Active Risk"
+    contrib: [
+      { k: 'growth', v: 40 },
+      { k: 'credit', v: 29 },
+      { k: 'ra', v: 27 },
+      { k: 'rrm', v: 3 },
+      { k: 'other', v: 1 },
+    ],
+    volTrend: [
+      { m: '2025-06', v: 9.5 },
+      { m: '2025-07', v: 9.2 },
+      { m: '2025-08', v: 9.2 },
+      { m: '2025-09', v: 9.0 },
+      { m: '2025-10', v: 8.8 },
+      { m: '2025-11', v: 8.9 },
+      { m: '2025-12', v: 8.6 },
+      { m: '2026-01', v: 8.9 },
+      { m: '2026-02', v: 8.7 },
+      { m: '2026-03', v: 8.8 },
+      { m: '2026-04', v: 9.3 },
+      { m: '2026-05', v: 9.1 },
+      { m: '2026-06', v: 8.9 },
+    ],
+    arTrend: [
+      { m: '2025-06', v: 1.13 },
+      { m: '2025-07', v: 1.1 },
+      { m: '2025-08', v: 1.04 },
+      { m: '2025-09', v: 0.93 },
+      { m: '2025-10', v: 0.96 },
+      { m: '2025-11', v: 0.94 },
+      { m: '2025-12', v: 0.91 },
+      { m: '2026-01', v: 1.22 },
+      { m: '2026-02', v: 1.25 },
+      { m: '2026-03', v: 1.24 },
+      { m: '2026-04', v: 1.42 },
+      { m: '2026-05', v: 1.26 },
+      { m: '2026-06', v: 1.28 },
+    ],
+  },
+  opeb: {
+    page: 15,
+    vol: 7.9,
+    benchVol: 8.1,
+    activeRisk: 0.72,
+    allocationRisk: 0.1,
+    selectionRisk: 0.62,
+    capital: [
+      { k: 'growth', v: 45 },
+      { k: 'credit', v: 16 },
+      { k: 'ra', v: 13 },
+      { k: 'rrm', v: 26 },
+    ],
+    risk: [
+      { k: 'growth', v: 82 },
+      { k: 'credit', v: 4 },
+      { k: 'ra', v: 7 },
+      { k: 'rrm', v: 7 },
+    ],
+    // the trust's growth exposure tracks its benchmark closely, so it contributes no active risk
+    contrib: [
+      { k: 'credit', v: 3 },
+      { k: 'ra', v: 94 },
+      { k: 'rrm', v: 3 },
+    ],
+    volTrend: [
+      { m: '2025-06', v: 9.0 },
+      { m: '2025-07', v: 8.7 },
+      { m: '2025-08', v: 8.6 },
+      { m: '2025-09', v: 8.4 },
+      { m: '2025-10', v: 8.2 },
+      { m: '2025-11', v: 8.1 },
+      { m: '2025-12', v: 7.9 },
+      { m: '2026-01', v: 7.8 },
+      { m: '2026-02', v: 7.6 },
+      { m: '2026-03', v: 7.7 },
+      { m: '2026-04', v: 8.2 },
+      { m: '2026-05', v: 8.0 },
+      { m: '2026-06', v: 7.9 },
+    ],
+    arTrend: [
+      { m: '2025-06', v: 0.77 },
+      { m: '2025-07', v: 0.76 },
+      { m: '2025-08', v: 0.75 },
+      { m: '2025-09', v: 0.69 },
+      { m: '2025-10', v: 0.68 },
+      { m: '2025-11', v: 0.7 },
+      { m: '2025-12', v: 0.68 },
+      { m: '2026-01', v: 0.69 },
+      { m: '2026-02', v: 0.72 },
+      { m: '2026-03', v: 0.73 },
+      { m: '2026-04', v: 0.71 },
+      { m: '2026-05', v: 0.69 },
+      { m: '2026-06', v: 0.72 },
+    ],
+  },
+};
+
 /** Change in Fiduciary Net Position, p. 21 — TRANSCRIBED from the page, which is an image in
  *  the PDF. `reported_public`: these are the report's own printed figures, read from its chart.
  *  The transcription is checked in cioMonthly.test.ts against the two figures printed beside

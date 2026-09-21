@@ -1,6 +1,6 @@
 import { deckHistory, deckPrior } from '../lib/deckFeed';
 
-import { NET_POSITION } from './cioMonthly.data';
+import { FORECAST_VOL, NET_POSITION } from './cioMonthly.data';
 import { deckGdp } from '../lib/cioGdp';
 import { WORLD_MARKS, WORLD_NAMED, WORLD_SHAPES, WORLD_VIEWBOX } from './worldMap.data';
 
@@ -28,6 +28,7 @@ export const DECK_DATA: CioDeckData = {
   GDP: deckGdp(CIO_LATEST.reportDate),
   HISTORY: deckHistory(CIO_LATEST),
   NETPOS: NET_POSITION,
+  FVOL: FORECAST_VOL,
   PRIOR: deckPrior(CIO_LATEST),
   PERIODS,
   ENT: CIO_LATEST.ENT,
@@ -52,6 +53,7 @@ export const DECK_FIELDS = [
   'NETPOS',
   'GDP',
   'HISTORY',
+  'FVOL',
 ] as const;
 
 /** The lines between the markers (no trailing newline). Declared with `let` so the deck, when

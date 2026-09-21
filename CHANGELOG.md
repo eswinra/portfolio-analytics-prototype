@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-20 — Revision 35: forecast volatility, the last page the deck was missing
+
+- **The report's forecast risk pages are now a slide.** Pages 10 and 15 — one per fund — were the
+  pages the deck explicitly did not carry; the return distribution slide's own speaker note said
+  so. Both are images in the PDF (page 10 yields eleven words of extractable text and nothing from
+  its charts), so the figures are transcribed from the pages rendered at 420 dpi from the published
+  file.
+- **Every transcribed figure is held to something the report prints beside it.** Allocation risk
+  plus selection risk must equal total active risk; the contributions to active risk must sum to
+  100%; each thirteen-month trend must end at the headline figure above it; and the capital-based
+  bar must equal the fund's own weights from pp. 9 / 14, rounded to whole percent. All are unit
+  tests.
+- **That last check is what makes the category mapping verifiable.** The bars are colour-coded with
+  no labels on the segments, so which colour is which functional category has to be read off a
+  legend — and reading it backwards would swap Growth with Risk Reduction. Because the
+  capital-based bar is the same allocation the report prints on another page, 49/13/14/24 has to
+  line up with 48.6/12.5/14.4/23.8, and 45/16/13/26 with 45.2/15.8/13.1/25.9. They do.
+- **The one figure with no second printing says so.** The Pension Fund's five risk shares are whole
+  percent and sum to 99%. It is recorded as printed, the slide says why, the figures page prints
+  the total, and a test asserts the gap stays within whole-percent rounding.
+- **One device differs from the report, deliberately and in writing.** The report sets capital
+  against risk as two stacked columns, which asks a reader to compare segment heights across a gap.
+  The page exists to say Growth is about half the money and most of the risk, so the slide pairs
+  the bars per category and states the change on the slide itself. A category the report does not
+  label on one of the two bars reads "not printed", never 0%.
+- Both funds are carried: the Pension Fund forecasts 8.9% against an 8.6% benchmark, the OPEB
+  Master Trust 7.9% against 8.1% — above and below respectively, which a test pins so a
+  transcription that copied one page onto the other would fail.
+- Fixed: the print stylesheet resets animated transforms by selector, and the new bars were not in
+  its list, so they were absent from the first PDF — caught by rendering the page.
+- Verification: lint · format · Vitest 528/528 (11 new) · build · Playwright 157/157 runnable
+  (1 new) · `npm audit --omit=dev` 0 vulnerabilities · both PDFs regenerated at 29 pages · the
+  slide, both funds and the figures page rendered and inspected.
+
 ## 2026-09-20 — Revision 34: the trend under each figure on Fund at a glance
 
 - **The report's page 8 puts a chart under each headline figure; now so does slide 4.** Total market

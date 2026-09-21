@@ -132,6 +132,36 @@ export interface DeckPrior {
 /** The report's Change in Fiduciary Net Position page: what the fund took in and paid out each
  *  month of the fiscal year, and the fiscal years before it. Transcribed from the page (it is an
  *  image in the PDF) and checked against the totals printed beside it. */
+/** One fund's Forecast Volatility page (pp. 10 / 15). Transcribed: both pages are images in the
+ *  PDF. The category keys are the deck's own composite keys, so the colours on this slide are the
+ *  colours used everywhere else for the same functional category. */
+export interface CioForecastVol {
+  page: number;
+  /** 1-year forecast volatility of the fund, percent */
+  vol: number;
+  /** and of its policy benchmark */
+  benchVol: number;
+  /** 1-year forecast tracking error against the benchmark, percent */
+  activeRisk: number;
+  allocationRisk: number;
+  selectionRisk: number;
+  /** "Current Asset Allocation", whole percent as printed */
+  capital: CioRiskShare[];
+  /** "Risk by Functional Category", whole percent as printed */
+  risk: CioRiskShare[];
+  /** "Functional Category Contributions to Active Risk", whole percent as printed */
+  contrib: CioRiskShare[];
+  /** thirteen months ending at the report's data-through month */
+  volTrend: { m: string; v: number }[];
+  arTrend: { m: string; v: number }[];
+}
+
+export interface CioRiskShare {
+  /** growth | credit | ra | rrm | other — the deck's composite keys */
+  k: string;
+  v: number;
+}
+
 export interface CioNetPosition {
   page: number;
   unit: string;
@@ -154,6 +184,8 @@ export interface CioDeckData {
   GDP: DeckGdp | null;
   /** one point per month the published reports cover, up to the report on screen */
   HISTORY: DeckHistoryPoint[];
+  /** the Forecast Volatility pages, for the report that carries them */
+  FVOL: Record<'pension' | 'opeb', CioForecastVol> | null;
   /** the Change in Fiduciary Net Position page, for the report that carries it */
   NETPOS: CioNetPosition | null;
   PRIOR: DeckPrior | null;

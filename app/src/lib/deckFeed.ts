@@ -1,4 +1,4 @@
-import { NET_POSITION } from '../fixtures/cioMonthly.data';
+import { FORECAST_VOL, NET_POSITION } from '../fixtures/cioMonthly.data';
 import { deckGdp } from './cioGdp';
 
 import {
@@ -62,6 +62,8 @@ export function deckDataFor(
     // the trend under each figure on Fund at a glance; an imported feed is not part of the series
     HISTORY: opts.feed || pkg ? [] : deckHistory(v),
     NETPOS: latest ? NET_POSITION : null,
+    // the forecast volatility pages are transcribed for the latest report only, like p. 21
+    FVOL: latest ? FORECAST_VOL : null,
     PRIOR: opts.feed || pkg ? null : deckPrior(v),
     PERIODS,
     ENT: v.ENT,

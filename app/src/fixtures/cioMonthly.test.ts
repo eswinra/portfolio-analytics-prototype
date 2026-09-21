@@ -20,7 +20,7 @@ import {
   type CioEntity,
   type CioVintage,
 } from './cioMonthly';
-import { NET_POSITION } from './cioMonthly.data';
+import { FORECAST_VOL, NET_POSITION } from './cioMonthly.data';
 import {
   DECK_BLOCK_BEGIN,
   DECK_BLOCK_END,
@@ -227,6 +227,81 @@ describe('macro strip: FRED as known on each report’s date', () => {
     ]);
     expect(MACRO[0]!.v).toBe('3.7% y/y');
     expect(MACRO[1]!.s).toMatch(/^In effect since Dec 11, 2025 \(FRED · Federal Reserve\)\. Fifth/);
+  });
+});
+
+describe('forecast volatility (transcribed from pp. 10 and 15)', () => {
+  // both pages are images in the PDF, so these are the checks the pages print beside the figures
+  const ENTITIES = [
+    ['pension', CIO_LATEST.ENT.pension],
+    ['opeb', CIO_LATEST.ENT.opeb],
+  ] as const;
+
+  it.each(ENTITIES)('%s: allocation risk and selection risk add to the total', (key) => {
+    const f = FORECAST_VOL[key];
+    within(f.allocationRisk + f.selectionRisk, f.activeRisk, 0.005);
+  });
+
+  it.each(ENTITIES)('%s: the contributions to active risk are a whole 100%%', (key) => {
+    const f = FORECAST_VOL[key];
+    expect(f.contrib.reduce((t, c) => t + c.v, 0)).toBe(100);
+    for (const c of f.contrib) expect(c.v).toBeGreaterThan(0);
+  });
+
+  it.each(ENTITIES)(
+    '%s: the capital-based bar is the fund’s own weights from pp. 9 / 14, rounded',
+    (key, e) => {
+      // the check that makes the category mapping verifiable rather than assumed: if the colours
+      // had been read the wrong way round these would not line up
+      const f = FORECAST_VOL[key];
+      expect(f.capital.reduce((t, c) => t + c.v, 0)).toBe(100);
+      for (const c of f.capital) {
+        const comp = e.comps.find((x) => x.k === c.k);
+        expect(comp, `${key}: no composite "${c.k}"`).toBeDefined();
+        expect(c.v, `${key} ${c.k}: ${c.v}% printed vs ${comp!.pct}% on the allocation page`).toBe(
+          Math.round(comp!.pct),
+        );
+      }
+    },
+  );
+
+  it.each(ENTITIES)('%s: the risk-based bar sums to 100 within whole-percent rounding', (key) => {
+    // this one has no second printing to check it against; the Total Fund's five labels sum to 99
+    const f = FORECAST_VOL[key];
+    const sum = f.risk.reduce((t, c) => t + c.v, 0);
+    expect(Math.abs(sum - 100), `${key}: printed shares sum to ${sum}%`).toBeLessThanOrEqual(
+      f.risk.length - 1,
+    );
+    // risk is more concentrated than capital: growth carries far more risk than its weight
+    const gCap = f.capital.find((c) => c.k === 'growth')!.v;
+    const gRisk = f.risk.find((c) => c.k === 'growth')!.v;
+    expect(gRisk).toBeGreaterThan(gCap);
+  });
+
+  it.each(ENTITIES)('%s: each trend is thirteen months ending at the headline figure', (key) => {
+    const f = FORECAST_VOL[key];
+    for (const [name, trend, headline] of [
+      ['volatility', f.volTrend, f.vol],
+      ['active risk', f.arTrend, f.activeRisk],
+    ] as const) {
+      expect(trend, `${key} ${name}`).toHaveLength(13);
+      expect(trend.at(-1)!.v, `${key} ${name} ends at the headline`).toBe(headline);
+      expect(trend.at(-1)!.m).toBe(CIO_LATEST.dataThrough.slice(0, 7));
+      for (let i = 1; i < trend.length; i++) {
+        const [y, m] = trend[i - 1]!.m.split('-').map(Number) as [number, number];
+        const next = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+        expect(trend[i]!.m, `${key} ${name} after ${trend[i - 1]!.m}`).toBe(next);
+      }
+    }
+  });
+
+  it('the two funds are different pages, and the fund is not always above its benchmark', () => {
+    expect(FORECAST_VOL.pension.page).toBe(10);
+    expect(FORECAST_VOL.opeb.page).toBe(15);
+    // the Pension Fund forecasts above its benchmark and the trust below its own: a transcription
+    // that copied one page onto the other would lose this
+    expect(FORECAST_VOL.pension.vol).toBeGreaterThan(FORECAST_VOL.pension.benchVol);
+    expect(FORECAST_VOL.opeb.vol).toBeLessThan(FORECAST_VOL.opeb.benchVol);
   });
 });
 

@@ -407,6 +407,32 @@
   .macro { display: flex; gap: 0; margin-top: 10px; border-top: 1px solid var(--line); }
   .mchip { flex: 1; padding: 9px 16px; font-size: 11.5px; color: var(--cat); line-height: 1.3; }
   .mchip + .mchip { border-left: 1px solid var(--line); }
+  /* forecast volatility: the figures, capital against risk, and the two trends */
+  .fv { display: grid; grid-template-columns: 196px 1fr 1fr; gap: 10px 30px; margin-top: 0; }
+  .fv h3 { margin: 0 0 6px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .fv-band { grid-column: 1 / -1; border-top: 1px solid var(--line); margin-top: 4px; }
+  .fv-fig { border-top: 1px solid var(--line); padding: 6px 0 5px; }
+  .fv-fig .l { font-size: 11px; color: var(--cat); }
+  .fv-fig .v { font-size: 25px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+  .fv-fig .v.small { font-size: 19px; }
+  .fv-fig .d { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .fvrow { display: grid; grid-template-columns: 116px 1fr; gap: 10px; align-items: center; margin-bottom: 4px; }
+  .fvrow .n { font-size: 11.5px; color: var(--ink); }
+  .fvpair { display: grid; gap: 3px; }
+  .fvb { position: relative; height: 13px; }
+  .fvb i { position: absolute; left: 0; top: 0; bottom: 0; transform: scaleX(0); transform-origin: left; transition: transform .6s cubic-bezier(.2,.7,.2,1) var(--d, 0s); }
+  .slide.armed .fvb i { transform: scaleX(1); }
+  .fvb b { position: absolute; top: 50%; transform: translateY(-50%); font-size: 10.5px; font-weight: 700; color: var(--cat); font-variant-numeric: tabular-nums; }
+  .fvb.risk i { opacity: .55; }
+  .fvkey { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+  .fvtr { position: relative; height: 84px; margin-top: 0; }
+  .fvtr svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .fvtr svg path { fill: none; stroke: var(--blue); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  .fvtr .pt { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--blue); transform: translate(-2px, -2px); }
+  .fvtr .pt.last { width: 7px; height: 7px; background: var(--navy); transform: translate(-3.5px, -3.5px); }
+  .fvtr .lab { position: absolute; font-size: 9.5px; color: var(--muted); transform: translateX(-50%); }
+  .fvnote { grid-column: 1 / -1; font-size: 11px; color: var(--muted); line-height: 1.45; }
+
   /* the economy slide: the GDP chart with room, and the indicators as a list */
   .econ { display: grid; grid-template-columns: 1.15fr 1fr; gap: 34px; margin-top: 4px; }
   .econ h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -537,8 +563,8 @@
     .stage { position: static; transform: none !important; width: 1280px; height: auto; box-shadow: none; overflow: visible; }
     .slide { position: relative; opacity: 1 !important; visibility: visible !important; transform: none !important; width: 1280px; height: 720px; page-break-after: always; break-after: page; overflow: hidden; }
     .slide .hd h2, .slide .hd .finding { animation: none !important; }
-    .mbar, .col, .wcol, .hb, .hcol, .head, .seg-a, .gb, .split div { transform: none !important; opacity: 1 !important; }
-    .mval, .vl, .wlab, .hv, .hvv, .gv, .tick, .callout, table.ops-t tr { opacity: 1 !important; transform: none !important; }
+    .mbar, .col, .wcol, .hb, .hcol, .head, .seg-a, .gb, .split div, .fvb i, .np-bar { transform: none !important; opacity: 1 !important; }
+    .mval, .vl, .wlab, .hv, .hvv, .gv, .tick, .callout, table.ops-t tr, .np-v { opacity: 1 !important; transform: none !important; }
     .leg span.off { opacity: 1; }
     .chart-wrap[data-view="table"] .chartv { visibility: visible; }
     .chart-wrap[data-view="table"] .tablev { display: none; }
@@ -848,6 +874,47 @@
         <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg">6</span></div>
       </section>
 
+      <!-- forecast volatility -->
+      <section class="slide" data-title="Forecast volatility" data-id="fvol">
+        <div class="hd">
+          <div>
+            <h2 id="fv-title">How much the fund could move, and how far from its benchmark</h2>
+            <p class="finding" id="fv-finding">&nbsp;</p>
+          </div>
+          <div class="asof"><b>As of <span class="v-through"></span></b>1-year forecast · MSCI BarraOne<br><span id="fv-page"></span><span class="ent-chip"></span></div>
+        </div>
+        <div class="bd">
+          <div class="fv">
+            <div id="fv-vol"></div>
+            <div>
+              <h3>Share of capital against share of forecast risk</h3>
+              <div id="fv-bars"></div>
+              <div class="fvkey" id="fv-bars-key"></div>
+            </div>
+            <div>
+              <h3>Forecast volatility, 13 months</h3>
+              <div class="fvtr" id="fv-tr-vol"></div>
+            </div>
+            <div class="fv-band"></div>
+            <div id="fv-ar"></div>
+            <div>
+              <h3>What the active risk comes from</h3>
+              <div id="fv-contrib"></div>
+            </div>
+            <div>
+              <h3>Forecast active risk, 13 months</h3>
+              <div class="fvtr" id="fv-tr-ar"></div>
+            </div>
+            <p class="fvnote" id="fv-note"></p>
+          </div>
+          <div class="nb">
+            <div class="note">A forecast, not a measurement: it is what a risk model expects over the next year, not what the fund earned or lost.</div>
+            <div class="src">Source: LACERA CIO Monthly Report, <span class="v-report"></span>, p. 10 (Pension Fund) and p. 15 (OPEB Master Trust) — transcribed from the pages, which are images in the PDF; the figures are checked against the totals printed beside them and against the weights on pp. 9 / 14. Model: MSCI BarraOne.<br><span class="cls">reported_public · calculated</span></div>
+          </div>
+        </div>
+        <div class="ft"><span class="samp">NOT AN OFFICIAL LACERA PUBLICATION</span><span class="org">LOS ANGELES COUNTY EMPLOYEES RETIREMENT ASSOCIATION</span><span class="pg"></span></div>
+      </section>
+
       <!-- 7 · market context -->
       <section class="slide" data-title="Market context" data-id="market">
         <div class="hd">
@@ -1041,6 +1108,7 @@
   let NETPOS = {"page":21,"unit":"$ millions","scope":"LACERA Pension Plan","investmentBookFy":{"label":"FY2026","mm":8731},"months":[{"m":"2025-07","v":-326},{"m":"2025-08","v":880},{"m":"2025-09","v":1168},{"m":"2025-10","v":846},{"m":"2025-11","v":745},{"m":"2025-12","v":-123},{"m":"2026-01","v":1350},{"m":"2026-02","v":1307},{"m":"2026-03","v":-2457},{"m":"2026-04","v":2651},{"m":"2026-05","v":1664},{"m":"2026-06","v":136}],"trend":[{"fy":"FY2026","bn":7.8,"up":9,"down":3},{"fy":"FY2025","bn":7,"up":9,"down":3},{"fy":"FY2024","bn":5.2,"up":8,"down":4}],"components":["Employee and employer contributions","Net investment income or loss","Benefits and refunds","Administrative expenses and miscellaneous"]};
   let GDP = {"asOf":"2026-07-31","asOfLabel":"July 31, 2026","reportAsOf":"2026-07-31","reportAsOfLabel":"July 31, 2026","stale":false,"behind":0,"quarters":[{"q":"2023Q1","v":2.9},{"q":"2023Q2","v":2.5},{"q":"2023Q3","v":4.7},{"q":"2023Q4","v":3.4},{"q":"2024Q1","v":0.8},{"q":"2024Q2","v":3.6},{"q":"2024Q3","v":3.3},{"q":"2024Q4","v":1.9},{"q":"2025Q1","v":-0.6},{"q":"2025Q2","v":3.8},{"q":"2025Q3","v":4.4},{"q":"2025Q4","v":0.5},{"q":"2026Q1","v":2.1},{"q":"2026Q2","v":1.5}]};
   let HISTORY = [{"m":"2025-02","label":"Feb 25","pension":{"aum":82.5,"r1":0.4,"god":1.54,"cash":1076},"opeb":{"aum":4.6,"r1":0.7,"god":1.48,"cash":103}},{"m":"2025-03","label":"Mar 25","pension":{"aum":81.5,"r1":-1,"god":1.64,"cash":1241},"opeb":{"aum":4.6,"r1":-2,"god":1.66,"cash":104}},{"m":"2025-04","label":"Apr 25","pension":{"aum":81.6,"r1":0.2,"god":1.58,"cash":1296},"opeb":{"aum":4.6,"r1":0.3,"god":1.54,"cash":104}},{"m":"2025-05","label":"May 25","pension":{"aum":83,"r1":1.9,"god":1.58,"cash":1204},"opeb":{"aum":4.7,"r1":2.7,"god":1.53,"cash":105}},{"m":"2025-06","label":"Jun 25","pension":{"aum":85.2,"r1":2.7,"god":1.6,"cash":1457},"opeb":{"aum":5,"r1":2.6,"god":1.54,"cash":104}},{"m":"2025-07","label":"Jul 25","pension":{"aum":85.9,"r1":1,"god":1.57,"cash":1166},"opeb":{"aum":5.1,"r1":0.5,"god":1.48,"cash":104}},{"m":"2025-08","label":"Aug 25","pension":{"aum":86.8,"r1":1.2,"god":1.54,"cash":1286},"opeb":{"aum":5.2,"r1":2,"god":1.46,"cash":104}},{"m":"2025-09","label":"Sep 25","pension":{"aum":88,"r1":1.5,"god":1.58,"cash":1196},"opeb":{"aum":5.4,"r1":2.3,"god":1.53,"cash":72}},{"m":"2025-10","label":"Oct 25","pension":{"aum":88.8,"r1":1.1,"god":1.61,"cash":1511},"opeb":{"aum":5.5,"r1":1.1,"god":1.56,"cash":112}},{"m":"2025-11","label":"Nov 25","pension":null,"opeb":null},{"m":"2025-12","label":"Dec 25","pension":{"aum":89.4,"r1":0,"god":1.49,"cash":1380},"opeb":{"aum":5.7,"r1":0.2,"god":1.4,"cash":114}},{"m":"2026-01","label":"Jan 26","pension":{"aum":90.8,"r1":1.6,"god":1.51,"cash":1097},"opeb":{"aum":5.8,"r1":1.8,"god":1.43,"cash":84}},{"m":"2026-02","label":"Feb 26","pension":{"aum":92.1,"r1":1.6,"god":1.51,"cash":1276},"opeb":{"aum":5.9,"r1":1.7,"god":1.43,"cash":137}},{"m":"2026-03","label":"Mar 26","pension":{"aum":89.6,"r1":-2.5,"god":1.44,"cash":969},"opeb":{"aum":5.8,"r1":-3.8,"god":1.35,"cash":122}},{"m":"2026-04","label":"Apr 26","pension":{"aum":92.3,"r1":3.1,"god":1.44,"cash":1188},"opeb":{"aum":6.1,"r1":5,"god":1.37,"cash":138}},{"m":"2026-05","label":"May 26","pension":{"aum":93.9,"r1":2,"god":1.44,"cash":1228},"opeb":{"aum":6.3,"r1":2.2,"god":1.38,"cash":199}},{"m":"2026-06","label":"Jun 26","pension":{"aum":93.9,"r1":0.1,"god":1.43,"cash":1309},"opeb":{"aum":6.4,"r1":0.2,"god":1.37,"cash":145}}];
+  let FVOL = {"pension":{"page":10,"vol":8.9,"benchVol":8.6,"activeRisk":1.28,"allocationRisk":0.04,"selectionRisk":1.24,"capital":[{"k":"growth","v":49},{"k":"credit","v":13},{"k":"ra","v":14},{"k":"rrm","v":24}],"risk":[{"k":"growth","v":78},{"k":"credit","v":4},{"k":"ra","v":13},{"k":"rrm","v":3},{"k":"other","v":1}],"contrib":[{"k":"growth","v":40},{"k":"credit","v":29},{"k":"ra","v":27},{"k":"rrm","v":3},{"k":"other","v":1}],"volTrend":[{"m":"2025-06","v":9.5},{"m":"2025-07","v":9.2},{"m":"2025-08","v":9.2},{"m":"2025-09","v":9},{"m":"2025-10","v":8.8},{"m":"2025-11","v":8.9},{"m":"2025-12","v":8.6},{"m":"2026-01","v":8.9},{"m":"2026-02","v":8.7},{"m":"2026-03","v":8.8},{"m":"2026-04","v":9.3},{"m":"2026-05","v":9.1},{"m":"2026-06","v":8.9}],"arTrend":[{"m":"2025-06","v":1.13},{"m":"2025-07","v":1.1},{"m":"2025-08","v":1.04},{"m":"2025-09","v":0.93},{"m":"2025-10","v":0.96},{"m":"2025-11","v":0.94},{"m":"2025-12","v":0.91},{"m":"2026-01","v":1.22},{"m":"2026-02","v":1.25},{"m":"2026-03","v":1.24},{"m":"2026-04","v":1.42},{"m":"2026-05","v":1.26},{"m":"2026-06","v":1.28}]},"opeb":{"page":15,"vol":7.9,"benchVol":8.1,"activeRisk":0.72,"allocationRisk":0.1,"selectionRisk":0.62,"capital":[{"k":"growth","v":45},{"k":"credit","v":16},{"k":"ra","v":13},{"k":"rrm","v":26}],"risk":[{"k":"growth","v":82},{"k":"credit","v":4},{"k":"ra","v":7},{"k":"rrm","v":7}],"contrib":[{"k":"credit","v":3},{"k":"ra","v":94},{"k":"rrm","v":3}],"volTrend":[{"m":"2025-06","v":9},{"m":"2025-07","v":8.7},{"m":"2025-08","v":8.6},{"m":"2025-09","v":8.4},{"m":"2025-10","v":8.2},{"m":"2025-11","v":8.1},{"m":"2025-12","v":7.9},{"m":"2026-01","v":7.8},{"m":"2026-02","v":7.6},{"m":"2026-03","v":7.7},{"m":"2026-04","v":8.2},{"m":"2026-05","v":8},{"m":"2026-06","v":7.9}],"arTrend":[{"m":"2025-06","v":0.77},{"m":"2025-07","v":0.76},{"m":"2025-08","v":0.75},{"m":"2025-09","v":0.69},{"m":"2025-10","v":0.68},{"m":"2025-11","v":0.7},{"m":"2025-12","v":0.68},{"m":"2026-01","v":0.69},{"m":"2026-02","v":0.72},{"m":"2026-03","v":0.73},{"m":"2026-04","v":0.71},{"m":"2026-05","v":0.69},{"m":"2026-06","v":0.72}]}};
   /* ==== END SHARED DATA ==== */
 
   /* ==== WORLD OUTLINES — generated from src/fixtures/worldMap.data.ts (itself generated by tools/make_world_paths.py) by `npm run sync:deck` ==== */
@@ -1062,9 +1130,9 @@
     if (!f) { try { if (window.opener && window.opener !== window && ok(window.opener.__laceraDeckData)) f = window.opener.__laceraDeckData; } catch (e) { f = null; } }
     if (!f) return;
     f = strip(f);
-    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE; PRIOR = f.PRIOR || null; NETPOS = f.NETPOS || null; GDP = f.GDP || null; HISTORY = f.HISTORY || [];
+    PERIODS = f.PERIODS; ENT = f.ENT; BINS = f.BINS; MKT = f.MKT || []; MACRO = f.MACRO || []; OPS = f.OPS || []; STATUS = f.STATUS || STATUS; VINTAGE = f.VINTAGE; PRIOR = f.PRIOR || null; NETPOS = f.NETPOS || null; GDP = f.GDP || null; HISTORY = f.HISTORY || []; FVOL = f.FVOL || null;
   })();
-  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE, PRIOR, NETPOS, GDP, HISTORY };
+  window.__laceraDeckData = { PERIODS, ENT, BINS, MKT, MACRO, OPS, STATUS, VINTAGE, PRIOR, NETPOS, GDP, HISTORY, FVOL };
   /* Speaker notes, keyed by the slide's own id. They were an array indexed by slide number
      until Revision 33, which meant a slide inserted anywhere but the end silently moved every
      note after it onto the wrong page. The heading is derived from the slide's title and
@@ -1077,6 +1145,7 @@
     alloc: '<p><b>Source:</b> weights and 2024 SAA targets (pp. 9, 14); monthly rebalancing activity and overlay program gains (p. 18). <b>Classification:</b> <code>reported_public</code>; drift and direction <code>calculated</code>. Policy ranges are in the IPS, not the monthly report, so no in/out-of-range judgement is drawn. Flows may include capital calls, distributions and cash management, so a flow "away from target" is a prompt for a question, not a finding. Overlay gains are Total Fund only.</p>',
     netpos: '<p><b>Source:</b> "Change In Fiduciary Net Position", p. 21 — a picture in the PDF, so its figures are read off the page and typed into the fixture. <b>Classification:</b> <code>reported_public</code>; the fiscal-year sum is <code>calculated</code>. Two figures printed beside the chart hold the transcription to account and are unit tests: the twelve months add to the printed fiscal-year total ($7,841mm against $7.8B) and their signs give the printed month counts.</p><p><b>Caveats:</b> the report prints this page once, in section 04, with no entity heading and no OPEB counterpart, so it does not follow the fund toggle; it is the pension plan’s, which the scale settles (the whole OPEB Master Trust moved $1,421mm over the same year). It is also a different book: the plan’s fiduciary net position is an accounting measure, and the investment-book market value moved $8,731mm over the same fiscal year. The page stacks contributions, net investment income, benefits and administrative expenses behind the net line without printing a figure for any of them, so only the net is carried.</p>',
     hist: '<p><b>Source:</b> pp. 9 and 14. <b>Classification:</b> <code>reported_public</code> counts and statistics; shares, tail counts and the latest month\'s bin percentile <code>calculated</code>. Bin edges as printed; the latest month is placed by value. "2024 SAA expected return" is the monthly expected return under the 2024 Strategic Asset Allocation, as labelled in the report. The forecast-volatility pages (10, 15) are image-only in the PDF and are not reproduced.</p>',
+    fvol: '<p><b>Source:</b> "Forecast Volatility", p. 10 (Pension Fund) and p. 15 (OPEB Master Trust); model MSCI BarraOne. Both pages are images in the PDF — page 10 carries eleven words of extractable text and nothing from its charts — so the figures are transcribed. <b>Classification:</b> <code>reported_public</code>; the finding line and the difference against the benchmark are <code>calculated</code>.</p><p><b>How the transcription is checked:</b> allocation risk plus selection risk must equal total active risk on both pages; the contributions to active risk must sum to 100%; each thirteen-month trend must end at the headline figure above it; and the capital-based bar must equal the fund’s own weights from pp. 9 / 14 rounded to whole percent. That last one is a check against a different page of the same report, and it is what makes the mapping from colour to functional category verifiable rather than assumed. All are unit tests.</p><p><b>Caveats:</b> this is a forecast from a risk model, not a measurement — it is what the model expects over the next year, not what the fund earned. Shares are whole percent as printed, so the Total Fund’s five risk shares sum to 99%. Footnotes 6 / 10: real estate and private equity use best available cash-flow-adjusted market values, and exposure uses security-level holdings and/or proxies. The report sets capital against risk as two stacked columns; the slide pairs the bars per category instead, so the two shares for one category can be read against each other, and says so on the page.</p>',
     econ: '<p><b>Source:</b> "Key Macro Indicators", p. 6, and the notable items on p. 4. <b>Classification:</b> <code>reported_public</code>; PCE inflation is <code>calculated</code> (year-over-year from the price index).</p><p>Quarterly real GDP growth, PCE inflation, the federal funds target range, the unemployment and participation rates and the Treasury curve are FRED series, read from FRED’s real-time archive as FRED showed them at the month end before the report’s month, so later revisions do not change them and every report has them. The dollar index and the themes are typed from the report and shown for the latest report only.</p><p><b>The GDP chart carries its own vintage.</b> The report does not redraw it every month: seven of the sixteen reports print it older than the rest of this page, and four consecutive reports in late 2025 print it exactly as FRED stood on July 31, 2025. The vintage is identified by matching every printed bar against FRED’s archive, and where the chart is behind the page says by how much — without that, a revision reads as a change in the economy. The Treasury curve is read at the fund’s month end rather than the report’s as-of date, which is the second as-of on this page.</p>',
     market: '<p><b>Source:</b> p. 5 table (Bloomberg, State Street), p. 4 notable items, p. 6 key macro indicators. In the macro strip, PCE inflation, the federal funds target range and the unemployment and participation rates are FRED series, read as FRED showed them at the month end before the month of the report (its real-time archive), so later revisions do not change them; for the latest report they equal the printed figures, which a unit test checks. The dollar index and themes are typed from the report (pp. 4, 6) and shown for the latest report only. <b>Classification:</b> <code>reported_public</code>; PCE inflation is <code>calculated</code> (year-over-year from the price index); the finding line is <code>calculated</code> (best/worst row). Kept separate from fund performance by design: index moves explain the environment the benchmarks moved in, not the Fund\'s result against them. FYTD runs from July 1, so in a table as of June 30 it equals 1 Y and in one as of July 31 it is July alone; NCREIF ODCE (net) is the latest available quarter.</p>',
     geo: '<p><b>Source:</b> "Geographic Exposure by AUM as of ' + VINTAGE.monthYear + '", p. 11 (Pension Fund) and p. 16 (OPEB Master Trust). <b>Classification:</b> <code>reported_public</code>.</p><p><b>Caveats (footnotes 7–8 / 11–12):</b> exposure excludes overlays and hedges and is based on the domicile country of each security or asset; it represents best available holdings-level transparency and uses the MSCI Market Classification Framework. The ten countries are the report\'s top five in each group; the remaining markets are not itemized. One fixed 0–80% scale is used for both groups so the U.S. weight is drawn to size.</p>',
@@ -1132,7 +1201,7 @@
     return n ? '<h4>Slide ' + (i + 1) + ' \u00b7 ' + sl.dataset.title + '</h4>' + n : '';
   }
 
-  const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc', 'netpos']], ['Context', ['hist', 'market', 'econ', 'geo']], ['Attention', ['ops']]];
+  const ACTS = [['Where we stand', ['exec', 'summary', 'perf']], ['Why', ['wf']], ['Positioning', ['alloc', 'netpos']], ['Context', ['hist', 'fvol', 'market', 'econ', 'geo']], ['Attention', ['ops']]];
   const ACT_ASKS = {
     'Where we stand': 'Did the fund earn its policy benchmark and the actuarial hurdle, and what is it worth?',
     'Why': 'Which composites account for the gap against the benchmark?',
@@ -2055,6 +2124,121 @@
     entityHooks.push(() => render(cur === idx('geo')));
   })();
 
+  /* ============ forecast volatility ============
+     The report gives each fund a page of this (10 and 15); both are images in the PDF, so the
+     figures are transcribed and checked against the totals printed beside them.
+
+     One device differs from the page on purpose. The report sets capital against risk as two
+     stacked columns, which asks a reader to compare segment heights across a gap. The point of the
+     page is that Growth is about half the money and most of the risk, so the bars are paired per
+     category instead, and the slide says that this is the change. */
+  (function fvolSlide() {
+    const volBox = $('#fv-vol'), arBox = $('#fv-ar'), bars = $('#fv-bars'), contrib = $('#fv-contrib');
+    if (!volBox) return;
+    const COL = { growth: 'var(--a1)', credit: 'var(--a2)', ra: 'var(--a3)', rrm: 'var(--a4)', other: 'var(--gray)' };
+    const NAME = { growth: 'Growth', credit: 'Credit', ra: 'Real Assets & Inflation Hedges', rrm: 'Risk Reduction & Mitigation', other: 'Overlays & Hedges + Other' };
+    const one = v => v.toFixed(1) + '%';
+    const two = v => v.toFixed(2) + '%';
+
+    function trend(host, pts, fmt) {
+      if (!host) return;
+      const H = 84, TOP = 20, BOT = 15, band = H - TOP - BOT;
+      const vs = pts.map(p => p.v), hi = Math.max(...vs), lo = Math.min(...vs), span = (hi - lo) || 1;
+      const n = pts.length;
+      const xOf = i => (n > 1 ? i * 100 / (n - 1) : 50);
+      const yOf = v => TOP + (1 - (v - lo) / span) * band;
+      // the line is one stretched path with a non-scaling stroke, so it meets at every width;
+      // the points and labels stay elements, so they stay round and unscaled
+      const d = pts.map((p, i) => (i ? 'L' : 'M') + ' ' + xOf(i).toFixed(2) + ' ' + yOf(p.v).toFixed(2)).join(' ');
+      let html = '<svg viewBox="0 0 100 ' + H + '" preserveAspectRatio="none" aria-hidden="true"><path d="' + d + '"></path></svg>';
+      pts.forEach((p, i) => {
+        const last = i === n - 1;
+        html += '<div class="pt' + (last ? ' last' : '') + '" style="left:' + xOf(i) + '%;top:' + yOf(p.v) + 'px"></div>';
+        if (i === 0 || last || i === Math.floor((n - 1) / 2)) {
+          html += '<div class="lab" style="left:' + xOf(i) + '%;top:' + (yOf(p.v) - 17) + 'px">' + fmt(p.v) + '</div>' +
+            '<div class="lab" style="left:' + xOf(i) + '%;top:' + (H - 12) + 'px">' + monLabel(p.m) + '</div>';
+        }
+      });
+      host.innerHTML = html;
+    }
+    function monLabel(m) {
+      return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(m.slice(5)) - 1] + ' ' + m.slice(2, 4);
+    }
+
+    function render() {
+      const F = typeof FVOL !== 'undefined' && FVOL ? FVOL[entity] : null;
+      const page = $('#fv-page'), note = $('#fv-note'), key = $('#fv-bars-key');
+      if (!F) {
+        volBox.innerHTML = '<div class="empty-note">The forecast volatility page is carried for the latest report only.</div>';
+        arBox.innerHTML = ''; bars.innerHTML = ''; contrib.innerHTML = '';
+        $('#fv-tr-vol').innerHTML = ''; $('#fv-tr-ar').innerHTML = '';
+        if (page) page.textContent = '';
+        if (note) note.textContent = '';
+        if (key) key.textContent = '';
+        $('#fv-finding').textContent = 'Not carried for this report';
+        return;
+      }
+      if (page) page.textContent = 'Report p. ' + F.page;
+      const E = ENT[entity];
+      $('#fv-title').textContent = E.short + ' \u2014 forecast volatility and active risk';
+
+      volBox.innerHTML =
+        '<div class="fv-fig"><div class="l">' + E.short + ' volatility</div><div class="v">' + one(F.vol) + '</div>' +
+        '<div class="d">1-year forecast</div></div>' +
+        '<div class="fv-fig"><div class="l">Policy benchmark volatility</div><div class="v small">' + one(F.benchVol) + '</div>' +
+        '<div class="d">' + sgn(F.vol - F.benchVol) + ' pts vs. the fund</div></div>';
+
+      arBox.innerHTML =
+        '<div class="fv-fig"><div class="l">Active risk</div><div class="v">' + two(F.activeRisk) + '</div>' +
+        '<div class="d">1-year forecast tracking error</div></div>' +
+        '<div class="fv-fig"><div class="l">Allocation risk</div><div class="v small">' + two(F.allocationRisk) + '</div></div>' +
+        '<div class="fv-fig"><div class="l">Selection risk</div><div class="v small">' + two(F.selectionRisk) + '</div>' +
+        '<div class="d">' + two(F.allocationRisk) + ' + ' + two(F.selectionRisk) + ' = ' + two(F.activeRisk) + '</div></div>';
+
+      // a category the report does not label on one of the bars is not a zero: the Pension
+      // Fund's capital bar prints no label for the overlays sliver, and 0% is not a printed figure
+      const capOf = k => { const c = F.capital.find(x => x.k === k); return c ? c.v : null; };
+      const riskOf = k => { const c = F.risk.find(x => x.k === k); return c ? c.v : null; };
+      const keys = F.capital.map(c => c.k).concat(F.risk.map(c => c.k).filter(k => !F.capital.some(c => c.k === k)));
+      const maxV = Math.max(...keys.flatMap(k => [capOf(k), riskOf(k)]).filter(v => v != null), 1);
+      bars.innerHTML = keys.map((k, i) => {
+        const bar = (v, cls) => v == null
+          ? '<div class="fvb ' + cls + '"><b style="left:0;color:var(--muted);font-weight:400">not printed</b></div>'
+          : '<div class="fvb ' + cls + '"><i style="--d:' + (i * 0.06) + 's;width:' +
+            (v / maxV * 78) + '%;background:' + (COL[k] || 'var(--gray)') + '"></i>' +
+            '<b style="left:calc(' + (v / maxV * 78) + '% + 6px)">' + v + '%</b></div>';
+        return '<div class="fvrow"><div class="n">' + (NAME[k] || k) + '</div>' +
+          '<div class="fvpair">' + bar(capOf(k), 'cap') + bar(riskOf(k), 'risk') + '</div></div>';
+      }).join('');
+      if (key) key.textContent = 'Upper bar: share of capital. Lower, paler bar: share of forecast risk. Whole percent, as printed.';
+
+      contrib.innerHTML = F.contrib.map((c, i) =>
+        '<div class="fvrow"><div class="n">' + (NAME[c.k] || c.k) + '</div>' +
+        '<div class="fvb"><i style="--d:' + (i * 0.06) + 's;width:' + (c.v * 0.78) + '%;background:' + (COL[c.k] || 'var(--gray)') + '"></i>' +
+        '<b style="left:calc(' + (c.v * 0.78) + '% + 6px)">' + c.v + '%</b></div></div>').join('');
+
+      trend($('#fv-tr-vol'), F.volTrend, one);
+      trend($('#fv-tr-ar'), F.arTrend, two);
+
+      const g = F.capital.find(c => c.k === 'growth'), gr = F.risk.find(c => c.k === 'growth');
+      const top = F.contrib.slice().sort((a, b) => b.v - a.v)[0];
+      $('#fv-finding').textContent =
+        (g && gr ? 'Growth is ' + g.v + '% of capital and ' + gr.v + '% of forecast risk; ' : '') +
+        'volatility ' + one(F.vol) + ' against ' + (/^8/.test(one(F.benchVol)) ? 'an ' : 'a ') + one(F.benchVol) + ' benchmark, and active risk ' +
+        two(F.activeRisk) + ' \u2014 mostly ' + (F.selectionRisk >= F.allocationRisk ? 'selection' : 'allocation') +
+        ', and mostly from ' + (NAME[top.k] || top.k).replace(' & Inflation Hedges', '');
+      const riskSum = F.risk.reduce((t, c) => t + c.v, 0);
+      if (note) {
+        note.textContent = 'The report sets capital against risk as two stacked columns; paired bars are used here so the two shares for one category can be read against each other, which is what the page is for. ' +
+          'Shares are whole percent as printed' + (riskSum !== 100 ? ', and the risk shares sum to ' + riskSum + '% for that reason' : '') + '. ' +
+          'Active risk is a forecast of how far the fund may run from its benchmark, not a result.';
+      }
+    }
+    render();
+    enterHooks[idx('fvol')] = () => render();
+    entityHooks.push(() => render());
+  })();
+
   /* ============ the economy around the fund ============
      The report's Key Macro Indicators page (p. 6). The GDP chart carries its own vintage, because
      the report does not redraw it every month: where it is behind the rest of that page the caption
@@ -2299,6 +2483,31 @@
              ['Difference (calculated)', money(NETPOS.investmentBookFy.mm - tot) + ' mm']]) +
           '<p class="pp-kv">The page stacks ' + esc(NETPOS.components.join('; ').toLowerCase()) +
           ' behind the net line and prints no figure for any of them, so they are not carried here.</p>';
+      }
+      if (id === 'fvol') {
+        const F = typeof FVOL !== 'undefined' && FVOL ? FVOL[entity] : null;
+        if (!F) return '<p class="pp-kv">The forecast volatility page is carried for the latest report only.</p>';
+        const NM = { growth: 'Growth', credit: 'Credit', ra: 'Real Assets & Inflation Hedges', rrm: 'Risk Reduction & Mitigation', other: 'Overlays & Hedges + Other Asset' };
+        const share = (list, k) => { const c = list.find(x => x.k === k); return c ? c.v + '%' : 'not printed'; };
+        const keys = F.capital.map(c => c.k).concat(F.risk.map(c => c.k).filter(k => !F.capital.some(c => c.k === k)));
+        const sum = list => list.reduce((t, c) => t + c.v, 0) + '%';
+        const mon = m => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(m.slice(5)) - 1] + ' ' + m.slice(2, 4);
+        return '<p class="pp-kv">Report p. ' + F.page + ' \u00b7 MSCI BarraOne \u00b7 transcribed from the page, which is an image in the PDF.</p>' +
+          tbl(['1-year forecast', 'Value'], [
+            [e.short + ' volatility', pct(F.vol)],
+            ['Policy benchmark volatility', pct(F.benchVol)],
+            ['Difference (calculated)', sgn(F.vol - F.benchVol) + ' pts'],
+            ['Active risk', F.activeRisk.toFixed(2) + '%'],
+            ['Allocation risk', F.allocationRisk.toFixed(2) + '%'],
+            ['Selection risk', F.selectionRisk.toFixed(2) + '%'],
+            ['Allocation + selection (calculated)', (F.allocationRisk + F.selectionRisk).toFixed(2) + '%'],
+          ]) +
+          tbl(['Functional category', 'Share of capital', 'Share of forecast risk', 'Contribution to active risk'],
+            keys.map(k => [NM[k] || k, share(F.capital, k), share(F.risk, k), share(F.contrib, k)])
+              .concat([['Printed total', sum(F.capital), sum(F.risk), sum(F.contrib)]])) +
+          tbl(['13-month forecast', ...F.volTrend.map(p => mon(p.m))],
+            [['Volatility', ...F.volTrend.map(p => p.v.toFixed(1))],
+             ['Active risk', ...F.arTrend.map(p => p.v.toFixed(2))]]);
       }
       if (id === 'hist') {
         if (!e.hist) return '<p class="pp-kv">The return distribution was not supplied for this report.</p>';

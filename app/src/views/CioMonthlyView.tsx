@@ -161,10 +161,11 @@ const SLIDE = {
   wf: 6,
   alloc: 7,
   hist: 9,
-  market: 10,
-  econ: 11,
-  geo: 12,
-  ops: 13,
+  fvol: 10,
+  market: 11,
+  econ: 12,
+  geo: 13,
+  ops: 14,
 } as const;
 
 /** Opens the Slides tab at the slide that carries this panel's figures, for the report on

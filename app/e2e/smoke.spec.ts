@@ -449,6 +449,42 @@ test.describe('CIO slide 2 drivers (desktop project)', () => {
   });
 });
 
+test.describe('forecast volatility (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('the slide carries both funds’ pages, and never shows an unprinted share as zero', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/deck/#10');
+    const slide = page.locator('section[data-id="fvol"]');
+    await expect(slide).toBeVisible();
+    await expect(page.locator('#fv-page')).toHaveText('Report p. 10');
+    await expect(page.locator('#fv-vol')).toContainText('8.9%');
+    await expect(page.locator('#fv-vol')).toContainText('8.6%');
+    // the sum the report prints beside the figures is shown, not just asserted in a test
+    await expect(page.locator('#fv-ar')).toContainText('0.04% + 1.24% = 1.28%');
+    // the point of the page: half the capital, most of the risk
+    await expect(page.locator('#fv-finding')).toContainText('49% of capital and 78% of forecast');
+    // the capital bar prints no label for the overlays sliver, so it is not drawn as 0%
+    await expect(page.locator('#fv-bars')).toContainText('not printed');
+    await expect(page.locator('#fv-tr-vol .pt')).toHaveCount(13);
+    await expect(page.locator('#fv-tr-ar .pt')).toHaveCount(13);
+    // the device that differs from the report is named on the slide
+    await expect(page.locator('#fv-note')).toContainText('two stacked columns');
+    await expect(page.locator('#fv-note')).toContainText('99%');
+
+    // the other fund is its own page, and it forecasts BELOW its benchmark
+    await page.locator('#entity-seg .seg-btn[data-v="opeb"]').click();
+    await expect(page.locator('#fv-page')).toHaveText('Report p. 15');
+    await expect(page.locator('#fv-vol')).toContainText('7.9%');
+    await expect(page.locator('#fv-vol')).toContainText('−0.2 pts');
+    await expect(page.locator('#fv-ar')).toContainText('0.10% + 0.62% = 0.72%');
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('the trend under each figure on Fund at a glance (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 
@@ -504,7 +540,7 @@ test.describe('quarterly real GDP growth (desktop project)', () => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     // an older report inside the dashboard: the whole deck must move to it, not just its labels
-    await ready(page, '/cio?v=2025-10-31&slide=11');
+    await ready(page, '/cio?v=2025-10-31&slide=12');
     const deck = page.frameLocator('.deck-frame-wrap iframe');
     await expect(deck.locator('.v-report').first()).toHaveText('December 10, 2025');
     await expect(deck.locator('#gplot .gc')).toHaveCount(13);
@@ -527,7 +563,7 @@ test.describe('geographic exposure map (desktop project)', () => {
   }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
-    await page.goto('/deck/#12');
+    await page.goto('/deck/#13');
     const slide = page.locator('section[data-id="geo"]');
     await expect(slide).toBeVisible();
     await slide.locator('[data-toggle-view="geo"] .seg-btn[data-v="map"]').click();
@@ -607,8 +643,8 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     // the deck's own cover and contents slides open the document; every other slide is
     // followed by its tab snapshots and its figures page
     expect(doc.order.slice(0, 2)).toEqual(['slide', 'slide']);
-    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(13);
-    expect(doc.order.filter((p) => p === 'figures')).toHaveLength(11);
+    expect(doc.order.filter((p) => p === 'slide')).toHaveLength(14);
+    expect(doc.order.filter((p) => p === 'figures')).toHaveLength(12);
     // a tab that draws a different picture is its own page, right after its slide
     expect(doc.variants).toEqual([
       'Tab: excess vs. benchmark',
@@ -633,11 +669,14 @@ test.describe('the deck prints as a publishable document (desktop project)', () 
     expect(doc.pages[5]).toContain('LACERA Pension Plan');
     expect(doc.pages[5]).toContain('Fiscal year, summed');
     expect(doc.pages[5]).toContain('Investment book market value');
-    expect(doc.pages[7]).toContain('U.S. Large Cap');
+    // forecast volatility sits between the distribution and the market table
+    expect(doc.pages[7]).toContain('Share of forecast risk');
+    expect(doc.pages[7]).toContain('Allocation + selection (calculated)');
+    expect(doc.pages[8]).toContain('U.S. Large Cap');
     // the macro page is its own slide now, and carries the GDP quarters with their vintage
-    expect(doc.pages[8]).toContain('Real GDP, quarterly, annualised');
-    expect(doc.pages[8]).toContain('Macro indicator');
-    expect(doc.pages[10]).toContain('Risk system onboarding');
+    expect(doc.pages[9]).toContain('Real GDP, quarterly, annualised');
+    expect(doc.pages[9]).toContain('Macro indicator');
+    expect(doc.pages[11]).toContain('Risk system onboarding');
     // and they are landscape slide-sized pages, like the slides
     const size = await page.locator('.pp-data').first().boundingBox();
     expect([Math.round(size!.width), Math.round(size!.height)]).toEqual([1280, 720]);
@@ -675,7 +714,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
     // the page's arrow keys step the slides without clicking into them: the deck opens on its
     // cover, so two presses reach the executive read and the next two build it
     for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
-    await expect(deck.locator('#counter')).toHaveText('3 / 13');
+    await expect(deck.locator('#counter')).toHaveText('3 / 14');
     await expect(deck.locator('.v-report').first()).toHaveText('August 12, 2026');
     // inside the dashboard the deck does not link back to it
     await expect(deck.locator('#dash-link')).toBeHidden();
@@ -704,7 +743,7 @@ test.describe('CIO Monthly deck stays served at /deck/ (desktop project)', () =>
       'true',
     );
     const deck = page.frameLocator('.deck-frame-wrap iframe');
-    await expect(deck.locator('#counter')).toHaveText('5 / 13');
+    await expect(deck.locator('#counter')).toHaveText('5 / 14');
   });
 
   test('selecting an earlier report moves the masthead, band and panels together', async ({

@@ -222,7 +222,7 @@ slides, with every build shown.
 
 | How | What |
 |---|---|
-| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 27 landscape pages |
+| In the deck: **Print / PDF**, then "Save as PDF" | The fund on screen, 29 landscape pages |
 | `npm run deck:pdf` (from `app/`) | Both funds, into `outputs/cio_deck/CIO_Monthly_<Month><Year>_<Fund>.pdf`; `-- --fund opeb` for one, `-- --out <dir>` elsewhere |
 
 A tab that draws a different picture — the performance slide's excess view, the market slide
@@ -241,10 +241,11 @@ deck), so they cannot drift from the picture:
 | 7 Allocation and flows | Market value, weight, target, drift and flow by composite, the net flow, and the overlay programs |
 | 8 Change in fiduciary net position | The twelve months, their sum, the three fiscal years with their month counts, and the two books side by side |
 | 9 Return distribution | The 14 bins with their month counts, and the printed statistics |
-| 10 Market context | The market table over all periods |
-| 11 The economy around the fund | The GDP quarters with the vintage they were read at, and every macro indicator with its detail |
-| 12 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
-| 13 Items for attention | Every item as printed, with its status and report page |
+| 10 Forecast volatility | The five forecast figures with their sum, the three shares per category with their printed totals, and both 13-month trends |
+| 11 Market context | The market table over all periods |
+| 12 The economy around the fund | The GDP quarters with the vintage they were read at, and every macro indicator with its detail |
+| 13 Geographic exposure | Developed and emerging shares and market counts, and the ten countries |
+| 14 Items for attention | Every item as printed, with its status and report page |
 
 ### The change in fiduciary net position (slide 8)
 
@@ -273,6 +274,43 @@ Two things about this page differ from every other slide, and the slide states b
 
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
+
+### Forecast volatility (slide 10)
+
+The report gives each fund a page of forecast risk — p. 10 for the Pension Fund, p. 15 for the OPEB
+Master Trust — and the deck did not carry them at all; the speaker note on the return distribution
+slide said as much. Both pages are images in the PDF: page 10 yields eleven words of extractable
+text and nothing from its charts. The figures are therefore transcribed, read from the pages
+rendered at 420 dpi from the published file, into `FORECAST_VOL` in
+`app/src/fixtures/cioMonthly.data.ts`.
+
+Nothing is typed without a check. Every figure is held to something the report prints beside it,
+and all of these are unit tests:
+
+| Check | What it catches |
+|---|---|
+| allocation risk + selection risk = total active risk | a mistyped digit in any of the three |
+| the contributions to active risk sum to 100% | a dropped or duplicated slice |
+| each 13-month trend ends at the headline figure above it | a trend read off by one position |
+| the capital-based bar equals the fund's own weights from pp. 9 / 14, rounded | **the category mapping** |
+
+The last one is the important one. The bars are colour-coded with no labels on the segments, so
+which colour is which functional category has to be read from a legend — and a reader who got it
+backwards would swap Growth and Risk Reduction. Because the capital-based bar is the same
+allocation the report prints on another page, 49/13/14/24 must line up with 48.6/12.5/14.4/23.8,
+and 45/16/13/26 with 45.2/15.8/13.1/25.9. They do, which makes the mapping verified rather than
+assumed.
+
+The one figure with no second printing is the risk-based bar: the Pension Fund's five whole-percent
+shares sum to 99%. That is recorded as printed, the slide says so, the figures page prints the
+total, and a test asserts the gap stays within whole-percent rounding.
+
+**One device differs from the report, on purpose.** The report sets capital against risk as two
+stacked columns, which asks a reader to compare segment heights across a gap. The page exists to
+say that Growth is about half the money and most of the risk, so the slide pairs the bars per
+category — upper bar capital, lower paler bar risk — and states the change on the page. A category
+the report does not label on one of the two bars reads "not printed", never 0%: the Pension Fund's
+overlays sliver is 0.7% of capital and the report prints no figure for it.
 
 ### The trend under each figure on Fund at a glance (slide 4)
 
