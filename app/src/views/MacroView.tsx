@@ -29,6 +29,7 @@ import {
 import { directionRead, levelRead, NEAR_NORM, QUADRANT_NAME, RULES } from '../lib/macro/regime';
 import { dayLabel, monthLabel, transformedAt, type Transform } from '../lib/macro/series';
 import { useEntity } from '../lib/entity';
+import { MACRO_TABS as TABS } from '../lib/routes';
 import { useUrlParam } from '../lib/urlState';
 
 /**
@@ -53,13 +54,6 @@ const BOARD = PANELS.map((p) => ({
 
 const RETRIEVED = longDate(SNAP.retrieved);
 const THROUGH = monthLabel(MODEL.end);
-
-const TABS: [key: string, label: string][] = [
-  ['summary', 'Summary'],
-  ['factors', 'Factors & lens'],
-  ['indicators', 'Indicators'],
-  ['sources', 'Sources & method'],
-];
 
 const TAB_OF: Record<string, string> = {
   'mac-read': 'summary',

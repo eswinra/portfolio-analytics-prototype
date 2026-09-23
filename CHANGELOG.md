@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-09-22 — Revision 40: saved views
+
+Phase 1, item 5. Every setting on the dashboard was already in its address; now a view can be
+named and come back to.
+
+- **"Saved views" in the title band of every dashboard view.** It offers a name built from the
+  address — "CIO Monthly › Compare · OPEB Trust · latest report" — saves it, lists saved views
+  newest first, opens one, copies its link, deletes it (with Undo), and renames by saving the
+  same view again.
+- **A saved view says which report it shows.** On CIO Monthly or the Exception Center, a view of
+  the latest report either follows whichever report is latest when it is opened, or is pinned to
+  the report on screen. The list says which, so a saved view never switches reports silently.
+- **What is stored is an address and a name, in this browser only.** No figure, file or dataset.
+  This is the site's first use of browser storage, and the menu says what it keeps and that
+  nothing is sent. A view of a template file or an imported dataset cannot be saved, because
+  neither is stored and the address would reopen to a different report.
+- **Stored entries are checked before anything is followed.** An entry that is not a dashboard
+  address — a script URL, another site, a malformed record — is left out, and the menu says how
+  many. Tested with a tampered store in the browser.
+- **Found by the browser tests and fixed.** Deleting a view closed the menu: the outside-click
+  check ran after React had removed the clicked button, so the button counted as outside. It now
+  reads the click's path as recorded when the click happened. And an open menu followed the reader
+  to the next page; it closes when the address changes.
+- The route and sub-tab lists moved to `app/src/lib/routes.ts` — one list for the navigation, the
+  sub-tab bars and the names saved views are offered.
+- Verification: lint · format · Vitest 622/622 (20 new) · build · Playwright 210/210 runnable
+  (10 new, including axe with the menu open and the menu at 320–375px) · `npm audit --omit=dev`
+  0 vulnerabilities · checked in the browser at 320 and 1280px.
+
 ## 2026-09-21 — Revision 39.1: "1 months older"
 
 - Found on the live Exception Center: a GDP chart one month behind its own macro page read "1 months

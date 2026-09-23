@@ -523,6 +523,143 @@ test.describe('compare two reports (desktop project)', () => {
   });
 });
 
+const SAVED_KEY = 'lacera-portfolio-analytics:saved-views:v1';
+
+test.describe('saved views (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('a saved view is named for what it shows, kept, and reopens the same address', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=compare&e=OPEB');
+    await page.locator('.saved-views > summary').click();
+    const menu = page.locator('.sv-pop');
+    await expect(menu.getByLabel('Name for this view')).toHaveValue(
+      'CIO Monthly › Compare · OPEB Trust · latest report',
+    );
+    // pinning fixes the report, and the offered name says which
+    await menu.getByLabel(/Keep the August 12, 2026 report/).check();
+    await expect(menu.getByLabel('Name for this view')).toHaveValue(
+      'CIO Monthly › Compare · OPEB Trust · August 12, 2026 report',
+    );
+    await menu.getByRole('button', { name: 'Save this view' }).click();
+    await expect(menu.locator('.sv-status')).toContainText('Saved');
+    await expect(menu.locator('.sv-list li')).toHaveCount(1);
+    await expect(menu.locator('.sv-meta')).toContainText('fixed to the August 12, 2026 report');
+
+    // only an address and a name are stored: no figure
+    const stored = await page.evaluate((k) => localStorage.getItem(k), SAVED_KEY);
+    expect(JSON.parse(stored!).views[0].href).toBe('/cio?tab=compare&e=OPEB&v=2026-06-30');
+    expect(stored).not.toMatch(/\d+\.\d%/);
+
+    // kept across a reload, and opened from another page
+    await ready(page, '/performance');
+    await expect(page.locator('.saved-views > summary')).toHaveText('Saved views (1)');
+    await page.locator('.saved-views > summary').click();
+    await page
+      .getByRole('link', { name: 'CIO Monthly › Compare · OPEB Trust · August 12, 2026 report' })
+      .click();
+    await expect(page).toHaveURL(/#\/cio\?tab=compare&e=OPEB&v=2026-06-30$/);
+    await expect(page.locator('.band .entity')).toHaveText('OPEB Master Trust');
+    await expect(page.locator('.saved-views')).not.toHaveAttribute('open', '');
+  });
+
+  test('a view that follows the latest report says so, and saving it again renames it', async ({
+    page,
+  }) => {
+    await ready(page, '/exceptions');
+    await page.locator('.saved-views > summary').click();
+    const menu = page.locator('.sv-pop');
+    await menu.getByRole('button', { name: 'Save this view' }).click();
+    await expect(menu.locator('.sv-meta')).toContainText('follows the latest report');
+    await expect(menu.getByLabel('This view is saved as')).toHaveValue(
+      'Exception Center · latest report',
+    );
+    await menu.getByLabel('This view is saved as').fill('Monday morning');
+    await menu.getByRole('button', { name: 'Rename' }).click();
+    await expect(menu.locator('.sv-list li')).toHaveCount(1);
+    await expect(menu.getByRole('link', { name: 'Monday morning' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
+
+  test('a deleted view can be put back', async ({ page }) => {
+    await ready(page, '/allocation?e=OPEB');
+    await page.locator('.saved-views > summary').click();
+    const menu = page.locator('.sv-pop');
+    await menu.getByRole('button', { name: 'Save this view' }).click();
+    await menu.getByRole('button', { name: 'Delete Allocation · OPEB Trust' }).click();
+    await expect(menu.locator('.sv-list li')).toHaveCount(0);
+    await expect(menu.getByText('No saved views in this browser yet.')).toBeVisible();
+    await menu.getByRole('button', { name: 'Undo' }).click();
+    await expect(menu.locator('.sv-list li')).toHaveCount(1);
+    const stored = await page.evaluate((k) => localStorage.getItem(k), SAVED_KEY);
+    expect(JSON.parse(stored!).views).toHaveLength(1);
+  });
+
+  test('a view of a template file cannot be saved, and says why', async ({ page }) => {
+    await ready(page, '/cio?tab=summary&v=file');
+    await page.locator('.saved-views > summary').click();
+    const menu = page.locator('.sv-pop');
+    await expect(menu).toContainText('never stored, so a view of it cannot be saved');
+    await expect(menu.getByRole('button', { name: 'Save this view' })).toHaveCount(0);
+  });
+
+  test('stored entries that are not dashboard views are left out, and counted', async ({
+    page,
+  }) => {
+    await page.addInitScript((k) => {
+      const at = '2026-09-22T09:00:00.000Z';
+      localStorage.setItem(
+        k,
+        JSON.stringify({
+          v: 1,
+          views: [
+            { id: 'a', name: 'Performance', href: '/performance', savedAt: at },
+            { id: 'b', name: 'Script', href: 'javascript:alert(1)', savedAt: at },
+            { id: 'c', name: 'Elsewhere', href: '//example.org/', savedAt: at },
+          ],
+        }),
+      );
+    }, SAVED_KEY);
+    await ready(page, '/');
+    await page.locator('.saved-views > summary').click();
+    const menu = page.locator('.sv-pop');
+    await expect(menu.locator('.sv-open')).toHaveCount(1);
+    await expect(menu.locator('.sv-open')).toHaveAttribute('href', '#/performance');
+    await expect(menu).toContainText(
+      '2 stored entries were not a dashboard view and were left out.',
+    );
+  });
+
+  test('axe clean with the menu open and a view saved', async ({ page }) => {
+    await ready(page, '/cio?tab=summary');
+    await page.locator('.saved-views > summary').click();
+    await page.locator('.sv-pop').getByRole('button', { name: 'Save this view' }).click();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .exclude('.deck-frame-wrap iframe')
+      .analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
+  });
+});
+
+test.describe('saved views on a phone', () => {
+  test('the menu stays on screen', async ({ page }) => {
+    await ready(page, '/exceptions');
+    await page.locator('.saved-views > summary').click();
+    const box = await page.locator('.sv-pop').boundingBox();
+    const width = page.viewportSize()!.width;
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
+});
+
 test.describe('Exception Center (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 

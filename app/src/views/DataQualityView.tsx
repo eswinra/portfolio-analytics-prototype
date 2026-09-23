@@ -112,8 +112,8 @@ export function DataQualityView() {
           <summary>Team activity — who entered and reviewed this dataset</summary>
           <p className="footnote" style={{ marginTop: 10 }}>
             Derived entirely from the dataset's provenance columns (schema 1.2+) — the file is the
-            audit log; the app stores nothing. Bundled fixtures carry synthetic actor labels, never
-            real names.
+            audit log; the app stores none of it. Bundled fixtures carry synthetic actor labels,
+            never real names.
           </p>
           <div
             className="table-scroll"

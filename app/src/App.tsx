@@ -11,6 +11,7 @@ import {
 } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SavedViews } from './components/SavedViews';
 import { Glossary } from './components/Glossary';
 import { cioFor, longDate } from './fixtures/cioMonthly';
 import { MACRO_META } from './fixtures/macroSnapshot.meta';
@@ -18,6 +19,7 @@ import { boardBrief, publishedFor } from './fixtures/published';
 import { CioFileProvider } from './lib/cioFile';
 import { useCioVintage } from './lib/cioVintage';
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
+import { DASHBOARD_VIEWS, WORKSTATION_VIEWS } from './lib/routes';
 import { EntityProvider, useEntity } from './lib/entity';
 import { AllocationView } from './views/AllocationView';
 import { FundedView } from './views/FundedView';
@@ -59,30 +61,6 @@ function ViewLoading() {
 /** LACERA Portfolio Analytics shell (design handoff): notice bar, wordmark header with the
  *  entity segmented control, seven-view nav, title band, and mission footer. Published FY2025
  *  figures only — quoted from the 2025 PAFR/ACFR and the IPS documents. */
-
-/** Dashboard mode — the published-figures presentation layer (2025 PAFR/ACFR, IPS). */
-const DASHBOARD_VIEWS: [path: string, label: string, bandTitle: string][] = [
-  ['/', 'Overview', 'Total fund overview'],
-  ['/exceptions', 'Exceptions', 'Exception Center'],
-  ['/performance', 'Performance', 'Performance vs policy benchmark'],
-  ['/allocation', 'Allocation', 'Asset allocation vs policy'],
-  ['/funded', 'Funded Status', 'Funded status and membership'],
-  ['/risk', 'Policy Monitoring', 'Policy monitoring'],
-  ['/holdings', 'Holdings & Fees', 'Holdings & fees'],
-  ['/cio', 'CIO Monthly', 'CIO Monthly Report'],
-  ['/macro', 'Economy', 'Economic context'],
-];
-
-/** Workstation mode — where the work is populated: the synthetic contract-data pipeline
- *  (Data/Import, Reconciliation, Exceptions) and the ACFR production tracker. In the internal
- *  version the dashboard consumes what the workstation publishes; on this public prototype the
- *  dashboard quotes published documents while the workstation demonstrates the pipeline. */
-const WORKSTATION_VIEWS: [path: string, label: string, bandTitle: string][] = [
-  ['/import', 'Data', 'Import a dataset'],
-  ['/recon', 'Reconciliation', 'Reconciliation'],
-  ['/data-quality', 'Data quality', 'Data quality'],
-  ['/acfr', 'ACFR Workflow', 'ACFR reporting workflow'],
-];
 
 const isWorkstationPath = (pathname: string): boolean =>
   WORKSTATION_VIEWS.some(([p]) => p === pathname);
@@ -282,25 +260,30 @@ function TitleBand() {
                     ? `Market context · lens on the ${d.label} policy targets`
                     : d.label}
           </span>
-          {isOverview ? (
+          {workstation ? null : (
             <span className="actions">
-              <button type="button" className="btn-band" onClick={copyBrief}>
-                {copyLabel}
-              </button>
-              <span className="visually-hidden" role="status" aria-live="polite">
-                {copyAnnouncement}
-              </span>
+              {isOverview ? (
+                <>
+                  <button type="button" className="btn-band" onClick={copyBrief}>
+                    {copyLabel}
+                  </button>
+                  <span className="visually-hidden" role="status" aria-live="polite">
+                    {copyAnnouncement}
+                  </span>
+                </>
+              ) : isCio ? (
+                <>
+                  <a className="btn-band" href="how-it-works/" target="_blank" rel="noreferrer">
+                    How this report works ↗
+                  </a>
+                  <button type="button" className="btn-band" onClick={presentFullScreen}>
+                    Present full screen
+                  </button>
+                </>
+              ) : null}
+              <SavedViews />
             </span>
-          ) : isCio ? (
-            <span className="actions">
-              <a className="btn-band" href="how-it-works/" target="_blank" rel="noreferrer">
-                How this report works ↗
-              </a>
-              <button type="button" className="btn-band" onClick={presentFullScreen}>
-                Present full screen
-              </button>
-            </span>
-          ) : null}
+          )}
         </div>
       </div>
       <div className="band-strip" />

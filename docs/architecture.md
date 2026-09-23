@@ -194,6 +194,25 @@ Conventions every dashboard view now follows:
   library is pure and holds the calculations the tables show, so the two cannot disagree; the
   component wraps a figure in `<Fig id>` and renders plain text outside the provider. See
   `docs/cio-monthly.md`, "Where a figure came from".
+- **Saved views** (`lib/savedViews.ts`, `components/SavedViews.tsx`, the title band on every
+  dashboard view): a view is already its address, so saving one stores that address and a name in
+  this browser's local storage — the site's only use of browser storage. No figure, file or
+  dataset is stored, and nothing is sent anywhere. Three rules:
+  - **A saved view says which report it shows.** A view of the latest CIO report is saved either
+    following the latest report or pinned to the one on screen (`v=` added), and the list says
+    which: "follows the latest report" or "fixed to the August 12, 2026 report". A view never
+    changes reports without saying so.
+  - **A view of a template file or an imported dataset cannot be saved.** Neither is stored, so
+    the address would reopen to a different report than the one saved; the menu says so.
+  - **What comes back from storage is checked like any other input** (`parseSavedViews`): the
+    record must be version 1, and each entry must be a known dashboard address with a name and a
+    date. Anything else — a script URL, another site, a malformed entry — is dropped and counted,
+    never followed.
+
+  Up to 24 views; saving an address already saved renames it; a deleted view can be put back.
+  If the browser blocks storage (a private window, a policy), the list lasts until the page is
+  closed, and says so. The route and sub-tab lists moved to `lib/routes.ts`, so the navigation,
+  the sub-tab bars and the names offered for saved views read one list.
 - **Exception Center** (`lib/exceptionCenter.ts`, `views/ExceptionCenterView.tsx`, `/exceptions`):
   policy ranges, report-specific data conditions and the changes to explain, for both funds in
   the report on screen; each item links to its panel with the provenance record open. The changes

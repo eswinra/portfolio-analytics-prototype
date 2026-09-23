@@ -54,6 +54,7 @@ import { feedClassification } from '../lib/dataset/cioFeed';
 import { figId, ipsRange, proxyAttribution } from '../lib/provenance';
 import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
+import { CIO_TABS as TABS } from '../lib/routes';
 import { useUrlFlag, useUrlParam } from '../lib/urlState';
 import {
   isWorkbookName,
@@ -61,18 +62,6 @@ import {
   SPREADSHEET_ACCEPT,
   workbookToCsv,
 } from '../lib/workbook';
-
-/** Sub-tabs: the report's slides first — opening the tab shows the deck inside the dashboard —
- *  then a one-screen summary and the detail, one click each. */
-const TABS: [key: string, label: string][] = [
-  ['slides', 'Slides'],
-  ['summary', 'Summary'],
-  ['performance', 'Performance'],
-  ['positioning', 'Positioning'],
-  ['markets', 'Markets & items'],
-  ['explore', 'Explore'],
-  ['compare', 'Compare'],
-];
 
 /** Which sub-tab holds each panel, so a jump or a panel link opens the right tab. */
 const TAB_OF: Record<string, string> = {

@@ -4268,3 +4268,144 @@ dialog.prov::backdrop {
     text-align: left;
   }
 }
+
+/* ---- saved views (title band) ------------------------------------------------------------- */
+
+.saved-views {
+  position: relative;
+}
+
+.saved-views > summary {
+  list-style: none;
+  display: inline-block;
+}
+
+.saved-views > summary::-webkit-details-marker {
+  display: none;
+}
+
+.saved-views > summary:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.saved-views[open] > summary {
+  background: var(--accent-700);
+}
+
+.sv-pop {
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  top: calc(100% + 6px);
+  box-sizing: border-box;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 14px 16px 12px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  background: #fff;
+  border: 1px solid var(--divider);
+  box-shadow: 0 8px 22px rgb(16 35 61 / 18%);
+}
+
+.sv-save {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.sv-save label {
+  font-size: 12px;
+  color: var(--muted-72);
+}
+
+.sv-save input[type='text'] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  border: 1px solid var(--neutral-400);
+}
+
+.sv-save input[type='text']:focus-visible {
+  outline: 2px solid var(--accent-700);
+  outline-offset: 1px;
+}
+
+.sv-save .sv-pin {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  color: var(--ink);
+}
+
+.sv-save button {
+  justify-self: start;
+}
+
+.sv-why,
+.sv-empty {
+  margin: 0 0 10px;
+  color: var(--muted-72);
+}
+
+.sv-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sv-list li {
+  display: grid;
+  gap: 1px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.sv-open {
+  font-weight: 600;
+  color: var(--accent-800);
+  overflow-wrap: anywhere;
+}
+
+.sv-open[aria-current='page'] {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.sv-open[aria-current='page']::after {
+  content: ' · on screen';
+  font-weight: 400;
+  color: var(--muted-68);
+}
+
+.sv-meta {
+  font-size: 12px;
+  color: var(--muted-68);
+}
+
+.sv-acts {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+}
+
+.sv-status {
+  min-height: 1.5em;
+  margin: 8px 0 4px;
+}
+
+.sv-status:empty {
+  margin: 0;
+  min-height: 0;
+}
+
+.sv-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted-68);
+}
