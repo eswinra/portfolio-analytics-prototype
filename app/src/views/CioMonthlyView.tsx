@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { DeckFrame } from '../components/DeckFrame';
 import { CioCompare } from './CioCompare';
 import { CioExplore } from './CioExplore';
+import { CategoryTrend } from '../components/explore/CategoryTrend';
 import { FreshnessMatrix } from '../components/FreshnessMatrix';
 import { offAnchorNote } from '../lib/freshness';
 import { GdpBars } from '../components/GdpBars';
@@ -47,7 +48,9 @@ import { type EntityId } from '../fixtures/published';
 import { SOURCES, type SourceRecord } from '../fixtures/sources';
 import { useCioFile } from '../lib/cioFile';
 import { cioSource, entityPages } from '../lib/cioSource';
+import { cioHistory } from '../lib/cioHistory';
 import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
+import { ATTR_PERIODS, bandsFor, furthestFromTarget, parseSeriesKey } from '../lib/crossFilter';
 import { PACKAGE_SHEET, readCioPackage } from '../lib/cioPackage';
 import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
 import { feedClassification } from '../lib/dataset/cioFeed';
@@ -71,7 +74,9 @@ const TAB_OF: Record<string, string> = {
   'cio-freshness': 'summary',
   'cio-perf': 'performance',
   'cio-attr': 'performance',
+  'cio-cat-perf': 'performance',
   'cio-trend': 'performance',
+  'cio-cat-weight': 'positioning',
   'cio-comps': 'positioning',
   'cio-flows': 'positioning',
   'cio-hist': 'positioning',
@@ -306,6 +311,33 @@ export function CioMonthlyView() {
   const [attrRaw, setAttrRaw] = useUrlParam('attr', String(oneYear));
   const attrPeriod = PERIODS[Number(attrRaw)] ? Number(attrRaw) : oneYear;
   const setAttrPeriod = (i: number) => setAttrRaw(String(i));
+  // one category followed across Performance, Positioning and Explore (lib/crossFilter.ts)
+  const [catRaw, setCat] = useUrlParam('cat', 'total');
+  const cat = parseSeriesKey(catRaw);
+  const history = useMemo(() => cioHistory(CIO_VINTAGES, (v) => cioFor(entity, v)), [entity]);
+  const bands = useMemo(() => bandsFor(entity), [entity]);
+  // a template file or an imported dataset is not part of the published history
+  const inSeries = !feed && !pkg;
+  const seriesAt = inSeries ? history.months.indexOf(vintage.dataThrough) : -1;
+  // Positioning follows a composite: the Total Fund's weight is always 100%
+  const posCat = cat === 'total' ? furthestFromTarget(e) : cat;
+  // a period chosen in the Performance table becomes the attribution's second period
+  const periodCell = (p: string, i: number) => (
+    <td>
+      {ATTR_PERIODS.includes(i) ? (
+        <button
+          type="button"
+          className="x-cat"
+          aria-pressed={i === attrPeriod}
+          onClick={() => setAttrPeriod(i)}
+        >
+          {p}
+        </button>
+      ) : (
+        p
+      )}
+    </td>
+  );
   const [trendView, setTrendView] = useUrlParam('trend', 'chart');
   const [compare, setCompare] = useUrlFlag('compare');
   const [tabRaw, setTab] = useUrlParam('tab', 'slides');
@@ -856,8 +888,8 @@ export function CioMonthlyView() {
                       </thead>
                       <tbody>
                         {PERIODS.map((p, i) => (
-                          <tr key={p}>
-                            <td>{p}</td>
+                          <tr key={p} className={i === attrPeriod ? 'x-row-sel' : undefined}>
+                            {periodCell(p, i)}
                             <td className="num grp" style={{ fontWeight: 500 }}>
                               <Fig id={figId.r(key, i)}>{pct(e.total.r[i])}</Fig>
                             </td>
@@ -892,7 +924,8 @@ export function CioMonthlyView() {
                     <table className="table">
                       <caption>
                         Total fund return, policy benchmark, excess, and actuarial hurdle by period
-                        {ep ? '; prior column = the same period in the prior report' : ''}
+                        {ep ? '; prior column = the same period in the prior report' : ''}. Choose a
+                        period to see where its gap came from, beside the table
                       </caption>
                       <thead>
                         <tr>
@@ -920,8 +953,8 @@ export function CioMonthlyView() {
                         {PERIODS.map((p, i) => {
                           const t = tagFor(e.total.r[i], e.total.b[i]);
                           return (
-                            <tr key={p}>
-                              <td>{p}</td>
+                            <tr key={p} className={i === attrPeriod ? 'x-row-sel' : undefined}>
+                              {periodCell(p, i)}
                               <td className="num" style={{ fontWeight: 500 }}>
                                 <Fig id={figId.r(key, i)}>{pct(e.total.r[i])}</Fig>
                               </td>
@@ -981,8 +1014,8 @@ export function CioMonthlyView() {
                           const x = excess(e, i);
                           const h = diff(e.total.r[i], e.total.h[i]);
                           return (
-                            <tr key={p}>
-                              <td>{p}</td>
+                            <tr key={p} className={i === attrPeriod ? 'x-row-sel' : undefined}>
+                              {periodCell(p, i)}
                               <td className="num" style={{ fontWeight: 500 }}>
                                 {x === null ? '—' : <Fig id={figId.x(key, i)}>{signed(x)} pp</Fig>}
                               </td>
@@ -1065,7 +1098,10 @@ export function CioMonthlyView() {
                   tabIndex={0}
                 >
                   <table className="table">
-                    <caption>Contribution to total-fund excess, percentage points</caption>
+                    <caption>
+                      Contribution to total-fund excess, percentage points. Choose a composite, or
+                      the total, to follow its monthly return in every report below
+                    </caption>
                     <thead>
                       <tr>
                         <th scope="col">Composite</th>
@@ -1078,8 +1114,17 @@ export function CioMonthlyView() {
                     </thead>
                     <tbody>
                       {e.comps.map((c, ci) => (
-                        <tr key={c.k}>
-                          <td>{c.short}</td>
+                        <tr key={c.k} className={c.k === cat ? 'x-row-sel' : undefined}>
+                          <td>
+                            <button
+                              type="button"
+                              className="x-cat"
+                              aria-pressed={c.k === cat}
+                              onClick={() => setCat(c.k)}
+                            >
+                              {c.short}
+                            </button>
+                          </td>
                           {attribution.map((a) => {
                             const v = a.rows[ci]!.contrib;
                             return (
@@ -1118,8 +1163,21 @@ export function CioMonthlyView() {
                           </td>
                         ))}
                       </tr>
-                      <tr style={{ fontWeight: 600 }}>
-                        <td>Total-fund excess (reported fund − benchmark)</td>
+                      <tr
+                        style={{ fontWeight: 600 }}
+                        className={cat === 'total' ? 'x-row-sel' : undefined}
+                      >
+                        <td>
+                          <button
+                            type="button"
+                            className="x-cat"
+                            aria-pressed={cat === 'total'}
+                            onClick={() => setCat('total')}
+                          >
+                            Total-fund excess
+                          </button>{' '}
+                          (reported fund − benchmark)
+                        </td>
                         {attribution.map((a) => (
                           <td className="num" key={a.period}>
                             {a.total === null ? (
@@ -1137,6 +1195,46 @@ export function CioMonthlyView() {
               </Panel>
             </div>
           </>
+        ) : null}
+
+        {tab === 'performance' ? (
+          <Panel
+            id="cio-cat-perf"
+            className="mt"
+            kicker={`${e.short} · chosen in the attribution table`}
+            title={`${history.labels[cat]}: monthly return against its benchmark, every report`}
+            method={
+              <p>
+                Each bar is one report&apos;s one-month net return as that report first printed it;
+                the tick is its benchmark. Excess and the count of months beaten are calculated. A
+                month with no report is marked, not filled. Private-market benchmarks are lagged one
+                to three months (IPS Table 2), as in the reports. Choose another composite in the
+                attribution table, or a month here to open that report. The same choice carries to
+                the Positioning and Explore tabs.
+              </p>
+            }
+          >
+            {inSeries ? null : (
+              <p className="footnote x-note">
+                These are the {CIO_VINTAGES.length} published reports; the{' '}
+                {pkg ? 'template file' : 'workstation dataset'} on screen is not part of that
+                history.
+              </p>
+            )}
+            <CategoryTrend
+              history={history}
+              cat={cat}
+              current={seriesAt}
+              band={null}
+              onSelectMonth={select}
+              show="return"
+            />
+            <SourceLine>
+              {CIO_VINTAGES.length} CIO Monthly Reports, {CIO_VINTAGES[0]!.reportLabel} through{' '}
+              {CIO_VINTAGES[CIO_VINTAGES.length - 1]!.reportLabel} — each report&apos;s one-month
+              returns and benchmarks, as printed
+            </SourceLine>
+          </Panel>
         ) : null}
 
         {tab === 'positioning' ? (
@@ -1164,7 +1262,8 @@ export function CioMonthlyView() {
                     Drift = weight − target; Δ weight = change against the prior report; IPS range
                     and distance to the nearer bound compare the month-end weight with the policy in
                     force (IPS Table 1, restated June 12, 2024) — all calculated. Return cells show
-                    composite / policy benchmark.
+                    composite / policy benchmark. Choose a composite to follow its weight in every
+                    report below.
                   </caption>
                   <thead role="rowgroup">
                     <tr role="row">
@@ -1209,9 +1308,20 @@ export function CioMonthlyView() {
                       const ips = ipsFor(c.n);
                       const dist = ips ? Math.min(c.pct - ips.lo, ips.hi - c.pct) : null;
                       return (
-                        <tr role="row" key={c.k}>
+                        <tr
+                          role="row"
+                          key={c.k}
+                          className={c.k === posCat ? 'x-row-sel' : undefined}
+                        >
                           <td role="cell" data-label="Composite">
-                            {c.n}
+                            <button
+                              type="button"
+                              className="x-cat"
+                              aria-pressed={c.k === posCat}
+                              onClick={() => setCat(c.k)}
+                            >
+                              {c.n}
+                            </button>
                           </td>
                           <td role="cell" className="num" data-label="Market value ($M)">
                             <Fig id={figId.comp(key, c.k, 'mv')}>{mm(c.mv)}</Fig>
@@ -1349,6 +1459,50 @@ export function CioMonthlyView() {
             )}
             <SourceLine sources={P ? ['IPS_T1'] : ['IPS_OPEB_T1']} />
             <DeckLink n={SLIDE.alloc} />
+          </Panel>
+        ) : null}
+
+        {tab === 'positioning' ? (
+          <Panel
+            id="cio-cat-weight"
+            className="mt"
+            kicker={
+              cat === 'total'
+                ? `${e.short} · furthest from target in ${monthYear(vintage.dataThrough)}; choose another composite in the table`
+                : `${e.short} · chosen in the composites table`
+            }
+            title={`${history.labels[posCat]}: weight against target and IPS range, every report`}
+            method={
+              <p>
+                Weight and target are the month-end figures each report printed; the policy range is
+                IPS Table 1 (restated June 12, 2024), which applies to every report on this site. A
+                weight moves with relative returns as well as with rebalancing — the flows beside
+                show this month&apos;s rebalancing — and the IPS sets no mechanical trade trigger,
+                so a weight near a bound is a fact to note, not a finding. Choose another composite
+                in the table or the flows; the same choice carries to the Performance and Explore
+                tabs.
+              </p>
+            }
+          >
+            {inSeries ? null : (
+              <p className="footnote x-note">
+                These are the {CIO_VINTAGES.length} published reports; the{' '}
+                {pkg ? 'template file' : 'workstation dataset'} on screen is not part of that
+                history.
+              </p>
+            )}
+            <CategoryTrend
+              history={history}
+              cat={posCat}
+              current={seriesAt}
+              band={bands[posCat] ?? null}
+              onSelectMonth={select}
+              show="weight"
+            />
+            <SourceLine sources={P ? ['IPS_T1'] : ['IPS_OPEB_T1']}>
+              {CIO_VINTAGES.length} CIO Monthly Reports — each report&apos;s month-end weights and
+              targets, as printed
+            </SourceLine>
           </Panel>
         ) : null}
 
@@ -1497,8 +1651,17 @@ export function CioMonthlyView() {
             >
               <div>
                 {e.comps.map((c) => (
-                  <div className="flow-row" key={c.k}>
-                    <span>{c.short}</span>
+                  <div className={`flow-row${c.k === posCat ? ' x-row-sel' : ''}`} key={c.k}>
+                    <span>
+                      <button
+                        type="button"
+                        className="x-cat"
+                        aria-pressed={c.k === posCat}
+                        onClick={() => setCat(c.k)}
+                      >
+                        {c.short}
+                      </button>
+                    </span>
                     <span className="v">{moneyMm(c.flow)}</span>
                   </div>
                 ))}

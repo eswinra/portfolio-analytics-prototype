@@ -13,7 +13,6 @@ import {
   type CioVintage,
   type CompositeKey,
 } from '../fixtures/cioMonthly';
-import { policyFor } from '../fixtures/policyPack';
 import type { EntityId } from '../fixtures/published';
 import {
   CATEGORY_KEYS,
@@ -21,37 +20,15 @@ import {
   formatTargets,
   MIN_CORRELATION_MONTHS,
   parseTargets,
-  SERIES_KEYS,
-  type Band,
-  type SeriesKey,
 } from '../lib/cioHistory';
+import { bandsFor, parseSeriesKey } from '../lib/crossFilter';
 import { useUrlParam } from '../lib/urlState';
-
-/** IPS Table 1 functional categories, by the report's composite keys. */
-const POLICY_CLASS: Record<CompositeKey, string> = {
-  growth: 'GROWTH',
-  credit: 'CREDIT',
-  ra: 'RAIH',
-  rrm: 'RRM',
-};
-
-const pctOf = (decimal: number) => Math.round(decimal * 1000) / 10;
-
-/** The policy range of each category, % of the fund, from the fund's IPS (explicit min/max). */
-function bandsFor(entity: EntityId): Partial<Record<CompositeKey, Band>> {
-  const pack = policyFor(entity);
-  const out: Partial<Record<CompositeKey, Band>> = {};
-  for (const k of CATEGORY_KEYS) {
-    const b = pack.bands.find((x) => x.classId === POLICY_CLASS[k] && x.parent === undefined);
-    if (b) out[k] = { min: pctOf(b.min), max: pctOf(b.max) };
-  }
-  return out;
-}
 
 /** CIO Monthly › Explore: the published reports as one history to work through. The report
  *  slider above is the timeline — every panel marks the report on screen — and a category chosen
- *  in the grid is followed in the panel beside it. Selections live in the address (`cat`,
- *  `pair`, `targets`), so a view can be shared as a link. */
+ *  in the grid is followed in the panel beside it, and on the Performance and Positioning tabs
+ *  (lib/crossFilter.ts). Selections live in the address (`cat`, `pair`, `targets`), so a view can
+ *  be shared as a link. */
 export function CioExplore({
   entity,
   vintage,
@@ -74,9 +51,7 @@ export function CioExplore({
   const current = published ? history.months.indexOf(vintage.dataThrough) : -1;
 
   const [catRaw, setCat] = useUrlParam('cat', 'total');
-  const cat: SeriesKey = (SERIES_KEYS as readonly string[]).includes(catRaw)
-    ? (catRaw as SeriesKey)
-    : 'total';
+  const cat = parseSeriesKey(catRaw);
   const [pairRaw, setPairRaw] = useUrlParam('pair', 'growth-credit');
   const pair: Pair = parsePair(pairRaw) ?? ['growth', 'credit'];
   const [targetsRaw, setTargetsRaw] = useUrlParam('targets', '');

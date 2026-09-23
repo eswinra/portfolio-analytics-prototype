@@ -629,6 +629,36 @@ The deck carries an equivalent narrative implementation in its own file, because
 self-contained. Both read the same fixture; if the wording changes in one, change it in the other
 (`app/public/deck/index.html`, the executive slide).
 
+### One choice, followed across Performance, Positioning and Explore
+
+A category — the Total Fund or one composite — chosen on any of the three sub-tabs is carried in
+the address (`cat`) and followed on the others (`app/src/lib/crossFilter.ts`):
+
+| Tab | Where it is chosen | What follows it |
+|---|---|---|
+| Performance | A row of the attribution table (the composites, or the total-fund excess) | A panel of its one-month return against its benchmark in every report, and how many months it beat the benchmark — whether a gap was one month or most months |
+| Positioning | A composite in the composites table or the flows | A panel of its weight against the target and the IPS range in every report, with the range of its weight and the nearest it came to a bound — whether it has been moving toward a bound. The flows mark the same composite |
+| Explore | A category in the month grid | Both histories, as before |
+
+The Total Fund's weight is always 100%, so until a composite is chosen Positioning shows the one
+furthest from its target that month, and says that is why. A period chosen in the Performance
+table becomes the second period of the attribution beside it (`attr`); FYTD is always shown there,
+so it is not offered as a choice. A choice is marked by a ▸ and bold type on its button and a rule
+above and below its row (on a phone, the card's border), never by colour alone. Choosing only
+changes what is shown; it never removes a figure from a total.
+
+The weight history reads its IPS ranges from the policy pack, while the Composites table, the
+provenance drawer and the Exception Center read them from the published IPS table. Both appear on
+one screen, so a unit test holds the two sources equal for every composite of both funds.
+
+**A fault found while building this, in every setting kept in the address.** The address hook
+(`app/src/lib/urlState.ts`) shows a value the moment it is set, while the address catches up. It
+kept that value until the address returned to what it had been before — so a link to the same
+page without the setting brought back the last choice instead of the default. After choosing
+Growth, a link to `/cio?tab=positioning` still showed Growth; a saved view or an Exception Center
+link to `/cio` could have opened the last sub-tab used instead of the one in the link. The hook now
+lets go of the value as soon as the address moves, and a test navigates exactly that way.
+
 ### Explore
 
 **Explore** treats the sixteen published reports as one monthly history

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 /** View state that belongs in the address bar: the fund, the selected report, and the toggles
@@ -15,6 +15,12 @@ export function useUrlParam(key: string, fallback: string): [string, (next: stri
   // the value just set, and the address value it was set against
   const [pending, setPending] = useState<{ v: string; base: string } | null>(null);
   const value = pending && pending.base === fromUrl ? pending.v : fromUrl;
+  // once the address has moved off that value — to the one set, or anywhere else — the address is
+  // the record again. Kept, a pending value came back whenever a link returned the address to the
+  // old value: a link to /cio without `cat` showed the category chosen before it.
+  useEffect(() => {
+    if (pending && pending.base !== fromUrl) setPending(null);
+  }, [pending, fromUrl]);
   const set = useCallback(
     (next: string) => {
       setPending({ v: next, base: fromUrl });

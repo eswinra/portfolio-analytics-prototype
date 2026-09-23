@@ -4409,3 +4409,26 @@ dialog.prov::backdrop {
   font-size: 12px;
   color: var(--muted-68);
 }
+
+/* ---- cross-filter: a row chosen on Performance or Positioning ----------------------------- */
+
+/* the chosen row: a rule above and below, as in the Explore grid; the ▸ and bold on its button
+   carry the state too, so it never rests on colour */
+.table .x-row-sel > th,
+.table .x-row-sel > td,
+.flow-row.x-row-sel {
+  box-shadow:
+    inset 0 2px 0 var(--accent-700),
+    inset 0 -2px 0 var(--accent-700);
+}
+
+/* a phone shows a table row as a card: the card is marked, not each of its lines */
+@media (max-width: 640px) {
+  .table.cardable .x-row-sel > td {
+    box-shadow: none;
+  }
+
+  .table.cardable tr.x-row-sel {
+    border: 2px solid var(--accent-700);
+  }
+}

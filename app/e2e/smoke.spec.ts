@@ -32,6 +32,9 @@ const ROUTES = [
   '/cio?tab=markets',
   '/cio?tab=explore',
   '/cio?tab=compare',
+  // a category and a period chosen: the cross-filter's panels and marked rows
+  '/cio?tab=performance&cat=growth&attr=5',
+  '/cio?tab=positioning&cat=credit',
   // the provenance drawer open, on the widest record (a proxy with four inputs) and on one that
   // cites two documents
   '/cio?tab=performance&fig=pension.attr.FYTD',
@@ -520,6 +523,105 @@ test.describe('compare two reports (desktop project)', () => {
     await page.getByRole('button', { name: 'OPEB Trust' }).click();
     await expect(cite).toHaveAttribute('aria-label', /pp\. 13–14/);
     await expect(cite).not.toHaveAttribute('aria-label', /pp\. 8–9/);
+  });
+});
+
+test.describe('one choice followed across Performance, Positioning and Explore (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  test('a composite chosen in the attribution shows its return in every report', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=performance');
+    const panel = page.locator('#cio-cat-perf');
+    await expect(panel.getByRole('heading', { level: 2 })).toHaveText(
+      'Total Fund: monthly return against its benchmark, every report',
+    );
+    const attr = page.locator('#cio-attr');
+    await attr.getByRole('button', { name: 'Growth' }).click();
+    await expect(page).toHaveURL(/cat=growth/);
+    await expect(attr.getByRole('button', { name: 'Growth' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(panel.getByRole('heading', { level: 2 })).toHaveText(
+      'Growth: monthly return against its benchmark, every report',
+    );
+    await expect(panel.locator('.x-lede')).toHaveText(
+      /^Growth beat its benchmark in \d+ of 16 months\.$/,
+    );
+    // the returns only: the weight is Positioning's question
+    await expect(panel.locator('svg.x-chart')).toHaveCount(1);
+  });
+
+  test('a period chosen in the performance table is the attribution’s second period', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=performance');
+    const perf = page.locator('#cio-perf');
+    await perf.getByRole('button', { name: '3 Y' }).click();
+    await expect(page).toHaveURL(/attr=5/);
+    await expect(perf.getByRole('button', { name: '3 Y' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#cio-attr thead th').last()).toHaveText('3 Y');
+    await expect(page.getByLabel('Attribution period')).toHaveValue('5');
+    // FYTD is always in the attribution, so it is not offered as a choice
+    await expect(perf.getByRole('button', { name: 'FYTD' })).toHaveCount(0);
+  });
+
+  test('Positioning shows the composite furthest from target until one is chosen', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=positioning');
+    const panel = page.locator('#cio-cat-weight');
+    await expect(panel).toContainText('furthest from target in June 2026');
+    await expect(panel.getByRole('heading', { level: 2 })).toHaveText(
+      'Growth: weight against target and IPS range, every report',
+    );
+    // chosen in the flows: the table, the flows and the panel all follow
+    await page.locator('#cio-flows').getByRole('button', { name: 'Credit' }).click();
+    await expect(page).toHaveURL(/cat=credit/);
+    await expect(panel).toContainText('chosen in the composites table');
+    await expect(panel.getByRole('heading', { level: 2 })).toHaveText(
+      'Credit: weight against target and IPS range, every report',
+    );
+    await expect(panel.locator('.x-lede')).toContainText(
+      'the nearest it came to a bound was 2.0 pp from the lower bound, in February 2025',
+    );
+    await expect(
+      page.locator('#cio-comps').getByRole('button', { name: 'Credit' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#cio-flows .flow-row.x-row-sel')).toContainText('Credit');
+  });
+
+  test('the choice carries to Explore and back to Performance', async ({ page }) => {
+    await ready(page, '/cio?tab=positioning');
+    await page.locator('#cio-comps').getByRole('button', { name: 'Credit' }).click();
+    await page.getByRole('tab', { name: 'Explore' }).click();
+    await expect(page.locator('#cio-x-grid .x-cat[aria-pressed="true"]')).toHaveText('Credit');
+    await expect(page.locator('#cio-x-cat').getByRole('heading', { level: 2 })).toHaveText(
+      'Credit: return and weight',
+    );
+    await page.getByRole('tab', { name: 'Performance' }).click();
+    await expect(page.locator('#cio-attr').getByRole('button', { name: 'Credit' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  test('a link that leaves the choice out shows the default, not the last choice', async ({
+    page,
+  }) => {
+    // found while building this: the address hook brought back a value set earlier whenever a
+    // link returned the address to the value it had before
+    await ready(page, '/cio?tab=performance');
+    await page.locator('#cio-attr').getByRole('button', { name: 'Growth' }).click();
+    await expect(page).toHaveURL(/cat=growth/);
+    await page.goto(hash('/cio?tab=positioning'));
+    await expect(page.locator('#cio-cat-weight')).toContainText('furthest from target');
+    await page.goto(hash('/cio?tab=performance'));
+    await expect(
+      page.locator('#cio-attr').getByRole('button', { name: 'Total-fund excess' }),
+    ).toHaveAttribute('aria-pressed', 'true');
   });
 });
 

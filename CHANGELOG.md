@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-09-22 — Revision 41: one choice, followed across the CIO tabs
+
+Phase 1, item 6, the last in Phase 1. Explore's cross-filter now reaches Performance and
+Positioning.
+
+- **Choose a composite on Performance and see its history.** A row of the attribution table
+  (a composite, or the total-fund excess) opens a panel of its one-month return against its
+  benchmark in every report, with how many months it beat the benchmark — so a gap reads as one
+  month or most months. Growth beat its benchmark in 5 of 16 months.
+- **Choose a composite on Positioning and see its drift.** A composite in the composites table or
+  the flows opens a panel of its weight against the target and IPS range in every report, with the
+  range of its weight and the nearest it came to a bound — Credit ran from 11.0% to 13.0%, closest
+  2.0 pp from the lower bound in February 2025. The flows mark the same composite. Until one is
+  chosen, Positioning shows the composite furthest from target that month and says so, since the
+  Total Fund's weight is always 100%.
+- **Choose a period on Performance and the attribution follows.** Every period but FYTD, which the
+  attribution always shows.
+- **One choice everywhere.** The category is in the address (`cat`), shared with Explore: chosen on
+  Positioning, it is chosen on Explore and Performance too, and a link carries it.
+- **The two sources of the IPS range are held equal by a test.** The weight history reads the
+  policy pack; the Composites table, the provenance drawer and the Exception Center read the
+  published IPS table. They agree today for all eight composites, and now cannot drift apart.
+- **Fixed: every setting kept in the address could come back after a link.** The address hook
+  showed a newly set value until the address returned to its previous value, so a link without the
+  setting — a saved view, an Exception Center link — could bring back the last choice instead of
+  the default. After choosing Growth, `/cio?tab=positioning` still showed Growth. It now lets go as
+  soon as the address moves; a test reproduces the case.
+- A summary line ended with a stray space when only one of its sentences applied; it is built from
+  sentences now, and the test that tolerated the space no longer does.
+- Verification: lint · format · Vitest 635/635 (13 new) · build · Playwright 225/225 runnable
+  (5 new, plus two routes in the overflow and accessibility checks) · `npm audit --omit=dev`
+  0 vulnerabilities · checked in the browser at 320 and 1280px.
+
 ## 2026-09-22 — Revision 40: saved views
 
 Phase 1, item 5. Every setting on the dashboard was already in its address; now a view can be

@@ -194,6 +194,10 @@ Conventions every dashboard view now follows:
   library is pure and holds the calculations the tables show, so the two cannot disagree; the
   component wraps a figure in `<Fig id>` and renders plain text outside the provider. See
   `docs/cio-monthly.md`, "Where a figure came from".
+- **Cross-filter** (`lib/crossFilter.ts`): one category, carried in the address (`cat`), is
+  followed on CIO Monthly's Performance, Positioning and Explore sub-tabs; the panels reuse
+  `components/explore/CategoryTrend.tsx`, which now draws the return history, the weight history
+  or both (`show`). See `docs/cio-monthly.md`, "One choice, followed across…".
 - **Saved views** (`lib/savedViews.ts`, `components/SavedViews.tsx`, the title band on every
   dashboard view): a view is already its address, so saving one stores that address and a name in
   this browser's local storage — the site's only use of browser storage. No figure, file or
