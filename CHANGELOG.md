@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-22 — Revision 43: every figure traced to the cell it was typed in
+
+Phase 3, second part. A figure from a template workbook now traces back through the Export tab to
+the input cell the analyst typed.
+
+- **The provenance drawer** says it: Growth's fiscal-year-to-date return from the example reads
+  "Typed in Pension!E12 of CIO_Monthly_Template_Example.xlsx, and read from its Export tab, cell
+  F35 (row 35)", cited as `Pension!E12 → Export!F35`. A calculated figure cites each input's cell.
+- **The Monthly run points at the cell to fix.** Every figure reconciliation flags carries the cell
+  it was typed in and its Export row; step 1 says how many figures were traced — 422 of the
+  example's 426 to the cell they were typed in (the other four: three dates worked out from the
+  Report tab's date, and the format marker typed into the Export tab itself).
+- **How the input is found.** The workbook is read with its formulas. The cell a formula returns is
+  where the figure was typed; every cell it reads is listed too, so a row guarded on its label
+  names the value cell, not the label. A value the formula works out (a date built from its parts)
+  names what it reads and no single input. Found while building: "reads exactly one cell" was the
+  wrong test — 166 of the example's figures are guarded on a label cell as well.
+- **A CSV says what it cannot trace.** The Export tab saved as CSV keeps values, not formulas, so a
+  figure from it traces to its row, and the drawer says to open the workbook to trace it to a cell.
+- **Fixed: row numbers after a blank row were too low.** Blank lines were dropped before rows were
+  counted, so "Row n" in error messages — and now the trace — named the wrong row after any blank
+  one. Blank rows are counted now, and a workbook's rows are its sheet rows even with a title above
+  the column names.
+- Verification: lint · format · Vitest 656/656 (10 new, including the real example workbook read
+  with its formulas, blank rows in a CSV and a titled workbook) · build · Playwright 240/240
+  runnable · `npm audit --omit=dev` 0 vulnerabilities · checked in the browser: the example's
+  Growth FYTD return traced to Pension!E12 in the drawer.
+
 ## 2026-09-22 — Revision 42: the Monthly run, one file straight through
 
 Phase 3, first part, with public data. One month's CIO template file goes from the file to the

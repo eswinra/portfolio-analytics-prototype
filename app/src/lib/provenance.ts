@@ -11,6 +11,7 @@ import {
 import { publishedFor } from '../fixtures/published';
 import { SOURCES, type SourceRecord } from '../fixtures/sources';
 import { fiscalYearOf } from './cioNarrative';
+import { COMPOSITE_CODE, traceKey, type FigureTrace } from './cioPackage';
 import { cioSource } from './cioSource';
 import { PERIOD_MONTHS, windowOverlap, monthsBetween } from './compare';
 // the six classifications every displayed figure carries (the row schema's own list has four)
@@ -330,6 +331,27 @@ function pageSource(v: CioVintage, fund: FundKey, which: 'summary' | 'table'): S
   return cioSource(v, `p. ${n}`, n);
 }
 
+/** Where a template file's figure was typed, in words, from its trace (lib/cioPackage.ts). */
+export function fileTraceLine(file: string, t: FigureTrace | undefined): string {
+  if (!t) return `As entered in the template file ${file}.`;
+  if (!t.sheet) {
+    return `Read from row ${t.row} of ${file}. A CSV does not record which cell of the workbook a figure came from; open the workbook itself to trace it to the cell.`;
+  }
+  const at = `its ${t.sheet} tab, cell ${t.cell} (row ${t.row})`;
+  if (t.input) return `Typed in ${t.input} of ${file}, and read from ${at}.`;
+  if (t.reads?.length)
+    return `Worked out in ${file} from ${t.reads.join(', ')}, and read from ${at}.`;
+  return `Typed into ${at} of ${file}.`;
+}
+
+/** The cell reference a file's figure is cited by, for its source line. */
+function fileTraceWhere(t: FigureTrace | undefined): string {
+  if (!t) return 'as entered in the template';
+  if (!t.sheet) return `row ${t.row} of the CSV`;
+  const exported = `${t.sheet}!${t.cell}`;
+  return t.input ? `${t.input} → ${exported}` : exported;
+}
+
 function printed(
   s: Scope,
   o: {
@@ -342,14 +364,24 @@ function printed(
     where: string;
     checks?: string[];
     notes?: string[];
+    /** the figure's key in a template file (traceKey), to trace it to its cell */
+    tk?: string;
+    /** said of a file's figure when the page shows it in other units than the file */
+    fileNote?: string;
   },
 ): Provenance {
   const k = kindOf(s.v);
-  const src = pageSource(s.v, s.fund, o.page);
+  let src = pageSource(s.v, s.fund, o.page);
+  const t = k === 'file' && o.tk ? s.v.trace?.[o.tk] : undefined;
+  if (k === 'file') {
+    // one source per cell, so a calculated figure lists each input's own cell
+    src = { ...src, id: `${src.id}:${t ? (t.cell ?? t.row) : o.id}`, pageTable: fileTraceWhere(t) };
+  }
   const read =
     k === 'file'
       ? [
-          'As entered in the CIO template file, and checked when the file was opened in this browser. Not published.',
+          fileTraceLine(s.v.file, t) + (o.fileNote ? ` ${o.fileNote}` : ''),
+          "Checked with the template's own rules when the file was opened in this browser. Not published.",
         ]
       : k === 'feed'
         ? [
@@ -483,6 +515,8 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
         page: 'summary',
         where: 'the performance summary, in $ billions',
         checks: [CHECK.aum],
+        tk: traceKey('fund', fund, 'TOTAL', 'market_value'),
+        fileNote: 'The file carries it in $ millions; it is shown here in $ billions.',
       });
     }
     if (head === 'mv') {
@@ -495,6 +529,7 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
         page: 'table',
         where: 'the total row of the performance table, market value column',
         checks: [CHECK.total],
+        tk: traceKey('fund', fund, 'TOTAL', 'market_value'),
       });
     }
     if (head === 'cash') {
@@ -506,6 +541,7 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
         when: point,
         page: 'summary',
         where: 'the performance summary',
+        tk: traceKey('fund', fund, 'TOTAL', 'cash'),
       });
     }
     if (head === 'dmv') {
@@ -549,6 +585,7 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
         page: 'table',
         where: `the total fund row, ${column}`,
         ...(i === 0 ? { checks: [CHECK.monthly] } : {}),
+        tk: traceKey('performance', fund, 'TOTAL', 'return', periodKey(p)),
         notes: [NOTE.net],
       });
     }
@@ -561,6 +598,7 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
         when,
         page: 'table',
         where: `the policy benchmark row, ${column}`,
+        tk: traceKey('performance', fund, 'TOTAL', 'benchmark', periodKey(p)),
       });
     }
     if (head === 'h') {
@@ -572,6 +610,7 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
         when,
         page: 'table',
         where: `the actuarial hurdle row, ${column}`,
+        tk: traceKey('performance', fund, 'TOTAL', 'hurdle', periodKey(p)),
         notes: [NOTE.hurdle],
       });
     }
@@ -777,6 +816,7 @@ function resolveComposite(
         page: 'table',
         where: `${row}, market value column`,
         checks: [CHECK.comp],
+        tk: traceKey('allocation', fund, COMPOSITE_CODE[c.k], 'market_value'),
         notes: [NOTE.lag],
       });
     }
@@ -790,6 +830,7 @@ function resolveComposite(
         page: 'table',
         where: `${row}, % of total column`,
         checks: [CHECK.weights],
+        tk: traceKey('allocation', fund, COMPOSITE_CODE[c.k], 'weight'),
         notes: [NOTE.lag],
       });
     }
@@ -802,6 +843,7 @@ function resolveComposite(
         when: point,
         page: 'table',
         where: `${row}, target column`,
+        tk: traceKey('allocation', fund, COMPOSITE_CODE[c.k], 'target'),
         notes: [NOTE.tgt],
       });
     }
@@ -893,6 +935,7 @@ function resolveComposite(
       when,
       page: 'table',
       where: `${row}, under ${p}`,
+      tk: traceKey('performance', fund, COMPOSITE_CODE[c.k], 'return', periodKey(p)),
       notes: [
         NOTE.net,
         ...(p === '10 Y' ? ['The report prints no ten-year figure for composites.'] : []),
@@ -908,6 +951,7 @@ function resolveComposite(
       when,
       page: 'table',
       where: `the ${c.n} benchmark row, under ${p}`,
+      tk: traceKey('performance', fund, COMPOSITE_CODE[c.k], 'benchmark', periodKey(p)),
     });
   }
   if (a === 'attr') {

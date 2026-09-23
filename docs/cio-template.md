@@ -108,6 +108,38 @@ July 8, 2026 report within rounding, and all 238 figures equal to the published 
 report. Typing Growth's FYTD return 17.5% as 15.7% is caught by all three checks at once, which a
 browser test runs.
 
+### Every figure traced to its cell
+
+Each value on the template's Export tab is a formula pointing at the cell the analyst typed —
+`Export!F35 = IF(Pension!E12="","",Pension!E12)` — so a figure opened from the workbook is traced
+all the way back:
+
+- **The provenance drawer** on the CIO Monthly tab says, for Growth's fiscal-year-to-date return,
+  "Typed in Pension!E12 of CIO_Monthly_Template_Example.xlsx, and read from its Export tab, cell
+  F35 (row 35)", and cites the source as `Pension!E12 → Export!F35`. A calculated figure (an excess,
+  a drift) cites each of its inputs' cells.
+- **The Monthly run** names the cell under every figure reconciliation flags ("typed in
+  Pension!E12 · Export row 35"), so a keying error points at the cell to fix. Step 1 says how many
+  figures were traced: 422 of the example's 426 go to the cell they were typed in; the other four
+  are the three dates, worked out from the date typed on the Report tab, and the format marker,
+  typed into the Export tab itself.
+
+How the input is found (`formulaResult` and `formulaInputs` in `app/src/lib/cioPackage.ts`): the
+cell a formula returns — `Pension!C9`, or the template's guard `IF(<test>,"",Pension!C30)` — is where
+the figure was typed; every other tab's cell the formula reads is listed too, so a row guarded on
+its label (`IF(OR(Pension!B30="",Pension!C30=""),"",Pension!C30)`) reads both and names C30. A
+formula that works a value out (a date built from its parts) names what it reads, and no single
+input. Items for attention are a list, several to an area, and are not traced as figures.
+
+**A CSV traces to its row, not to a cell.** The Export tab saved as CSV keeps the values and loses
+the formulas, so the drawer says "Read from row 35 of June.csv" and that the workbook itself must be
+opened to trace to the cell.
+
+**Row numbers are the rows a person sees.** Blank lines used to be dropped before rows were
+counted, so every row after a blank one was numbered too low — in "Row n" error messages as well
+as the trace. They are now counted, and a workbook's rows are its sheet rows even with a title
+above the column names. Tests insert blank rows and a title and check the numbers.
+
 ## Format `cio-template-1`
 
 Seven columns, a header row, one figure per row:

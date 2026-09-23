@@ -1,4 +1,5 @@
 import type { DeckGdp } from '../lib/cioGdp';
+import type { FigureTrace } from '../lib/cioPackage';
 import type { DeckHistoryPoint } from '../lib/deckFeed';
 import { macroAsOf, macroLines, type MacroLine } from '../lib/cioMacro';
 import { CIO_MACRO } from './cioMacro.data';
@@ -115,6 +116,8 @@ export interface CioVintage {
   MKT: CioMarketGroup[] | null;
   /** 'file': built from a CIO template file in this browser (lib/cioPackage.ts), not published */
   origin?: 'file';
+  /** for a template file: where each figure was read, by traceKey (lib/cioPackage.ts) */
+  trace?: Record<string, FigureTrace>;
 }
 
 /** The previous published report's market values, for the value bridge on slide 2: a month's

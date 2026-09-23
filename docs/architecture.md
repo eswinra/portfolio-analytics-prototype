@@ -194,6 +194,10 @@ Conventions every dashboard view now follows:
   library is pure and holds the calculations the tables show, so the two cannot disagree; the
   component wraps a figure in `<Fig id>` and renders plain text outside the provider. See
   `docs/cio-monthly.md`, "Where a figure came from".
+- **Cell-level trace** (`lib/cioPackage.ts` `FigureTrace`, `lib/workbook.ts` `SheetOrigin`): a
+  template workbook's Export tab is read with its formulas, and every figure keeps its Export row,
+  its cell and the input cell it was typed in; the provenance drawer and the Monthly run show them.
+  See `docs/cio-template.md`, "Every figure traced to its cell".
 - **Monthly run** (`views/MonthlyRunView.tsx`, `lib/reconcile.ts`, `/run`, the Workstation's
   first view): one template file from the file to the slides — read, the template's checks,
   reconciliation (same-period pairs, compounding from the prior reports within the rounding of the

@@ -550,6 +550,9 @@ test.describe('Monthly run: one file, straight through (desktop project)', () =>
     await page.getByRole('button', { name: 'Use the public example' }).click();
     await expect(steps(page).locator('.tag')).toHaveText(['done', 'done', 'done', 'done', 'done']);
     await expect(page.locator('.run-facts')).toContainText('the “Export” tab, 438 rows');
+    await expect(page.locator('.run-facts')).toContainText(
+      '422 of 426 figures to the cell they were typed in',
+    );
     const recon = page.locator('#run-reconciled');
     await expect(recon).toContainText('20 pairs of periods that are the same period, all equal.');
     await expect(recon).toContainText(
@@ -613,6 +616,10 @@ test.describe('Monthly run: one file, straight through (desktop project)', () =>
     await expect(diff).toContainText('15.7%');
     await expect(diff).toContainText('17.5%');
     await expect(recon).toContainText('Nothing is corrected here');
+    // each flagged figure says where to fix it: its line of the CSV
+    await expect(recon.locator('[data-check="chain:pension:growth:return:FYTD"]')).toContainText(
+      `row ${i + 1} of the CSV`,
+    );
   });
 
   test('a file that fails the template’s checks stops at step 1, with every problem listed', async ({
@@ -634,6 +641,19 @@ test.describe('Monthly run: one file, straight through (desktop project)', () =>
     await expect(page.locator('#run-file .file-errors')).toContainText(
       'This is not a CIO template export',
     );
+  });
+
+  test('a figure from the file shows the cell it was typed in', async ({ page }) => {
+    await ready(page, '/run');
+    await page.getByRole('button', { name: 'Use the public example' }).click();
+    await expect(steps(page).first().locator('.tag')).toHaveText('done');
+    // the file stays open: the address changes within the page
+    await page.goto(hash('/cio?tab=summary&v=file&fig=pension.growth.r.FYTD'));
+    const drawer = page.getByRole('dialog');
+    await expect(drawer).toContainText(
+      'Typed in Pension!E12 of CIO_Monthly_Template_Example.xlsx, and read from its Export tab, cell F35 (row 35).',
+    );
+    await expect(drawer.locator('.prov-sources')).toContainText('Pension!E12 → Export!F35');
   });
 
   test('the Workstation opens on the Monthly run', async ({ page }) => {

@@ -31,8 +31,19 @@ export interface SheetChoice {
   what: string;
 }
 
+/** Where the CSV came from on its sheet, so a figure can be traced back to a cell: line 1 of the
+ *  CSV is sheet row `firstRow` (1-based), CSV column 1 is sheet column `firstCol` (0-based), and
+ *  `formulas` holds the formula text of every cell on the sheet that has one, by address. */
+export interface SheetOrigin {
+  sheet: string;
+  firstRow: number;
+  firstCol: number;
+  formulas: Record<string, string>;
+}
+
 export type WorkbookCsv =
-  { ok: true; csv: string; sheetName: string } | { ok: false; errors: string[] };
+  | { ok: true; csv: string; sheetName: string; origin: SheetOrigin }
+  | { ok: false; errors: string[] };
 
 type Xlsx = typeof import('xlsx');
 
@@ -82,11 +93,15 @@ export function sheetToCsv(XLSX: Xlsx, wb: WorkBook, choice: SheetChoice): Workb
   const uncalculated: string[] = [];
   const errorCells: string[] = [];
   const rows: string[][] = [];
-  for (let r = headerRow ?? range.s.r; r <= range.e.r; r++) {
+  const formulas: Record<string, string> = {};
+  const start = headerRow ?? range.s.r;
+  for (let r = start; r <= range.e.r; r++) {
     const row: string[] = [];
     for (let c = range.s.c; c <= range.e.c; c++) {
       const addr = XLSX.utils.encode_cell({ r, c });
-      row.push(cellText(XLSX, ws[addr] as CellObject | undefined, addr, uncalculated, errorCells));
+      const cell = ws[addr] as CellObject | undefined;
+      if (cell?.f !== undefined) formulas[addr] = cell.f;
+      row.push(cellText(XLSX, cell, addr, uncalculated, errorCells));
     }
     rows.push(row);
   }
@@ -102,7 +117,12 @@ export function sheetToCsv(XLSX: Xlsx, wb: WorkBook, choice: SheetChoice): Workb
   }
   while (rows.length && rows[rows.length - 1]!.every((v) => v === '')) rows.pop();
   if (!rows.length) return fail([`The sheet "${name}" is empty.`]);
-  return { ok: true, csv: Papa.unparse(rows, { newline: '\n' }), sheetName: name };
+  return {
+    ok: true,
+    csv: Papa.unparse(rows, { newline: '\n' }),
+    sheetName: name,
+    origin: { sheet: name, firstRow: start + 1, firstCol: range.s.c, formulas },
+  };
 }
 
 /** how far down a sheet the column-name row is looked for */

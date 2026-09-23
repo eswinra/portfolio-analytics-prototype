@@ -13,7 +13,7 @@ import {
 import type { MacroLine } from './cioMacro';
 import { CIO_PERIOD_TOKENS } from './contract/schema';
 import { histBinOf } from './dataset/cioFeed';
-import type { SheetChoice } from './workbook';
+import type { SheetChoice, SheetOrigin } from './workbook';
 
 /**
  * The CIO Monthly template file: a whole report (both funds, market table, geography, macro
@@ -51,8 +51,80 @@ export interface CioOpsItem {
   p: number;
 }
 
+/** Where one figure of a template file came from: the row it was read from and, for a workbook,
+ *  the cell on the Export tab and the input cells its formula reads. */
+export interface FigureTrace {
+  /** 1-based row of the Export tab, or line of the CSV */
+  row: number;
+  /** the tab read, or null for a CSV */
+  sheet: string | null;
+  /** the Export cell holding the figure, e.g. F35 (workbooks only) */
+  cell?: string;
+  /** the cell whose value the formula returns — where the figure was typed, e.g. Pension!E12
+   *  (workbooks only; absent for a typed value or a value the formula works out) */
+  input?: string;
+  /** every other tab's cell the formula reads: the input, and any cell it only tests, such as a
+   *  row's label (workbooks only; absent for a typed value) */
+  reads?: string[];
+}
+
+/** A figure's key in the template's own terms: section|entity|item|measure|period. */
+export const traceKey = (
+  section: string,
+  entity: string,
+  item: string,
+  measure: string,
+  period = '',
+): string => `${section}|${entity}|${item}|${measure}|${period}`;
+
+/** The template's category codes, by the report's composite keys. */
+export const COMPOSITE_CODE: Record<CioComposite['k'], string> = {
+  growth: 'GROWTH',
+  credit: 'CREDIT',
+  ra: 'RAIH',
+  rrm: 'RRM',
+};
+
+/** 0 → A, 25 → Z, 26 → AA */
+function colName(c: number): string {
+  let s = '';
+  for (let n = c + 1; n > 0; n = Math.floor((n - 1) / 26)) {
+    s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+  }
+  return s;
+}
+
+/** a reference to one cell on another tab: Pension!E12, 'Pension inputs'!$B$3 */
+const REF = String.raw`(?:'([^']+)'|([A-Za-z_][\w.]*))!\$?([A-Z]{1,3})\$?(\d+)(?![\d:])`;
+const normRef = (m: RegExpMatchArray | RegExpExecArray) => {
+  const sheet = m[1] ?? m[2]!;
+  return `${/[^\w.]/.test(sheet) ? `'${sheet}'` : sheet}!${m[3]}${m[4]}`;
+};
+
+/** The other tabs' cells a formula reads, once each, e.g. `IF(Pension!E12="","",Pension!E12)` →
+ *  Pension!E12. References to the Export tab itself, names and ranges are left out. */
+export function formulaInputs(formula: string): string[] {
+  const out: string[] = [];
+  for (const m of formula.matchAll(new RegExp(REF, 'g'))) {
+    const ref = normRef(m);
+    if (!out.includes(ref)) out.push(ref);
+  }
+  return out;
+}
+
+/** The one cell a formula returns, when it returns a cell: `Pension!C9`, or the template's guard
+ *  `IF(<test>,"",Pension!C30)`. Null when it works a value out (a date built from its parts). */
+export function formulaResult(formula: string): string | null {
+  const m =
+    new RegExp(String.raw`^\s*IF\(.*,\s*""\s*,\s*${REF}\s*\)\s*$`).exec(formula) ??
+    new RegExp(String.raw`^\s*${REF}\s*$`).exec(formula);
+  return m ? normRef(m) : null;
+}
+
 export interface CioPackage {
   fileName: string;
+  /** every figure read, by its key (traceKey): the row and, for a workbook, the input cells */
+  trace: Record<string, FigureTrace>;
   /** the report as a vintage (origin 'file'), rendered by the same panels and slides */
   vintage: CioVintage;
   macro: MacroLine[];
@@ -103,7 +175,12 @@ const isMonthEnd = (iso: string) => {
 };
 
 /** Reads and checks a template file. `fileName` is only used for labels. */
-export function readCioPackage(text: string, fileName: string): PackageResult {
+export function readCioPackage(
+  text: string,
+  fileName: string,
+  /** for a workbook: where the CSV came from, so each figure traces to its cell */
+  origin?: SheetOrigin,
+): PackageResult {
   // a byte-order mark from Excel's "CSV UTF-8" is dropped; U+FFFD means characters were lost
   const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   if (clean.includes(String.fromCharCode(0xfffd))) {
@@ -111,7 +188,9 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
       'Some characters were lost when the file was saved. In Excel, save the Export tab as "CSV UTF-8 (Comma delimited)".',
     ]);
   }
-  const parsed = Papa.parse<string[]>(clean, { skipEmptyLines: 'greedy' });
+  // blank lines are kept (and skipped below) so every row number is the one a person sees in the
+  // file: dropping them first shifted every later row number after a blank row
+  const parsed = Papa.parse<string[]>(clean, { skipEmptyLines: false });
   const [header, ...body] = parsed.data;
   const head = (header ?? []).map((h) => h.trim().toLowerCase());
   if (head.slice(0, PACKAGE_COLUMNS.length).join(',') !== PACKAGE_COLUMNS.join(',')) {
@@ -635,6 +714,32 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
   }
 
   if (errors.length) return fail(errors);
+
+  // every figure read, traced to its row and, for a workbook, to the cells its formula reads
+  const trace: Record<string, FigureTrace> = {};
+  for (const r of rows) {
+    // items for attention are a list (several per area), not figures with a single address
+    if (r.section === 'attention') continue;
+    const key = traceKey(r.section, r.entity, r.item, r.measure, r.period);
+    if (!origin) {
+      trace[key] = { row: r.n, sheet: null };
+      continue;
+    }
+    const row = r.n + origin.firstRow - 1;
+    // the cell that carried the figure: the value column, or the text column for dates and labels
+    const cell = `${colName(origin.firstCol + (r.value !== null ? 5 : 6))}${row}`;
+    const f = origin.formulas[cell];
+    const reads = f ? formulaInputs(f) : [];
+    const input = f ? formulaResult(f) : null;
+    trace[key] = {
+      row,
+      sheet: origin.sheet,
+      cell,
+      ...(input ? { input } : {}),
+      ...(reads.length ? { reads } : {}),
+    };
+  }
+
   const vintage: CioVintage = {
     reportDate,
     reportLabel: longDate(reportDate),
@@ -646,8 +751,12 @@ export function readCioPackage(text: string, fileName: string): PackageResult {
     ENT: { pension: ENT.pension, opeb: ENT.opeb },
     MKT: groups.length ? groups : null,
     origin: 'file',
+    trace,
   };
-  return { ok: true, pkg: { fileName, vintage, macro: macroLines, ops, rowCount: rows.length } };
+  return {
+    ok: true,
+    pkg: { fileName, trace, vintage, macro: macroLines, ops, rowCount: rows.length },
+  };
 }
 
 function fail(errors: string[]): PackageResult {

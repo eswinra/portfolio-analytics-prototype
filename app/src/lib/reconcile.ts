@@ -5,6 +5,7 @@ import {
   type CioEntity,
   type CioVintage,
 } from '../fixtures/cioMonthly';
+import { COMPOSITE_CODE, traceKey } from './cioPackage';
 import { fiscalYearOf } from './cioNarrative';
 import { monthsBetween } from './compare';
 
@@ -38,6 +39,8 @@ const I = (p: string) => PERIODS.indexOf(p);
 
 export interface Check {
   id: string;
+  /** the figure's key in a template file (traceKey), to find the cell it was typed in */
+  key: string;
   fund: Fund;
   /** "Total Fund" or the composite's name */
   line: string;
@@ -55,6 +58,8 @@ export interface Check {
 
 export interface TieDiff {
   id: string;
+  /** the figure's key in a template file (traceKey), when it has one */
+  key?: string;
   label: string;
   file: number | null;
   published: number | null;
@@ -98,6 +103,17 @@ function linesOf(e: CioEntity): Line[] {
   ];
 }
 
+/** a period in the template's spelling: '3 M' → '3M' */
+const tok = (p: string) => p.replace(/\s+/g, '');
+const perfKey = (fund: Fund, line: string, series: 'return' | 'benchmark', period: string) =>
+  traceKey(
+    'performance',
+    fund,
+    line === 'total' ? 'TOTAL' : COMPOSITE_CODE[line as keyof typeof COMPOSITE_CODE],
+    series,
+    tok(period),
+  );
+
 const has = (v: number | null | undefined): v is number =>
   v !== null && v !== undefined && Number.isFinite(v);
 
@@ -127,6 +143,7 @@ export function withinReport(v: CioVintage): { checked: number; failed: Check[] 
           all.push(
             check({
               id: `within:${fund}:${line.key}:${series}:${a}`,
+              key: perfKey(fund, line.key, series, a),
               fund,
               line: line.name,
               series,
@@ -193,6 +210,7 @@ export function chainedFromPrior(v: CioVintage): Reconciliation['chained'] {
           all.push(
             check({
               id: `chain:${fund}:${line.key}:${series}:${period}`,
+              key: perfKey(fund, line.key, series, period),
               fund,
               line: line.name,
               series,
@@ -213,6 +231,7 @@ export function chainedFromPrior(v: CioVintage): Reconciliation['chained'] {
           all.push(
             check({
               id: `chain:${fund}:${line.key}:${series}:3M`,
+              key: perfKey(fund, line.key, series, '3 M'),
               fund,
               line: line.name,
               series,
@@ -260,38 +279,102 @@ export function tieOut(v: CioVintage): Reconciliation['tieOut'] {
     file: number | null | undefined,
     pub: number | null | undefined,
     unit: TieDiff['unit'],
-  ) => pairs.push({ id, label, file: file ?? null, published: pub ?? null, unit });
+    key?: string,
+  ) =>
+    pairs.push({
+      id,
+      label,
+      file: file ?? null,
+      published: pub ?? null,
+      unit,
+      ...(key ? { key } : {}),
+    });
 
   for (const fund of FUNDS) {
     const f = v.ENT[fund];
     const p = published.ENT[fund];
     const who = p.short;
-    add(`${fund}:aum`, `${who} · market value`, f.aum, p.aum, '$B');
-    add(`${fund}:mv`, `${who} · market value`, f.mv, p.mv, '$M');
-    add(`${fund}:cash`, `${who} · cash and equivalents`, f.cash, p.cash, '$M');
+    const mvKey = traceKey('fund', fund, 'TOTAL', 'market_value');
+    add(`${fund}:aum`, `${who} · market value`, f.aum, p.aum, '$B', mvKey);
+    add(`${fund}:mv`, `${who} · market value`, f.mv, p.mv, '$M', mvKey);
+    const cashKey = traceKey('fund', fund, 'TOTAL', 'cash');
+    add(`${fund}:cash`, `${who} · cash and equivalents`, f.cash, p.cash, '$M', cashKey);
     PERIODS.forEach((per, i) => {
-      add(`${fund}:r:${per}`, `${who} · return ${per}`, f.total.r[i], p.total.r[i], '%');
-      add(`${fund}:b:${per}`, `${who} · benchmark ${per}`, f.total.b[i], p.total.b[i], '%');
-      add(`${fund}:h:${per}`, `${who} · actuarial hurdle ${per}`, f.total.h[i], p.total.h[i], '%');
+      const k = (m: string) => traceKey('performance', fund, 'TOTAL', m, tok(per));
+      add(
+        `${fund}:r:${per}`,
+        `${who} · return ${per}`,
+        f.total.r[i],
+        p.total.r[i],
+        '%',
+        k('return'),
+      );
+      add(
+        `${fund}:b:${per}`,
+        `${who} · benchmark ${per}`,
+        f.total.b[i],
+        p.total.b[i],
+        '%',
+        k('benchmark'),
+      );
+      add(
+        `${fund}:h:${per}`,
+        `${who} · actuarial hurdle ${per}`,
+        f.total.h[i],
+        p.total.h[i],
+        '%',
+        k('hurdle'),
+      );
     });
     for (const pc of p.comps) {
       const fc = f.comps.find((x) => x.k === pc.k);
-      add(`${fund}:${pc.k}:mv`, `${who} · ${pc.n} market value`, fc?.mv, pc.mv, '$M');
-      add(`${fund}:${pc.k}:pct`, `${who} · ${pc.n} weight`, fc?.pct, pc.pct, '%');
-      add(`${fund}:${pc.k}:tgt`, `${who} · ${pc.n} target`, fc?.tgt, pc.tgt, '%');
+      const code = COMPOSITE_CODE[pc.k];
+      const ak = (m: string) => traceKey('allocation', fund, code, m);
+      add(
+        `${fund}:${pc.k}:mv`,
+        `${who} · ${pc.n} market value`,
+        fc?.mv,
+        pc.mv,
+        '$M',
+        ak('market_value'),
+      );
+      add(`${fund}:${pc.k}:pct`, `${who} · ${pc.n} weight`, fc?.pct, pc.pct, '%', ak('weight'));
+      add(`${fund}:${pc.k}:tgt`, `${who} · ${pc.n} target`, fc?.tgt, pc.tgt, '%', ak('target'));
       PERIODS.forEach((per, i) => {
-        add(`${fund}:${pc.k}:r:${per}`, `${who} · ${pc.n} return ${per}`, fc?.r[i], pc.r[i], '%');
+        add(
+          `${fund}:${pc.k}:r:${per}`,
+          `${who} · ${pc.n} return ${per}`,
+          fc?.r[i],
+          pc.r[i],
+          '%',
+          perfKey(fund, pc.k, 'return', per),
+        );
         add(
           `${fund}:${pc.k}:b:${per}`,
           `${who} · ${pc.n} benchmark ${per}`,
           fc?.b[i],
           pc.b[i],
           '%',
+          perfKey(fund, pc.k, 'benchmark', per),
         );
       });
     }
-    add(`${fund}:dm`, `${who} · developed markets`, f.geo.dm, p.geo.dm, '%');
-    add(`${fund}:em`, `${who} · emerging markets`, f.geo.em, p.geo.em, '%');
+    add(
+      `${fund}:dm`,
+      `${who} · developed markets`,
+      f.geo.dm,
+      p.geo.dm,
+      '%',
+      traceKey('geography', fund, 'DM', 'share'),
+    );
+    add(
+      `${fund}:em`,
+      `${who} · emerging markets`,
+      f.geo.em,
+      p.geo.em,
+      '%',
+      traceKey('geography', fund, 'EM', 'share'),
+    );
     if (p.hist) {
       p.hist.c.forEach((n, j) =>
         add(

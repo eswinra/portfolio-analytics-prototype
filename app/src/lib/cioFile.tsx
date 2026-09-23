@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import { PACKAGE_SHEET, readCioPackage, type CioPackage } from './cioPackage';
-import { isWorkbookName, MAX_WORKBOOK_BYTES, workbookToCsv } from './workbook';
+import { isWorkbookName, MAX_WORKBOOK_BYTES, workbookToCsv, type SheetOrigin } from './workbook';
 
 /** The CIO template file opened on this page. It may carry a report's figures before LACERA
  *  publishes them, so it is held in memory only — never written to browser storage, the URL or
@@ -90,6 +90,7 @@ export function useTemplateOpener() {
       }
       let text: string;
       let sheet: string | null = null;
+      let origin: SheetOrigin | undefined;
       const raw = await body();
       if (book) {
         const res = await workbookToCsv(
@@ -102,10 +103,11 @@ export function useTemplateOpener() {
         }
         text = res.csv;
         sheet = res.sheetName;
+        origin = res.origin;
       } else {
         text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
       }
-      const res = readCioPackage(text, name);
+      const res = readCioPackage(text, name, origin);
       if (!res.ok) {
         setErrors({ name, errors: res.errors });
         return false;

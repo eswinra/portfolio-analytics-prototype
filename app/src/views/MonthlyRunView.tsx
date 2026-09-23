@@ -5,6 +5,7 @@ import { AboutFigures, PageMeta } from '../components/page';
 import { Panel, Tag, type TagVariant } from '../components/ui';
 import { longDate } from '../fixtures/cioMonthly';
 import { EXAMPLE_FILE, EXAMPLE_URL, useCioFile, useTemplateOpener } from '../lib/cioFile';
+import type { FigureTrace } from '../lib/cioPackage';
 import { centerSummary, exceptionCenter } from '../lib/exceptionCenter';
 import { reconcile, type Check, type TieDiff } from '../lib/reconcile';
 import { SPREADSHEET_ACCEPT } from '../lib/workbook';
@@ -23,6 +24,24 @@ const STATUS: Record<Stage, [label: string, variant: TagVariant]> = {
   check: ['to check', 'outline'],
   stopped: ['stopped', 'blocked'],
 };
+
+/** Where to fix a flagged figure: the cell it was typed in, and its Export row. */
+function cellOf(t: FigureTrace | undefined): string | null {
+  if (!t) return null;
+  if (!t.sheet) return `row ${t.row} of the CSV`;
+  const exported = `${t.sheet} row ${t.row}`;
+  return t.input ? `typed in ${t.input} · ${exported}` : exported;
+}
+
+/** How far the file's figures trace: to the cell they were typed in, or only to a row of a CSV. */
+function traceLine(trace: Record<string, FigureTrace>): string {
+  const all = Object.values(trace);
+  if (all.length && all.every((t) => !t.sheet)) {
+    return `${all.length} figures, each to its row of the CSV — a CSV does not record the workbook's cells; open the workbook to trace each figure to its cell`;
+  }
+  const typed = all.filter((t) => t.input).length;
+  return `${typed} of ${all.length} figures to the cell they were typed in; select one on the CIO Monthly tab to see it`;
+}
 
 const pct2 = (v: number) => `${v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)}%`;
 const pp2 = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)} pp`;
@@ -62,7 +81,15 @@ function Step({
   );
 }
 
-function ChecksTable({ label, checks }: { label: string; checks: Check[] }) {
+function ChecksTable({
+  label,
+  checks,
+  trace,
+}: {
+  label: string;
+  checks: Check[];
+  trace: Record<string, FigureTrace> | undefined;
+}) {
   return (
     <div className="table-scroll run-wrap" role="region" aria-label={label} tabIndex={0}>
       <table className="table cardable" role="table">
@@ -90,8 +117,13 @@ function ChecksTable({ label, checks }: { label: string; checks: Check[] }) {
           {checks.map((c) => (
             <tr role="row" key={c.id} data-check={c.id}>
               <td role="cell" data-label="Figure">
-                {c.fund === 'pension' ? 'Pension Fund' : 'OPEB Master Trust'} · {c.line} ·{' '}
-                {c.series}
+                <span>
+                  {c.fund === 'pension' ? 'Pension Fund' : 'OPEB Master Trust'} · {c.line} ·{' '}
+                  {c.series}
+                  {cellOf(trace?.[c.key]) ? (
+                    <span className="run-cell">{cellOf(trace?.[c.key])}</span>
+                  ) : null}
+                </span>
               </td>
               <td role="cell" data-label="Rule" className="issue-impact">
                 {c.rule}: {c.inputs}
@@ -203,6 +235,10 @@ export function MonthlyRunView() {
               </dd>
             </div>
             <div>
+              <dt>Traced</dt>
+              <dd>{traceLine(pkg.trace)}</dd>
+            </div>
+            <div>
               <dt>Time</dt>
               <dd>read and checked in {Math.max(1, Math.round(from.ms))} ms, in this browser</dd>
             </div>
@@ -310,6 +346,7 @@ export function MonthlyRunView() {
                 <ChecksTable
                   label="Periods that should be equal and are not"
                   checks={rec.within.failed}
+                  trace={v?.trace}
                 />
               ) : null}
             </section>
@@ -325,6 +362,7 @@ export function MonthlyRunView() {
                 <ChecksTable
                   label="Figures that do not compound from the earlier reports"
                   checks={rec.chained.failed}
+                  trace={v?.trace}
                 />
               ) : null}
             </section>
@@ -361,7 +399,12 @@ export function MonthlyRunView() {
                       {rec.tieOut.differences.map((d) => (
                         <tr role="row" key={d.id} data-diff={d.id}>
                           <td role="cell" data-label="Figure">
-                            {d.label}
+                            <span>
+                              {d.label}
+                              {d.key && cellOf(v?.trace?.[d.key]) ? (
+                                <span className="run-cell">{cellOf(v?.trace?.[d.key])}</span>
+                              ) : null}
+                            </span>
                           </td>
                           <td role="cell" className="num" data-label="In the file">
                             {showTie(d.file, d.unit)}
