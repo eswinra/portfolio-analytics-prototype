@@ -194,6 +194,12 @@ Conventions every dashboard view now follows:
   library is pure and holds the calculations the tables show, so the two cannot disagree; the
   component wraps a figure in `<Fig id>` and renders plain text outside the provider. See
   `docs/cio-monthly.md`, "Where a figure came from".
+- **Monthly run** (`views/MonthlyRunView.tsx`, `lib/reconcile.ts`, `/run`, the Workstation's
+  first view): one template file from the file to the slides — read, the template's checks,
+  reconciliation (same-period pairs, compounding from the prior reports within the rounding of the
+  printed figures, and a tie-out to the published report when there is one), the dashboard, the
+  slides and their PDF. File opening is shared with the CIO tab (`useTemplateOpener` in
+  `lib/cioFile.tsx`). See `docs/cio-template.md`, "The Monthly run".
 - **Cross-filter** (`lib/crossFilter.ts`): one category, carried in the address (`cat`), is
   followed on CIO Monthly's Performance, Positioning and Explore sub-tabs; the panels reuse
   `components/explore/CategoryTrend.tsx`, which now draws the return history, the weight history

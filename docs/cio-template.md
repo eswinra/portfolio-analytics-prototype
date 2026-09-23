@@ -62,6 +62,52 @@ the same checks. What it takes from a cell is the value Excel stored, not what t
   site. It is fetched from the site itself only when a workbook is opened; the file is never sent
   anywhere. Workbooks up to 10 MB.
 
+## The Monthly run (Workstation › Monthly run)
+
+One month's file taken straight through, on one page, in the browser: the Workstation opens on it.
+Five steps, each saying what it did and where its output is.
+
+| Step | What happens | Output |
+|---|---|---|
+| 1 · File | The workbook (its Export tab) or the CSV is read; or **Use the public example**, the example workbook fetched from the site itself | File, size, tab, rows read, and the time taken |
+| 2 · Checked | The template's own identities (below); a file that fails any is not opened, and every problem is listed | — |
+| 3 · Reconciled | Three checks against things the file does not control (next section) | What agrees, and a table of every figure to check |
+| 4 · On the dashboard | The CIO Monthly tab, the Exception Center and Compare are built from the file | Links, and the Exception Center's one line |
+| 5 · Slides and PDF | The report's slides are built from the file | **Print / PDF** on the slides' toolbar, saved by the browser |
+
+The file is the one the CIO Monthly tab opens too (`app/src/lib/cioFile.tsx`, shared), so the run,
+the tab, the Exception Center and the slides all show the same file, and closing it anywhere
+closes it everywhere. Nothing is uploaded or stored; a browser test records every request the page
+makes during a run and finds none but the site's own files.
+
+### Reconciliation (`app/src/lib/reconcile.ts`)
+
+Every check comes from the arithmetic of returns. None uses a threshold chosen by eye.
+
+1. **Within the report.** Some periods are the same period: FYTD in July is the month itself, YTD
+   in January is the month itself, and FYTD in June is the year. Each pair is the same number
+   printed twice, so it must be equal.
+2. **Against the reports before it.** Returns compound. This month's FYTD is the prior report's
+   FYTD compounded with this month's return (within one fiscal year), YTD likewise (within one
+   calendar year), and three months is the last three one-month returns compounded — for the
+   Total Fund and every composite, returns and benchmarks. The only slack is rounding: every figure
+   is printed to one decimal, so each can be off by 0.05 pp, and the tolerance is exactly 0.05 pp
+   per printed figure in the check (0.15 pp for FYTD and YTD, 0.20 pp for three months).
+3. **Against the published report for the same month**, when there is one: 238 figures (market
+   value, cash, returns, benchmarks and hurdles by period, every composite's value, weight, target,
+   returns and benchmarks, the geographic split and the 120-month distribution) compared one for one.
+
+Across the sixteen published reports the chains hold within 0.13 pp in every case and the
+same-period pairs are equal in all 80, so a check outside its tolerance is a keying error, or a
+restatement of earlier months that the report would footnote. It is listed to be looked at; nothing
+is corrected. A month with no published report has nothing to tie out to — the chains are then the
+independent check — and a report after a gap in the series cannot be chained, and says so.
+
+The public example reconciles completely: 20 same-period pairs equal, 60 figures chained from the
+July 8, 2026 report within rounding, and all 238 figures equal to the published August 12, 2026
+report. Typing Growth's FYTD return 17.5% as 15.7% is caught by all three checks at once, which a
+browser test runs.
+
 ## Format `cio-template-1`
 
 Seven columns, a header row, one figure per row:

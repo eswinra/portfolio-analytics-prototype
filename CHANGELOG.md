@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-22 — Revision 42: the Monthly run, one file straight through
+
+Phase 3, first part, with public data. One month's CIO template file goes from the file to the
+slides on one page, in the browser, and every step says what it did.
+
+- **Workstation › Monthly run**, now where the Workstation opens. Five steps: read the file (or the
+  public example, fetched from the site itself); the template's own checks; reconciliation; the
+  dashboard built from the file, with the Exception Center's one line; the slides and their Print /
+  PDF. Each step shows its status — waiting, done, to check or stopped — and its output.
+- **Reconciliation from the arithmetic of returns** (`app/src/lib/reconcile.ts`). Same-period pairs
+  must be equal (FYTD in July is the month, YTD in January is the month, FYTD in June is the year).
+  FYTD, YTD and three-month returns must compound from the reports before, within the rounding of
+  the printed figures — 0.05 pp per figure, derived, not tuned. And every figure is tied out to the
+  published report for the same month when there is one: 238 figures.
+- **The public example reconciles completely.** 20 pairs equal, 60 chains within rounding from the
+  July 8, 2026 report, 238 of 238 figures equal to the August 12, 2026 report. The run shows the
+  time taken (38 ms to read and check it when this was tested).
+- **A mistyped figure is caught three ways.** Growth's FYTD return typed as 15.7% instead of 17.5%
+  is flagged by the June FYTD = one-year pair, by the chain from the July report and by the tie-out,
+  and the run says "3 figures to check before the file is used". Nothing is corrected.
+- **Tested against the whole series first.** Across the sixteen published reports, 260 FYTD chains
+  (fund and composites, returns and benchmarks) hold within 0.13 pp and the 80 same-period pairs are
+  exactly equal, so the checks do not fire on good data.
+- **Nothing leaves the browser**, and a test proves it: it records every request the page makes
+  during a run and finds only the site's own files.
+- **One way to open a file.** The CIO tab and the run share the opener (`useTemplateOpener`), so a
+  file opened on one is the file on the other, the Exception Center and the slides.
+- A page served in place of the example (a "not found" page) is now reported as the example not
+  loading, rather than as a workbook that could not be read.
+- Verification: lint · format · Vitest 646/646 (11 new) · build · Playwright 239/239 runnable
+  (6 new, the run's route in the overflow and accessibility checks, and a phone check with figures
+  to check) · `npm audit --omit=dev` 0 vulnerabilities · checked in the browser, including the
+  links on to the CIO tab and the slides.
+
 ## 2026-09-22 — Revision 41: one choice, followed across the CIO tabs
 
 Phase 1, item 6, the last in Phase 1. Explore's cross-filter now reaches Performance and

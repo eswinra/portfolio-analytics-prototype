@@ -16,7 +16,7 @@ import { Glossary } from './components/Glossary';
 import { cioFor, longDate } from './fixtures/cioMonthly';
 import { MACRO_META } from './fixtures/macroSnapshot.meta';
 import { boardBrief, publishedFor } from './fixtures/published';
-import { CioFileProvider } from './lib/cioFile';
+import { CioFileProvider, useCioFile } from './lib/cioFile';
 import { useCioVintage } from './lib/cioVintage';
 import { DatasetProvider, useDataset } from './lib/dataset/useDataset';
 import { DASHBOARD_VIEWS, WORKSTATION_VIEWS } from './lib/routes';
@@ -32,6 +32,10 @@ import { RiskView } from './views/RiskView';
  *  import surface, reconciliation, exceptions triage, and tracker code that only the
  *  pipeline demo needs. Dashboard views stay eager so the first paint is complete. */
 const AcfrView = lazy(() => import('./views/AcfrView').then((m) => ({ default: m.AcfrView })));
+// one month's template file, from the file to the slides
+const MonthlyRunView = lazy(() =>
+  import('./views/MonthlyRunView').then((m) => ({ default: m.MonthlyRunView })),
+);
 const DataQualityView = lazy(() =>
   import('./views/DataQualityView').then((m) => ({ default: m.DataQualityView })),
 );
@@ -184,6 +188,9 @@ function TitleBand() {
   const view = workstation ?? DASHBOARD_VIEWS.find(([p]) => p === pathname) ?? DASHBOARD_VIEWS[0]!;
   const isOverview = !workstation && view[0] === '/';
   const isAcfr = pathname === '/acfr';
+  // the Monthly run holds a CIO template file, not the synthetic contract dataset
+  const isRun = pathname === '/run';
+  const { pkg: runFile } = useCioFile();
   const isCio = pathname === '/cio';
   const isExceptions = pathname === '/exceptions';
   const isMacro = pathname === '/macro';
@@ -251,7 +258,11 @@ function TitleBand() {
             {workstation
               ? isAcfr
                 ? 'Workstation · ACFR tracker — illustrative demo values'
-                : `Workstation · synthetic ${dataset.meta.entityId} data`
+                : isRun
+                  ? runFile
+                    ? `Workstation · template file ${runFile.fileName}`
+                    : 'Workstation · CIO template file'
+                  : `Workstation · synthetic ${dataset.meta.entityId} data`
               : isCio
                 ? cioFor(entity, vintage).name
                 : isExceptions
@@ -300,15 +311,24 @@ function TitleBand() {
           <div className="workflow-banner" role="note">
             <div className="workflow-banner-inner">
               <strong>Workstation</strong>
-              <span>
-                Where the work is populated — synthetic contract data (schema 1.3, V01–V23), not the
-                published FY2025 figures on the Dashboard. In the internal version the dashboard
-                consumes what the workstation publishes; here the pipeline is demonstrated. Files
-                never leave your browser.
-              </span>
+              {isRun ? (
+                <span>
+                  Where the work is populated — here, one month&apos;s CIO template file, read in
+                  this browser and never uploaded or kept. The public example is filled from a
+                  published report; a real month&apos;s file stays on the team&apos;s systems until
+                  the report is published.
+                </span>
+              ) : (
+                <span>
+                  Where the work is populated — synthetic contract data (schema 1.3, V01–V23), not
+                  the published FY2025 figures on the Dashboard. In the internal version the
+                  dashboard consumes what the workstation publishes; here the pipeline is
+                  demonstrated. Files never leave your browser.
+                </span>
+              )}
             </div>
           </div>
-          {!isAcfr ? (
+          {!isAcfr && !isRun ? (
             <div
               className={`publish-banner ${dataset.publishEligible ? 'ok' : 'blocked'}`}
               role="status"
@@ -351,6 +371,8 @@ function Shell() {
   const cio = pathname === '/cio' || pathname === '/exceptions';
   const macro = pathname === '/macro';
   const { vintage, feed, pkg } = useCioVintage();
+  // the Monthly run shows the open template file whatever the address says
+  const { pkg: runFile } = useCioFile();
   const modeViews = workstation ? WORKSTATION_VIEWS : DASHBOARD_VIEWS;
   const mainRef = useRef<HTMLElement>(null);
 
@@ -372,7 +394,9 @@ function Shell() {
       <div className="notice-bar" role="note">
         <span>
           {workstation
-            ? 'Prototype — workstation demo on synthetic contract data'
+            ? pathname === '/run'
+              ? 'Prototype — a CIO template file, read in this browser'
+              : 'Prototype — workstation demo on synthetic contract data'
             : cio && feed
               ? 'Prototype — imported workstation feed, not a published report'
               : cio && pkg
@@ -413,7 +437,16 @@ function Shell() {
             </button>
           </div>
           <div className="asof">
-            {workstation ? (
+            {workstation && pathname === '/run' ? (
+              runFile ? (
+                <>
+                  Data through <strong>{longDate(runFile.vintage.dataThrough)}</strong> · template
+                  file, not published
+                </>
+              ) : (
+                <>No file open · a template file is read in this browser</>
+              )
+            ) : workstation ? (
               <>
                 Data through <strong>{dataset.freshness.latestAsOf ?? 'n/a'}</strong> · synthetic
                 workstation dataset
@@ -454,7 +487,7 @@ function Shell() {
             <NavLink to="/" end className={!workstation ? 'mode-active' : ''}>
               Dashboard
             </NavLink>
-            <NavLink to="/import" className={workstation ? 'mode-active' : ''}>
+            <NavLink to="/run" className={workstation ? 'mode-active' : ''}>
               Workstation
             </NavLink>
           </div>
@@ -481,6 +514,7 @@ function Shell() {
               <Route path="/recon" element={<ReconView />} />
               <Route path="/exceptions" element={<ExceptionCenterView />} />
               <Route path="/data-quality" element={<DataQualityView />} />
+              <Route path="/run" element={<MonthlyRunView />} />
               {/* legacy routes from revisions 1–7 */}
               <Route path="/trends" element={<Navigate to="/performance" replace />} />
               <Route path="/contribution" element={<Navigate to="/performance" replace />} />

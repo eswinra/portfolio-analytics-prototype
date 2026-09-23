@@ -21,6 +21,7 @@ const ROUTES = [
   '/import',
   '/recon',
   '/exceptions',
+  '/run',
   // the Exception Center on a report with a data condition (a month missing before it)
   '/exceptions?v=2025-12-31',
   '/data-quality',
@@ -526,6 +527,132 @@ test.describe('compare two reports (desktop project)', () => {
   });
 });
 
+test.describe('Monthly run: one file, straight through (desktop project)', () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
+
+  const example = readFileSync(CIO_TEMPLATE_CSV, 'utf-8');
+  const steps = (page: Page) => page.locator('.run-step');
+
+  test('the public example goes through every step, and nothing leaves the browser', async ({
+    page,
+  }) => {
+    // every request the page makes, judged at the end against the site's own address
+    const requests: { method: string; url: string }[] = [];
+    page.on('request', (r) => requests.push({ method: r.method(), url: r.url() }));
+    await ready(page, '/run');
+    await expect(steps(page).locator('.tag')).toHaveText([
+      'waiting',
+      'waiting',
+      'waiting',
+      'waiting',
+      'waiting',
+    ]);
+    await page.getByRole('button', { name: 'Use the public example' }).click();
+    await expect(steps(page).locator('.tag')).toHaveText(['done', 'done', 'done', 'done', 'done']);
+    await expect(page.locator('.run-facts')).toContainText('the “Export” tab, 438 rows');
+    const recon = page.locator('#run-reconciled');
+    await expect(recon).toContainText('20 pairs of periods that are the same period, all equal.');
+    await expect(recon).toContainText(
+      '60 returns and benchmarks compounded from the July 8, 2026 report, every one within its rounding.',
+    );
+    await expect(recon).toContainText(
+      '238 figures compared with the August 12, 2026 report: every one agrees.',
+    );
+    await expect(page.locator('.asof')).toContainText('Data through June 30, 2026');
+
+    // the dashboard and the slides are built from the file
+    await page.locator('#run-dashboard').getByRole('link', { name: 'CIO Monthly summary' }).click();
+    await expect(page).toHaveURL(/#\/cio\?tab=summary&v=file/);
+    await expect(page.locator('.file-banner')).toContainText('CIO_Monthly_Template_Example.xlsx');
+    await page.goBack();
+    await page.locator('#run-slides').getByRole('link', { name: 'Open the slides' }).click();
+    const deck = page.frameLocator('.deck-frame-wrap iframe');
+    await expect(deck.locator('#print-btn')).toHaveText('Print / PDF');
+
+    // the example is the site's own file; nothing was sent anywhere
+    const origin = new URL(page.url()).origin;
+    const sent = requests.filter(
+      (r) => r.method !== 'GET' || (!r.url.startsWith('data:') && new URL(r.url).origin !== origin),
+    );
+    expect(sent).toEqual([]);
+    // and the example was fetched from the site itself
+    expect(
+      requests.some((r) => r.url.endsWith('/templates/CIO_Monthly_Template_Example.xlsx')),
+    ).toBe(true);
+  });
+
+  test('a mistyped figure is caught three ways, and nothing is corrected', async ({ page }) => {
+    // Growth's fiscal-year-to-date return, 17.5%, typed as 15.7%
+    const lines = example.split('\n');
+    const i = lines.findIndex((l) => l.startsWith('performance,pension,GROWTH,return,FYTD,'));
+    const cells = lines[i]!.split(',');
+    cells[5] = '15.7';
+    lines[i] = cells.join(',');
+    await ready(page, '/run');
+    await page.locator('#run-file input[type=file]').setInputFiles({
+      name: 'June_mistyped.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(lines.join('\n')),
+    });
+    await expect(steps(page).locator('.tag')).toHaveText([
+      'done',
+      'done',
+      'to check (3)',
+      'to check',
+      'to check',
+    ]);
+    const recon = page.locator('#run-reconciled');
+    await expect(recon.getByRole('heading', { level: 2 })).toHaveText(
+      '3 figures to check before the file is used',
+    );
+    await expect(recon.locator('[data-check="within:pension:growth:return:FYTD"]')).toBeVisible();
+    await expect(recon.locator('[data-check="chain:pension:growth:return:FYTD"]')).toContainText(
+      '15.70%',
+    );
+    const diff = recon.locator('[data-diff="pension:growth:r:FYTD"]');
+    await expect(diff).toContainText('15.7%');
+    await expect(diff).toContainText('17.5%');
+    await expect(recon).toContainText('Nothing is corrected here');
+  });
+
+  test('a file that fails the template’s checks stops at step 1, with every problem listed', async ({
+    page,
+  }) => {
+    await ready(page, '/run');
+    await page.locator('#run-file input[type=file]').setInputFiles({
+      name: 'not_a_template.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('a,b,c\n1,2,3\n'),
+    });
+    await expect(steps(page).locator('.tag')).toHaveText([
+      'stopped',
+      'stopped',
+      'waiting',
+      'waiting',
+      'waiting',
+    ]);
+    await expect(page.locator('#run-file .file-errors')).toContainText(
+      'This is not a CIO template export',
+    );
+  });
+
+  test('the Workstation opens on the Monthly run', async ({ page }) => {
+    await ready(page, '/');
+    await page.locator('.mode-switch').getByRole('link', { name: 'Workstation' }).click();
+    await expect(page).toHaveURL(/#\/run$/);
+    await expect(page.locator('#view-title')).toHaveText('Monthly run');
+    await expect(page.locator('.workflow-banner')).toContainText('never uploaded or kept');
+  });
+
+  test('axe clean with the example open', async ({ page }) => {
+    await ready(page, '/run');
+    await page.getByRole('button', { name: 'Use the public example' }).click();
+    await expect(steps(page).first().locator('.tag')).toHaveText('done');
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
+  });
+});
+
 test.describe('one choice followed across Performance, Positioning and Explore (desktop project)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 1280) < 768, 'desktop project only');
 
@@ -744,6 +871,27 @@ test.describe('saved views (desktop project)', () => {
       .exclude('.deck-frame-wrap iframe')
       .analyze();
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`)).toEqual([]);
+  });
+});
+
+test.describe('the Monthly run on a phone', () => {
+  test('figures to check stay on screen', async ({ page }) => {
+    const lines = readFileSync(CIO_TEMPLATE_CSV, 'utf-8').split('\n');
+    const i = lines.findIndex((l) => l.startsWith('performance,pension,GROWTH,return,FYTD,'));
+    const cells = lines[i]!.split(',');
+    cells[5] = '15.7';
+    lines[i] = cells.join(',');
+    await ready(page, '/run');
+    await page.locator('#run-file input[type=file]').setInputFiles({
+      name: 'June_mistyped.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(lines.join('\n')),
+    });
+    await expect(page.locator('#run-reconciled [data-diff]')).toHaveCount(1);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(1);
   });
 });
 

@@ -4432,3 +4432,97 @@ dialog.prov::backdrop {
     border: 2px solid var(--accent-700);
   }
 }
+
+/* ---- Workstation › Monthly run --------------------------------------------------------------- */
+
+.run-facts {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+}
+
+.run-facts > div {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.run-facts dt {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-68);
+}
+
+.run-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.run-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 6px;
+}
+
+.run-lede {
+  margin: 0 0 8px;
+}
+
+.run-list,
+.run-links {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+
+.run-sub {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--divider);
+}
+
+.run-sub:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.run-sub h3 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-68);
+}
+
+.run-sub p {
+  margin: 0 0 6px;
+}
+
+.run-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--muted-72);
+}
+
+.run-tol {
+  font-size: 11px;
+  color: var(--muted-68);
+  white-space: nowrap;
+}
+
+.run-wrap {
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .run-facts > div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

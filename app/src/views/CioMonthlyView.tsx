@@ -46,12 +46,11 @@ import {
 } from '../fixtures/cioMonthly';
 import { type EntityId } from '../fixtures/published';
 import { SOURCES, type SourceRecord } from '../fixtures/sources';
-import { useCioFile } from '../lib/cioFile';
+import { useCioFile, useTemplateOpener } from '../lib/cioFile';
 import { cioSource, entityPages } from '../lib/cioSource';
 import { cioHistory } from '../lib/cioHistory';
 import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
 import { ATTR_PERIODS, bandsFor, furthestFromTarget, parseSeriesKey } from '../lib/crossFilter';
-import { PACKAGE_SHEET, readCioPackage } from '../lib/cioPackage';
 import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
 import { feedClassification } from '../lib/dataset/cioFeed';
 import { figId, ipsRange, proxyAttribution } from '../lib/provenance';
@@ -59,12 +58,7 @@ import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 import { CIO_TABS as TABS } from '../lib/routes';
 import { useUrlFlag, useUrlParam } from '../lib/urlState';
-import {
-  isWorkbookName,
-  MAX_WORKBOOK_BYTES,
-  SPREADSHEET_ACCEPT,
-  workbookToCsv,
-} from '../lib/workbook';
+import { SPREADSHEET_ACCEPT } from '../lib/workbook';
 
 /** Which sub-tab holds each panel, so a jump or a panel link opens the right tab. */
 const TAB_OF: Record<string, string> = {
@@ -252,40 +246,15 @@ export function CioMonthlyView() {
   const { vintage, prior, isLatest, feed, feedAvailable, pkg, fileAvailable, fileGone, select } =
     useCioVintage();
   const cioFile = useCioFile();
-  const [fileErrors, setFileErrors] = useState<{ name: string; errors: string[] } | null>(null);
   // a template file (the workbook, or its Export tab saved as CSV) is read here, in the browser;
-  // nothing is uploaded or stored. A workbook becomes the same CSV text, checked the same way.
+  // nothing is uploaded or stored (lib/cioFile.tsx, shared with the Monthly run)
+  const opener = useTemplateOpener();
+  const fileErrors = opener.errors;
   const openFile = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
     ev.target.value = '';
     if (!f) return;
-    const book = isWorkbookName(f.name);
-    if (f.size > (book ? MAX_WORKBOOK_BYTES : 2_000_000)) {
-      setFileErrors({
-        name: f.name,
-        errors: ['The file is far larger than a CIO template; check that it is the right file.'],
-      });
-      return;
-    }
-    let text: string;
-    if (book) {
-      const sheet = await workbookToCsv(await f.arrayBuffer(), PACKAGE_SHEET);
-      if (!sheet.ok) {
-        setFileErrors({ name: f.name, errors: sheet.errors });
-        return;
-      }
-      text = sheet.csv;
-    } else {
-      text = await f.text();
-    }
-    const res = readCioPackage(text, f.name);
-    if (!res.ok) {
-      setFileErrors({ name: f.name, errors: res.errors });
-      return;
-    }
-    setFileErrors(null);
-    cioFile.open(res.pkg);
-    select(FILE_KEY);
+    if (await opener.openFile(f)) select(FILE_KEY);
   };
   const closeFile = () => {
     cioFile.close();
@@ -511,7 +480,7 @@ export function CioMonthlyView() {
             ))}
           </ul>
           {fileErrors.errors.length > 12 ? <p>…and {fileErrors.errors.length - 12} more.</p> : null}
-          <button type="button" className="btn-outline" onClick={() => setFileErrors(null)}>
+          <button type="button" className="btn-outline" onClick={opener.clearErrors}>
             Dismiss
           </button>
         </div>

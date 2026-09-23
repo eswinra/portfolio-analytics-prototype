@@ -22,6 +22,8 @@ export const DASHBOARD_VIEWS: ViewEntry[] = [
  *  version the dashboard consumes what the workstation publishes; on this public prototype the
  *  dashboard quotes published documents while the workstation demonstrates the pipeline. */
 export const WORKSTATION_VIEWS: ViewEntry[] = [
+  // a month's CIO template file straight through to the slides (public example included)
+  ['/run', 'Monthly run', 'Monthly run'],
   ['/import', 'Data', 'Import a dataset'],
   ['/recon', 'Reconciliation', 'Reconciliation'],
   ['/data-quality', 'Data quality', 'Data quality'],
