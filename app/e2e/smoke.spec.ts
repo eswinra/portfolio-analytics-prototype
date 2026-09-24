@@ -1076,7 +1076,7 @@ test.describe('provenance drawer (desktop project)', () => {
 
   test('a figure from the prior report cites the prior report', async ({ page }) => {
     await ready(page, '/cio?tab=performance');
-    await page.locator('[data-fig="pension.r.1M@2026-05-31"]').click();
+    await page.locator('#cio-perf [data-fig="pension.r.1M@2026-05-31"]').click();
     const drawer = page.getByRole('dialog');
     await expect(drawer).toContainText('July 8, 2026 report, data through May 31, 2026');
     await expect(
@@ -1112,13 +1112,87 @@ test.describe('provenance drawer (desktop project)', () => {
   test('every figure on the three detail tabs opens a record', async ({ page }) => {
     for (const tab of ['summary', 'performance', 'positioning']) {
       await ready(page, `/cio?tab=${tab}`);
+      // visible figures only: the month tables under each category history are folded away
       const ids = await page
         .locator('[data-fig]')
-        .evaluateAll((els) => [...new Set(els.map((el) => el.getAttribute('data-fig')!))]);
+        .evaluateAll((els) => [
+          ...new Set(
+            els
+              .filter((el) => el.checkVisibility())
+              .map((el) => el.getAttribute('data-fig')!),
+          ),
+        ]);
       expect(ids.length, tab).toBeGreaterThan(10);
       const drawer = page.getByRole('dialog');
       for (const id of ids) {
-        await page.locator(`[data-fig="${id}"]`).first().click();
+        await page.locator(`[data-fig="${id}"]`).filter({ visible: true }).first().click();
+        await expect(drawer.getByRole('heading', { level: 2 }), id).not.toHaveText(
+          'Nothing on this page has that address',
+        );
+        await page.keyboard.press('Escape');
+        await expect(drawer).toBeHidden();
+      }
+    }
+  });
+
+  test('on Compare, each side opens its own report and the change opens its calculation', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=compare');
+    const row = page.locator('#cio-cmp-returns tbody tr', { hasText: '3 Y' });
+    await expect(row.locator('[data-fig]')).toHaveCount(3);
+    await expect(row.locator('[data-fig]').nth(0)).toHaveAttribute(
+      'data-fig',
+      'pension.r.3Y@2025-06-30',
+    );
+    await row.locator('[data-fig]').nth(2).click();
+    const drawer = page.getByRole('dialog');
+    await expect(drawer.getByRole('heading', { level: 2 })).toHaveText(
+      'Net return, three years: change since the August 13, 2025 report',
+    );
+    await expect(drawer.locator('.prov-worked')).toHaveText('10.3% − 8.4% = +1.9 pp');
+    await expect(drawer).toContainText('The two windows share 24 of 36 months.');
+    await page.keyboard.press('Escape');
+    // a pair the table does not compare says why, in the table's words
+    await page
+      .locator('#cio-cmp-returns tbody tr', { hasText: 'FYTD' })
+      .locator('[data-fig]')
+      .nth(2)
+      .click();
+    await expect(drawer).toContainText(
+      'Different fiscal years (FY2025 and FY2026) — not compared.',
+    );
+  });
+
+  test('in Explore, a month in the grid opens the report that printed it', async ({ page }) => {
+    await ready(page, '/cio?tab=explore&cat=growth');
+    await page.locator('#cio-x-grid [data-fig="pension.growth.r.1M@2025-10-31"]').click();
+    const drawer = page.getByRole('dialog');
+    await expect(drawer.getByRole('heading', { level: 2 })).toHaveText(
+      'Growth: net return, one month',
+    );
+    await expect(drawer.locator('.prov-kicker')).toContainText('December 10, 2025 report');
+    await expect(drawer.getByRole('link', { name: /December 10, 2025\), p\. 9/ })).toBeVisible();
+  });
+
+  test('a sample of every figure on Compare and Explore opens a record', async ({ page }) => {
+    for (const tab of ['compare', 'explore']) {
+      await ready(page, `/cio?tab=${tab}`);
+      // unfold the month table under the Explore chart, so its figures are sampled too
+      if (tab === 'explore') await page.getByText('Figures by month').first().click();
+      const ids = await page
+        .locator('[data-fig]')
+        .evaluateAll((els) => [
+          ...new Set(
+            els
+              .filter((el) => el.checkVisibility())
+              .map((el) => el.getAttribute('data-fig')!),
+          ),
+        ]);
+      expect(ids.length, tab).toBeGreaterThan(50);
+      const drawer = page.getByRole('dialog');
+      for (const id of ids.filter((_, i) => i % 7 === 0)) {
+        await page.locator(`[data-fig="${id}"]`).filter({ visible: true }).first().click();
         await expect(drawer.getByRole('heading', { level: 2 }), id).not.toHaveText(
           'Nothing on this page has that address',
         );

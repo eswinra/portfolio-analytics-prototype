@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { CIO_LATEST, CIO_VINTAGES, PERIODS, priorVintage } from '../fixtures/cioMonthly';
 import { SOURCES } from '../fixtures/sources';
 
+import { allLines, compareReports } from './compare';
 import {
+  compareFigId,
   figId,
   figureIds,
   ipsRange,
@@ -289,5 +291,72 @@ describe('addresses', () => {
     const c: ProvenanceContext = { vintage: first, base: 'reported_public' };
     expect(figureIds(first, 'pension')).not.toContain(figId.dmv('pension'));
     expect(resolveFigure(figId.dmv('pension'), c).ok).toBe(false);
+  });
+});
+
+describe('the change between two reports, as the Compare tab shows it', () => {
+  const june25 = CIO_VINTAGES.find((v) => v.dataThrough === '2025-06-30')!;
+
+  it('is the later figure minus the earlier, with both reports cited', () => {
+    const f = get(`pension.chg.r-3Y.2025-06-30@${CIO_LATEST.dataThrough}`);
+    const i = PERIODS.indexOf('3 Y');
+    expect(f.value).toBeCloseTo(
+      CIO_LATEST.ENT.pension.total.r[i]! - june25.ENT.pension.total.r[i]!,
+      9,
+    );
+    expect(f.cls).toBe('calculated');
+    expect(f.inputs.map((x) => x.id)).toEqual([
+      'pension.r.3Y@2025-06-30',
+      `pension.r.3Y@${CIO_LATEST.dataThrough}`,
+    ]);
+    expect(f.sources).toHaveLength(2);
+    // the Compare tab's own note: the windows overlap
+    expect(f.notes[0]).toBe('The two windows share 24 of 36 months.');
+    expect(f.when).toEqual({ kind: 'between', from: '2025-06-30', to: CIO_LATEST.dataThrough });
+  });
+
+  it('says why a pair is not compared, in the Compare tab’s words', () => {
+    const f = get(`pension.chg.r-FYTD.2025-06-30@${CIO_LATEST.dataThrough}`);
+    expect(f.display).toBe('not calculated');
+    expect(f.notes[0]).toBe('Different fiscal years (FY2025 and FY2026) — not compared.');
+  });
+
+  it('agrees with every row of the comparison, for both funds', () => {
+    for (const fund of ['pension', 'opeb'] as const) {
+      const c = compareReports(june25, CIO_LATEST, fund);
+      for (const line of allLines(c)) {
+        const base = compareFigId(fund, line.key);
+        expect(base, line.key).not.toBeNull();
+        const f = get(figId.chg(fund, line.key, june25, CIO_LATEST));
+        if (line.change === null) expect(f.value, line.key).toBeNull();
+        else expect(f.value, line.key).toBeCloseTo(line.change, 9);
+      }
+    }
+  });
+
+  it('needs the earlier report first, and a published one', () => {
+    for (const bad of [
+      `pension.chg.r-3Y.${CIO_LATEST.dataThrough}@2025-06-30`,
+      'pension.chg.r-3Y.2019-01-31',
+      'pension.chg.nothing.2025-06-30',
+    ]) {
+      expect(resolveFigure(bad, ctx).ok, bad).toBe(false);
+    }
+  });
+});
+
+describe('growth of a dollar and geography', () => {
+  it('cite the pages they are printed on', () => {
+    const [summary, , , geo] = CIO_LATEST.pages.pension;
+    expect(get('pension.god').sources[0]!.pageTable).toBe(`p. ${summary}`);
+    expect(get('pension.geo.dm').sources[0]!.pageTable).toBe(`p. ${geo}`);
+    expect(get('pension.country.united-states').sources[0]!.pageTable).toBe(`p. ${geo}`);
+    expect(get('pension.country.united-states').value).toBe(
+      CIO_LATEST.ENT.pension.geo.top.find(([n]) => n === 'United States')![1],
+    );
+  });
+
+  it('a country not in the top five has no address', () => {
+    expect(resolveFigure('pension.country.atlantis', ctx).ok).toBe(false);
   });
 });

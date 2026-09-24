@@ -1,5 +1,7 @@
 import { monthYear } from '../../fixtures/cioMonthly';
 import type { Band, CioHistory, SeriesKey } from '../../lib/cioHistory';
+import { figId, type FundKey } from '../../lib/provenance';
+import { Fig } from '../Provenance';
 import { moneyM, pct1, shortMonth, signed1 } from './format';
 
 const W = 640;
@@ -51,7 +53,10 @@ export function CategoryTrend({
   band,
   onSelectMonth,
   show = 'both',
+  fund,
 }: {
+  /** the fund the history is for: the figures table then opens each figure's record */
+  fund?: FundKey;
   history: CioHistory;
   cat: SeriesKey;
   current: number;
@@ -60,6 +65,12 @@ export function CategoryTrend({
   show?: 'both' | 'return' | 'weight';
 }) {
   const showReturn = show !== 'weight';
+  // a figure in the month's own report, when the fund is known
+  const figAt = (i: number, id: (f: FundKey) => string | null, text: string) => {
+    const v = history.reports[i];
+    const address = fund && v ? id(fund) : null;
+    return address ? <Fig id={figId.at(address, v)}>{text}</Fig> : text;
+  };
   const showWeight = show !== 'return';
   const { months, reports } = history;
   const s = history.series[cat];
@@ -371,21 +382,53 @@ export function CategoryTrend({
                     <>
                       {showReturn ? (
                         <>
-                          <td className="num">{pct1(p.r)}</td>
-                          <td className="num">{pct1(p.b)}</td>
                           <td className="num">
-                            {p.r === null || p.b === null ? '—' : `${signed1(p.r - p.b)} pp`}
+                            {figAt(
+                              i,
+                              (f) => (isTotal ? figId.r(f, 0) : figId.compR(f, cat, 0)),
+                              pct1(p.r),
+                            )}
+                          </td>
+                          <td className="num">
+                            {figAt(
+                              i,
+                              (f) => (isTotal ? figId.b(f, 0) : figId.compB(f, cat, 0)),
+                              pct1(p.b),
+                            )}
+                          </td>
+                          <td className="num">
+                            {p.r === null || p.b === null
+                              ? '—'
+                              : figAt(
+                                  i,
+                                  // a composite's excess has no record of its own: its return and
+                                  // benchmark beside it do
+                                  (f) => (isTotal ? figId.x(f, 0) : null),
+                                  `${signed1(p.r - p.b)} pp`,
+                                )}
                           </td>
                         </>
                       ) : null}
                       {isTotal || !showWeight ? null : (
                         <>
-                          <td className="num">{pct1(p.weight)}</td>
-                          <td className="num">{pct1(p.target)}</td>
+                          <td className="num">
+                            {figAt(i, (f) => figId.comp(f, cat, 'w'), pct1(p.weight))}
+                          </td>
+                          <td className="num">
+                            {figAt(i, (f) => figId.comp(f, cat, 'tgt'), pct1(p.target))}
+                          </td>
                         </>
                       )}
                       {showWeight ? (
-                        <td className="num">{p.mv === null ? '—' : moneyM(p.mv)}</td>
+                        <td className="num">
+                          {p.mv === null
+                            ? '—'
+                            : figAt(
+                                i,
+                                (f) => (isTotal ? figId.mv(f) : figId.comp(f, cat, 'mv')),
+                                moneyM(p.mv),
+                              )}
+                        </td>
                       ) : null}
                     </>
                   ) : (

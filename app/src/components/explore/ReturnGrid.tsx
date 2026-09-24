@@ -1,5 +1,7 @@
 import { monthYear } from '../../fixtures/cioMonthly';
 import { SERIES_KEYS, type CioHistory, type SeriesKey } from '../../lib/cioHistory';
+import { figId, type FundKey } from '../../lib/provenance';
+import { Fig } from '../Provenance';
 import { shortMonth, signed1 } from './format';
 
 /** Shade step for a one-month return: the number is always printed, so the shade only helps the
@@ -20,7 +22,10 @@ export function ReturnGrid({
   cat,
   onSelectCat,
   onSelectMonth,
+  fund,
 }: {
+  /** the fund the history is for: its cells then open each figure's record */
+  fund?: FundKey;
   history: CioHistory;
   /** index of the report on screen in `history.months`, or -1 */
   current: number;
@@ -93,7 +98,22 @@ export function ReturnGrid({
                     reports[i] ? '' : ' x-gap'
                   }`}
                 >
-                  {reports[i] ? signed1(p.r) : ''}
+                  {reports[i] ? (
+                    fund ? (
+                      <Fig
+                        id={figId.at(
+                          k === 'total' ? figId.r(fund, 0) : figId.compR(fund, k, 0),
+                          reports[i],
+                        )}
+                      >
+                        {signed1(p.r)}
+                      </Fig>
+                    ) : (
+                      signed1(p.r)
+                    )
+                  ) : (
+                    ''
+                  )}
                 </td>
               ))}
             </tr>

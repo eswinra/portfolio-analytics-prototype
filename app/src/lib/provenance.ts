@@ -13,7 +13,14 @@ import { SOURCES, type SourceRecord } from '../fixtures/sources';
 import { fiscalYearOf } from './cioNarrative';
 import { COMPOSITE_CODE, traceKey, type FigureTrace } from './cioPackage';
 import { cioSource } from './cioSource';
-import { PERIOD_MONTHS, windowOverlap, monthsBetween } from './compare';
+import {
+  allLines,
+  compareReports,
+  PERIOD_MONTHS,
+  windowOverlap,
+  monthsBetween,
+  type CompareLine,
+} from './compare';
 // the six classifications every displayed figure carries (the row schema's own list has four)
 import type { Classification } from '../components/pageMeta';
 
@@ -89,6 +96,12 @@ export interface ProvenanceContext {
 /* ---- addresses ------------------------------------------------------------------------ */
 
 export const periodKey = (p: string): string => p.replace(/\s+/g, '');
+/** 'United States' → 'united-states': a name as it can sit in an address */
+export const slug = (name: string): string =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 const periodAt = (i: number): string => periodKey(PERIODS[i] ?? '');
 
 export type CompositeFigure = 'mv' | 'w' | 'tgt' | 'drift' | 'dw' | 'ips' | 'bound';
@@ -116,6 +129,15 @@ export const figId = {
   other: (f: FundKey, what: 'mv' | 'w') => `${f}.other.${what}`,
   ipsTarget: (f: FundKey, k: string) => `${f}.ips.${k}.tgt`,
   ipsBand: (f: FundKey, k: string) => `${f}.ips.${k}.band`,
+  /** growth of a dollar over the trailing five years, as the report charts it */
+  god: (f: FundKey) => `${f}.god`,
+  /** developed or emerging markets, from the geographic exposure page */
+  geo: (f: FundKey, g: 'dm' | 'em') => `${f}.geo.${g}`,
+  /** one country of the top five in its group, by name */
+  country: (f: FundKey, name: string) => `${f}.country.${slug(name)}`,
+  /** a Compare row's change, from the earlier report to the later one */
+  chg: (f: FundKey, key: string, earlier: CioVintage, later: CioVintage) =>
+    `${f}.chg.${key.replace(/\s+/g, '')}.${earlier.dataThrough}@${later.dataThrough}`,
   /** the same figure in another report */
   at: (id: string, v: CioVintage | null | undefined) => (v ? `${id}@${v.dataThrough}` : id),
 };
@@ -324,10 +346,14 @@ function reportLabel(v: CioVintage): string {
   return `${v.reportLabel} report, data through ${longDate(v.dataThrough)}`;
 }
 
-function pageSource(v: CioVintage, fund: FundKey, which: 'summary' | 'table'): SourceRecord {
+function pageSource(
+  v: CioVintage,
+  fund: FundKey,
+  which: 'summary' | 'table' | 'geo',
+): SourceRecord {
   const k = kindOf(v);
   if (k === 'feed') return cioSource(v, 'cio_monthly rows', null);
-  const n = v.pages[fund][which === 'summary' ? 0 : 1];
+  const n = v.pages[fund][which === 'summary' ? 0 : which === 'table' ? 1 : 3];
   return cioSource(v, `p. ${n}`, n);
 }
 
@@ -360,7 +386,7 @@ function printed(
     value: number | null;
     display: string;
     when: When;
-    page: 'summary' | 'table';
+    page: 'summary' | 'table' | 'geo';
     where: string;
     checks?: string[];
     notes?: string[];
@@ -542,6 +568,22 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
         page: 'summary',
         where: 'the performance summary',
         tk: traceKey('fund', fund, 'TOTAL', 'cash'),
+      });
+    }
+    if (head === 'god') {
+      const five = periodWindow('5 Y', v.dataThrough);
+      return printed(s, {
+        id,
+        label: 'Growth of a dollar, trailing five years',
+        value: e.god,
+        display: e.god === null ? '—' : `$${e.god.toFixed(2)}`,
+        when: five ? { kind: 'window', ...five, basis: 'cumulative over five years' } : point,
+        page: 'summary',
+        where: 'the growth-of-a-dollar chart on the performance summary',
+        tk: traceKey('fund', fund, 'TOTAL', 'growth_of_dollar'),
+        notes: [
+          'What one dollar at the start of the five years had grown to at the month end, as the report charts it.',
+        ],
       });
     }
     if (head === 'dmv') {
@@ -740,6 +782,40 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
     };
   }
 
+  // the geographic exposure page: developed and emerging markets, and the top five of each
+  if (head === 'geo' && (a === 'dm' || a === 'em') && b === undefined) {
+    const val = a === 'dm' ? e.geo.dm : e.geo.em;
+    const group = a === 'dm' ? 'Developed markets' : 'Emerging and frontier markets';
+    return printed(s, {
+      id,
+      label: `${group}, geographic exposure`,
+      value: val,
+      display: show.pct(val),
+      when: point,
+      page: 'geo',
+      where: `the ${a === 'dm' ? 'developed' : 'emerging'} markets share of the geographic exposure chart`,
+      tk: traceKey('geography', fund, a.toUpperCase(), 'share'),
+      notes: ['The report prints the two shares as whole percentages.'],
+    });
+  }
+  if (head === 'country' && a !== undefined && b === undefined) {
+    const hit = e.geo.top.find(([name]) => slug(name) === a);
+    if (!hit) return null;
+    return printed(s, {
+      id,
+      label: `${hit[0]}, geographic exposure`,
+      value: hit[1],
+      display: show.pct(hit[1]),
+      when: point,
+      page: 'geo',
+      where: `the top five ${hit[2] === 'dm' ? 'developed' : 'emerging'} markets on the geographic exposure page`,
+      tk: traceKey('country', fund, hit[0], 'share'),
+    });
+  }
+  if (head === 'chg' && a !== undefined && b !== undefined && extra === undefined) {
+    return resolveChange(s, id, a, b);
+  }
+
   // composite figures
   const c = e.comps.find((x) => x.k === head);
   if (c) return resolveComposite(s, id, c, a, b, extra, here, point);
@@ -789,6 +865,72 @@ function resolvePath(s: Scope, id: string, path: string[]): Provenance | null {
   }
 
   return null;
+}
+
+/** The figure a Compare row shows, by the row's key in lib/compare.ts. */
+export function compareFigId(fund: FundKey, key: string): string | null {
+  if (key === 'mv') return figId.aum(fund);
+  if (key === 'cash') return figId.cash(fund);
+  if (key === 'god') return figId.god(fund);
+  if (key === 'dm' || key === 'em') return figId.geo(fund, key);
+  if (key === 'us') return figId.country(fund, 'United States');
+  const kind = key.slice(0, 2);
+  const rest = key.slice(2);
+  const i = PERIODS.indexOf(rest);
+  if (kind === 'r-' && i >= 0) return figId.r(fund, i);
+  if (kind === 'x-' && i >= 0) return figId.x(fund, i);
+  if (kind === 'w-' && rest) return figId.comp(fund, rest, 'w');
+  return null;
+}
+
+const compareShow = (v: number | null, unit: CompareLine['unit']): string => {
+  if (v === null) return '—';
+  if (unit === 'bn') return show.bn(v);
+  if (unit === 'mm') return show.mm(Math.round(v));
+  if (unit === 'usd') return `$${v.toFixed(2)}`;
+  return show.pct(v);
+};
+const compareChange = (v: number | null, unit: CompareLine['unit']): string => {
+  if (v === null) return '—';
+  const sign = v > 0 ? '+' : v < 0 ? MINUS : '';
+  const a = Math.abs(v);
+  if (unit === 'bn') return `${sign}$${a.toFixed(1)}B`;
+  if (unit === 'mm') return `${sign}$${Math.round(a).toLocaleString('en-US')}M`;
+  if (unit === 'usd') return `${sign}$${a.toFixed(2)}`;
+  return `${sign}${a.toFixed(1)} pp`;
+};
+
+/** A Compare row's change: the later report (the one the address names) minus the earlier one.
+ *  What is comparable, and the notes, come from lib/compare.ts, so the record and the row agree. */
+function resolveChange(s: Scope, id: string, key: string, earlierDate: string): Provenance | null {
+  const later = s.v;
+  const earlier = CIO_VINTAGES.find((x) => x.origin !== 'file' && x.dataThrough === earlierDate);
+  if (!earlier || earlier.dataThrough >= later.dataThrough) return null;
+  const c = compareReports(earlier, later, s.fund);
+  const line = allLines(c).find((l) => l.key.replace(/\s+/g, '') === key);
+  const base = line ? compareFigId(s.fund, line.key) : null;
+  if (!line || !base) return null;
+  const laterId = figId.at(base, later);
+  const laterFig = resolveFigure(laterId, s.ctx);
+  const name = laterFig.ok ? laterFig.fig.label : line.label;
+  const note = line.note ? `${line.note}.` : null;
+  return calculated(s, {
+    id,
+    label: `${name}: change since the ${earlier.reportLabel} report`,
+    value: line.change,
+    display: compareChange(line.change, line.unit),
+    when: { kind: 'between', from: earlier.dataThrough, to: later.dataThrough },
+    formula: "The later report's figure − the earlier report's figure",
+    worked: `${minus(compareShow(line.later, line.unit), compareShow(line.earlier, line.unit))} = ${compareChange(line.change, line.unit)}`,
+    inputs: [figId.at(base, earlier), laterId],
+    ...(line.comparable
+      ? {}
+      : { notCalculated: note ?? 'Not compared: the two measure different things.' }),
+    notes: [
+      ...(line.comparable && note ? [note] : []),
+      ...(line.unit === 'pct' ? [NOTE.rounding] : []),
+    ],
+  });
 }
 
 function resolveComposite(
@@ -999,5 +1141,7 @@ export function figureIds(v: CioVintage, fund: FundKey): string[] {
     });
   }
   if (e.other) ids.push(figId.other(fund, 'mv'), figId.other(fund, 'w'));
+  ids.push(figId.god(fund), figId.geo(fund, 'dm'), figId.geo(fund, 'em'));
+  for (const [name] of e.geo.top) ids.push(figId.country(fund, name));
   return ids;
 }

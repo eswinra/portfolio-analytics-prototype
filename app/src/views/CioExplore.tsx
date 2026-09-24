@@ -46,6 +46,8 @@ export function CioExplore({
   onSelectReport: (dataThrough: string) => void;
 }) {
   const history = useMemo(() => cioHistory(CIO_VINTAGES, (v) => cioFor(entity, v)), [entity]);
+  // every figure in the grid and the month table opens its own report's record
+  const fund = entity === 'OPEB' ? 'opeb' : 'pension';
   const bands = useMemo(() => bandsFor(entity), [entity]);
   const published = source === 'published';
   const current = published ? history.months.indexOf(vintage.dataThrough) : -1;
@@ -96,6 +98,7 @@ export function CioExplore({
         }
       >
         <ReturnGrid
+          fund={fund}
           history={history}
           current={current}
           cat={cat}
@@ -129,6 +132,7 @@ export function CioExplore({
           }
         >
           <CategoryTrend
+            fund={fund}
             history={history}
             cat={cat}
             current={current}

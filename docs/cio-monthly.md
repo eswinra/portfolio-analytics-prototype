@@ -275,10 +275,11 @@ Two things about this page differ from every other slide, and the slide states b
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
 
-### Where a figure came from — the provenance drawer (Summary, Performance, Positioning)
+### Where a figure came from — the provenance drawer (Summary, Performance, Positioning, Explore, Compare)
 
-Select any figure on the Summary, Performance or Positioning tab (they carry a faint dotted
-underline) and a drawer opens with its record:
+Select any figure on the Summary, Performance, Positioning, Explore or Compare tab (they carry a
+faint dotted underline) and a drawer opens with its record. The Markets & items tab's market table
+and macro strip are not covered yet:
 
 | Section | What it says |
 |---|---|
@@ -295,6 +296,21 @@ address is in the page URL (`?fig=`), so **Copy link to this figure** shares one
 The `@` suffix is what makes lineage work: the Prior report column and every change against the
 prior report resolve their earlier figure with the same code, and so cite the earlier report's own
 page, not the page on screen.
+
+**On Compare and Explore, each figure opens the report that printed it.** Each side of a Compare
+row opens the figure in its own report (`pension.r.3Y@2025-06-30`). The change opens a calculated
+record, `pension.chg.r-3Y.2025-06-30@2026-06-30`: the later report's figure minus the earlier
+one's, with those two figures as its inputs. Whether a pair is comparable, and the note on the row,
+come from the function the table itself uses (`compareReports` in `app/src/lib/compare.ts`), so the
+record and the row cannot disagree. A three-year change says the two windows share 24 of 36
+months, and an FYTD pair across a July reset gives the table's own reason for not comparing it.
+
+Each cell of the Explore month grid is that report's one-month return. Under every category history
+(on Explore, Performance and Positioning), the folded **Figures by month** table opens the return,
+benchmark, weight, target and market value from each month's report. A composite's excess in that
+table opens nothing, because no report prints it; the return and benchmark beside it each open a
+record. Growth of a dollar and the geographic exposure shares (developed markets, emerging
+markets, and the top five countries in each) now have addresses too, because Compare shows them.
 
 **The record says what checked a figure, and says so when nothing did.** The extractor rejects a
 report whose identities fail: the summary page's total must agree with the performance table's to
@@ -379,7 +395,8 @@ A moved policy target is called out as well, because drift is not comparable acr
 
 **Columns always run earlier then later**, and every change is later minus earlier, whichever
 report was on screen first. A change column whose sign depended on the order two menus were used
-would be its own trap.
+would be its own trap. Each figure and each change opens its provenance record (see the drawer,
+above), so a reader can check the subtraction and see both source pages.
 
 **The marker means what it means on Summary, and no more.** A row is marked only when it crosses
 the threshold the "What changed" panel already applies — a tenth of a point in the FYTD or one-year

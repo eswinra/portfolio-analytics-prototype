@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-09-24 — Revision 44: every figure on Compare and Explore opens its record
+
+The provenance drawer now covers five CIO Monthly tabs, not three. On Compare, Explore and the
+month-by-month tables, a figure opens the report that printed it.
+
+- **Compare.** Each side of a row opens the figure in its own report, and the change opens a
+  calculated record with the subtraction worked out and both figures as inputs. The three-year row a
+  year apart reads "10.3% − 8.4% = +1.9 pp" and says the two windows share 24 of 36 months. The
+  FYTD pair across the July reset gives the table's reason for not comparing it: "Different fiscal
+  years (FY2025 and FY2026) — not compared." Comparability and the note come from `compareReports`,
+  the function the table uses, so the record cannot disagree with the row.
+- **Explore.** Each cell of the month grid is that report's one-month return and cites that
+  report's page. Growth in October 2025 cites the December 10, 2025 report, p. 9.
+- **Figures by month**, the folded table under every category history on Explore, Performance and
+  Positioning, opens each month's return, benchmark, weight, target and market value. A
+  composite's excess opens nothing, because no report prints it; the return and benchmark beside
+  it each open a record.
+- **New addresses** for figures Compare shows: growth of a dollar (`pension.god`), developed and
+  emerging markets (`pension.geo.dm`, `pension.geo.em`), and the top five countries in each
+  (`pension.country.united-states`).
+- **Not covered yet:** the Markets & items tab's market table and macro strip.
+- **Found while testing.** The month tables repeat figures the Performance tab already shows, so
+  a test that clicked "the" figure by address now found two. The sweep tests click the visible
+  one. They find it with `checkVisibility()`, because `offsetParent` is not a visibility test for
+  the contents of a closed `<details>`: current Chromium hides them with `content-visibility`, so
+  they keep a layout parent but are never painted.
+- Verification: lint · format · Vitest 662/662 (6 new: a change's value, inputs and notes, the
+  reset case, agreement with every Compare row for both funds, and the new addresses) · build ·
+  Playwright 243/243 runnable (3 new) · `npm audit --omit=dev` 0 vulnerabilities · checked in the
+  browser: Compare's three-year change, the Explore grid's October 2025 Growth cell, and the
+  Figures by month table.
+
 ## 2026-09-22 — Revision 43: every figure traced to the cell it was typed in
 
 Phase 3, second part. A figure from a template workbook now traces back through the Export tab to

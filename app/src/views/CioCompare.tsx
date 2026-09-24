@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { Fig } from '../components/Provenance';
 import { ClassBadge, Panel, SourceLine } from '../components/ui';
 import { CIO_VINTAGES, longDate, monthYear, type CioVintage } from '../fixtures/cioMonthly';
 import type { EntityId } from '../fixtures/published';
@@ -11,6 +12,7 @@ import {
   type Comparison,
 } from '../lib/compare';
 import { entityPages } from '../lib/cioSource';
+import { compareFigId, figId, type FundKey } from '../lib/provenance';
 import { useUrlParam } from '../lib/urlState';
 
 /** Two reports side by side.
@@ -155,7 +157,15 @@ export function CioCompare({
         <SourceLine records={[entityPages(c.earlier, key).main, entityPages(c.later, key).main]} />
       </Panel>
 
-      <CompareTable id="cio-cmp-fund" title="The fund" lines={c.fund} cols={cols} only={only} />
+      <CompareTable
+        id="cio-cmp-fund"
+        title="The fund"
+        lines={c.fund}
+        cols={cols}
+        only={only}
+        fund={key}
+        c={c}
+      />
       <CompareTable
         id="cio-cmp-returns"
         title="Returns, net of fees"
@@ -163,6 +173,8 @@ export function CioCompare({
         cols={cols}
         only={only}
         rowHead="Period"
+        fund={key}
+        c={c}
       />
       <CompareTable
         id="cio-cmp-excess"
@@ -172,6 +184,8 @@ export function CioCompare({
         only={only}
         rowHead="Period"
         calculated
+        fund={key}
+        c={c}
       />
       <CompareTable
         id="cio-cmp-alloc"
@@ -180,6 +194,8 @@ export function CioCompare({
         cols={cols}
         only={only}
         rowHead="Category"
+        fund={key}
+        c={c}
       />
       <CompareTable
         id="cio-cmp-geo"
@@ -187,6 +203,8 @@ export function CioCompare({
         lines={c.geography}
         cols={cols}
         only={only}
+        fund={key}
+        c={c}
       />
     </>
   );
@@ -212,6 +230,8 @@ function CompareTable({
   only,
   rowHead = '',
   calculated = false,
+  fund,
+  c,
 }: {
   id: string;
   title: string;
@@ -220,8 +240,16 @@ function CompareTable({
   only: boolean;
   rowHead?: string;
   calculated?: boolean;
+  fund: FundKey;
+  c: Comparison;
 }) {
   const shown = only ? lines.filter((l) => l.material) : lines;
+  // each side opens the figure in its own report; the change opens its calculation
+  const side = (l: CompareLine, v: CioVintage, value: number | null) => {
+    const base = compareFigId(fund, l.key);
+    const text = fmt(value, l.unit);
+    return base ? <Fig id={figId.at(base, v)}>{text}</Fig> : text;
+  };
   return (
     <Panel id={id} className="mt" title={title}>
       {shown.length === 0 ? (
@@ -248,11 +276,13 @@ function CompareTable({
               {shown.map((l) => (
                 <tr key={l.key} className={l.material ? 'cmp-mat' : l.comparable ? '' : 'cmp-off'}>
                   <th scope="row">{l.label}</th>
-                  <td className="num">{fmt(l.earlier, l.unit)}</td>
-                  <td className="num">{fmt(l.later, l.unit)}</td>
+                  <td className="num">{side(l, c.earlier, l.earlier)}</td>
+                  <td className="num">{side(l, c.later, l.later)}</td>
                   <td className="num cmp-chg">
                     {l.material ? <span className="cmp-mark" aria-hidden="true" /> : null}
-                    {l.comparable ? fmtChange(l.change, l.unit) : 'not compared'}
+                    <Fig id={figId.chg(fund, l.key, c.earlier, c.later)}>
+                      {l.comparable ? fmtChange(l.change, l.unit) : 'not compared'}
+                    </Fig>
                     {l.material ? (
                       <span className="visually-hidden"> (crossed a threshold)</span>
                     ) : null}

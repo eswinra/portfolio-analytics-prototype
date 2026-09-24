@@ -1191,6 +1191,7 @@ export function CioMonthlyView() {
               </p>
             )}
             <CategoryTrend
+              fund={key}
               history={history}
               cat={cat}
               current={seriesAt}
@@ -1461,6 +1462,7 @@ export function CioMonthlyView() {
               </p>
             )}
             <CategoryTrend
+              fund={key}
               history={history}
               cat={posCat}
               current={seriesAt}
