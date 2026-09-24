@@ -1,4 +1,5 @@
-import { longDate, type CioVintage } from '../fixtures/cioMonthly';
+import { CIO_MACRO_SERIES } from '../fixtures/cioMacro.data';
+import { CIO_MACRO, longDate, type CioVintage } from '../fixtures/cioMonthly';
 import type { SourceRecord } from '../fixtures/sources';
 
 /** Source records for one report's pages, built per vintage — the fixed registry in
@@ -42,5 +43,36 @@ export function entityPages(v: CioVintage, key: 'pension' | 'opeb') {
   return {
     main: cioSource(v, summary === last ? `p. ${summary}` : `pp. ${summary}–${last}`, summary),
     geo: cioSource(v, `p. ${geo}`, geo),
+  };
+}
+
+/** Source record for the macro strip's FRED figures, read as of the report's as-of date. */
+export function fredMacroSource(v: CioVintage): SourceRecord | null {
+  const m = CIO_MACRO[v.reportDate];
+  if (!m) return null;
+  return {
+    id: `FRED_CIO_${m.asOf}`,
+    label: `FRED, as known on ${longDate(m.asOf)}`,
+    doc: 'Federal Reserve Economic Data, real-time archive (ALFRED): PCEPI, PCEPILFE (BEA); UNRATE, CIVPART (BLS); DFEDTARL, DFEDTARU (Federal Reserve)',
+    pageTable: 'observations as FRED showed them on the date given',
+    asOf: longDate(m.asOf),
+    url: 'https://alfred.stlouisfed.org/',
+  };
+}
+
+/** Source record for named FRED series as FRED showed them on one date, linked to the first
+ *  series' page in the real-time archive — for one figure's provenance record. */
+export function fredSeriesSource(ids: string[], asOf: string): SourceRecord {
+  const series = ids.map((id) => CIO_MACRO_SERIES.find((s) => s.id === id));
+  const providers = [...new Set(series.map((s) => s?.provider ?? 'FRED'))];
+  return {
+    id: `FRED_${ids.join('_')}_${asOf}`,
+    label: `FRED ${ids.join(', ')}, as known on ${longDate(asOf)}`,
+    doc: `Federal Reserve Economic Data, real-time archive (ALFRED): ${series
+      .map((s, i) => s?.title ?? ids[i])
+      .join('; ')} (${providers.join('; ')})`,
+    pageTable: 'observations as FRED showed them on the date given',
+    asOf: longDate(asOf),
+    url: `https://alfred.stlouisfed.org/series?seid=${ids[0] ?? ''}`,
   };
 }

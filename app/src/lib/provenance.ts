@@ -1,18 +1,31 @@
 import { CONFIG } from '../config';
 import {
+  CIO_LATEST,
+  CIO_MACRO,
   CIO_VINTAGES,
   longDate,
+  macroFor,
   PERIODS,
   priorVintage,
   type CioComposite,
   type CioEntity,
   type CioVintage,
 } from '../fixtures/cioMonthly';
+import { MACRO_NOTES } from '../fixtures/cioMonthly.data';
 import { publishedFor } from '../fixtures/published';
 import { SOURCES, type SourceRecord } from '../fixtures/sources';
+import {
+  CURVE_KEYS,
+  macroAsOf,
+  macroMonth,
+  yoy,
+  type CioMacroVintage,
+  type MacroLine,
+  type MacroNotes,
+} from './cioMacro';
 import { fiscalYearOf } from './cioNarrative';
 import { COMPOSITE_CODE, traceKey, type FigureTrace } from './cioPackage';
-import { cioSource } from './cioSource';
+import { cioSource, fredSeriesSource } from './cioSource';
 import {
   allLines,
   compareReports,
@@ -49,7 +62,11 @@ export type When =
   /** a change between two reports' month ends */
   | { kind: 'between'; from: string; to: string }
   /** a policy figure, in force since a date */
-  | { kind: 'policy'; since: string };
+  | { kind: 'policy'; since: string }
+  /** an observation as a real-time archive held it on a date: later revisions do not reach it */
+  | { kind: 'observed'; period: string; known: string; archive: string }
+  /** a figure its source does not date: the text says what is known */
+  | { kind: 'undated'; text: string };
 
 export interface FigureRef {
   id: string;
@@ -91,6 +108,9 @@ export interface ProvenanceContext {
    *  report, the rows' own classification for an imported dataset, calculated for a template
    *  file. A figure from another published report is always reported_public. */
   base: Classification;
+  /** a template file's macro strip, as the team entered it; a published report's strip is
+   *  rebuilt from FRED and the report, so it needs none */
+  macro?: MacroLine[];
 }
 
 /* ---- addresses ------------------------------------------------------------------------ */
@@ -138,6 +158,10 @@ export const figId = {
   /** a Compare row's change, from the earlier report to the later one */
   chg: (f: FundKey, key: string, earlier: CioVintage, later: CioVintage) =>
     `${f}.chg.${key.replace(/\s+/g, '')}.${earlier.dataThrough}@${later.dataThrough}`,
+  /** one index in the report's market table, for one period — market context, so no fund */
+  market: (row: string, i: number) => `market.${marketKey(row)}.${periodAt(i)}`,
+  /** one line of the macro strip, by the indicator it reports — economic context, so no fund */
+  macro: (label: string) => `macro.${macroKey(label)}`,
   /** the same figure in another report */
   at: (id: string, v: CioVintage | null | undefined) => (v ? `${id}@${v.dataThrough}` : id),
 };
@@ -179,6 +203,10 @@ export function whenText(w: When): string {
       return `Between the month ends of two reports: ${longDate(w.from)} and ${longDate(w.to)}`;
     case 'policy':
       return `The policy in force since ${w.since}`;
+    case 'observed':
+      return `${w.period}, in ${w.archive} as of ${longDate(w.known)}`;
+    case 'undated':
+      return w.text;
   }
 }
 
@@ -311,6 +339,8 @@ const CHECK = {
   monthly:
     "The summary page prints this month's return as well, and the two agree to within 0.05 point.",
 };
+const FILE_CHECKED =
+  "Checked with the template's own rules when the file was opened in this browser. Not published.";
 const NO_TIE =
   'Nothing else in the report ties this figure to another, so it rests on its position on the page alone.';
 
@@ -405,10 +435,7 @@ function printed(
   }
   const read =
     k === 'file'
-      ? [
-          fileTraceLine(s.v.file, t) + (o.fileNote ? ` ${o.fileNote}` : ''),
-          "Checked with the template's own rules when the file was opened in this browser. Not published.",
-        ]
+      ? [fileTraceLine(s.v.file, t) + (o.fileNote ? ` ${o.fileNote}` : ''), FILE_CHECKED]
       : k === 'feed'
         ? [
             'As imported from the workstation dataset and validated against schema 1.4 when it was read. Not a published report.',
@@ -503,6 +530,18 @@ export function resolveFigure(id: string, ctx: ProvenanceContext): Resolution {
   const v = date === undefined ? ctx.vintage : CIO_VINTAGES.find((x) => x.dataThrough === date);
   if (!v) return fail(`No published report on this site has data through ${date}.`);
   const [fund, ...path] = body.split('.');
+  // market and economic context belong to the report, not to either fund
+  if (fund === 'market' || fund === 'macro') {
+    const c: ContextScope = {
+      v,
+      base: v === ctx.vintage ? ctx.base : 'reported_public',
+      ctx,
+      at: date === undefined ? '' : `@${date}`,
+      ...(v === ctx.vintage && ctx.macro ? { lines: ctx.macro } : {}),
+    };
+    const fig = fund === 'market' ? resolveMarket(c, id, path) : resolveMacro(c, id, path);
+    return fig ? { ok: true, fig } : fail('This report has no figure at that address.');
+  }
   if (fund !== 'pension' && fund !== 'opeb') {
     return fail('The address does not name the Pension Fund or the OPEB Master Trust.');
   }
@@ -1143,5 +1182,361 @@ export function figureIds(v: CioVintage, fund: FundKey): string[] {
   if (e.other) ids.push(figId.other(fund, 'mv'), figId.other(fund, 'w'));
   ids.push(figId.god(fund), figId.geo(fund, 'dm'), figId.geo(fund, 'em'));
   for (const [name] of e.geo.top) ids.push(figId.country(fund, name));
+  return ids;
+}
+
+/* ---- market and economic context ------------------------------------------------------ */
+
+/** What a context figure's record says where a fund's name would go — the first line of the
+ *  drawer — so an index return or an inflation rate is never read as the Fund's. */
+const CONTEXT = {
+  market: 'Market context, not fund performance',
+  macro: 'Economic context, not fund performance',
+} as const;
+
+interface ContextScope {
+  v: CioVintage;
+  base: Classification;
+  ctx: ProvenanceContext;
+  /** the date suffix to put back on inputs */
+  at: string;
+  /** a template file's own macro strip */
+  lines?: MacroLine[];
+}
+
+/** A market row's address: its name without the dots, so 'U.S. Large Cap' is us-large-cap. */
+export const marketKey = (name: string): string => slug(name.replaceAll('.', ''));
+
+/** A macro line's address: the indicator it reports, whichever month its label names, so one
+ *  indicator has one address in every report. */
+export function macroKey(label: string): string {
+  const known: [prefix: string, key: string][] = [
+    ['PCE inflation', 'pce'],
+    ['Federal funds', 'fed'],
+    ['Unemployment', 'labor'],
+    ['Treasury yields', 'curve'],
+    ['U.S. Dollar Index', 'usd'],
+    ['Themes', 'themes'],
+  ];
+  return known.find(([prefix]) => label.startsWith(prefix))?.[1] ?? slug(label);
+}
+
+/** The themes line is the CIO's commentary, not a figure, so it opens no record. */
+export const isMacroFigure = (label: string): boolean => macroKey(label) !== 'themes';
+
+/** The page the latest report prints the U.S. Dollar Index on (MACRO_TYPED in the fixtures). */
+const USD_PAGE = 6;
+const FRED = "FRED's real-time archive (ALFRED)";
+const CURVE_WORDS: Record<(typeof CURVE_KEYS)[number], string> = {
+  m3: '3-month',
+  y2: '2-year',
+  y5: '5-year',
+  y10: '10-year',
+  y30: '30-year',
+};
+
+const range = (from: string, to: string) => `${longDate(from)} – ${longDate(to)}`;
+
+/** A template file's figure, cited by the cell it was typed in. */
+function fileSource(v: CioVintage, t: FigureTrace | undefined, id: string): SourceRecord {
+  const src = cioSource(v, 'as entered in the template', null);
+  return { ...src, id: `${src.id}:${t ? (t.cell ?? t.row) : id}`, pageTable: fileTraceWhere(t) };
+}
+
+const fredRead = (asOf: string) =>
+  `Read from ${FRED} as FRED showed the series on ${longDate(asOf)}, the month end before the report, so later revisions do not change it (tools/fetch_cio_macro.py). The report's own macro pages credit Bloomberg and the St. Louis Federal Reserve for these indicators.`;
+
+const macroReport = (v: CioVintage, asOf: string) =>
+  `${v.reportLabel} report, macro page as of ${longDate(asOf)}`;
+
+/** The report's own commentary beside a FRED figure, which the latest report's strip carries. */
+function commentary(v: CioVintage, key: keyof MacroNotes): string[] {
+  const n = v === CIO_LATEST ? MACRO_NOTES[key] : undefined;
+  return n ? [`The report's commentary beside it: ${n}.`] : [];
+}
+
+/** One index return from the report's market table. The table is a month ahead of the fund
+ *  figures, so the record puts the window the index covers beside the fund's window for the same
+ *  period in the same report. */
+function resolveMarket(c: ContextScope, id: string, path: string[]): Provenance | null {
+  const { v } = c;
+  const [rowKey, periodK, extra] = path;
+  if (rowKey === undefined || extra !== undefined || !v.MKT || !v.marketAsOf) return null;
+  const i = periodIndex(periodK);
+  const row = v.MKT.flatMap((g) => g.rows).find((x) => marketKey(x.n) === rowKey);
+  if (i < 0 || !row) return null;
+  const p = PERIODS[i]!;
+  const value = row.v[i] ?? null;
+  const asOf = v.marketAsOf;
+  const isFile = kindOf(v) === 'file';
+  // footnote 1: the real estate index is the latest quarter available, and the report does not
+  // say which quarter that is
+  const lagged = /latest available quarter/i.test(row.i);
+  const win = periodWindow(p, asOf);
+  const fundWin = periodWindow(p, v.dataThrough);
+  const t = isFile ? v.trace?.[traceKey('market', '', row.n, 'return', periodKey(p))] : undefined;
+  const page = v.pages.market;
+  return {
+    id,
+    fund: CONTEXT.market,
+    label: `${row.n.replace(/[¹²³]+$/u, '')}: total return, ${PERIOD_WORDS[p] ?? p}`,
+    display: show.pct(value),
+    value,
+    cls: value === null ? 'missing' : lagged ? 'stale' : c.base,
+    when: lagged
+      ? {
+          kind: 'undated',
+          text: `The report does not say which quarter. The index is the latest quarter available, so it ends at an earlier quarter end than the rest of the table, which runs to ${longDate(asOf)}.`,
+        }
+      : win
+        ? { kind: 'window', ...win }
+        : { kind: 'point', date: asOf },
+    report: isFile
+      ? reportLabel(v)
+      : `${v.reportLabel} report, market table as of ${longDate(asOf)}`,
+    sources: [
+      isFile ? fileSource(v, t, id) : { ...cioSource(v, `p. ${page}`, page), asOf: longDate(asOf) },
+    ],
+    inputs: [],
+    read: isFile
+      ? [fileTraceLine(v.file, t), FILE_CHECKED]
+      : [
+          `Printed on p. ${page} of the ${v.reportLabel} report: the ${row.n} row (${row.i}), under ${p}.`,
+          'The report credits Bloomberg and State Street for the table. Nothing else in the report ties an index return to another figure, so it rests on its position on the page alone.',
+          'Read from the public PDF by the position of each word on the page: each row is found by its label and each figure by the period column it sits under (tools/extract_cio_report.py). Nothing is corrected by hand.',
+        ],
+    notes: [
+      ...(value === null
+        ? [
+            isFile
+              ? 'The input did not supply this figure.'
+              : 'The report does not print this figure.',
+          ]
+        : []),
+      "An index return, not the Fund's: it shows the market the benchmarks moved in, not the Fund's result against them.",
+      ...(!lagged && win && fundWin
+        ? [
+            `The market table is a month ahead of the fund figures: this return covers ${range(win.from, win.to)}, and the fund's ${PERIOD_ADJ[p] ?? p} return in the same report covers ${range(fundWin.from, fundWin.to)}.`,
+          ]
+        : []),
+      ...(lagged && value === 0
+        ? [
+            'NCREIF ODCE is published quarterly, and the report does not say how it fills a period shorter than a quarter, so 0.0% here may mean no new quarter rather than a flat one.',
+          ]
+        : []),
+    ],
+  };
+}
+
+/** One line of the macro strip. A published report's lines are rebuilt from FRED as FRED showed
+ *  them at the month end before the report (lib/cioMacro.ts), so each record cites its FRED
+ *  series; PCE inflation is calculated from two index levels, and each has a record of its own.
+ *  A template file's lines are the team's, cited by the cell they were typed in. */
+function resolveMacro(c: ContextScope, id: string, path: string[]): Provenance | null {
+  const { v } = c;
+  const [key, sub, extra] = path;
+  if (key === undefined || extra !== undefined) return null;
+  const kind = kindOf(v);
+  if (kind === 'feed') return null;
+  const lines = kind === 'file' ? (c.lines ?? []) : macroFor(v);
+  const line = lines.find((l) => isMacroFigure(l.l) && macroKey(l.l) === key);
+  if (kind === 'file') return line && sub === undefined ? fileMacro(c, id, line) : null;
+  if (key === 'usd') return line && sub === undefined ? typedUsd(c, id, line) : null;
+  const m = CIO_MACRO[v.reportDate];
+  if (!m) return null;
+  if (key === 'pce' && (sub === 'index' || sub === 'yearago')) return pceIndex(c, id, m, sub);
+  if (!line || sub !== undefined) return null;
+  if (key === 'pce') return pceInflation(c, id, m, line);
+  if (key === 'fed' || key === 'labor' || key === 'curve') return fredLine(c, id, m, key, line);
+  return null;
+}
+
+function fileMacro(c: ContextScope, id: string, line: MacroLine): Provenance {
+  const t = c.v.trace?.[traceKey('macro', '', line.l, 'value')];
+  return {
+    id,
+    fund: CONTEXT.macro,
+    label: line.l,
+    display: line.v,
+    value: null,
+    cls: c.base,
+    when: {
+      kind: 'undated',
+      text: 'The file records no date for this line beyond what its label says.',
+    },
+    report: reportLabel(c.v),
+    sources: [fileSource(c.v, t, id)],
+    inputs: [],
+    read: [fileTraceLine(c.v.file, t), FILE_CHECKED],
+    notes: [
+      "As entered in the template file, with the team's commentary beside it. A published report's strip is read from FRED instead, as FRED showed it at the month end before the report.",
+    ],
+  };
+}
+
+function pceIndex(
+  c: ContextScope,
+  id: string,
+  m: CioMacroVintage,
+  which: 'index' | 'yearago',
+): Provenance {
+  const obs = which === 'index' ? m.pce : m.pce.yearAgo;
+  return {
+    id,
+    fund: CONTEXT.macro,
+    label: `PCE price index, ${macroMonth(obs.date)}`,
+    display: obs.v.toFixed(3),
+    value: obs.v,
+    cls: 'reported_public',
+    when: { kind: 'observed', period: macroMonth(obs.date), known: m.asOf, archive: FRED },
+    report: macroReport(c.v, m.asOf),
+    sources: [fredSeriesSource(['PCEPI'], m.asOf)],
+    inputs: [],
+    read: [fredRead(m.asOf)],
+    notes: ['An index level, 2017 = 100, seasonally adjusted.'],
+  };
+}
+
+function pceInflation(
+  c: ContextScope,
+  id: string,
+  m: CioMacroVintage,
+  line: MacroLine,
+): Provenance {
+  const inputs = (['index', 'yearago'] as const).map((w) =>
+    pceIndex(c, `macro.pce.${w}${c.at}`, m, w),
+  );
+  const val = yoy(m.pce);
+  return {
+    id,
+    fund: CONTEXT.macro,
+    label: `PCE inflation, ${macroMonth(m.pce.date)}, year over year`,
+    display: line.v,
+    value: val,
+    cls: 'calculated',
+    when: {
+      kind: 'observed',
+      period: `${macroMonth(m.pce.date)} against ${macroMonth(m.pce.yearAgo.date)}`,
+      known: m.asOf,
+      archive: FRED,
+    },
+    report: macroReport(c.v, m.asOf),
+    sources: [fredSeriesSource(['PCEPI'], m.asOf)],
+    formula: '(PCE price index for the month ÷ the same month a year earlier − 1) × 100',
+    worked: `(${m.pce.v.toFixed(3)} ÷ ${m.pce.yearAgo.v.toFixed(3)} − 1) × 100 = ${val.toFixed(1)}%`,
+    inputs: inputs.map((f) => ({ id: f.id, label: f.label, display: f.display })),
+    read: [
+      'Calculated in this browser from the two index levels listed below, each as FRED showed it.',
+    ],
+    notes: [
+      `${macroMonth(m.pce.date)} was the latest month FRED had published by ${longDate(m.asOf)}.`,
+      `Core PCE inflation beside it, ${yoy(m.corePce).toFixed(1)}%, leaves out food and energy and is worked out the same way from PCEPILFE.`,
+      ...commentary(c.v, 'pce'),
+    ],
+  };
+}
+
+function fredLine(
+  c: ContextScope,
+  id: string,
+  m: CioMacroVintage,
+  key: 'fed' | 'labor' | 'curve',
+  line: MacroLine,
+): Provenance {
+  const common = {
+    id,
+    fund: CONTEXT.macro,
+    label: line.l,
+    display: line.v,
+    // several figures on one line: each is in the notes, unrounded
+    value: null,
+    cls: 'reported_public' as const,
+    report: macroReport(c.v, m.asOf),
+    inputs: [],
+    read: [fredRead(m.asOf)],
+  };
+  const observed = (period: string): When => ({
+    kind: 'observed',
+    period,
+    known: m.asOf,
+    archive: FRED,
+  });
+  if (key === 'fed') {
+    return {
+      ...common,
+      when: observed(
+        m.fed.since ? `In effect from ${longDate(m.fed.since)}` : 'In effect for six years or more',
+      ),
+      sources: [fredSeriesSource(['DFEDTARL', 'DFEDTARU'], m.asOf)],
+      notes: [
+        'The lower and upper limits are two FRED series, DFEDTARL and DFEDTARU, read on the same day.',
+        ...commentary(c.v, 'fed'),
+      ],
+    };
+  }
+  if (key === 'labor') {
+    const u = m.unemployment;
+    const p = m.participation;
+    return {
+      ...common,
+      when: observed(
+        u.date === p.date ? macroMonth(u.date) : `${macroMonth(u.date)} and ${macroMonth(p.date)}`,
+      ),
+      sources: [fredSeriesSource(['UNRATE', 'CIVPART'], m.asOf)],
+      notes: [
+        `The unemployment rate, ${u.v.toFixed(1)}% (UNRATE), and the labor force participation rate, ${p.v.toFixed(1)}% (CIVPART), both seasonally adjusted and published to one decimal.`,
+        ...commentary(c.v, 'labor'),
+      ],
+    };
+  }
+  const day = m.curve.y10.date;
+  return {
+    ...common,
+    when: observed(longDate(day)),
+    sources: [fredSeriesSource(['DGS3MO', 'DGS2', 'DGS5', 'DGS10', 'DGS30'], m.asOf)],
+    notes: [
+      `${CURVE_KEYS.map((k) => `${CURVE_WORDS[k]} ${m.curve[k].v.toFixed(2)}%`).join(', ')}: constant-maturity yields as FRED publishes them, to two decimals. The strip rounds them to one.`,
+      `Read at the fund's month end, ${longDate(day)} (the last day on or before it with a published yield), not at ${longDate(m.asOf)}, the date the rest of the macro page reads as of.`,
+      ...commentary(c.v, 'curve'),
+    ],
+  };
+}
+
+/** The U.S. Dollar Index line, typed from the latest report: FRED's broad dollar index is a
+ *  different measure, so it cannot be rebuilt. */
+function typedUsd(c: ContextScope, id: string, line: MacroLine): Provenance {
+  const { v } = c;
+  const asOf = macroAsOf(v.reportDate);
+  const ytd = periodWindow('YTD', asOf);
+  const n = Number(line.v.replace('%', '').replace('+', '').replace(MINUS, '-'));
+  return {
+    id,
+    fund: CONTEXT.macro,
+    label: 'U.S. Dollar Index, year to date',
+    display: line.v,
+    value: Number.isFinite(n) ? n : null,
+    cls: c.base,
+    when: ytd ? { kind: 'window', ...ytd } : { kind: 'point', date: asOf },
+    report: macroReport(v, asOf),
+    sources: [{ ...cioSource(v, `p. ${USD_PAGE}`, USD_PAGE), asOf: longDate(asOf) }],
+    inputs: [],
+    read: [
+      `Printed on p. ${USD_PAGE} of the ${v.reportLabel} report, and typed in from it for the latest report only.`,
+      "The report's U.S. Dollar Index is not a FRED series — FRED's broad dollar index is a different measure — so nothing on this site can check it.",
+    ],
+    notes: [
+      `The report prints six currencies beside it, as it labels them: ${line.s.replace(` (p. ${USD_PAGE})`, '')}.`,
+    ],
+  };
+}
+
+/** Every market and macro address the Markets & items tab can put on screen for one report. A
+ *  template file passes its own macro strip; a published report's is rebuilt here. */
+export function contextFigureIds(v: CioVintage, lines: MacroLine[] = macroFor(v)): string[] {
+  const ids: string[] = [];
+  for (const g of v.MKT ?? []) {
+    for (const row of g.rows) PERIODS.forEach((_, i) => ids.push(figId.market(row.n, i)));
+  }
+  for (const l of lines) if (isMacroFigure(l.l)) ids.push(figId.macro(l.l));
   return ids;
 }

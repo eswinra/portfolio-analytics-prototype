@@ -1,17 +1,29 @@
 import { describe, expect, it } from 'vitest';
 
-import { CIO_LATEST, CIO_VINTAGES, PERIODS, priorVintage } from '../fixtures/cioMonthly';
+import {
+  CIO_LATEST,
+  CIO_MACRO,
+  CIO_VINTAGES,
+  macroFor,
+  PERIODS,
+  priorVintage,
+} from '../fixtures/cioMonthly';
 import { SOURCES } from '../fixtures/sources';
 
+import { yoy } from './cioMacro';
 import { allLines, compareReports } from './compare';
 import {
   compareFigId,
+  contextFigureIds,
   figId,
   figureIds,
   ipsRange,
+  isMacroFigure,
+  marketKey,
   periodWindow,
   proxyAttribution,
   resolveFigure,
+  show,
   whenText,
   type Provenance,
   type ProvenanceContext,
@@ -358,5 +370,118 @@ describe('growth of a dollar and geography', () => {
 
   it('a country not in the top five has no address', () => {
     expect(resolveFigure('pension.country.atlantis', ctx).ok).toBe(false);
+  });
+});
+
+describe('market and economic context', () => {
+  const asOf = CIO_LATEST.marketAsOf!;
+  const rows = (CIO_LATEST.MKT ?? []).flatMap((g) => g.rows);
+
+  it('an index return cites the market page, dated by the market table, and is not the Fund’s', () => {
+    const large = rows.find((r) => r.n === 'U.S. Large Cap')!;
+    const f = get(figId.market(large.n, FYTD));
+    expect(f.id).toBe('market.us-large-cap.FYTD');
+    expect(f.fund).toBe('Market context, not fund performance');
+    expect(f.cls).toBe('reported_public');
+    expect(f.value).toBe(large.v[FYTD]);
+    expect(f.sources[0]).toMatchObject({
+      pageTable: `p. ${CIO_LATEST.pages.market}`,
+      asOf: 'July 31, 2026',
+    });
+    // a month ahead of the fund: the index's fiscal year to date is July alone
+    expect(f.when).toEqual({
+      kind: 'window',
+      from: '2026-07-01',
+      to: asOf,
+      basis: 'cumulative over 1 month',
+    });
+    expect(f.notes).toContain(
+      "The market table is a month ahead of the fund figures: this return covers July 1, 2026 – July 31, 2026, and the fund's fiscal-year-to-date return in the same report covers July 1, 2025 – June 30, 2026.",
+    );
+  });
+
+  it('the real estate index is stale and undated, and a zero may be no new quarter', () => {
+    const odce = rows.find((r) => /ODCE/.test(r.n))!;
+    expect(odce.v[ONE_M]).toBe(0);
+    const f = get(figId.market(odce.n, ONE_M));
+    expect(f.cls).toBe('stale');
+    expect(f.when.kind).toBe('undated');
+    expect(whenText(f.when)).toMatch(/^The report does not say which quarter\./);
+    expect(f.notes.join(' ')).toContain('may mean no new quarter rather than a flat one');
+    // no window beside the fund's: the report does not say which window it is
+    expect(f.notes.join(' ')).not.toContain('a month ahead');
+  });
+
+  it('every market and macro figure resolves, for every report, and shows what the page shows', () => {
+    for (const v of CIO_VINTAGES) {
+      const c: ProvenanceContext = { vintage: v, base: 'reported_public' };
+      for (const g of v.MKT ?? []) {
+        for (const row of g.rows) {
+          row.v.forEach((x, i) => {
+            const f = get(figId.market(row.n, i), c);
+            expect(f.display, f.id).toBe(show.pct(x));
+            expect(f.fund).toBe('Market context, not fund performance');
+          });
+        }
+      }
+      for (const line of macroFor(v).filter((l) => isMacroFigure(l.l))) {
+        const f = get(figId.macro(line.l), c);
+        expect(f.display, `${v.reportLabel} ${f.id}`).toBe(line.v);
+        expect(f.fund).toBe('Economic context, not fund performance');
+      }
+      expect(contextFigureIds(v).every((id) => resolveFigure(id, c).ok)).toBe(true);
+    }
+  });
+
+  it('a report without a readable market table offers no market figure', () => {
+    const early = CIO_VINTAGES.find((v) => v.MKT === null)!;
+    const r = resolveFigure(figId.at('market.us-large-cap.1M', early), ctx);
+    expect(r.ok).toBe(false);
+    expect(marketKey('U.S. Long-Term Treasuries')).toBe('us-long-term-treasuries');
+  });
+
+  it('PCE inflation is calculated from two FRED index levels, each with a record of its own', () => {
+    const m = CIO_MACRO[CIO_LATEST.reportDate]!;
+    const f = get('macro.pce');
+    expect(f.cls).toBe('calculated');
+    expect(f.value).toBeCloseTo(yoy(m.pce), 10);
+    expect(f.worked).toBe(
+      `(${m.pce.v.toFixed(3)} ÷ ${m.pce.yearAgo.v.toFixed(3)} − 1) × 100 = ${yoy(m.pce).toFixed(1)}%`,
+    );
+    expect(f.inputs.map((i) => i.id)).toEqual(['macro.pce.index', 'macro.pce.yearago']);
+    for (const i of f.inputs) {
+      const input = get(i.id);
+      expect(input.cls).toBe('reported_public');
+      expect(input.sources[0]!.url).toBe('https://alfred.stlouisfed.org/series?seid=PCEPI');
+    }
+    // an earlier report's figure keeps its inputs in that report
+    const dec = CIO_VINTAGES.find((v) => v.reportLabel === 'December 10, 2025')!;
+    const old = get(figId.at('macro.pce', dec));
+    expect(old.inputs.map((i) => i.id)).toEqual([
+      'macro.pce.index@2025-10-31',
+      'macro.pce.yearago@2025-10-31',
+    ]);
+    // FRED had not published September by the report's date, and the record says so
+    expect(old.notes[0]).toBe(
+      'August 2025 was the latest month FRED had published by November 30, 2025.',
+    );
+  });
+
+  it('the yield curve says it is read at the fund’s month end, not the macro page’s date', () => {
+    const f = get('macro.curve');
+    expect(whenText(f.when)).toBe(
+      "June 30, 2026, in FRED's real-time archive (ALFRED) as of July 31, 2026",
+    );
+    expect(f.notes[0]).toMatch(/^3-month \d\.\d\d%, 2-year/);
+  });
+
+  it('the dollar index is typed from the latest report, and the themes are not a figure', () => {
+    const f = get('macro.usd');
+    expect(f.sources[0]!.pageTable).toBe('p. 6');
+    expect(f.value).toBe(1.6);
+    const prior = priorVintage(CIO_LATEST)!;
+    expect(resolveFigure(figId.at('macro.usd', prior), ctx).ok).toBe(false);
+    expect(isMacroFigure('Themes to watch')).toBe(false);
+    expect(resolveFigure('macro.themes', ctx).ok).toBe(false);
   });
 });

@@ -13,7 +13,7 @@ import {
   traceKey,
   type CioPackage,
 } from './cioPackage';
-import { resolveFigure } from './provenance';
+import { contextFigureIds, resolveFigure } from './provenance';
 import { reconcile } from './reconcile';
 import { workbookToCsv } from './workbook';
 
@@ -229,6 +229,29 @@ describe('the provenance drawer, for a figure from a template file', () => {
     const aum = resolveFigure('pension.aum', ctx);
     if (!aum.ok) throw new Error(aum.reason);
     expect(aum.fig.read[0]).toContain('The file carries it in $ millions');
+  });
+
+  it('traces the market table and the macro strip to their cells, as the team’s own', async () => {
+    const pkg = await openWorkbook(
+      bytesOf('../../public/templates/CIO_Monthly_Template_Example.xlsx'),
+      'CIO_Monthly_Template_Example.xlsx',
+    );
+    const ctx = { vintage: pkg.vintage, base: 'calculated' as const, macro: pkg.macro };
+    const ids = contextFigureIds(pkg.vintage, pkg.macro);
+    expect(ids.filter((id) => !resolveFigure(id, ctx).ok)).toEqual([]);
+
+    const m = resolveFigure('market.us-large-cap.FYTD', ctx);
+    if (!m.ok) throw new Error(m.reason);
+    expect(m.fig.report).toBe('Template file CIO_Monthly_Template_Example.xlsx, not published');
+    expect(m.fig.sources[0]!.pageTable).toMatch(/^Markets!\w+ → Export!F\d+$/);
+
+    // the file's strip is typed text: it is cited by its cell and dated by nothing but its label
+    const pce = resolveFigure('macro.pce', ctx);
+    if (!pce.ok) throw new Error(pce.reason);
+    expect(pce.fig.display).toBe(pkg.macro.find((l) => l.l.startsWith('PCE'))!.v);
+    expect(pce.fig.sources[0]!.pageTable).toMatch(/^Macro!\w+ → Export!G\d+$/);
+    expect(pce.fig.formula).toBeUndefined();
+    expect(pce.fig.when.kind).toBe('undated');
   });
 
   it('from a CSV, names the row and says the cell is not recorded', () => {

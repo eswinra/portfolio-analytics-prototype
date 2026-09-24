@@ -275,11 +275,12 @@ Two things about this page differ from every other slide, and the slide states b
 Only the latest report carries this page in the deck; earlier reports show "not carried for this
 report", as they do for other pages a vintage does not supply.
 
-### Where a figure came from — the provenance drawer (Summary, Performance, Positioning, Explore, Compare)
+### Where a figure came from — the provenance drawer (every tab but Slides)
 
-Select any figure on the Summary, Performance, Positioning, Explore or Compare tab (they carry a
-faint dotted underline) and a drawer opens with its record. The Markets & items tab's market table
-and macro strip are not covered yet:
+Select any figure on the Summary, Performance, Positioning, Markets & items, Explore or Compare tab
+(they carry a faint dotted underline) and a drawer opens with its record. Two things on those tabs
+do not open one: the GDP chart's bar labels, and the items for attention, which are statuses
+rather than figures and give their page in the table:
 
 | Section | What it says |
 |---|---|
@@ -311,6 +312,42 @@ benchmark, weight, target and market value from each month's report. A composite
 table opens nothing, because no report prints it; the return and benchmark beside it each open a
 record. Growth of a dollar and the geographic exposure shares (developed markets, emerging
 markets, and the top five countries in each) now have addresses too, because Compare shows them.
+
+**Market and economic context has addresses of its own, outside either fund.** An index return is
+`market.us-large-cap.FYTD` and a macro line is `macro.pce`, not `pension.…`. The first line of
+the record says "Market context, not fund performance" or "Economic context, not fund
+performance", where a fund figure's record names the fund. Filing an index return under a fund's
+address would present it as that fund's figure.
+
+- **The market table is a month ahead of the fund figures, and each record gives both windows.**
+  In the August 12, 2026 report, U.S. Large Cap's fiscal-year-to-date return covers July 1 – July
+  31, 2026: one month. The fund's fiscal-year-to-date return in the same report covers twelve
+  months to June 30, 2026. The record puts the two windows side by side, so the difference is
+  visible before anyone compares the two numbers.
+- **The real estate index (NCREIF ODCE, net) is `stale` and undated.** The report's footnote says
+  it is the latest available quarter but not which one, so the record says that rather than
+  inventing a date. This matches its row in the freshness matrix. Where it shows 0.0% for a period
+  shorter than a quarter, the record says that may mean no new quarter rather than a flat one.
+- **PCE inflation is calculated, and opens the two FRED index levels it comes from.** In the
+  August 12, 2026 report, the record shows `(131.392 ÷ 126.743 − 1) × 100 = 3.7%`. Each level
+  opens its own record, linked to that series in FRED's real-time archive (ALFRED) and dated by
+  the day the archive was read. It also says which month was the latest FRED had published by
+  then: August 2025 for the December 10, 2025 report, when publication ran late.
+- **Lines that carry several figures are one record each.** The federal funds range, unemployment
+  and participation, and the yield curve are single lines on the page. Each record lists the
+  figures on its line: the curve's five yields to two decimals, as FRED publishes them. It also
+  says the curve is read at the fund's month end, not at the date the rest of the macro page uses.
+- **The U.S. Dollar Index line is typed from p. 6 of the latest report** and cites that page. It
+  is not a FRED series, so the record says nothing on this site checks it. The themes line is the
+  CIO's commentary, not a figure, and opens nothing.
+- **A template file's market table and macro strip** trace to the cells they were typed in
+  (`Markets!F6 → Export!F328`, `Macro!B5 → Export!G514`), like every other figure from a file. A
+  file's macro lines are the team's typed text, so they have no calculation, and no date beyond
+  what their labels say.
+
+While wiring the strip, its values turned out to wrap. The long note beside each line took the
+width, so "3.7% y/y" broke onto three lines. The value now keeps its width, up to 55% of the row,
+and the note wraps beside it instead.
 
 **The record says what checked a figure, and says so when nothing did.** The extractor rejects a
 report whose identities fail: the summary page's total must agree with the performance table's to

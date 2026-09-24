@@ -29,7 +29,6 @@ import {
 import {
   BINS,
   CIO_LATEST,
-  CIO_MACRO,
   CIO_VINTAGE,
   CIO_VINTAGES,
   cioFor,
@@ -41,19 +40,18 @@ import {
   PERIODS,
   STATUS,
   type CioEntity,
-  type CioVintage,
   type OpsStatus,
 } from '../fixtures/cioMonthly';
 import { type EntityId } from '../fixtures/published';
-import { SOURCES, type SourceRecord } from '../fixtures/sources';
+import { SOURCES } from '../fixtures/sources';
 import { useCioFile, useTemplateOpener } from '../lib/cioFile';
-import { cioSource, entityPages } from '../lib/cioSource';
+import { cioSource, entityPages, fredMacroSource } from '../lib/cioSource';
 import { cioHistory } from '../lib/cioHistory';
 import { cioChanges, cioNarrative, fiscalYearOf } from '../lib/cioNarrative';
 import { ATTR_PERIODS, bandsFor, furthestFromTarget, parseSeriesKey } from '../lib/crossFilter';
 import { FEED_KEY, FILE_KEY, useCioVintage } from '../lib/cioVintage';
 import { feedClassification } from '../lib/dataset/cioFeed';
-import { figId, ipsRange, proxyAttribution } from '../lib/provenance';
+import { figId, ipsRange, isMacroFigure, proxyAttribution } from '../lib/provenance';
 import { useDataset } from '../lib/dataset/useDataset';
 import { useEntity } from '../lib/entity';
 import { CIO_TABS as TABS } from '../lib/routes';
@@ -115,20 +113,6 @@ const STATUS_VARIANT: Record<OpsStatus, TagVariant> = {
   quiet: 'blocked',
   done: 'accent',
 };
-
-/** Source record for the macro strip's FRED figures, read as of the report's as-of date. */
-function fredMacroSource(v: CioVintage): SourceRecord | null {
-  const m = CIO_MACRO[v.reportDate];
-  if (!m) return null;
-  return {
-    id: `FRED_CIO_${m.asOf}`,
-    label: `FRED, as known on ${longDate(m.asOf)}`,
-    doc: 'Federal Reserve Economic Data, real-time archive (ALFRED): PCEPI, PCEPILFE (BEA); UNRATE, CIVPART (BLS); DFEDTARL, DFEDTARU (Federal Reserve)',
-    pageTable: 'observations as FRED showed them on the date given',
-    asOf: longDate(m.asOf),
-    url: 'https://alfred.stlouisfed.org/',
-  };
-}
 
 /** Slide index in the deck (its URL hash is the slide number). */
 const SLIDE = {
@@ -347,7 +331,11 @@ export function CioMonthlyView() {
   // an imported feed is labelled as its rows are, never as the published report
   const feedCls = feed ? feedClassification(feed.classifications) : null;
   const pageCls = pkg ? 'calculated' : feedCls ? feedCls.primary : 'reported_public';
-  const provCtx = useMemo(() => ({ vintage, base: pageCls }), [vintage, pageCls]);
+  // a template file's macro strip is the team's own; a published report's comes from FRED
+  const provCtx = useMemo(
+    () => ({ vintage, base: pageCls, ...(pkg ? { macro: pkg.macro } : {}) }),
+    [vintage, pageCls, pkg],
+  );
   const alsoCls = [
     ...new Set([...(feedCls ? feedCls.also : []), 'calculated', 'proxy_estimate'] as const),
   ].filter((c) => c !== pageCls);
@@ -1834,7 +1822,7 @@ export function CioMonthlyView() {
                               </td>
                               {row.v.map((v, i) => (
                                 <td className="num" key={PERIODS[i]}>
-                                  {pct(v)}
+                                  <Fig id={figId.market(row.n, i)}>{pct(v)}</Fig>
                                 </td>
                               ))}
                             </tr>
@@ -1887,14 +1875,16 @@ export function CioMonthlyView() {
                   }
                 >
                   {!pkg && !feed ? <GdpBars reportDate={vintage.reportDate} /> : null}
-                  <div>
+                  <div className="macro-strip">
                     {macro.map((m) => (
                       <div className="flow-row" key={m.l}>
                         <span>
                           {m.l}
                           <div className="footnote">{m.s}</div>
                         </span>
-                        <span className="v">{m.v}</span>
+                        <span className="v">
+                          {isMacroFigure(m.l) ? <Fig id={figId.macro(m.l)}>{m.v}</Fig> : m.v}
+                        </span>
                       </div>
                     ))}
                   </div>

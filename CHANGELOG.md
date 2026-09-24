@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-09-24 — Revision 45: the Markets & items tab opens its records
+
+The provenance drawer now covers every CIO Monthly tab but Slides. Each index return in the market
+table and each line of the macro strip opens its record. Each record says it is context, not the
+Fund's performance.
+
+- **Addresses outside either fund.** An index return is `market.us-large-cap.FYTD` and a macro
+  line is `macro.pce`. The record's first line reads "Market context, not fund performance" or
+  "Economic context, not fund performance", where a fund figure names the fund.
+- **Two windows side by side.** The market table is a month ahead of the fund figures. In the
+  August 12, 2026 report, U.S. Large Cap's fiscal-year-to-date return covers July 1 – July 31,
+  2026, one month. The record puts that beside the fund's window for the same period in the same
+  report: twelve months to June 30, 2026.
+- **Real estate (NCREIF ODCE, net) is `stale` and undated.** The report gives the latest
+  available quarter without naming it, and the record says so, matching the freshness matrix. A
+  0.0% over a period shorter than a quarter carries a note that it may mean no new quarter.
+- **PCE inflation is shown as a calculation:** `(131.392 ÷ 126.743 − 1) × 100 = 3.7%`. Each of
+  the two FRED index levels opens its own record, linked to that series in FRED's real-time
+  archive (ALFRED). The record names the latest month FRED had published by the report's date:
+  August 2025 for the December 10, 2025 report, when publication ran late.
+- **The federal funds range, unemployment and participation, and the yield curve** cite their FRED
+  series, and list each figure on the line. The curve's five yields are given to two decimals, as
+  FRED publishes them, and read at the fund's month end. The U.S. Dollar Index cites p. 6 of the
+  latest report and says nothing on this site checks it. The themes line opens nothing.
+- **A template file's** market table and macro strip trace to the cells they were typed in, as
+  every other file figure does.
+- **Fixed: macro values wrapped onto three lines.** The long note beside each value took the width
+  of the row, so "3.7% y/y" broke apart. That was true before this change too. The value now keeps
+  its width, up to 55% of the row.
+- **Not covered:** the GDP chart's bar labels, which screen readers treat as part of a single
+  image. They would need the chart rebuilt to become buttons. The items for attention are
+  statuses, not figures.
+- Verification: lint · format · Vitest 670/670 (8 new, including every market and macro address
+  in all sixteen reports and the example workbook's cells) · build · Playwright 246/246 runnable
+  (3 new, including every figure on the tab) · `npm audit --omit=dev` 0 vulnerabilities · checked
+  in the browser at desktop and 320 px width.
+
 ## 2026-09-24 — Revision 44: every figure on Compare and Explore opens its record
 
 The provenance drawer now covers five CIO Monthly tabs, not three. On Compare, Explore and the

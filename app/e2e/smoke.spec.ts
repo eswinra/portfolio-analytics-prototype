@@ -1117,9 +1117,7 @@ test.describe('provenance drawer (desktop project)', () => {
         .locator('[data-fig]')
         .evaluateAll((els) => [
           ...new Set(
-            els
-              .filter((el) => el.checkVisibility())
-              .map((el) => el.getAttribute('data-fig')!),
+            els.filter((el) => el.checkVisibility()).map((el) => el.getAttribute('data-fig')!),
           ),
         ]);
       expect(ids.length, tab).toBeGreaterThan(10);
@@ -1175,6 +1173,66 @@ test.describe('provenance drawer (desktop project)', () => {
     await expect(drawer.getByRole('link', { name: /December 10, 2025\), p\. 9/ })).toBeVisible();
   });
 
+  test('on Markets & items, an index return is market context, a month ahead of the fund', async ({
+    page,
+  }) => {
+    await ready(page, '/cio?tab=markets');
+    await page.locator('#cio-market [data-fig="market.us-large-cap.FYTD"]').click();
+    const drawer = page.getByRole('dialog');
+    await expect(drawer.getByRole('heading', { level: 2 })).toHaveText(
+      'U.S. Large Cap: total return, fiscal year to date',
+    );
+    await expect(drawer.locator('.prov-kicker')).toContainText(
+      'Market context, not fund performance',
+    );
+    await expect(drawer).toContainText('The market table is a month ahead of the fund figures');
+    await expect(
+      drawer.getByRole('link', { name: 'CIO Monthly Report (August 12, 2026), p. 5' }),
+    ).toBeVisible();
+  });
+
+  test('PCE inflation opens the two FRED index levels it is calculated from', async ({ page }) => {
+    await ready(page, '/cio?tab=markets');
+    // the themes are commentary, not a figure
+    await expect(
+      page.locator('#cio-macro .flow-row', { hasText: 'Themes to watch' }).locator('[data-fig]'),
+    ).toHaveCount(0);
+    await page.locator('#cio-macro [data-fig="macro.pce"]').click();
+    const drawer = page.getByRole('dialog');
+    await expect(drawer.locator('.prov-kicker')).toContainText(
+      'Economic context, not fund performance',
+    );
+    await expect(drawer.locator('.prov-worked')).toHaveText('(131.392 ÷ 126.743 − 1) × 100 = 3.7%');
+    await drawer.locator('.prov-inputs button').first().click();
+    await expect(drawer.getByRole('heading', { level: 2 })).toHaveText(
+      'PCE price index, June 2026',
+    );
+    await expect(drawer.getByRole('link', { name: /FRED PCEPI/ })).toHaveAttribute(
+      'href',
+      'https://alfred.stlouisfed.org/series?seid=PCEPI',
+    );
+  });
+
+  test('every figure on Markets & items opens a record, and none is a fund’s', async ({ page }) => {
+    await ready(page, '/cio?tab=markets');
+    const ids = await page
+      .locator('[data-fig]')
+      .evaluateAll((els) => [
+        ...new Set(
+          els.filter((el) => el.checkVisibility()).map((el) => el.getAttribute('data-fig')!),
+        ),
+      ]);
+    // thirteen indices over eight periods, and five macro lines
+    expect(ids).toHaveLength(13 * 8 + 5);
+    const drawer = page.getByRole('dialog');
+    for (const id of ids) {
+      await page.locator(`[data-fig="${id}"]`).filter({ visible: true }).first().click();
+      await expect(drawer.locator('.prov-kicker'), id).toContainText('not fund performance');
+      await page.keyboard.press('Escape');
+      await expect(drawer).toBeHidden();
+    }
+  });
+
   test('a sample of every figure on Compare and Explore opens a record', async ({ page }) => {
     for (const tab of ['compare', 'explore']) {
       await ready(page, `/cio?tab=${tab}`);
@@ -1184,9 +1242,7 @@ test.describe('provenance drawer (desktop project)', () => {
         .locator('[data-fig]')
         .evaluateAll((els) => [
           ...new Set(
-            els
-              .filter((el) => el.checkVisibility())
-              .map((el) => el.getAttribute('data-fig')!),
+            els.filter((el) => el.checkVisibility()).map((el) => el.getAttribute('data-fig')!),
           ),
         ]);
       expect(ids.length, tab).toBeGreaterThan(50);

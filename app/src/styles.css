@@ -1216,6 +1216,15 @@ a.btn-band {
   font-variant-numeric: tabular-nums;
 }
 
+/* the macro strip's notes run long: the value keeps its width and the note wraps beside it,
+   rather than the note squeezing "3.7% y/y" onto three lines */
+.macro-strip .flow-row .v {
+  flex-shrink: 0;
+  max-width: 55%;
+  margin-left: 16px;
+  text-align: right;
+}
+
 .chart-legend {
   display: flex;
   gap: 16px;

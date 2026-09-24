@@ -189,9 +189,11 @@ Conventions every dashboard view now follows:
   table or in text on the page.
 - **Slides inside the dashboard**: see `docs/cio-monthly.md`, "The dashboard feeds the slides".
 - **Provenance drawer** (`lib/provenance.ts`, `components/Provenance.tsx`): every figure on the
-  CIO Monthly Summary, Performance, Positioning, Explore and Compare tabs has an address and opens
-  a record of its source page, classification, calculation (each input opens its own record) and
-  period. A Compare change resolves through `compareReports`, the function the table uses. The
+  CIO Monthly Summary, Performance, Positioning, Markets & items, Explore and Compare tabs has an
+  address and opens a record of its source page, classification, calculation (each input opens its
+  own record) and period. A Compare change resolves through `compareReports`, the function the
+  table uses. Market and macro figures have addresses outside either fund (`market.…`,
+  `macro.…`), and the FRED source records live in `lib/cioSource.ts` with the report's. The
   library is pure and holds the calculations the tables show, so the two cannot disagree; the
   component wraps a figure in `<Fig id>` and renders plain text outside the provider. See
   `docs/cio-monthly.md`, "Where a figure came from".
